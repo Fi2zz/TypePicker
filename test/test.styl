@@ -1,0 +1,36 @@
+primary = #06a2d0;
+default = #fff
+gray = #ddd
+disabled = #ccc
+
+.calendar-action
+
+  &-prev, &-next
+    &:before
+      content ''
+      display: block
+      width 32px
+      height 32px
+      border 2px primary solid
+      transform rotate(45deg) scale(.5)
+  &-disabled
+    &:before
+      border-color disabled
+
+  &-prev
+    &:before
+      border-top: none
+      border-right: none
+
+  &-next
+    &:before
+      border-left none
+      border-bottom none
+
+  span
+    display: none
+
+.highlight
+  color primary
+
+

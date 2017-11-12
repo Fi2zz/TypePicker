@@ -1,0 +1,117 @@
+brand = #06a2d0;
+brand-default = #fff
+brand-gray = #ddd
+brand-disabled = #ccc
+.calendar
+  position: relative
+  box-sizing border-box
+  margin auto
+  *
+    box-sizing border-box
+
+  &-main
+    position: relative
+  &-action
+
+    &-bar
+      height: 44px
+      position: absolute
+      top: 0
+      left: 0
+      right: 0
+      z-index: 9
+    width: 44px
+    height: 44px
+    text-align: center
+    background #fff
+    border: none
+    &:focus
+      outline: none
+    &.disabled
+      color brand-disabled
+    &-prev
+      float: left
+    &-next
+      float: right
+  &-body, &-day
+    font-size: 0
+  &-day
+    text-align: center
+    position: relative
+    height: 44px
+    &-cell
+      height: 44px
+      line-height 44px
+
+
+  &-cell
+    font-size: 14px
+    width (100 / 7) * 1%
+    display: inline-block
+    vertical-align: top
+  &-date-cell
+    min-height: 64px
+    height 2rem
+    text-align: center
+    position: relative
+
+
+    &.start-date
+
+      background darkslategrey !important
+    &.end-date
+      background darkcyan !important
+
+
+
+    .date
+      padding-left: 4px
+      padding-top: 4px
+      font-size: 14px
+      text-align: center
+    .label
+      font-size: 12px
+      position: absolute
+      top: 6px
+      left: 6px
+      display: none
+    .value
+      font-size: 12px
+      text-align: center
+      padding-right: 4px
+
+    &:not(:empty)
+      cursor pointer
+
+    &.disabled
+      color brand-disabled
+      cursor default
+    &.in-range
+      background lighten(brand, 20%)
+      color brand-default
+    &.active
+      position: relative
+      color brand-default
+      background brand
+
+  &-double-views
+    width: 100%
+    max-width none
+
+    .calendar-main
+      width: 50%
+      vertical-align: top
+      display: inline-block
+    .calendar-head
+      height: 44px
+      position: relative
+      line-height 44px
+      text-align: center
+
+  &-single-view
+    max-width 768px
+    .calendar-title
+      height: 44px
+      text-align: center
+      line-height 44px
+

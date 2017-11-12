@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "outDir": "./transform/",
+    "sourceMap": false,
+    "noImplicitAny": true,
+    "module": "commonjs",
+    "target": "es3",
+    "noEmitOnError": false,
+    "allowSyntheticDefaultImports": true,
+    "allowJs": true,
+    "lib": [
+      "dom",
+      "es5",
+      "es2015.promise"
+    ]
+  },
+  "include": [
+    "./src/**/*",
+    "./app.ts"
+  ],
+  "exclude":["./app.ts"]
+}
