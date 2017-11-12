@@ -177,9 +177,7 @@ function doubleSelectHandler(date: any, selected: Array<any>, cache: Array<any>,
                 selected = [selected[0]]
             }
         } else {
-            if (
-                inArray(source, end)
-            ) {
+            if (inDates(end)) {
                 //得到选择范围
                 const year = startDate.getFullYear(),
                     month = startDate.getMonth(),
@@ -206,10 +204,9 @@ function doubleSelectHandler(date: any, selected: Array<any>, cache: Array<any>,
         //开始日期为当前点击的元素
         const start = selected[selected.length - 1];
         //如果在data选项里有当前选择的日期
-        //着选择的日期为当前当前点击的元素
+        //则选择的日期为当前当前点击的元素
         if (inDates(start)) {
-            selected = [];
-            selected.push(start)
+            selected = [start];
         } else {
             //如果选择的日期不在data里，则读取缓存的数据
             selected = cache;

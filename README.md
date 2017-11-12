@@ -27,7 +27,7 @@
         date: date.getDate()
     };
     
-    const calendar = <any>new DatePicker({
+    const datePicker = <any>new DatePicker({
         el: '.calendar-container',
         from: new Date(dist.year, dist.month, dist.date),
         to: new Date(dist.year, dist.month + 4, dist.date),
@@ -39,12 +39,12 @@
         multiViews: true,
         flatView: false,
     });
-    calendar.on("update", (output: any) => {
+    datePicker.on("update", (output: any) => {
         document.getElementById("layout").innerHTML = `选中的日期${output}`
     });
     
     //通过data事件来控制每个日期格子展示的数据
-    calendar.on("data", (result: any) => {
+    datePicker.on("data", (result: any) => {
         //返回传入的数据和nodeList
         //返回传入的数据是因为需要和外部的数据做校验
         const data = result.data;
@@ -72,21 +72,18 @@
         const keys = Object.keys(source);
         const currDate = new Date(dist.year, dist.month, dist.date);
         for (let i = 0; i < keys.length; i++) {
-            let item = calendar.parse(keys[i]);
-            if (calendar.diff(item, currDate) >= 0) {
+            let item = datePicker.parse(keys[i]);
+            if (datePicker.diff(item, currDate) >= 0) {
                 params.dates.push(keys[i])
             } else {
                 delete source[keys[i]]
             }
         }
         params.data = source;
-        // params.dates = Object.keys(source);
         return params
     });
         
         
-
-    
 
 	
 * datePicker实例返回一个对象，对象包含以下
