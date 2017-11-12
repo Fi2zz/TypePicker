@@ -90,6 +90,7 @@
 
 	
 * datePicker实例返回一个对象，对象包含以下
+
 |api|type |Desc|Example|
 |---|---|---|---|
 |diff[1]|Function|计算日期差，返回值为一个number类型|`datePicker.diff(d1,d2)` |
