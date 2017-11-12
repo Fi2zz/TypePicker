@@ -11,13 +11,11 @@
 |format |string|                           日期格式|
 |doubleSelect|Boolean|                      是否双选，对于酒店和车船票机票比较有用|
 |limit   |Number|                          双选情况下，限制最大跨度,如果`doubleSelect=false`,则自动限制为`1`|
-|update   |event|                          获取选择的日期|
-|data   |event|                          渲染日历数据|
-|data   |function|                       传入日历数据|
+
 
     * multiViews和flatView都为true的情况下，自动转换成multiviews
-                  
-                  
+    * multiViews和flatView都为false的情况下，垂直展示多个月份，移动端会比较有用
+    * from默认是new Date(),to默认为new Date()往后推6个月
                   
 *使用方法
 
@@ -91,41 +89,38 @@
     
 
 	
-* datePicker实例返回的以下方法
-
-|Function|Desc|Example|
-|---|---|---|
-|diff <sup>[1]</sup>|计算日期差| `let diffs= datePicker.diff(d1,d2)`,返回一个number  |
-|parse <sup>[2]</sup>|把格式化后的日期反格式化,返回一个Date对象| `let parsed= datePicker.parse(dateString)`  |
-|format <sup>[3]</sup>|把格式化的日期,返回一个对象| `let parsed= datePicker.format(DateObject)`  |
-|data|初始化日历数据，仅在初始化的时候需要调用 `datePicker.data(data)`  |
-|on <sup>[4]</sup>|事件监听器| `datePicker.on("update",data=>{})`  |
+* datePicker实例返回一个对象，对象包含以下
+|api|type |Desc|Example|
+|---|---|---|---|
+|diff[1]|Function|计算日期差，返回值为一个number类型|`datePicker.diff(d1,d2)` |
+|parse <sup>[2]</sup>|Function|把格式化后的日期反格式化,返回一个Date对象| `datePicker.parse(dateString)`  |
+|format <sup>[3]</sup>|Function| 把格式化的日期,返回一个对象| `datePicker.format(DateObject)`  |
+|on <sup>[4]</sup>|Function|事件监听器|  `datePicker.on("update",data=>{})`  |
+|update   |event| 更新日历数据|`datePicker,on("update",data=>{ })`|
+|data   |event|  获取日历数据 | `datePicker.on("data",data=>{ })`|
+|data|Function|初始化日历数据，仅在初始化的时候需要调用 `datePicker.data(data)`  |
 
 
 [0] language语言包,由以下构成
 	
 	{
-		"zh-cn": {
-      		days: ['日', '一', '二', '三', '四', '五', '六'],
-	       months: ['01月', '02月', '03月', '04月', '05月', '06月', '07月', '08月', '09月', '10月', '11月', '12月'],
-		      year: "年"
-		    },
-		    "jp": {
-		      days: ['日', '月', '火', '水', '木', '金', '土'],
-		      months: ['01月', '02月', '03月', '04月', '05月', '06月', '07月', '08月', '09月', '10月', '11月', '12月'],
-		      year: "年"
-		    },
-		
-		}
+         "zh-cn": {
+            days: ['日', '一', '二', '三', '四', '五', '六'],
+            months: ['01月', '02月', '03月', '04月', '05月', '06月', '07月', '08月', '09月', '10月', '11月', '12月'],
+            year: "年"
+            },
+        "jp": {
+            days: ['日', '月', '火', '水', '木', '金', '土'],
+            months: ['01月', '02月', '03月', '04月', '05月', '06月', '07月', '08月', '09月', '10月', '11月', '12月'],
+            year: "年"
+        },
+    }
 		
 
 [1] 目前仅支持计算两个日期差，不支持月份差，参数类型是`Date`类型；
-
 [2] 日期格式和`option.format`相同，不需要传入format,返回Date对象，如；
 
 		datePicker.parse("2017-11-11") // new Date(2017,10,11)
-	
-
 [3] 日期格式和`option.format`相同，不需要传入format,返回如下对象
 
 	{
@@ -135,8 +130,6 @@
 		year:<String>//年份
 		value:<String>//格式化后的日期,如 2017-11-11
 	}	
-		
-	
 [4] 事件监听,`update`事件，获取日期选择更新,`data`事件，渲染日历数据
 	
 	
