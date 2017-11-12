@@ -187,3 +187,29 @@ export  function getLanguage(language: any, key: string) {
     }
     return output
 }
+
+export  function quickSort(arr: number[], isAscending?: boolean): number[] {
+
+    if (1 === arr.length) return arr;
+    if (0 === arr.length) return [];
+
+    let small: number[] = [];
+    let big: number[] = [];
+    let equal: number[] = [];
+    let key = arr[0];
+
+    for (let i: number = 0; i < arr.length; i++) {
+        if (arr[i] < key) {
+            small.push(arr[i]);
+        } else if (arr[i] > key) {
+            big.push(arr[i]);
+        } else {
+            equal.push(arr[i]);
+        }
+    }
+
+    if (isAscending) {
+        return [].concat(quickSort(small, isAscending), equal, quickSort(big, isAscending));
+    }
+    return [].concat(quickSort(big, isAscending), equal, quickSort(small, isAscending));
+}

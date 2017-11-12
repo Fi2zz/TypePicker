@@ -50,7 +50,8 @@ function setDates(year: any, month: any, formater: string) {
             key
         });
     }
-    const template = List.map((item: any) => `<div class="${item.className}" data-date="${item.key}">${item.text}</div>`).join(" ");
+    const template = List.map((item: any) => `<div class="${item.className}"
+            ${item.key ? "data-date=" + item.key : ""}>${item.text}</div>`).join(" ");
     return {template, year: curr.year, month: curr.index}
 }
 

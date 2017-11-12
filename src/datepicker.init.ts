@@ -71,11 +71,13 @@ export function buildCalendar(el: any, language: any) {
 
     this.selected = setDefaultRange(
         this.element,
-        this.element.querySelectorAll(".calendar-date-cell"),
+        this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
         this.selected,
         this.format(this.date).value,
         this.data,
-        this.double);
+        this.double,
+        this.parse,
+    );
 
     //日期切换
     const prev = this.element.querySelector(".calendar-action-prev");

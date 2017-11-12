@@ -1,4 +1,8 @@
-import {attr, addClass, hasClass, removeClass, attrSelector} from "./util"
+import {attr, addClass, hasClass, removeClass, attrSelector, diff} from "./util"
+
+const date = new Date();
+
+const currDate = new Date(date.getFullYear(), date.getMonth(), date.getDate())
 function getDefaultRange(collection: HTMLCollection, start: string, end: string) {
     let temp = [];
     for (let i = 0; i < collection.length; i++) {
@@ -24,7 +28,7 @@ function getDefaultRange(collection: HTMLCollection, start: string, end: string)
 
     return temp.slice(startIndex + 1, endIndex)
 }
-function setStartAndEnd(collection: HTMLCollection, source: any, data: Array<any>) {
+function setStartAndEnd(collection: HTMLCollection, source: any, data: Array<any>, parse: Function) {
     let temp = <Array<string>> [];
     const start = data[0];
     const end = data[data.length - 1];
@@ -41,14 +45,22 @@ function setStartAndEnd(collection: HTMLCollection, source: any, data: Array<any
             }
         } else {
 
+
             if (item && nextItem) {
+
+
                 let curr = attr(item, "data-date");
                 let next = attr(nextItem, "data-date");
-                if (source[next] && source[curr] || source[curr] && !source[next]) {
-                    if (temp.length < 2) {
-                        addClass(item, "start-date");
-                        addClass(nextItem, "end-date");
-                        temp.push(curr, next)
+                if (curr && next) {
+                    let start = parse(curr);
+                    if (diff(start, currDate, "days") >= 0) {
+                        if (source[next] && source[curr] || source[curr] && !source[next]) {
+                            if (temp.length < 2) {
+                                addClass(item, "start-date");
+                                addClass(nextItem, "end-date");
+                                temp.push(curr, next)
+                            }
+                        }
                     }
                 }
             }
@@ -86,17 +98,19 @@ export function ranged(data: Array<any>, collector: HTMLElement, remove: boolean
         }
     }
 }
+
 export function setDefaultRange(collector: HTMLElement,
                                 collection: HTMLCollection,
                                 data: Array<string>,
                                 initDate: any,
                                 source: any,
-                                isDouble: boolean) {
+                                isDouble: boolean,
+                                parse: Function) {
     let dates = [];
     if (!isDouble) {
         dates = data.length > 0 ? data : [initDate];
     } else {
-        dates = setStartAndEnd(collection, source, data);
+        dates = setStartAndEnd(collection, source, data, parse);
         const start = dates[0];
         const end = dates[dates.length - 1];
         const range = getDefaultRange(collection, start, end);

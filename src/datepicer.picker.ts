@@ -2,10 +2,11 @@ import {
     diff, attr,
     removeClass,
     addClass,
-    attrSelector
+    attrSelector,
+    quickSort
 } from "./util"
 
-import {ranged as setRange} from  './datepicker.ranger'
+import {ranged, ranged as setRange} from  './datepicker.ranger'
 export default function (element: any,
                          selected: Array<any>,
                          isDouble: boolean,
@@ -15,6 +16,11 @@ export default function (element: any,
                          limit: number,
                          update: Function) {
     const collection = element.querySelectorAll(".calendar-date-cell");
+
+    let hoverRange = <Array<any>>[];
+    let inHoverRange = <Array<any>>[];
+    let newRange = <Array<any>>[];
+
     for (let i = 0; i < collection.length; i++) {
         const item = collection[i];
         item.addEventListener("click", (e: any) => {
@@ -178,7 +184,9 @@ export default function (element: any,
                 allValid
             );
             update(selected)
-        })
+        });
+        
+
     }
 }
 
