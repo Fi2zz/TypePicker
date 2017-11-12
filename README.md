@@ -1,9 +1,9 @@
 
 | api|    类型| 说明|
 |----|----    |----|
-|el|string|选择器|
+|el|string|选择器,用于挂载日历|
 |multiViews              |Boolean          |展示多个日历视图，目前支持两个日历横向展示|
-|flatView              |Boolean          |展示多个日历视图，目前支持两个日历横向展示|
+|flatView              |Boolean          |单个日历视图|
 |from 	|Date|                             开始日期|
 |to    |Date|                            结束日期|
 |language<sup>[0]</sup>|Map                         | 语言包|
@@ -15,7 +15,7 @@
 |data   |event|                          渲染日历数据|
 |data   |function|                       传入日历数据|
 
-
+    * multiViews和flatView都为true的情况下，自动转换成multiviews
                   
                   
                   
@@ -67,7 +67,27 @@
         }
     });
     //初始化后，需要手动调用一下data方法，把日历数据传入日历
-    calendar.data(source);
+    
+    calendar.data((params: any) => {
+        //params为calendar.data的callback 的参数
+        //包含两个key， data 和dates
+        const keys = Object.keys(source);
+        const currDate = new Date(dist.year, dist.month, dist.date);
+        for (let i = 0; i < keys.length; i++) {
+            let item = calendar.parse(keys[i]);
+            if (calendar.diff(item, currDate) >= 0) {
+                params.dates.push(keys[i])
+            } else {
+                delete source[keys[i]]
+            }
+        }
+        params.data = source;
+        // params.dates = Object.keys(source);
+        return params
+    });
+        
+        
+
     
 
 	

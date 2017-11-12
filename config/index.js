@@ -10,7 +10,7 @@ module.exports = {
         cssSourceMap: false
     },
     build: {
-        input: "./transform/index.js",
+        input: "./lib/index.js",
         output: {
             file: path.resolve("dist", "datepicker.min.js"),
             format: "umd",

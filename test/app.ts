@@ -22,8 +22,9 @@ const calendar = <any>new DatePicker({
     doubleSelect: true,
     limit: 7,
     defaultLanguage: "en-us",
-    multiViews: true,
-    flatView: false,
+    multiViews: false,
+    flatView: true,
+    renderData: true
 });
 calendar.on("update", (output: any) => {
     document.getElementById("layout").innerHTML = `选中的日期${output}`
@@ -35,7 +36,7 @@ calendar.on("data", (result: any) => {
         let node = nodeList[i];
         let date = node.getAttribute("data-date");
         if (date in data) {
-            let itemData = data[date];
+            let itemData = source[date];
             if (itemData.highlight) {
                 addClass(node, "highlight")
             }
@@ -47,7 +48,21 @@ calendar.on("data", (result: any) => {
     }
 });
 
-calendar.data(source);
+calendar.data((params: any) => {
+    const keys = Object.keys(source);
+    const currDate = new Date(dist.year, dist.month, dist.date);
+    for (let i = 0; i < keys.length; i++) {
+        let item = calendar.parse(keys[i]);
+        if (calendar.diff(item, currDate) >= 0) {
+            params.dates.push(keys[i])
+        } else {
+            delete source[keys[i]]
+        }
+    }
+    params.data = source;
+    // params.dates = Object.keys(source);
+    return params
+});
 
 
 

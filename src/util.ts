@@ -40,10 +40,11 @@ export const getLastDates = (date: Date) => {
     }
     return temp
 };
-export function inArray(array: Array<any>, item: any) {
-    if (!isArray(array)) {
+export function inArray(array: Array<any>, item?: any) {
+    if (!isArray(array) || array.length <= 0 || !item) {
         return false
     }
+
     return ~array.indexOf(item) //>= 0
 }
 export function attr(el: any, attr: any, attrvalue: any | undefined = undefined) {
@@ -174,7 +175,7 @@ export function setLanguage(option: any) {
 }
 
 
-export  function getLanguage(language: any, key: string) {
+export function getLanguage(language: any, key: string) {
 
     let output = {};
     if (!key || !language[key]) {
@@ -188,7 +189,7 @@ export  function getLanguage(language: any, key: string) {
     return output
 }
 
-export  function quickSort(arr: number[], isAscending?: boolean): number[] {
+export function quickSort(arr: number[], isAscending?: boolean): number[] {
 
     if (1 === arr.length) return arr;
     if (0 === arr.length) return [];
@@ -213,3 +214,5 @@ export  function quickSort(arr: number[], isAscending?: boolean): number[] {
     }
     return [].concat(quickSort(big, isAscending), equal, quickSort(small, isAscending));
 }
+
+

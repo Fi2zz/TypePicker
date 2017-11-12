@@ -2,7 +2,6 @@ import {
     isDate,
     isBoolean,
     isNumber,
-    isObject,
     diff,
     parseEl,
     addClass,
@@ -12,7 +11,6 @@ import {
 } from "./util"
 import compose from './datepicker.template'
 import {setDefaultRange} from './datepicker.ranger'
-import Observer from './datepicker.observer'
 /***
  * 月份切换
  * @param size 切换月份数量
@@ -25,23 +23,22 @@ export function monthSwitch(size: number, el: any, language: any) {
         date: this.date.getDate()
     };
     let month = curr.month + size;
+    //每次切换两个月份
+    if (this.multiViews) {
+        month += size > 0 ? 1 : -1
+    }
     this.date = new Date(curr.year, month, curr.date);
     this.buildCalendar(el, language);
     this.handlePickDate(this.element,
-
         this.selected,
         this.double,
-        this.data,
+        this.dates,
         this.parse,
         this.format,
         this.limit,
         this.update
     );
-    //外置的data renderer
-    Observer.$emit("data", {
-        data: this.data,
-        nodeList: this.element.querySelectorAll(".calendar-date-cell")
-    });
+    this.dataRenderer(this.data)
 }
 
 /**
@@ -52,7 +49,6 @@ export function monthSwitch(size: number, el: any, language: any) {
  * */
 
 export function buildCalendar(el: any, language: any) {
-
     this.element = <HTMLElement>parseEl(el);
     if (!this.element) {
         console.error(`[Calendar Warn] invalid selector,current selector ${el}`);
@@ -74,7 +70,7 @@ export function buildCalendar(el: any, language: any) {
         this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
         this.selected,
         this.format(this.date).value,
-        this.data,
+        this.dates,
         this.double,
         this.parse,
     );
@@ -83,7 +79,8 @@ export function buildCalendar(el: any, language: any) {
     const prev = this.element.querySelector(".calendar-action-prev");
     const next = this.element.querySelector(".calendar-action-next");
     if (prev && next) {
-        if (diff(this.date, this.endDate) >= 2) {
+        let gap = diff(this.date, this.endDate);
+        if (gap >= 2) {
             next.addEventListener("click", () => {
                 this.monthSwitch(1, el, language);
                 removeClass(prev, "disabled");
@@ -107,7 +104,7 @@ export function buildCalendar(el: any, language: any) {
         }
     }
 }
-export function init(option: any, data: any) {
+export function init(option: any, renderer: any) {
     if (option.format) {
         this.dateFormat = option.format
     }
@@ -129,20 +126,43 @@ export function init(option: any, data: any) {
     }
     //雙選
     this.double = isBoolean(option.doubleSelect) ? option.doubleSelect : false;
+
+
     //开始日期
     this.startDate = isDate(option.from) ? option.from : new Date();
     this.date = this.startDate;
+
+
     //结束日期
     this.endDate = isDate(option.to) ? option.to : new Date(this.date.getFullYear(), this.date.getMonth() + 6, this.date.getDate());
+
+
+    if (this.flatView) {
+
+        const year = this.endDate.getFullYear();
+        const month = this.endDate.getMonth();
+        const date = this.endDate.getDate();
+        this.endDate = new Date(year, month + 1, date)
+    }
+
+
     //選擇日期區間最大限制
     this.limit = this.double ? isNumber(option.limit) ? option.limit : 1 : 1;
-    this.data = data;
+
+
+    this.data = renderer.data;
+    if (renderer.dates.length <= 0) {
+        this.double = false;
+        this.limit = 1;
+    } else {
+        this.dates = renderer.dates;
+    }
     this.buildCalendar(option.el, getLanguage(option.language, option.defaultLanguage));
     this.handlePickDate(
         this.element,
         this.selected,
         this.double,
-        this.data,
+        this.dates,
         this.parse,
         this.format,
         this.limit,

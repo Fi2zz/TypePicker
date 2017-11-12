@@ -1,8 +1,6 @@
-import {attr, addClass, hasClass, removeClass, attrSelector, diff} from "./util"
-
+import {attr, addClass, hasClass, removeClass, attrSelector, diff, inArray} from "./util"
 const date = new Date();
-
-const currDate = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+const currDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 function getDefaultRange(collection: HTMLCollection, start: string, end: string) {
     let temp = [];
     for (let i = 0; i < collection.length; i++) {
@@ -28,7 +26,7 @@ function getDefaultRange(collection: HTMLCollection, start: string, end: string)
 
     return temp.slice(startIndex + 1, endIndex)
 }
-function setStartAndEnd(collection: HTMLCollection, source: any, data: Array<any>, parse: Function) {
+function setStartAndEnd(collection: HTMLCollection, source: Array<any>, data: Array<any>, parse: Function) {
     let temp = <Array<string>> [];
     const start = data[0];
     const end = data[data.length - 1];
@@ -54,7 +52,10 @@ function setStartAndEnd(collection: HTMLCollection, source: any, data: Array<any
                 if (curr && next) {
                     let start = parse(curr);
                     if (diff(start, currDate, "days") >= 0) {
-                        if (source[next] && source[curr] || source[curr] && !source[next]) {
+
+                        let hasItem = inArray(source, next) && inArray(source, curr) || inArray(source, curr) && !inArray(source, next)
+
+                        if (hasItem) {
                             if (temp.length < 2) {
                                 addClass(item, "start-date");
                                 addClass(nextItem, "end-date");
@@ -103,7 +104,7 @@ export function setDefaultRange(collector: HTMLElement,
                                 collection: HTMLCollection,
                                 data: Array<string>,
                                 initDate: any,
-                                source: any,
+                                source: Array<any>,
                                 isDouble: boolean,
                                 parse: Function) {
     let dates = [];

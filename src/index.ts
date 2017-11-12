@@ -15,12 +15,15 @@ interface INTERFACES {
     multiViews: boolean,
     doubleSelect: boolean,
     defaultLanguage: string,
-    // shouldDisablePast: boolean,
+    renderData: boolean
 }
+
 
 export default class DatePicker {
     init = init;
+
     date: Date = new Date();
+    dates: Array<any>;
     limit: number = 1;
     double: boolean = false;
     dateFormat: string = "YYYY-MM-DD";
@@ -40,16 +43,31 @@ export default class DatePicker {
         this.selected = value;
     };
 
+    dataRenderer = (data: any) => {
+        Observer.$emit("data", {
+            data: data,
+            nodeList: this.element.querySelectorAll(".calendar-date-cell")
+        })
+    };
+
     constructor(option: INTERFACES) {
+
+        if (!option.renderData) {
+            this.init(option, {})
+        }
+
+
         return <any>{
             on: Observer.$on,
-            data: (data: any) => {
-                this.init(option, data);
-                Observer.$emit("data", {
-                    data: data,
-                    nodeList: this.element.querySelectorAll(".calendar-date-cell")
-                });
-                this.update(this.selected)
+            data: (cb: Function) => {
+
+
+                if (option.renderData) {
+                    const result = cb && cb({dates: <Array<any>>[], data: <any>{}});
+                    this.init(option, {data: result.data, dates: result.dates});
+                    this.dataRenderer(result.data);
+                    this.update(this.selected)
+                }
             },
             diff: (d1: Date, d2: Date) => diff(d1, d2, "days"),
             parse: this.parse,
