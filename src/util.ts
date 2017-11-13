@@ -7,6 +7,7 @@ export function diff(start: Date, end: Date, type: string = "month") {
         return Math.round((startTime - endTime)) / (1000 * 60 * 60 * 24);
     }
 }
+
 export const attrSelector = (attr: string, value: string) => `[${attr}="${value}"]`;
 export const getDates = (year: number, month: number): number => {
     let d = new Date(year, month, 1)
@@ -40,6 +41,7 @@ export const getLastDates = (date: Date) => {
     }
     return temp
 };
+
 export function inArray(array: Array<any>, item?: any) {
     if (!isArray(array) || array.length <= 0 || !item) {
         return false
@@ -47,6 +49,7 @@ export function inArray(array: Array<any>, item?: any) {
 
     return ~array.indexOf(item) //>= 0
 }
+
 export function attr(el: any, attr: any, attrvalue: any | undefined = undefined) {
     if (!el) {
         return null
@@ -57,44 +60,69 @@ export function attr(el: any, attr: any, attrvalue: any | undefined = undefined)
     }
     return value ? value : el.setAttribute(attr, attrvalue)
 }
-export function remove(array: Array<any>, elm: any) {
-    if (~array.indexOf(elm)) {
-        let index = array.indexOf(elm);
-        array.splice(index, 1);
+
+export function remove (arr: Array<any>, item: any): Array<any> | void {
+    if (arr.length) {
+        const index = arr.indexOf(item)
+        if (index > -1) {
+            return arr.splice(index, 1)
+        }
     }
-    return array
 }
+
 const _toString = (object: any) => Object.prototype.toString.call(object);
+
 export function isBoolean(object: any) {
     return _toString(object) === '[object Boolean]';
 }
+
 export function isArray(object: any) {
     return _toString(object) === '[object Array]';
 }
+
 export function isObject(object: any) {
     return _toString(object) === '[object Object]';
 }
+
 export function isNumber(object: any) {
     return _toString(object) === '[object Number]';
 }
+
 export function isString(object: any) {
     return _toString(object) === '[object String]';
 }
+
 export function isDate(object: any) {
     return _toString(object) === '[object Date]';
 }
+
+export function isNil(object: any) {
+    return object === null || typeof object === "undefined" || object === undefined
+}
+
+export function isPrimitive(value: any): boolean {
+    return (
+        typeof value === 'string' ||
+        typeof value === 'number' ||
+        typeof value === 'boolean'
+    )
+}
+
+
 export function hasClass(el: any, className: string) {
     if (!el) {
         return false
     }
     return el.classList.contains(className)
 }
+
 export function removeClass(el: any, className: string) {
     if (!el) {
         return
     }
     return el.classList.remove(className)
 }
+
 export function addClass(el: any, className: string) {
     if (!el) {
         return
@@ -104,19 +132,8 @@ export function addClass(el: any, className: string) {
     }
     return el.classList.add(className)
 }
-export function element(collector: HTMLElement, selector: string) {
-    const node = collector.querySelectorAll(selector);
-    if (node.length <= 0) {
-        return false
-    }
-    else {
-        if (node.length <= 1) {
-            return node[0]
-        } else {
-            return node
-        }
-    }
-}
+
+
 export function parseEl(el: string) {
     if (!el) {
         return null
@@ -151,6 +168,7 @@ export function parseEl(el: string) {
         }
     }
 }
+
 export const defaultLanguage: any = {
     locale: "zh-cn",
     pack: {
@@ -159,6 +177,7 @@ export const defaultLanguage: any = {
         year: "年"
     }
 };
+
 export function setLanguage(option: any) {
     const locale = option.locale.toLowerCase();
     const curr = option.pack;

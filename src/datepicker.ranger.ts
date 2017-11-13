@@ -1,6 +1,8 @@
 import {attr, addClass, hasClass, removeClass, attrSelector, diff, inArray} from "./util"
+
 const date = new Date();
 const currDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
 function getDefaultRange(collection: HTMLCollection, start: string, end: string) {
     let temp = [];
     for (let i = 0; i < collection.length; i++) {
@@ -26,7 +28,12 @@ function getDefaultRange(collection: HTMLCollection, start: string, end: string)
 
     return temp.slice(startIndex + 1, endIndex)
 }
+
 function setStartAndEnd(collection: HTMLCollection, source: Array<any>, data: Array<any>, parse: Function) {
+
+
+    const inDates = (item?: any) => inArray(source, item);
+
     let temp = <Array<string>> [];
     const start = data[0];
     const end = data[data.length - 1];
@@ -45,16 +52,12 @@ function setStartAndEnd(collection: HTMLCollection, source: Array<any>, data: Ar
 
 
             if (item && nextItem) {
-
-
                 let curr = attr(item, "data-date");
                 let next = attr(nextItem, "data-date");
                 if (curr && next) {
                     let start = parse(curr);
                     if (diff(start, currDate, "days") >= 0) {
-
-                        let hasItem = inArray(source, next) && inArray(source, curr) || inArray(source, curr) && !inArray(source, next)
-
+                        let hasItem = inDates(next) && inDates(curr) || inDates(curr) && !inDates(next);
                         if (hasItem) {
                             if (temp.length < 2) {
                                 addClass(item, "start-date");
@@ -72,16 +75,7 @@ function setStartAndEnd(collection: HTMLCollection, source: Array<any>, data: Ar
     }
     return temp
 }
-function setActive(collection: HTMLCollection, date: string) {
-    for (let i = 0; i < collection.length; i++) {
-        let item = collection[i];
-        let value = attr(item, "data-date");
-        if (value === date) {
-            addClass(item, "active")
-        }
-    }
 
-}
 export function ranged(data: Array<any>, collector: HTMLElement, remove: boolean) {
     if (remove) {
         let collection = collector.querySelectorAll(".in-range");
@@ -119,8 +113,12 @@ export function setDefaultRange(collector: HTMLElement,
             ranged(range, collector, false)
         }
     }
+    //设置激活状态
     for (let i = 0; i < dates.length; i++) {
-        setActive(collection, dates[i]);
+        let selector = <string>attrSelector("data-date", dates[i])
+        let element = collector.querySelector(selector);
+        addClass(element, "active")
+
     }
     return dates
 }

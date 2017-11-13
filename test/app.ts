@@ -22,16 +22,18 @@ const calendar = <any>new DatePicker({
     doubleSelect: true,
     limit: 7,
     defaultLanguage: "en-us",
-    multiViews: false,
-    flatView: true,
-    renderData: true
+    multiViews: true,
+    flatView: false,
+    bindData: true
 });
+
 calendar.on("update", (output: any) => {
-    document.getElementById("layout").innerHTML = `选中的日期${output}`
+    document.getElementById("layout").innerHTML = `选中的日期<br/>${output}`
 });
 calendar.on("data", (result: any) => {
     const data = result.data;
     const nodeList = result.nodeList;
+    // console.log(result)
     for (let i = 0; i < nodeList.length; i++) {
         let node = nodeList[i];
         let date = node.getAttribute("data-date");
@@ -60,7 +62,6 @@ calendar.data((params: any) => {
         }
     }
     params.data = source;
-    // params.dates = Object.keys(source);
     return params
 });
 

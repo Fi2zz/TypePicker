@@ -8,9 +8,12 @@ import {
     removeClass,
     getLanguage,
     setLanguage,
+    getDates
 } from "./util"
 import compose from './datepicker.template'
 import {setDefaultRange} from './datepicker.ranger'
+import Observer from './datepicker.observer';
+
 /***
  * 月份切换
  * @param size 切换月份数量
@@ -27,8 +30,10 @@ export function monthSwitch(size: number, el: any, language: any) {
     if (this.multiViews) {
         month += size > 0 ? 1 : -1
     }
+
     this.date = new Date(curr.year, month, curr.date);
     this.buildCalendar(el, language);
+
     this.handlePickDate(this.element,
         this.selected,
         this.double,
@@ -104,6 +109,7 @@ export function buildCalendar(el: any, language: any) {
         }
     }
 }
+
 export function init(option: any, renderer: any) {
     if (option.format) {
         this.dateFormat = option.format
@@ -115,7 +121,7 @@ export function init(option: any, renderer: any) {
     }
 
     //雙視圖，即雙月份橫向展示
-    if (!option.flatView && option.multiViews) {
+    if (option.flatView && option.multiViews || !option.flatView && option.multiViews) {
         this.flatView = false;
         this.multiViews = true
     }
@@ -134,7 +140,11 @@ export function init(option: any, renderer: any) {
 
 
     //结束日期
+
     this.endDate = isDate(option.to) ? option.to : new Date(this.date.getFullYear(), this.date.getMonth() + 6, this.date.getDate());
+
+    //選擇日期區間最大限制
+    this.limit = this.double ? isNumber(option.limit) ? option.limit : 1 : 1;
 
 
     if (this.flatView) {
@@ -145,17 +155,23 @@ export function init(option: any, renderer: any) {
         this.endDate = new Date(year, month + 1, date)
     }
 
-
-    //選擇日期區間最大限制
-    this.limit = this.double ? isNumber(option.limit) ? option.limit : 1 : 1;
-
-
-    this.data = renderer.data;
-    if (renderer.dates.length <= 0) {
-        this.double = false;
-        this.limit = 1;
+    if (!renderer.dates || renderer.dates && renderer.dates.length <= 0) {
+        const currDate = new Date();
+        const gap = diff(this.endDate, currDate, "days");
+        const year = currDate.getFullYear();
+        const month = currDate.getMonth();
+        const date = currDate.getDate();
+        let dates = [];
+        for (let i = 0; i < gap; i++) {
+            let item = <Date> new Date(year, month, date + i);
+            let formatted = this.format(item).value;
+            dates.push(formatted)
+        }
+        this.data = {};
+        this.dates = dates;
     } else {
         this.dates = renderer.dates;
+        this.data = renderer.data;
     }
     this.buildCalendar(option.el, getLanguage(option.language, option.defaultLanguage));
     this.handlePickDate(

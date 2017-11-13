@@ -4,11 +4,11 @@ import {
     addClass,
     attrSelector,
     quickSort,
-    inArray
+    inArray, hasClass
 } from "./util"
 
 
-import {ranged as setRange} from  './datepicker.ranger'
+import {ranged as setRange} from './datepicker.ranger'
 
 export default function (element: any,
                          selected: Array<any>,
@@ -74,19 +74,24 @@ function pickerHandler(data: Array<any>,
                        double: boolean,
                        valid: boolean) {
 
-    //缓存已选的开始日期和结束日期
-    const cache = {
-        start: collector.querySelector(".start-date"),
-        end: collector.querySelector(".end-date")
-    };
-    const actives = collector.querySelectorAll(".active");
+
     if (!double) {
+        const actives = collector.querySelectorAll(".active");
         for (let i = 0; i < actives.length; i++) {
             removeClass(actives[i], "active")
         }
-        addClass(collector.querySelector(<string>attrSelector("data-date", data[0])), "active")
+        let selector = <string>attrSelector("data-date", data[0]);
+        let element = collector.querySelector(selector);
+        if (!hasClass(element, "disabled")) {
+            addClass(element, "active")
+        }
     } else {
 
+        //缓存已选的开始日期和结束日期
+        const cache = {
+            start: collector.querySelector(".start-date"),
+            end: collector.querySelector(".end-date")
+        };
         const start = data[0], end = data[data.length - 1];
         let current = {
             start: collector.querySelector(<string>attrSelector("data-date", start)),
@@ -267,19 +272,23 @@ function doubleSelectHandler(date: any, selected: Array<any>, cache: Array<any>,
 
         if (inRange.length === range.length) {
             allValid = true
+
         } else {
             allValid = false;
             selected = [selected[0]]
         }
-
         //超出限制范围
         //取最后一天
         if (range.length > limit) {
             allValid = false;
-            selected = [selected[selected.length - 1]]
+            const peek = selected[selected.length - 1];
+            if (inDates(peek)) {
+                selected = [peek]
+            } else {
+                selected = [cache[0]]
+            }
         }
     }
-
     return {
         selected,
         allValid,

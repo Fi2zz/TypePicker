@@ -1,5 +1,5 @@
 import Observer from './datepicker.observer';
-import {diff} from "./util"
+import {diff, isObject} from "./util"
 import {init, monthSwitch, buildCalendar} from './datepicker.init'
 import handlePickDate from './datepicer.picker'
 import {parseFormatted, format as formatter} from "./datepicker.formatter"
@@ -15,7 +15,7 @@ interface INTERFACES {
     multiViews: boolean,
     doubleSelect: boolean,
     defaultLanguage: string,
-    renderData: boolean
+    bindData: boolean
 }
 
 
@@ -44,28 +44,32 @@ export default class DatePicker {
     };
 
     dataRenderer = (data: any) => {
-        Observer.$emit("data", {
-            data: data,
-            nodeList: this.element.querySelectorAll(".calendar-date-cell")
-        })
+        if (Object.keys(data).length <= 0) {
+            Observer.$remove("data")
+        } else {
+            Observer.$emit("data", {
+                data: data,
+                nodeList: this.element.querySelectorAll(".calendar-date-cell")
+            })
+        }
     };
 
     constructor(option: INTERFACES) {
-
-        if (!option.renderData) {
+        if (!option.bindData) {
             this.init(option, {})
         }
-
-
         return <any>{
             on: Observer.$on,
             data: (cb: Function) => {
-
-
-                if (option.renderData) {
+                if (option.bindData) {
                     const result = cb && cb({dates: <Array<any>>[], data: <any>{}});
-                    this.init(option, {data: result.data, dates: result.dates});
-                    this.dataRenderer(result.data);
+                    const noData = !isObject(result) || Object.keys(result.data).length <= 0 || result.dates.length <= 0
+                    if (noData) {
+                        this.init(option, {})
+                    } else {
+                        this.init(option, {data: result.data, dates: result.dates});
+                        this.dataRenderer(result.data);
+                    }
                     this.update(this.selected)
                 }
             },
