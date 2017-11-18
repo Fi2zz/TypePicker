@@ -43,7 +43,6 @@ export default function (element: any,
                 selected = []
             }
             selected.push(date);
-
             //选择日期
             if (isDouble) {
                 const handled = doubleSelectHandler(date, selected, cache, limit, source, format, parse);
@@ -79,13 +78,122 @@ export default function (element: any,
             update(selected)
         });
 
+    //     item.addEventListener("mouseenter", () => {
+        //         const date = attr(item, "data-date");
+        //         const prev = attr(item.previousElementSibling, "data-date");
+        //         const next = attr(item.nextElementSibling, "data-date");
+        //         const start = selected[0];
+        //         const end = selected[selected.length - 1];
+        //         const range = hoverHandler(
+        //             hoverRange,
+        //             date,
+        //             start,
+        //             end,
+        //             prev,
+        //             next,
+        //             limit,
+        //             inDates,
+        //             parse,
+        //             format);
+        //         hoverRange = setRange(range, element, false, true);
+        //     });
+        //
+        //     item.addEventListener("mouseleave", () => {
+        //
+        //         const ranges = Array.prototype.slice.call(element.querySelectorAll(".in-range"));
+        //
+        //         const date = attr(item, "data-date")
+        //         let outOfRange = [];
+        //         let index = -1
+        //
+        //         for (let i = 0; i < ranges.length; i++) {
+        //
+        //             let d = attr(ranges[i], "data-date");
+        //
+        //
+        //             if (d === date) {
+        //                 index = i
+        //                 // outOfRange = ranges.slice(i, ranges.length - 1)
+        //             }
+        //
+        //         }
+        //
+        //         console.log(ranges.slice(index))
+        //
+        //         // console.log(outOfRange)
+        //
+        //     });
+        //
+        }
+}
 
+
+function hoverHandler(range: Array<any>,
+                      date: string,
+                      start: string,
+                      end: string,
+                      prev: string,
+                      next: string,
+                      limit: number,
+                      inDates: Function,
+                      parse: Function,
+                      format: Function) {
+    const startDate = parse(start)
+    const endDate = parse(end);
+    const currDate = parse(date);
+    const diffStart = gap(currDate, startDate) * -1;
+    const diffEnd = gap(endDate, currDate);
+
+
+    if (date === start
+        || date === end
+        || diffStart < 0
+        || diffStart > limit
+        || start !== end && diffEnd > 0
+        || diffEnd > limit
+        || ~range.indexOf(parse(date).getTime())
+        || !inDates(date) && !inDates(next) && !inDates(prev)
+        || inDates(date) && !inDates(prev)
+        || !inDates(date) && inDates(next)
+
+    ) {
+        range = [];
+    } else {
+        range.push(parse(date).getTime());
+        if (range.length < diffStart) {
+            range = [];
+            const year = startDate.getFullYear();
+            const month = startDate.getMonth();
+            const date = startDate.getDate();
+            for (let i = 0; i <= diffStart; i++) {
+                let d = new Date(year, month, date + i);
+                range.push(d.getTime())
+            }
+            let inDatesDate = [];
+            for (let i = 0; i < range.length; i++) {
+                let d = new Date(range[i])
+                let formatted = format(d).value;
+                if (inDates(formatted)) {
+                    inDatesDate.push(formatted);
+                }
+            }
+            if (inDatesDate.length < range.length - 1) {
+                range = []
+            }
+        }
+
+
+        range = quickSort(range).reverse().map((time: number) => {
+            return format(new Date(time)).value
+        });
     }
+    return range
+
+
 }
 
 
 function singlePick(selector: string, collector: HTMLElement, shouldChange: boolean) {
-
     if (shouldChange) {
         const actives = collector.querySelectorAll(".active");
         for (let i = 0; i < actives.length; i++) {
@@ -146,14 +254,10 @@ function doublePick(collector: HTMLElement,
 
 
 }
-
-
 function gap(d1: Date, d2: Date) {
     let value = diff(d1, d2, "days");
     return value === 0 ? 0 : value * -1
 }
-
-
 function doubleSelectHandler(date: any,
                              selected: Array<any>,
                              cache: Array<any>,
@@ -161,14 +265,9 @@ function doubleSelectHandler(date: any,
                              source: any,
                              format: Function,
                              parse: Function) {
-
-
-    let allValid = false
-
     function inDates(item?: any) {
         return inArray(source, item);
     }
-
 
     let range = <Array<any>> [];
     let inRange = <Array<any>>[];
@@ -237,7 +336,7 @@ function doubleSelectHandler(date: any,
     }
 
     //重合
-    allValid = range.length === inRange.length;
+    let allValid = range.length === inRange.length;
 
     if (!allValid) {
         selected = [selected[selected.length - 1]]
@@ -305,10 +404,7 @@ function doubleSelectHandler(date: any,
     return {
         selected,
         allValid,
-        inRange,
         range
     }
-
 }
-
 

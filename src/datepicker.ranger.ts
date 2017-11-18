@@ -76,7 +76,7 @@ function setStartAndEnd(collection: HTMLCollection, source: Array<any>, data: Ar
     return temp
 }
 
-export function ranged(data: Array<any>, collector: HTMLElement, remove: boolean) {
+export function ranged(data: Array<any>, collector: HTMLElement, remove: boolean, clearRange?: boolean) {
     if (remove) {
         let collection = collector.querySelectorAll(".in-range");
         for (let i = 0; i < collection.length; i++) {
@@ -92,6 +92,13 @@ export function ranged(data: Array<any>, collector: HTMLElement, remove: boolean
             }
         }
     }
+
+
+    if (clearRange) {
+        return <Array<any>>[]
+    }
+
+
 }
 
 export function setDefaultRange(collector: HTMLElement,

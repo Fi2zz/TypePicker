@@ -19,10 +19,10 @@ const calendar = <any>new DatePicker({
     to: new Date(dist.year, dist.month + 4, dist.date),
     language: languages,
     format: "YYYY-MM-DD",
-    doubleSelect: false,
+    doubleSelect: true,
     limit: 7,
     defaultLanguage: "en-us",
-    multiViews: false,
+    multiViews: true,
     flatView: false,
     bindData: true
 });

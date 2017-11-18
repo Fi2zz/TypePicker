@@ -42,7 +42,6 @@ export default class DatePicker {
         Observer.$emit("update", value);
         this.selected = value;
     };
-
     dataRenderer = (data: any) => {
         if (Object.keys(data).length <= 0) {
             Observer.$remove("data")
@@ -58,13 +57,18 @@ export default class DatePicker {
         if (!option.bindData) {
             this.init(option, {})
         }
+        function noData(data: any) {
+            return !isObject(data) || Object.keys(data.data).length <= 0 || data.dates.length <= 0
+        }
+
         return <any>{
             on: Observer.$on,
             data: (cb: Function) => {
                 if (option.bindData) {
                     const result = cb && cb({dates: <Array<any>>[], data: <any>{}});
-                    const noData = !isObject(result) || Object.keys(result.data).length <= 0 || result.dates.length <= 0
-                    if (noData) {
+
+                    // const noData = !isObject(result) || Object.keys(result.data).length <= 0 || result.dates.length <= 0
+                    if (noData(result)) {
                         this.init(option, {})
                     } else {
                         const temp = result.dates;
