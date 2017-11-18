@@ -101,9 +101,11 @@ export function setDefaultRange(collector: HTMLElement,
                                 source: Array<any>,
                                 isDouble: boolean,
                                 parse: Function) {
+
+
     let dates = [];
     if (!isDouble) {
-        dates = data.length > 0 ? data : [initDate];
+        dates = data.length > 0 ? data : ~source.indexOf(initDate) ? [initDate] : [source[0]];
     } else {
         dates = setStartAndEnd(collection, source, data, parse);
         const start = dates[0];
@@ -115,10 +117,9 @@ export function setDefaultRange(collector: HTMLElement,
     }
     //设置激活状态
     for (let i = 0; i < dates.length; i++) {
-        let selector = <string>attrSelector("data-date", dates[i])
+        let selector = <string>attrSelector("data-date", dates[i]);
         let element = collector.querySelector(selector);
         addClass(element, "active")
-
     }
     return dates
 }

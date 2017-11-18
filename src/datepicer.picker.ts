@@ -19,18 +19,19 @@ export default function (element: any,
                          limit: number,
                          update: Function) {
     const collection = element.querySelectorAll(".calendar-date-cell");
-
     let hoverRange = <Array<any>>[];
     let inHoverRange = <Array<any>>[];
     let newRange = <Array<any>>[];
 
+    function inDates(date?: string) {
+        return inArray(source, date);
+    }
+
     for (let i = 0; i < collection.length; i++) {
         const item = collection[i];
         item.addEventListener("click", (e: any) => {
-            let allValid = false;
             //缓存已选的日期
-            let cache = selected;
-            let range = <Array<any>> [];
+            const cache = selected;
             const date = attr(item, "data-date");
             const index = selected.indexOf(date);
             //不可选的日期
@@ -41,24 +42,40 @@ export default function (element: any,
             if (isDouble && selected.length >= 2 || !isDouble) {
                 selected = []
             }
-            //选择日期
             selected.push(date);
-            if (isDouble) {
-                const handled = doubleSelectHandler(date, selected, cache, limit, allValid, source, format, parse);
-                selected = handled.selected;
-                range = handled.range;
-                allValid = handled.allValid;
-            }
 
-            pickerHandler(
-                selected,
-                range,
-                element,
-                parse,
-                limit,
-                isDouble,
-                allValid
-            );
+            //选择日期
+            if (isDouble) {
+                const handled = doubleSelectHandler(date, selected, cache, limit, source, format, parse);
+                selected = handled.selected;
+                const range = handled.range;
+                const allValid = handled.allValid;
+                const start = selected[0];
+                const end = selected[selected.length - 1];
+                const diff = gap(parse(start), parse(end));
+                const isOutOfLimit = diff > limit;
+                doublePick(
+                    element,
+                    start,
+                    end,
+                    diff,
+                    isOutOfLimit,
+                    allValid
+                );
+                setRange([], element, true);
+                if (allValid) {
+                    setRange(range, element, false)
+                }
+            } else {
+                let selector = item;
+                let shouldChange = true;
+                if (!inDates(date)) {
+                    selected = cache;
+                    shouldChange = false;
+                }
+
+                singlePick(selector, element, shouldChange);
+            }
             update(selected)
         });
 
@@ -66,80 +83,68 @@ export default function (element: any,
     }
 }
 
-function pickerHandler(data: Array<any>,
-                       range: Array<string>,
-                       collector: HTMLElement,
-                       parse: Function,
-                       limit: number,
-                       double: boolean,
-                       valid: boolean) {
 
+function singlePick(selector: string, collector: HTMLElement, shouldChange: boolean) {
 
-    if (!double) {
+    if (shouldChange) {
         const actives = collector.querySelectorAll(".active");
         for (let i = 0; i < actives.length; i++) {
             removeClass(actives[i], "active")
         }
-        let selector = <string>attrSelector("data-date", data[0]);
-        let element = collector.querySelector(selector);
-        if (!hasClass(element, "disabled")) {
-            addClass(element, "active")
-        }
-    } else {
-
-        //缓存已选的开始日期和结束日期
-        const cache = {
-            start: collector.querySelector(".start-date"),
-            end: collector.querySelector(".end-date")
-        };
-        const start = data[0], end = data[data.length - 1];
-        let current = {
-            start: collector.querySelector(<string>attrSelector("data-date", start)),
-            end: collector.querySelector(<string>attrSelector("data-date", end))
-        };
-
-
-        //选择了开始日期，尚未选择结束日期
-        if (start === end) {
-
-
-            removeClass(cache.start, "start-date");
-            removeClass(cache.start, "active");
-            removeClass(cache.end, "end-date");
-            removeClass(cache.end, "active");
-            addClass(current.start, "active");
-            addClass(current.start, "start-date");
-        } else {
-            const startDate = parse(start);
-            const endDate = parse(end);
-            const diff = gap(startDate, endDate);
-            addClass(current.end, "active");
-            if (diff > 0) {
-                if (diff > limit) {
-                    addClass(current.end, "start-date");
-                    removeClass(cache.start, "start-date");
-                    removeClass(cache.start, "active");
-                } else {
-                    if (valid) {
-                        addClass(current.end, "end-date");
-                    } else {
-                        removeClass(current.start, "active");
-                        removeClass(current.start, "start-date");
-                        addClass(current.end, "start-date")
-                    }
-                }
-            } else if (diff < 0) {
-                removeClass(current.start, "active");
-                removeClass(current.start, "start-date");
-                addClass(current.end, "start-date")
-            }
-        }
-
-        setRange([], collector, true);
-        if (valid) {
-            setRange(range, collector, false)
+        if (!hasClass(selector, "disabled")) {
+            addClass(selector, "active")
         }
     }
+
+}
+function doublePick(collector: HTMLElement,
+                    start: string,
+                    end: string,
+                    diff: number,
+                    outOfLimit: boolean,
+                    valid: boolean) {
+    //缓存已选的开始日期和结束日期
+    const cache = {
+        start: collector.querySelector(".start-date"),
+        end: collector.querySelector(".end-date")
+    };
+    const current = {
+        start: collector.querySelector(<string>attrSelector("data-date", start)),
+        end: collector.querySelector(<string>attrSelector("data-date", end))
+    };
+
+    //选择了开始日期，尚未选择结束日期
+    if (diff === 0) {
+        removeClass(cache.start, "start-date");
+        removeClass(cache.start, "active");
+        removeClass(cache.end, "end-date");
+        removeClass(cache.end, "active");
+        addClass(current.start, "active");
+        addClass(current.start, "start-date");
+    } else {
+        addClass(current.end, "active");
+        if (diff > 0) {
+            if (outOfLimit) {
+                addClass(current.end, "start-date");
+                removeClass(cache.start, "start-date");
+                removeClass(cache.start, "active");
+            } else {
+                if (valid) {
+                    addClass(current.end, "end-date");
+                } else {
+                    removeClass(current.start, "active");
+                    removeClass(current.start, "start-date");
+                    addClass(current.end, "start-date")
+                }
+            }
+        } else if (diff < 0) {
+            removeClass(current.start, "active");
+            removeClass(current.start, "start-date");
+            addClass(current.end, "start-date")
+        }
+    }
+
+
 }
 
 
@@ -149,8 +154,16 @@ function gap(d1: Date, d2: Date) {
 }
 
 
-function doubleSelectHandler(date: any, selected: Array<any>, cache: Array<any>, limit: number, allValid: boolean, source: any, format: Function, parse: Function) {
+function doubleSelectHandler(date: any,
+                             selected: Array<any>,
+                             cache: Array<any>,
+                             limit: number,
+                             source: any,
+                             format: Function,
+                             parse: Function) {
 
+
+    let allValid = false
 
     function inDates(item?: any) {
         return inArray(source, item);
@@ -251,14 +264,14 @@ function doubleSelectHandler(date: any, selected: Array<any>, cache: Array<any>,
                 let d = new Date(year, month, date + i)
                 const string = format(d).value;
                 if (inDates(string)) {
-                    lastValidDate = string
+                    lastValidDate = d
                     inRange.push(string)
                 }
                 if (!~range.indexOf(string)) {
                     range.push(string);
                 }
             }
-            const newDiff = gap(parse(lastValidDate), endDate);
+            const newDiff = gap(lastValidDate, endDate);
 
             if (newDiff === 1 || newDiff === -1) {
                 allValid = true;

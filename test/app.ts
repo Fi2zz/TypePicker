@@ -19,7 +19,7 @@ const calendar = <any>new DatePicker({
     to: new Date(dist.year, dist.month + 4, dist.date),
     language: languages,
     format: "YYYY-MM-DD",
-    doubleSelect: true,
+    doubleSelect: false,
     limit: 7,
     defaultLanguage: "en-us",
     multiViews: false,
@@ -31,11 +31,8 @@ calendar.on("update", (output: any) => {
     document.getElementById("layout").innerHTML = `选中的日期<br/>${output}`
 });
 calendar.on("data", (result: any) => {
-
-
     const data = result.data;
     const nodeList = result.nodeList;
-    // console.log(result)
     for (let i = 0; i < nodeList.length; i++) {
         let node = nodeList[i];
         let date = node.getAttribute("data-date");
@@ -51,7 +48,6 @@ calendar.on("data", (result: any) => {
         }
     }
 });
-
 calendar.data((params: any) => {
     const keys = Object.keys(source);
     const currDate = new Date(dist.year, dist.month, dist.date);

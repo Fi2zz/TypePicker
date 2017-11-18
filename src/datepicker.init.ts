@@ -30,10 +30,8 @@ export function monthSwitch(size: number, el: any, language: any) {
     if (this.multiViews) {
         month += size > 0 ? 1 : -1
     }
-
     this.date = new Date(curr.year, month, curr.date);
     this.buildCalendar(el, language);
-
     this.handlePickDate(this.element,
         this.selected,
         this.double,
@@ -69,7 +67,6 @@ export function buildCalendar(el: any, language: any) {
         this.flatView,
         setLanguage(language)
     );
-
     this.selected = setDefaultRange(
         this.element,
         this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
@@ -79,7 +76,6 @@ export function buildCalendar(el: any, language: any) {
         this.double,
         this.parse,
     );
-
     //日期切换
     const prev = this.element.querySelector(".calendar-action-prev");
     const next = this.element.querySelector(".calendar-action-next");
@@ -119,7 +115,6 @@ export function init(option: any, renderer: any) {
         this.multiViews = false;
         this.flatView = true;
     }
-
     //雙視圖，即雙月份橫向展示
     if (option.flatView && option.multiViews || !option.flatView && option.multiViews) {
         this.flatView = false;
@@ -132,23 +127,14 @@ export function init(option: any, renderer: any) {
     }
     //雙選
     this.double = isBoolean(option.doubleSelect) ? option.doubleSelect : false;
-
-
     //开始日期
     this.startDate = isDate(option.from) ? option.from : new Date();
     this.date = this.startDate;
-
-
     //结束日期
-
     this.endDate = isDate(option.to) ? option.to : new Date(this.date.getFullYear(), this.date.getMonth() + 6, this.date.getDate());
-
     //選擇日期區間最大限制
     this.limit = this.double ? isNumber(option.limit) ? option.limit : 1 : 1;
-
-
     if (this.flatView) {
-
         const year = this.endDate.getFullYear();
         const month = this.endDate.getMonth();
         const date = this.endDate.getDate();

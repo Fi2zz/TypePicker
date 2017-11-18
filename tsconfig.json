@@ -18,5 +18,7 @@
     "./src/**/*",
     "./app.ts"
   ],
-  "exclude":["./app.ts"]
+  "exclude": [
+    "./test/**/*"
+  ]
 }

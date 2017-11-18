@@ -1,5 +1,5 @@
 import Observer from './datepicker.observer';
-import {diff, isObject} from "./util"
+import {diff, isObject, quickSort} from "./util"
 import {init, monthSwitch, buildCalendar} from './datepicker.init'
 import handlePickDate from './datepicer.picker'
 import {parseFormatted, format as formatter} from "./datepicker.formatter"
@@ -67,7 +67,18 @@ export default class DatePicker {
                     if (noData) {
                         this.init(option, {})
                     } else {
-                        this.init(option, {data: result.data, dates: result.dates});
+                        const temp = result.dates;
+                        let dates = [];
+                        let times = [];
+                        for (let i = 0; i < temp.length; i++) {
+                            times.push(this.parse(temp[i]).getTime())
+                        }
+                        times = quickSort(times).reverse();
+                        for (let i = 0; i < times.length; i++) {
+                            dates.push(this.format(new Date(times[i])).value)
+                        }
+
+                        this.init(option, {data: result.data, dates: dates});
                         this.dataRenderer(result.data);
                     }
                     this.update(this.selected)
