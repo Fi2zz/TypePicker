@@ -66,8 +66,8 @@
             }
         }
     });
-    //初始化后，需要手动调用一下data方法，把日历数据传入日历
     
+    //初始化后，需要手动调用一下data方法，把日历数据传入日历
     calendar.data((params: any) => {
         //params为calendar.data的callback 的参数
         //包含两个key， data 和dates
@@ -75,6 +75,7 @@
         const currDate = new Date(dist.year, dist.month, dist.date);
         for (let i = 0; i < keys.length; i++) {
             let item = datePicker.parse(keys[i]);
+            //筛选有效日期
             if (datePicker.diff(item, currDate) >= 0) {
                 params.dates.push(keys[i])
             } else {
