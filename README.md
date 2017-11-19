@@ -70,7 +70,14 @@
     //初始化后，需要手动调用一下data方法，把日历数据传入日历
     calendar.data((params: any) => {
         //params为calendar.data的callback 的参数
-        //包含两个key， data 和dates
+        /* params={
+                dates:Array<string>["2017-11-18",...,"2017-12-31"],
+                data:<Map>{
+                    "2017-11-18":<any>,
+                    ...,
+                     "2017-12-31":<any>,
+                }
+        */
         /*
             data的类型为map,由如下key-value的形式组成
             {
