@@ -71,6 +71,14 @@
     calendar.data((params: any) => {
         //params为calendar.data的callback 的参数
         //包含两个key， data 和dates
+
+        //data 是一个map,格式为
+        //    {
+        //      "2017-11-18":<any>,
+        //        "2017-11-18":<any>,
+        //      "2017-11-18":<any>,
+        //  }        
+
         const keys = Object.keys(source);
         const currDate = new Date(dist.year, dist.month, dist.date);
         for (let i = 0; i < keys.length; i++) {
