@@ -1,22 +1,16 @@
-'use strict'
-const path = require('path')
+const path = require('path');
 const config = require('../config');
-
-const webpack = require('webpack')
-const merge = require('webpack-merge')
-const HtmlWebpackPlugin = require('html-webpack-plugin')
-const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin')
-
-
+const webpack = require('webpack');
+const merge = require('webpack-merge');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
 function resolve(dir) {
     return path.join(__dirname, '..', dir)
 }
-
 const assetsPath = function (_path) {
     const assetsSubDirectory = config.dev.assetsSubDirectory;
     return path.posix.join(assetsSubDirectory, _path)
 };
-
 
 module.exports = {
     entry: {
@@ -28,7 +22,7 @@ module.exports = {
         publicPath: config.dev.assetsPublicPath
     },
     resolve: {
-        extensions: ['.js', '.vue', '.json', ".ts", ".tsx"],
+        extensions: ['.js', '.json', ".ts", ".tsx"],
         alias: {
             '@': resolve('src'),
         }
@@ -75,16 +69,12 @@ module.exports = {
     },
     devtool: '#cheap-module-eval-source-map',
     plugins: [
-        new webpack.DefinePlugin({
-            'process.env': config.dev.env
-        }),
-        // https://github.com/glenjamin/webpack-hot-middleware#installation--usage
+        new webpack.DefinePlugin({'process.env': config.dev.env}),
         new webpack.HotModuleReplacementPlugin(),
         new webpack.NoEmitOnErrorsPlugin(),
-        // https://github.com/ampedandwired/html-webpack-plugin
         new HtmlWebpackPlugin({
             filename: 'index.html',
-            template: 'index.html',
+            template: './test/index.html',
             inject: true
         }),
         new FriendlyErrorsPlugin()

@@ -1,24 +1,26 @@
 import {getFirstDay, getDates, diff, padding} from "./util"
 import {format} from './datepicker.formatter'
+
+import Stack from './stack';
 const currDate = new Date();
 
+
 function setItemClassName(date?: any) {
-    let className = <Array<any> > ["calendar-cell", " calendar-date-cell"];
+    const classStack = new Stack(["calendar-cell", "calendar-date-cell"]);
     if (!date) {
-        className.push("disabled");
-        className.push("empty");
+        classStack.push(["disabled", "empty"])
     } else {
         if (diff(date, currDate, "days") < 0) {
-            className.push("disabled")
+            classStack.push("disabled")
         }
         if (date.getDay() === 0) {
-            className.push("calendar-cell-weekend")
+            classStack.push("calendar-cell-weekend")
         }
         if (date.getDay() === 6) {
-            className.push("calendar-cell-weekday")
+            classStack.push("calendar-cell-weekday")
         }
     }
-    return className.join(" ")
+    return classStack.toString()
 }
 function setDates(year: any, month: any, formater: string) {
     let List = <Array<any>>[];
@@ -50,7 +52,8 @@ function setDates(year: any, month: any, formater: string) {
             key
         });
     }
-    const template = List.map((item: any) => `<div class="${item.className}" data-date="${item.key}">${item.text}</div>`).join(" ");
+    const template = List.map((item: any) => `<div class="${item.className}"
+            ${item.key ? "data-date=" + item.key : ""}>${item.text}</div>`).join(" ");
     return {template, year: curr.year, month: curr.index}
 }
 
@@ -76,13 +79,9 @@ function template(template: any,
                   language: any,) {
 
     const weekDays = language.week.map((day: any, index: number) => {
-        let className = ["calendar-cell", "calendar-day-cell"];
-        if (index === 0) {
-            className.push("calendar-cell-weekday")
-        } else if (index === 6) {
-            className.push("calendar-cell-weekend")
-        }
-        return `<div class="${className.join(" ")}">${day}</div>`
+        const className = new Stack(["calendar-cell", "calendar-day-cell",
+            index === 0 ? "calendar-cell-weekday" : index === 6 ? "calendar-cell-weekend" : ""]);
+        return `<div class="${className.toString()}">${day}</div>`
     }).join("");
 
     let tpl = template.map((item: any, index: any) => {

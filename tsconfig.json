@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "outDir": "./transform/",
+    "outDir": "./lib/",
     "sourceMap": false,
     "noImplicitAny": true,
     "module": "commonjs",
@@ -18,5 +18,7 @@
     "./src/**/*",
     "./app.ts"
   ],
-  "exclude":["./app.ts"]
+  "exclude": [
+    "./test/**/*"
+  ]
 }

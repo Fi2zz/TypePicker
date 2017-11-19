@@ -1,7 +1,7 @@
 const Observer = (function () {
   let clientList = <any>{};
 
-  const $remove = function (key: string, fn: any | undefined) {
+  const $remove = function (key: string, fn?: any | undefined) {
     let fns = clientList[key];
 
     // key对应的消息么有被人订阅
