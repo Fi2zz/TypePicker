@@ -71,13 +71,17 @@
     calendar.data((params: any) => {
         //params为calendar.data的callback 的参数
         //包含两个key， data 和dates
-
-        //data 是一个map,格式为
-        //    {
-        //      "2017-11-18":<any>,
-        //        "2017-11-18":<any>,
-        //      "2017-11-18":<any>,
-        //  }        
+        /*
+            data的类型为map,由如下key-value的形式组成
+            {
+                "2017-11-18":<any>,
+                "2017-11-19":<any>,
+                "2017-11-20":<any>,
+                "2017-11-21":<any>,
+                "2017-11-22":<any>,
+                "2017-11-23":<any>,
+            }
+        */
 
         const keys = Object.keys(source);
         const currDate = new Date(dist.year, dist.month, dist.date);
@@ -130,6 +134,7 @@
 [2] 日期格式和`option.format`相同，不需要传入format,返回Date对象，如；
 
 		datePicker.parse("2017-11-11") // new Date(2017,10,11)
+
 [3] 日期格式和`option.format`相同，不需要传入format,返回如下对象
 
 	{
