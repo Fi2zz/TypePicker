@@ -12,7 +12,6 @@ import {
 } from "./util"
 import compose from './datepicker.template'
 import {setDefaultRange} from './datepicker.ranger'
-import Observer from './datepicker.observer';
 
 /***
  * 月份切换
@@ -59,6 +58,8 @@ export function buildCalendar(el: any, language: any) {
     }
     const startTime = this.startDate.getTime(), endTime = this.endDate.getTime();
     const currTime = this.date.getTime();
+
+
     this.element.innerHTML = compose(
         this.date,
         this.endDate,
@@ -67,15 +68,35 @@ export function buildCalendar(el: any, language: any) {
         this.flatView,
         setLanguage(language)
     );
-    this.selected = setDefaultRange(
-        this.element,
-        this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
-        this.selected,
-        this.format(this.date).value,
-        this.dates,
-        this.double,
-        this.parse,
-    );
+
+    //默认选中的日期
+    const defaultDates = this.defaultDates.length > 0 ? this.defaultDates : [this.format(this.date).value];
+
+
+
+    const initSelected =
+        this.defaultDates.length>0?this.defaultDates
+        : this.double? this.selected:[this.format(this.date).value];
+
+    console.log(this.selected)
+
+
+
+    setTimeout(()=>{
+
+        this.selected = setDefaultRange(
+            this.element,
+            this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
+            initSelected,
+            this.dates,
+            this.double,
+            this.parse,
+            this.format
+        );
+
+
+    },10)
+    // console.log(this.selected)
     //日期切换
     const prev = this.element.querySelector(".calendar-action-prev");
     const next = this.element.querySelector(".calendar-action-next");

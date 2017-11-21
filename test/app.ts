@@ -20,16 +20,19 @@ const calendar = <any>new DatePicker({
     language: languages,
     format: "YYYY-MM-DD",
     doubleSelect: true,
-    limit: 7,
+    limit: 9,
     defaultLanguage: "en-us",
     multiViews: true,
     flatView: false,
     bindData: true
 });
 
+
+
 calendar.on("update", (output: any) => {
     document.getElementById("layout").innerHTML = `选中的日期<br/>${output}`
 });
+
 calendar.on("data", (result: any) => {
     const data = result.data;
     const nodeList = result.nodeList;
@@ -48,6 +51,8 @@ calendar.on("data", (result: any) => {
         }
     }
 });
+calendar.setDefaultDates(["2017-11-27","2017-12-05"]);
+
 calendar.data((params: any) => {
     const keys = Object.keys(source);
     const currDate = new Date(dist.year, dist.month, dist.date);
@@ -62,6 +67,8 @@ calendar.data((params: any) => {
     params.data = source;
     return params
 });
+
+
 
 
 

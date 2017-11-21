@@ -41,9 +41,13 @@
         multiViews: true,
         flatView: false,
     });
+    //更新选择的日期
     datePicker.on("update", (output: any) => {
         document.getElementById("layout").innerHTML = `选中的日期${output}`
     });
+    //设置默认日期，在 calendar.data() 之前调用，
+    //如果不需要设置默认选中的日期，不执行此方法即可    
+    calendar.setDefaultDates(["2017-11-27","2017-12-05"]);
     
     //通过data事件来控制每个日期格子展示的数据
     datePicker.on("data", (result: any) => {
@@ -119,7 +123,7 @@
 |update   |event| 更新日历数据|`datePicker,on("update",data=>{ })`|
 |data   |event|  获取日历数据 | `datePicker.on("data",data=>{ })`|
 |data|Function|初始化日历数据，仅在初始化的时候需要调用 `datePicker.data(data)`  |
-
+|setDefaultDates|Function| 设置默认选中日期 |`datePicker.setDefaultDates([Array<string>])|
 
 [0] language语言包,由以下构成
 	
