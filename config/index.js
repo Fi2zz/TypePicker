@@ -20,5 +20,14 @@ module.exports = {
             name: "DatePicker"
         },
 
+    },
+    test: {
+        input: "./lib/test/app.js",
+        output: {
+            file: path.resolve("test", "app.js"),
+            format: "umd",
+            name: "App"
+        }
+
     }
 };

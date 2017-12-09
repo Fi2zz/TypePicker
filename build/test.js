@@ -1,7 +1,7 @@
 const rollup = require('rollup')
 const fs = require("fs");
 const path = require("path");
-const config = require("../config").build;
+const config = require("../config").test;
 const uglify = require('uglify-js');
 const buble = require('rollup-plugin-buble');
 const alias = require('rollup-plugin-alias');
@@ -32,16 +32,13 @@ rollup.rollup(config)
 
 
         console.log("> start building ...");
-        fs.writeFile(output.file.normal, code, err => {
+        fs.writeFile(output.file, code, err => {
             if (err) console.log(err);
             console.log("> start compressing");
 
-            fs.writeFile(output.file.compressed, minified, err => {
-                if (err) console.log(err);
-                console.log("> start compiling style ....");
-                exec("stylus ./src/style.styl -c -o ./dist");
-                console.log("> build done !")
-            })
+            console.log("> start compiling style ....");
+            exec("stylus ./src/style.styl -c -o ./test");
+            console.log("> build done !")
 
 
         });

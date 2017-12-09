@@ -76,20 +76,21 @@ export function buildCalendar(el: any, language: any) {
     const initSelected =
         this.defaultDates.length > 0 ? this.defaultDates
             : this.double ? this.selected : [this.format(this.date).value];
-    setTimeout(() => {
-        this.selected = setDefaultRange(
-            this.element,
-            this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
-            initSelected,
-            this.dates,
-            this.double,
-            this.parse,
-            this.format
-        );
+    // setTimeout(() => {
+    this.selected = setDefaultRange(
+        this.element,
+        this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
+        initSelected,
+        this.dates,
+        this.double,
+        this.parse,
+        this.format
+    );
 
 
-    }, 10)
-    // console.log(this.selected)
+    // }, 10)
+    // console.log(this.selected,123)
+
     //日期切换
     const prev = this.element.querySelector(".calendar-action-prev");
     const next = this.element.querySelector(".calendar-action-next");
@@ -174,7 +175,11 @@ export function init(option: any, renderer: any) {
         this.dates = renderer.dates;
         this.data = renderer.data;
     }
-    this.buildCalendar(option.el, getLanguage(option.language, option.defaultLanguage));
+
+    this.buildCalendar(
+        option.el,
+        getLanguage(option.language, option.defaultLanguage)
+    );
     this.handlePickDate(
         this.element,
         this.selected,
@@ -185,4 +190,6 @@ export function init(option: any, renderer: any) {
         this.limit,
         this.update
     );
+
+    this.update(this.selected);
 }

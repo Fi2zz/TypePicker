@@ -135,6 +135,7 @@
 |data|Function|初始化日历数据，仅在初始化的时候需要调用 `datePicker.data(data)`  |
 |[deprecated]setDefaultDates|Function| 设置默认选中日期 |`datePicker.setDefaultDates([Array<string>])|
 |dateRanges|Function| 设置默认选中日期 |`datePicker.dateRanges([Array<string>])|
+|get|Function| 获取初始选中的日期 |`datePicker.get()`,当bindData为false的时候，需要手动调用此方法，方可获取默认初始选中的日期|
 
 [0] language语言包,由以下构成
 	

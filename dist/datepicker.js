@@ -774,11 +774,10 @@ function buildCalendar(el, language) {
     var defaultDates = this.defaultDates.length > 0 ? this.defaultDates : [this.format(this.date).value];
     var initSelected = this.defaultDates.length > 0 ? this.defaultDates
         : this.double ? this.selected : [this.format(this.date).value];
-    console.log(this.selected);
-    setTimeout(function () {
-        _this.selected = datepicker_ranger.setDefaultRange(_this.element, _this.element.querySelectorAll(".calendar-date-cell:not(.empty)"), initSelected, _this.dates, _this.double, _this.parse, _this.format);
-    }, 10);
-    // console.log(this.selected)
+    // setTimeout(() => {
+    this.selected = datepicker_ranger.setDefaultRange(this.element, this.element.querySelectorAll(".calendar-date-cell:not(.empty)"), initSelected, this.dates, this.double, this.parse, this.format);
+    // }, 10)
+    // console.log(this.selected,123)
     //日期切换
     var prev = this.element.querySelector(".calendar-action-prev");
     var next = this.element.querySelector(".calendar-action-next");
@@ -866,6 +865,7 @@ function init(option, renderer) {
     }
     this.buildCalendar(option.el, util.getLanguage(option.language, option.defaultLanguage));
     this.handlePickDate(this.element, this.selected, this.double, this.dates, this.parse, this.format, this.limit, this.update);
+    this.update(this.selected);
 }
 exports.init = init;
 });
@@ -1203,8 +1203,13 @@ var DatePicker = /** @class */ (function () {
         this.format = function (date) { return datepicker_formatter.format(date, _this.dateFormat); };
         this.parse = function (string) { return datepicker_formatter.parseFormatted(string, _this.dateFormat); };
         this.update = function (value) {
+            if (!value) {
+                value = _this.selected;
+            }
+            else {
+                _this.selected = value;
+            }
             datepicker_observer["default"].$emit("update", value);
-            _this.selected = value;
         };
         this.dataRenderer = function (data) {
             if (Object.keys(data).length <= 0) {
@@ -1220,87 +1225,97 @@ var DatePicker = /** @class */ (function () {
         this.defaultDates = [];
         if (!option.bindData) {
             this.init(option, {});
+            // this.update()
         }
-        function noData(data) {
-            return !util.isObject(data) || Object.keys(data.data).length <= 0 || data.dates.length <= 0;
-        }
-        return {
+        var output = {
             on: datepicker_observer["default"].$on,
+            get: this.update,
             data: function (cb) {
+                function noData(data) {
+                    return !util.isObject(data)
+                        || (Object.keys(data.data).length <= 0
+                            || data.dates.length <= 0);
+                }
                 if (option.bindData) {
-                    var result = cb && cb({ dates: [], data: {} });
-                    if (noData(result)) {
-                        _this.init(option, {});
-                    }
-                    else {
-                        var temp = result.dates;
-                        var dates = [];
-                        var times = [];
-                        for (var i = 0; i < temp.length; i++) {
-                            times.push(_this.parse(temp[i]).getTime());
-                        }
-                        times = util.quickSort(times).reverse();
-                        for (var i = 0; i < times.length; i++) {
-                            dates.push(_this.format(new Date(times[i])).value);
-                        }
-                        _this.init(option, { data: result.data, dates: dates });
+                    var params = {
+                        dates: [],
+                        data: {},
+                        from: Date,
+                        to: Date
+                    };
+                    var cbData = cb && cb(params);
+                    var result = cbData ? cbData : params;
+                    if (util.isDate(params.from))
+                        { option.from = params.from; }
+                    if (util.isDate(params.to))
+                        { option.to = params.to; }
+                    _this.init(option, {
+                        data: result.data,
+                        dates: result.dates.sort(function (a, b) { return _this.parse(a) - _this.parse(b); })
+                    });
+                    if (!noData(result)) {
                         _this.dataRenderer(result.data);
                     }
-                    _this.update(_this.selected);
                 }
             },
             diff: function (d1, d2) { return util.diff(d1, d2, "days"); },
             parse: this.parse,
             format: this.format,
-            setDefaultDates: function (dates) {
+            dateRanges: function (dates) {
                 if (!dates) {
-                    console.error("[setDefaultDates error] no dates provided", dates);
+                    console.error("[dateRanges error] no dates provided", dates);
                     _this.defaultDates = [];
                     return;
                 }
                 if (dates && dates instanceof Array) {
                     if (dates.length <= 0) {
-                        console.error("[setDefaultDates error] no dates provided", dates);
+                        console.error("[dateRanges error] no dates provided", dates);
                         return;
                     }
                     if (option.doubleSelect) {
                         if (dates.length === 1) {
-                            console.error("[setDefaultDates] please provide end date");
+                            console.error("[dateRanges] please provide end date");
                         }
                         else if (dates.length > 2) {
                             dates = dates.slice(0, 2);
                         }
                         var start = dates[0];
                         var end = dates[dates.length - 1];
-                        var startDate = _this.parse(start);
-                        var endDate = _this.parse(end);
-                        if (!startDate || !endDate) {
-                            console.error("[setDefaultDates error] illegal dates,", dates);
+                        var startDate = util.isDate(start) ? start : _this.parse(start);
+                        var endDate = util.isDate(end) ? end : _this.parse(end);
+                        if (!util.isDate(startDate) || !util.isDate(endDate)) {
+                            console.error("[dateRanges error] illegal dates,", dates);
                             _this.defaultDates = [];
                             return;
                         }
                         var gap = util.diff(startDate, endDate, "days");
                         var endGap = util.diff(endDate, startDate, "days");
                         if (!option.limit) {
-                            option.limit = 1;
+                            option.limit = 2;
                         }
                         //计算日期范围
                         if (gap > 0
                             || endGap > option.limit
                             || endGap < option.limit * -1) {
-                            console.error("[setDefaultDates error] illegal start date or end date or out of limit,your selected dates:[" + dates + "],limit:[" + option.limit + "]");
+                            console.error("[dateRanges error] illegal start date or end date or out of limit,your selected dates:[" + dates + "],limit:[" + option.limit + "]");
                             _this.defaultDates = [];
                             return false;
                         }
                     }
                     else {
-                        dates = [dates[0]];
+                        dates = [dates[dates.length - 1]];
                     }
-                    _this.defaultDates = dates;
-                    _this.update(dates);
+                    var tempDatesArray = [];
+                    for (var i = 0; i < dates.length; i++) {
+                        var date = dates[i];
+                        tempDatesArray.push(util.isDate(date) ? _this.format(date).value : date);
+                    }
+                    _this.defaultDates = tempDatesArray;
                 }
-            }
+            },
+            setDefaultDates: function (dates) { return output.dateRanges(dates); }
         };
+        return output;
     }
     DatePicker.prototype.inDates = function (date) {
         return ~this.dates.indexOf(date);
