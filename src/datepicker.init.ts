@@ -69,27 +69,7 @@ export function buildCalendar(el: any, language: any) {
         setLanguage(language)
     );
 
-    //默认选中的日期
-    const defaultDates = this.defaultDates.length > 0 ? this.defaultDates : [this.format(this.date).value];
 
-
-    const initSelected =
-        this.defaultDates.length > 0 ? this.defaultDates
-            : this.double ? this.selected : [this.format(this.date).value];
-    setTimeout(() => {
-        this.selected = setDefaultRange(
-            this.element,
-            this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
-            initSelected,
-            this.dates,
-            this.double,
-            this.parse,
-            this.format
-        );
-
-
-    }, 10)
-    // console.log(this.selected)
     //日期切换
     const prev = this.element.querySelector(".calendar-action-prev");
     const next = this.element.querySelector(".calendar-action-next");
@@ -118,6 +98,27 @@ export function buildCalendar(el: any, language: any) {
             addClass(prev, "calendar-action-disabled")
         }
     }
+    //加个定时器，保证初始化时，可以得到选中的日期
+    const timer = setTimeout(() => {
+        const initSelected =
+            this.defaultDates.length > 0
+                ? this.defaultDates
+                : this.double
+                ? this.selected
+                : [this.format(this.date).value];
+        this.selected = setDefaultRange(
+            this.element,
+            this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
+            initSelected,
+            this.dates,
+            this.double,
+            this.parse,
+            this.format
+        );
+        this.update(this.selected);
+        //初始化后，清除定时器
+        clearTimeout(timer)
+    }, 0);
 }
 
 export function init(option: any, renderer: any) {
@@ -174,7 +175,11 @@ export function init(option: any, renderer: any) {
         this.dates = renderer.dates;
         this.data = renderer.data;
     }
-    this.buildCalendar(option.el, getLanguage(option.language, option.defaultLanguage));
+
+    this.buildCalendar(
+        option.el,
+        getLanguage(option.language, option.defaultLanguage)
+    );
     this.handlePickDate(
         this.element,
         this.selected,
@@ -185,4 +190,5 @@ export function init(option: any, renderer: any) {
         this.limit,
         this.update
     );
+
 }

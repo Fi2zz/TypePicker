@@ -1,5 +1,5 @@
 import Observer from './datepicker.observer';
-import {diff, inArray, isObject, quickSort, isDate} from "./util"
+import {diff, inArray, isObject, quickSort, isDate, isArray} from "./util"
 import {init, monthSwitch, buildCalendar} from './datepicker.init'
 import handlePickDate from './datepicer.picker'
 import {parseFormatted, format as formatter} from "./datepicker.formatter"
@@ -41,8 +41,12 @@ export default class DatePicker {
     format = (date: Date) => formatter(date, this.dateFormat);
     parse = (string: string) => parseFormatted(string, this.dateFormat);
     update = (value: Array<any>) => {
+        // if (!value) {
+        //     value = this.selected
+        // } else {
+        //     this.selected = value
+        // }
         Observer.$emit("update", value);
-        this.selected = value;
     };
     dataRenderer = (data: any) => {
         if (Object.keys(data).length <= 0) {
@@ -64,83 +68,68 @@ export default class DatePicker {
 
         this.defaultDates = [];
         if (!option.bindData) {
-            this.init(option, {})
+            this.init(option, {});
         }
-
-        function noData(data: any) {
-            return !isObject(data) || Object.keys(data.data).length <= 0 || data.dates.length <= 0
-        }
-
-
         const output: any = {
             on: Observer.$on,
+            get: this.update,
             data: (cb: Function) => {
-                if (option.bindData) {
+                function noData(data: any) {
+                    return !isObject(data)
+                        || ( Object.keys(data.data).length <= 0
+                        || data.dates.length <= 0)
+                }
 
+                if (option.bindData) {
                     const params = {
                         dates: <Array<string>>[],
                         data: <any>{},
                         from: Date,
                         to: Date
                     };
+                    const cbData = cb && cb(params);
+                    const result = cbData ? cbData : params;
+                    if (isDate(params.from)) option.from = params.from;
+                    if (isDate(params.to)) option.to = params.to;
+                    this.init(
+                        option,
+                        {
+                            data: result.data,
+                            dates: result.dates.sort((a: string, b: string) => this.parse(a) - this.parse(b))
+                        });
 
-                    const result = cb && cb(params);
-
-                    if (isDate(params.from)) {
-                        option.from = params.from
-                    }
-
-                    if (isDate(params.to)) {
-                        option.to = params.to;
-                    }
-                    if (noData(result)) {
-                        this.init(option, {})
-                    } else {
-                        const temp = result.dates;
-                        let dates = [];
-                        let times = [];
-                        for (let i = 0; i < temp.length; i++) {
-                            times.push(this.parse(temp[i]).getTime())
-                        }
-                        times = quickSort(times).reverse();
-                        for (let i = 0; i < times.length; i++) {
-                            dates.push(this.format(new Date(times[i])).value)
-                        }
-                        this.init(option, {data: result.data, dates: dates});
+                    if (!noData(result)) {
                         this.dataRenderer(result.data);
                     }
-                    this.update(this.selected)
                 }
             },
             diff: (d1: Date, d2: Date) => diff(d1, d2, "days"),
             parse: this.parse,
             format: this.format,
             dateRanges: (dates: Array<any>) => {
+
+                const tempDatesArray = <Array<any>>[];
                 if (!dates) {
-                    console.error("[setDefaultDates error] no dates provided", dates);
-                    this.defaultDates = [];
+                    dates = [];
                     return
                 }
                 if (dates && dates instanceof Array) {
                     if (dates.length <= 0) {
-                        console.error("[setDefaultDates error] no dates provided", dates);
+                        console.error("[dateRanges error] no dates provided", dates);
                         return
                     }
                     if (option.doubleSelect) {
                         if (dates.length === 1) {
-                            console.error("[setDefaultDates] please provide end date")
+                            console.error("[dateRanges] please provide end date")
                         } else if (dates.length > 2) {
                             dates = dates.slice(0, 2)
                         }
-
-
                         const start = <any> dates[0];
                         const end = <any> dates[dates.length - 1];
                         const startDate = isDate(start) ? start : this.parse(start);
                         const endDate = isDate(end) ? end : this.parse(end);
                         if (!isDate(startDate) || !isDate(endDate)) {
-                            console.error("[setDefaultDates error] illegal dates,", dates);
-                            this.defaultDates = [];
+                            console.error("[dateRanges error] illegal dates,", dates);
                             return
                         }
                         const gap = diff(startDate, endDate, "days");
@@ -153,25 +142,21 @@ export default class DatePicker {
                             || endGap > option.limit
                             || endGap < option.limit * -1
                         ) {
-                            console.error(`[setDefaultDates error] illegal start date or end date or out of limit,your selected dates:[${dates}],limit:[${option.limit}]`);
-                            this.defaultDates = [];
-                            return false
+                            console.error(`[dateRanges error] illegal start date or end date or out of limit,your selected dates:[${dates}],limit:[${option.limit}]`);
+                            return
                         }
                     }
                     else {
                         dates = [dates[dates.length - 1]];
                     }
-                    const tempDatesArray = <Array<any>>[];
                     for (let i = 0; i < dates.length; i++) {
                         let date = dates[i];
                         tempDatesArray.push(isDate(date) ? this.format(date).value : date)
                     }
                     this.defaultDates = tempDatesArray;
-                    this.update(tempDatesArray)
                 }
             },
-
-            setDefaultDates: (dates: Array<any>) => output.dateRanges(dates)
+            setDefaultDates: (dates: Array<any>) => output.dateRanges(dates),
         };
         return output
     }

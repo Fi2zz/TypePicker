@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "node build/dev-server.js",
     "dist": "tsc && node build/build",
-    "test": "tsc"
+    "test": "tsc && node build/test"
   },
   "devDependencies": {
     "babel-plugin-transform-remove-console": "^6.8.5",
