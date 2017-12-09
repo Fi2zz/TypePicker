@@ -12,7 +12,8 @@ const dist = {
     month: date.getMonth(),
     date: date.getDate()
 };
-
+const from = new Date(dist.year, dist.month , dist.date)
+const to = new Date(dist.year, dist.month + 5, dist.date);
 const calendar = <any>new DatePicker({
     el: '.calendar-container',
     from: new Date(dist.year, dist.month, dist.date),
@@ -20,16 +21,18 @@ const calendar = <any>new DatePicker({
     language: languages,
     format: "YYYY-MM-DD",
     doubleSelect: true,
-    limit: 7,
+    limit: 9,
     defaultLanguage: "en-us",
     multiViews: true,
     flatView: false,
     bindData: true
 });
 
+
 calendar.on("update", (output: any) => {
     document.getElementById("layout").innerHTML = `选中的日期<br/>${output}`
 });
+
 calendar.on("data", (result: any) => {
     const data = result.data;
     const nodeList = result.nodeList;
@@ -48,7 +51,9 @@ calendar.on("data", (result: any) => {
         }
     }
 });
-calendar.data((params: any) => {
+
+
+calendar.data((params:any) => {
     const keys = Object.keys(source);
     const currDate = new Date(dist.year, dist.month, dist.date);
     for (let i = 0; i < keys.length; i++) {
@@ -59,9 +64,15 @@ calendar.data((params: any) => {
             delete source[keys[i]]
         }
     }
+    params.from = from;
+    params.to = to;
     params.data = source;
+    calendar.dateRanges([new Date(dist.year, dist.month, dist.date + 10), "2017-12-25"]);
+
     return params
 });
+
+
 
 
 

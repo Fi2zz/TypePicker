@@ -1,42 +1,22 @@
 const rollup = require('rollup')
-let config = require("../config").build;
 const fs = require("fs");
+const path = require("path");
+const config = require("../config").build;
 const uglify = require('uglify-js');
-
 const buble = require('rollup-plugin-buble');
 const alias = require('rollup-plugin-alias');
 const cjs = require('rollup-plugin-commonjs');
 const replace = require('rollup-plugin-replace');
 const node = require('rollup-plugin-node-resolve');
 
-
-const output = config.output;
-const path = require("path");
-
 config.plugins = [buble(),
     cjs(),
     node(),
+];
+const mkdirp = require("mkdirp");
+const exec = require("shelljs").exec;
 
-]
-
-const mkdirp = require("mkdirp")
-
-const ugly = function (code) {
-
-    const minified = uglify.minify(code, {
-        output: {
-            ascii_only: true
-        },
-        compress: {
-            pure_funcs: ['makeMap']
-        }
-    }).code
-
-    return minified
-
-
-};
-const exec =require("shelljs").exec;
+const output = config.output;
 
 rollup.rollup(config)
     .then(bundle => bundle.generate(output))
@@ -51,14 +31,23 @@ rollup.rollup(config)
         }).code;
 
 
-        fs.writeFile(output.file, minified, err => {
-            if (err) {
-                console.log(err)
-            }
+        async function generate() {
+            console.log("> start building ...");
+            await function () {
+                fs.writeFile(output.file.normal, code, err => {
+                    if (err) console.log(err);
+                    console.log("> start compressing");
+                });
+            };
+            fs.writeFile(output.file.compressed, minified, err => {
+                if (err) console.log(err);
+                console.log("> start compiling style ....");
+                exec("stylus ./src/style.styl -c -o ./dist");
+                console.log("> build done !")
+            })
+        }
 
-            exec("stylus ./src/style.styl -c -o ./dist")
+        generate()
 
-            console.log("> build done")
-        })
 
     });

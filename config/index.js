@@ -12,7 +12,10 @@ module.exports = {
     build: {
         input: "./lib/index.js",
         output: {
-            file: path.resolve("dist", "datepicker.min.js"),
+            file: {
+                compressed: path.resolve("dist", "datepicker.min.js"),
+                normal: path.resolve("dist", "datepicker.js")
+            },
             format: "umd",
             name: "DatePicker"
         },
