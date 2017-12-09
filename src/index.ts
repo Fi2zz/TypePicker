@@ -40,12 +40,12 @@ export default class DatePicker {
     defaults: Array<any>[];
     format = (date: Date) => formatter(date, this.dateFormat);
     parse = (string: string) => parseFormatted(string, this.dateFormat);
-    update = (value?: Array<any>) => {
-        if (!value) {
-            value = this.selected
-        } else {
-            this.selected = value
-        }
+    update = (value: Array<any>) => {
+        // if (!value) {
+        //     value = this.selected
+        // } else {
+        //     this.selected = value
+        // }
         Observer.$emit("update", value);
     };
     dataRenderer = (data: any) => {

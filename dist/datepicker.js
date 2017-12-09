@@ -770,12 +770,6 @@ function buildCalendar(el, language) {
     var startTime = this.startDate.getTime(), endTime = this.endDate.getTime();
     var currTime = this.date.getTime();
     this.element.innerHTML = datepicker_template["default"](this.date, this.endDate, this.dateFormat, this.multiViews, this.flatView, util.setLanguage(language));
-    setTimeout(function () {
-        var initSelected = _this.defaultDates.length > 0 ? _this.defaultDates
-            : _this.double ? _this.selected : [_this.format(_this.date).value];
-        _this.selected = datepicker_ranger.setDefaultRange(_this.element, _this.element.querySelectorAll(".calendar-date-cell:not(.empty)"), initSelected, _this.dates, _this.double, _this.parse, _this.format);
-        _this.update(_this.selected);
-    }, 0);
     //日期切换
     var prev = this.element.querySelector(".calendar-action-prev");
     var next = this.element.querySelector(".calendar-action-next");
@@ -804,6 +798,18 @@ function buildCalendar(el, language) {
             util.addClass(prev, "calendar-action-disabled");
         }
     }
+    //加个定时器，保证初始化时，可以得到选中的日期
+    var timer = setTimeout(function () {
+        var initSelected = _this.defaultDates.length > 0
+            ? _this.defaultDates
+            : _this.double
+                ? _this.selected
+                : [_this.format(_this.date).value];
+        _this.selected = datepicker_ranger.setDefaultRange(_this.element, _this.element.querySelectorAll(".calendar-date-cell:not(.empty)"), initSelected, _this.dates, _this.double, _this.parse, _this.format);
+        _this.update(_this.selected);
+        //初始化后，清除定时器
+        clearTimeout(timer);
+    }, 0);
 }
 exports.buildCalendar = buildCalendar;
 function init(option, renderer) {
@@ -1200,12 +1206,11 @@ var DatePicker = /** @class */ (function () {
         this.format = function (date) { return datepicker_formatter.format(date, _this.dateFormat); };
         this.parse = function (string) { return datepicker_formatter.parseFormatted(string, _this.dateFormat); };
         this.update = function (value) {
-            if (!value) {
-                value = _this.selected;
-            }
-            else {
-                _this.selected = value;
-            }
+            // if (!value) {
+            //     value = this.selected
+            // } else {
+            //     this.selected = value
+            // }
             datepicker_observer["default"].$emit("update", value);
         };
         this.dataRenderer = function (data) {

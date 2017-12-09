@@ -23,7 +23,7 @@ const calendar = <any>new DatePicker({
     doubleSelect: true,
     limit: 9,
     defaultLanguage: "en-us",
-    multiViews: true,
+    multiViews: false,
     flatView: false,
     bindData: true
 });
