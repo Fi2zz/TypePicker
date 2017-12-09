@@ -69,27 +69,23 @@ export function buildCalendar(el: any, language: any) {
         setLanguage(language)
     );
 
-    //默认选中的日期
-    const defaultDates = this.defaultDates.length > 0 ? this.defaultDates : [this.format(this.date).value];
 
+    setTimeout(() => {
+        const initSelected =
+            this.defaultDates.length > 0 ? this.defaultDates
+                : this.double ? this.selected : [this.format(this.date).value];
+        this.selected = setDefaultRange(
+            this.element,
+            this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
+            initSelected,
+            this.dates,
+            this.double,
+            this.parse,
+            this.format
+        );
+        this.update(this.selected);
+    }, 0);
 
-    const initSelected =
-        this.defaultDates.length > 0 ? this.defaultDates
-            : this.double ? this.selected : [this.format(this.date).value];
-    // setTimeout(() => {
-    this.selected = setDefaultRange(
-        this.element,
-        this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
-        initSelected,
-        this.dates,
-        this.double,
-        this.parse,
-        this.format
-    );
-
-
-    // }, 10)
-    // console.log(this.selected,123)
 
     //日期切换
     const prev = this.element.querySelector(".calendar-action-prev");
@@ -191,5 +187,4 @@ export function init(option: any, renderer: any) {
         this.update
     );
 
-    this.update(this.selected);
 }

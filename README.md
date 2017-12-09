@@ -46,12 +46,14 @@
         document.getElementById("layout").innerHTML = `选中的日期${output}`
     });
     
-    //设置默认日期，在 datePicker.data() 之前或在 datePicker.data()内调用调用，
+    //设置默认日期，在 datePicker.get()或datePicker.data() 之前或在 datePicker.data()内调用调用，
     //如果不需要设置默认选中的日期，不执行此方法即可    
     //[deprecated]datePicker.setDefaultDates(["2017-11-27","2017-12-05"]);
     //dateRanges =<Array<any>>[<Date>|<string>]
     //example:  dateRanges =<Array<any>>[new Date(),"2017-12-20"];
     datePicker.dateRanges(dateRanges);
+    
+    
     
     //通过data事件来控制每个日期格子展示的数据
     datePicker.on("data", (result: any) => {
@@ -135,7 +137,6 @@
 |data|Function|初始化日历数据，仅在初始化的时候需要调用 `datePicker.data(data)`  |
 |[deprecated]setDefaultDates|Function| 设置默认选中日期 |`datePicker.setDefaultDates([Array<string>])|
 |dateRanges|Function| 设置默认选中日期 |`datePicker.dateRanges([Array<string>])|
-|get|Function| 获取初始选中的日期 |`datePicker.get()`,当bindData为false的时候，需要手动调用此方法，方可获取默认初始选中的日期|
 
 [0] language语言包,由以下构成
 	

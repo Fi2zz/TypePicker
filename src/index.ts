@@ -69,7 +69,6 @@ export default class DatePicker {
         this.defaultDates = [];
         if (!option.bindData) {
             this.init(option, {});
-            // this.update()
         }
         const output: any = {
             on: Observer.$on,
@@ -82,7 +81,6 @@ export default class DatePicker {
                 }
 
                 if (option.bindData) {
-
                     const params = {
                         dates: <Array<string>>[],
                         data: <any>{},
@@ -104,15 +102,15 @@ export default class DatePicker {
                         this.dataRenderer(result.data);
                     }
                 }
-
             },
             diff: (d1: Date, d2: Date) => diff(d1, d2, "days"),
             parse: this.parse,
             format: this.format,
             dateRanges: (dates: Array<any>) => {
+
+                const tempDatesArray = <Array<any>>[];
                 if (!dates) {
-                    console.error("[dateRanges error] no dates provided", dates);
-                    this.defaultDates = [];
+                    dates = [];
                     return
                 }
                 if (dates && dates instanceof Array) {
@@ -126,15 +124,12 @@ export default class DatePicker {
                         } else if (dates.length > 2) {
                             dates = dates.slice(0, 2)
                         }
-
-
                         const start = <any> dates[0];
                         const end = <any> dates[dates.length - 1];
                         const startDate = isDate(start) ? start : this.parse(start);
                         const endDate = isDate(end) ? end : this.parse(end);
                         if (!isDate(startDate) || !isDate(endDate)) {
                             console.error("[dateRanges error] illegal dates,", dates);
-                            this.defaultDates = [];
                             return
                         }
                         const gap = diff(startDate, endDate, "days");
@@ -148,20 +143,17 @@ export default class DatePicker {
                             || endGap < option.limit * -1
                         ) {
                             console.error(`[dateRanges error] illegal start date or end date or out of limit,your selected dates:[${dates}],limit:[${option.limit}]`);
-                            this.defaultDates = [];
-                            return false
+                            return
                         }
                     }
                     else {
                         dates = [dates[dates.length - 1]];
                     }
-                    const tempDatesArray = <Array<any>>[];
                     for (let i = 0; i < dates.length; i++) {
                         let date = dates[i];
                         tempDatesArray.push(isDate(date) ? this.format(date).value : date)
                     }
                     this.defaultDates = tempDatesArray;
-
                 }
             },
             setDefaultDates: (dates: Array<any>) => output.dateRanges(dates),

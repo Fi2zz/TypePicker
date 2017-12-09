@@ -770,14 +770,12 @@ function buildCalendar(el, language) {
     var startTime = this.startDate.getTime(), endTime = this.endDate.getTime();
     var currTime = this.date.getTime();
     this.element.innerHTML = datepicker_template["default"](this.date, this.endDate, this.dateFormat, this.multiViews, this.flatView, util.setLanguage(language));
-    //默认选中的日期
-    var defaultDates = this.defaultDates.length > 0 ? this.defaultDates : [this.format(this.date).value];
-    var initSelected = this.defaultDates.length > 0 ? this.defaultDates
-        : this.double ? this.selected : [this.format(this.date).value];
-    // setTimeout(() => {
-    this.selected = datepicker_ranger.setDefaultRange(this.element, this.element.querySelectorAll(".calendar-date-cell:not(.empty)"), initSelected, this.dates, this.double, this.parse, this.format);
-    // }, 10)
-    // console.log(this.selected,123)
+    setTimeout(function () {
+        var initSelected = _this.defaultDates.length > 0 ? _this.defaultDates
+            : _this.double ? _this.selected : [_this.format(_this.date).value];
+        _this.selected = datepicker_ranger.setDefaultRange(_this.element, _this.element.querySelectorAll(".calendar-date-cell:not(.empty)"), initSelected, _this.dates, _this.double, _this.parse, _this.format);
+        _this.update(_this.selected);
+    }, 0);
     //日期切换
     var prev = this.element.querySelector(".calendar-action-prev");
     var next = this.element.querySelector(".calendar-action-next");
@@ -865,7 +863,6 @@ function init(option, renderer) {
     }
     this.buildCalendar(option.el, util.getLanguage(option.language, option.defaultLanguage));
     this.handlePickDate(this.element, this.selected, this.double, this.dates, this.parse, this.format, this.limit, this.update);
-    this.update(this.selected);
 }
 exports.init = init;
 });
@@ -1225,7 +1222,6 @@ var DatePicker = /** @class */ (function () {
         this.defaultDates = [];
         if (!option.bindData) {
             this.init(option, {});
-            // this.update()
         }
         var output = {
             on: datepicker_observer["default"].$on,
@@ -1262,9 +1258,9 @@ var DatePicker = /** @class */ (function () {
             parse: this.parse,
             format: this.format,
             dateRanges: function (dates) {
+                var tempDatesArray = [];
                 if (!dates) {
-                    console.error("[dateRanges error] no dates provided", dates);
-                    _this.defaultDates = [];
+                    dates = [];
                     return;
                 }
                 if (dates && dates instanceof Array) {
@@ -1285,7 +1281,6 @@ var DatePicker = /** @class */ (function () {
                         var endDate = util.isDate(end) ? end : _this.parse(end);
                         if (!util.isDate(startDate) || !util.isDate(endDate)) {
                             console.error("[dateRanges error] illegal dates,", dates);
-                            _this.defaultDates = [];
                             return;
                         }
                         var gap = util.diff(startDate, endDate, "days");
@@ -1298,14 +1293,12 @@ var DatePicker = /** @class */ (function () {
                             || endGap > option.limit
                             || endGap < option.limit * -1) {
                             console.error("[dateRanges error] illegal start date or end date or out of limit,your selected dates:[" + dates + "],limit:[" + option.limit + "]");
-                            _this.defaultDates = [];
-                            return false;
+                            return;
                         }
                     }
                     else {
                         dates = [dates[dates.length - 1]];
                     }
-                    var tempDatesArray = [];
                     for (var i = 0; i < dates.length; i++) {
                         var date = dates[i];
                         tempDatesArray.push(util.isDate(date) ? _this.format(date).value : date);
