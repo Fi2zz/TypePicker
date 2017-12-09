@@ -12,7 +12,8 @@ const dist = {
     month: date.getMonth(),
     date: date.getDate()
 };
-
+const from = new Date(dist.year, dist.month , dist.date)
+const to = new Date(dist.year, dist.month + 5, dist.date);
 const calendar = <any>new DatePicker({
     el: '.calendar-container',
     from: new Date(dist.year, dist.month, dist.date),
@@ -26,7 +27,6 @@ const calendar = <any>new DatePicker({
     flatView: false,
     bindData: true
 });
-
 
 
 calendar.on("update", (output: any) => {
@@ -51,9 +51,9 @@ calendar.on("data", (result: any) => {
         }
     }
 });
-calendar.setDefaultDates(["2017-11-27","2017-12-05"]);
 
-calendar.data((params: any) => {
+
+calendar.data((params:any) => {
     const keys = Object.keys(source);
     const currDate = new Date(dist.year, dist.month, dist.date);
     for (let i = 0; i < keys.length; i++) {
@@ -64,7 +64,11 @@ calendar.data((params: any) => {
             delete source[keys[i]]
         }
     }
+    params.from = from;
+    params.to = to;
     params.data = source;
+    calendar.dateRanges([new Date(dist.year, dist.month, dist.date + 10), "2017-12-25"]);
+
     return params
 });
 

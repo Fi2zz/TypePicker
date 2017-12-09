@@ -30,7 +30,7 @@
     };
     
     const datePicker = <any>new DatePicker({
-        el: '.calendar-container',
+        el: '.datePicker-container',
         from: new Date(dist.year, dist.month, dist.date),
         to: new Date(dist.year, dist.month + 4, dist.date),
         language: languages,
@@ -45,9 +45,13 @@
     datePicker.on("update", (output: any) => {
         document.getElementById("layout").innerHTML = `选中的日期${output}`
     });
-    //设置默认日期，在 calendar.data() 之前调用，
+    
+    //设置默认日期，在 datePicker.data() 之前或在 datePicker.data()内调用调用，
     //如果不需要设置默认选中的日期，不执行此方法即可    
-    calendar.setDefaultDates(["2017-11-27","2017-12-05"]);
+    //[deprecated]datePicker.setDefaultDates(["2017-11-27","2017-12-05"]);
+    //dateRanges =<Array<any>>[<Date>|<string>]
+    //example:  dateRanges =<Array<any>>[new Date(),"2017-12-20"];
+    datePicker.dateRanges(dateRanges);
     
     //通过data事件来控制每个日期格子展示的数据
     datePicker.on("data", (result: any) => {
@@ -72,8 +76,8 @@
     });
     
     //初始化后，需要手动调用一下data方法，把日历数据传入日历
-    calendar.data((params: any) => {
-        //params为calendar.data的callback 的参数
+    datePicker.data((params: any) => {
+        //params为datePicker.data的callback 的参数
         /* params={
                 dates:Array<string>["2017-11-18",...,"2017-12-31"],
                 data:<Map>{
@@ -106,6 +110,12 @@
             }
         }
         params.data = source;
+        //开始日期和结束日期
+        //此为避免重复 new DatePicker();
+        
+        params.from =<Date>
+        params.to   =<Date>
+        
         return params
     });
         
@@ -123,7 +133,8 @@
 |update   |event| 更新日历数据|`datePicker,on("update",data=>{ })`|
 |data   |event|  获取日历数据 | `datePicker.on("data",data=>{ })`|
 |data|Function|初始化日历数据，仅在初始化的时候需要调用 `datePicker.data(data)`  |
-|setDefaultDates|Function| 设置默认选中日期 |`datePicker.setDefaultDates([Array<string>])|
+|[deprecated]setDefaultDates|Function| 设置默认选中日期 |`datePicker.setDefaultDates([Array<string>])|
+|dateRanges|Function| 设置默认选中日期 |`datePicker.dateRanges([Array<string>])|
 
 [0] language语言包,由以下构成
 	
