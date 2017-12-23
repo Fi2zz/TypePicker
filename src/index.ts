@@ -1,8 +1,23 @@
 import Observer from './datepicker.observer';
-import { diff, inArray, isObject, quickSort, isDate, isArray } from "./util"
-import { init, monthSwitch, buildCalendar } from './datepicker.init'
+import {
+    diff,
+    isObject,
+    isDate,
+} from "./util"
+import {
+    init,
+    monthSwitch,
+    createDatePicker
+} from './datepicker.init'
 import handlePickDate from './datepicer.picker'
-import { parseFormatted, format as formatter } from "./datepicker.formatter"
+import {
+    parseFormatted,
+    format as formatter
+} from "./datepicker.formatter"
+
+
+
+
 
 interface INTERFACES {
     el: string,
@@ -34,20 +49,26 @@ export default class DatePicker {
     flatView: boolean = false;
     multiViews: boolean = false;
     monthSwitch = monthSwitch;
-    buildCalendar = buildCalendar;
-    handlePickDate = handlePickDate;
+    createDatePicker = createDatePicker;
+    pickDate = () => {
+        handlePickDate(
+            this.element,
+            this.selected,
+            this.double,
+            this.dates,
+            this.parse,
+            this.format,
+            this.limit,
+            this.inDates,
+            this.update
+        )
+    };
     defaultDates: Array<string>[];
     defaults: Array<any>[];
     format = (date: Date) => formatter(date, this.dateFormat);
     parse = (string: string) => parseFormatted(string, this.dateFormat);
-    update = (value: Array<any>) => {
-        // if (!value) {
-        //     value = this.selected
-        // } else {
-        //     this.selected = value
-        // }
-        Observer.$emit("update", value);
-    };
+    inDates = (date: string) => !!~this.dates.indexOf(date);
+    update = (value: Array<any>) => Observer.$emit("update", value);
     dataRenderer = (data: any) => {
         if (Object.keys(data).length <= 0) {
             Observer.$remove("data")
@@ -58,11 +79,6 @@ export default class DatePicker {
             })
         }
     };
-
-
-    inDates(date: string) {
-        return ~this.dates.indexOf(date)
-    }
 
 
     constructor(option: INTERFACES) {
@@ -78,7 +94,7 @@ export default class DatePicker {
                 function noData(data: any) {
                     return !isObject(data)
                         || (Object.keys(data.data).length <= 0
-                            || data.dates.length <= 0)
+                        || data.dates.length <= 0)
                 }
 
                 if (option.bindData) {

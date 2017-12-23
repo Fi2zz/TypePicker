@@ -18,7 +18,7 @@ import {setDefaultRange} from './datepicker.ranger'
  * @param size 切换月份数量
  * @param el   挂载日历的元素
  * ***/
-export function monthSwitch(size: number, el: any, language: any) {
+export function monthSwitch(size: number, language: any) {
     let curr = {
         year: this.date.getFullYear(),
         month: this.date.getMonth(),
@@ -30,16 +30,8 @@ export function monthSwitch(size: number, el: any, language: any) {
         month += size > 0 ? 1 : -1
     }
     this.date = new Date(curr.year, month, curr.date);
-    this.buildCalendar(el, language);
-    this.handlePickDate(this.element,
-        this.selected,
-        this.double,
-        this.dates,
-        this.parse,
-        this.format,
-        this.limit,
-        this.update
-    );
+    this.createDatePicker(language);
+    this.pickDate();
     this.dataRenderer(this.data)
 }
 
@@ -50,10 +42,10 @@ export function monthSwitch(size: number, el: any, language: any) {
  *
  * */
 
-export function buildCalendar(el: any, language: any) {
-    this.element = <HTMLElement>parseEl(el);
+export function createDatePicker(lang: any) {
+    // this.element = <HTMLElement>parseEl(el);
     if (!this.element) {
-        console.error(`[Calendar Warn] invalid selector,current selector ${el}`);
+        console.error(`[Calendar Warn] invalid selector,current selector ${this.element}`);
         return false
     }
     const startTime = this.startDate.getTime(), endTime = this.endDate.getTime();
@@ -66,7 +58,7 @@ export function buildCalendar(el: any, language: any) {
         this.dateFormat,
         this.multiViews,
         this.flatView,
-        setLanguage(language)
+        setLanguage(lang)
     );
 
 
@@ -77,7 +69,7 @@ export function buildCalendar(el: any, language: any) {
         let gap = diff(this.date, this.endDate);
         if (gap >= 2) {
             next.addEventListener("click", () => {
-                this.monthSwitch(1, el, language);
+                this.monthSwitch(1, lang);
                 removeClass(prev, "disabled");
                 removeClass(prev, "calendar-action-disabled")
             });
@@ -89,7 +81,7 @@ export function buildCalendar(el: any, language: any) {
 
         if (currTime > startTime) {
             prev.addEventListener("click", () => {
-                this.monthSwitch(-1, el, language);
+                this.monthSwitch(-1, lang);
                 removeClass(next, "disabled");
                 removeClass(next, "calendar-action-disabled")
             });
@@ -177,19 +169,9 @@ export function init(option: any, renderer: any) {
         this.data = renderer.data;
     }
 
-    this.buildCalendar(
-        option.el,
-        getLanguage(option.language, option.defaultLanguage)
-    );
-    this.handlePickDate(
-        this.element,
-        this.selected,
-        this.double,
-        this.dates,
-        this.parse,
-        this.format,
-        this.limit,
-        this.update
-    );
+    this.element = parseEl(option.el);
+    const lang = getLanguage(option.language, option.defaultLanguage);
+    this.createDatePicker(lang);
+    this.pickDate()
 
 }

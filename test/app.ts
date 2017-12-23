@@ -24,7 +24,7 @@ const calendar = <any>new DatePicker({
     limit: 9,
     defaultLanguage: "en-us",
     multiViews: false,
-    flatView: false,
+    flatView: true,
     bindData: true
 });
 

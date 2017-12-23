@@ -15,7 +15,7 @@ function createCommonjsModule(fn, module) {
 var datepicker_observer = createCommonjsModule(function (module, exports) {
 "use strict";
 exports.__esModule = true;
-var Observer = (function () {
+exports["default"] = (function () {
     var clientList = {};
     var $remove = function (key, fn) {
         var fns = clientList[key];
@@ -43,7 +43,6 @@ var Observer = (function () {
             clientList[key] = [];
         }
         clientList[key].push(fn);
-        // $remove(key, undefined)
     };
     var $emit = function (evt, value) {
         var arguments$1 = arguments;
@@ -62,7 +61,6 @@ var Observer = (function () {
         $on: $on, $emit: $emit, $remove: $remove
     };
 }());
-exports["default"] = Observer;
 });
 
 unwrapExports(datepicker_observer);
@@ -737,7 +735,7 @@ exports.__esModule = true;
  * @param size 切换月份数量
  * @param el   挂载日历的元素
  * ***/
-function monthSwitch(size, el, language) {
+function monthSwitch(size, language) {
     var curr = {
         year: this.date.getFullYear(),
         month: this.date.getMonth(),
@@ -749,8 +747,8 @@ function monthSwitch(size, el, language) {
         month += size > 0 ? 1 : -1;
     }
     this.date = new Date(curr.year, month, curr.date);
-    this.buildCalendar(el, language);
-    this.handlePickDate(this.element, this.selected, this.double, this.dates, this.parse, this.format, this.limit, this.update);
+    this.createDatePicker(language);
+    this.pickDate();
     this.dataRenderer(this.data);
 }
 exports.monthSwitch = monthSwitch;
@@ -760,16 +758,16 @@ exports.monthSwitch = monthSwitch;
  * @param el    挂载日历的元素
  *
  * */
-function buildCalendar(el, language) {
+function createDatePicker(lang) {
     var _this = this;
-    this.element = util.parseEl(el);
+    // this.element = <HTMLElement>parseEl(el);
     if (!this.element) {
-        console.error("[Calendar Warn] invalid selector,current selector " + el);
+        console.error("[Calendar Warn] invalid selector,current selector " + this.element);
         return false;
     }
     var startTime = this.startDate.getTime(), endTime = this.endDate.getTime();
     var currTime = this.date.getTime();
-    this.element.innerHTML = datepicker_template["default"](this.date, this.endDate, this.dateFormat, this.multiViews, this.flatView, util.setLanguage(language));
+    this.element.innerHTML = datepicker_template["default"](this.date, this.endDate, this.dateFormat, this.multiViews, this.flatView, util.setLanguage(lang));
     //日期切换
     var prev = this.element.querySelector(".calendar-action-prev");
     var next = this.element.querySelector(".calendar-action-next");
@@ -777,7 +775,7 @@ function buildCalendar(el, language) {
         var gap = util.diff(this.date, this.endDate);
         if (gap >= 2) {
             next.addEventListener("click", function () {
-                _this.monthSwitch(1, el, language);
+                _this.monthSwitch(1, lang);
                 util.removeClass(prev, "disabled");
                 util.removeClass(prev, "calendar-action-disabled");
             });
@@ -788,7 +786,7 @@ function buildCalendar(el, language) {
         }
         if (currTime > startTime) {
             prev.addEventListener("click", function () {
-                _this.monthSwitch(-1, el, language);
+                _this.monthSwitch(-1, lang);
                 util.removeClass(next, "disabled");
                 util.removeClass(next, "calendar-action-disabled");
             });
@@ -812,7 +810,7 @@ function buildCalendar(el, language) {
         clearTimeout(timer);
     }, 0);
 }
-exports.buildCalendar = buildCalendar;
+exports.createDatePicker = createDatePicker;
 function init(option, renderer) {
     var this$1 = this;
 
@@ -868,8 +866,10 @@ function init(option, renderer) {
         this.dates = renderer.dates;
         this.data = renderer.data;
     }
-    this.buildCalendar(option.el, util.getLanguage(option.language, option.defaultLanguage));
-    this.handlePickDate(this.element, this.selected, this.double, this.dates, this.parse, this.format, this.limit, this.update);
+    this.element = util.parseEl(option.el);
+    var lang = util.getLanguage(option.language, option.defaultLanguage);
+    this.createDatePicker(lang);
+    this.pickDate();
 }
 exports.init = init;
 });
@@ -881,11 +881,8 @@ var datepicer_picker = createCommonjsModule(function (module, exports) {
 exports.__esModule = true;
 
 
-function default_1(element, selected, isDouble, source, parse, format, limit, update) {
+function default_1(element, selected, isDouble, source, parse, format, limit, inDates, update) {
     var collection = element.querySelectorAll(".calendar-date-cell");
-    function inDates(date) {
-        return !!~source.indexOf(date);
-    }
     var _loop_1 = function (i) {
         var item = collection[i];
         item.addEventListener("click", function (e) {
@@ -1214,18 +1211,14 @@ var DatePicker = /** @class */ (function () {
         this.flatView = false;
         this.multiViews = false;
         this.monthSwitch = datepicker_init.monthSwitch;
-        this.buildCalendar = datepicker_init.buildCalendar;
-        this.handlePickDate = datepicer_picker["default"];
+        this.createDatePicker = datepicker_init.createDatePicker;
+        this.pickDate = function () {
+            datepicer_picker["default"](_this.element, _this.selected, _this.double, _this.dates, _this.parse, _this.format, _this.limit, _this.inDates, _this.update);
+        };
         this.format = function (date) { return datepicker_formatter.format(date, _this.dateFormat); };
         this.parse = function (string) { return datepicker_formatter.parseFormatted(string, _this.dateFormat); };
-        this.update = function (value) {
-            // if (!value) {
-            //     value = this.selected
-            // } else {
-            //     this.selected = value
-            // }
-            datepicker_observer["default"].$emit("update", value);
-        };
+        this.inDates = function (date) { return !!~_this.dates.indexOf(date); };
+        this.update = function (value) { return datepicker_observer["default"].$emit("update", value); };
         this.dataRenderer = function (data) {
             if (Object.keys(data).length <= 0) {
                 datepicker_observer["default"].$remove("data");
@@ -1329,9 +1322,6 @@ var DatePicker = /** @class */ (function () {
         };
         return output;
     }
-    DatePicker.prototype.inDates = function (date) {
-        return ~this.dates.indexOf(date);
-    };
     return DatePicker;
 }());
 exports["default"] = DatePicker;

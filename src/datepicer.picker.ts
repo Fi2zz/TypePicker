@@ -17,15 +17,15 @@ export default function (element: any,
                          parse: Function,
                          format: Function,
                          limit: number,
-                         update: Function) {
+                         inDates: Function,
+                         update: Function
+
+) {
     const collection = element.querySelectorAll(".calendar-date-cell");
     let hoverRange = <Array<any>>[];
     let inHoverRange = <Array<any>>[];
     let newRange = <Array<any>>[];
 
-    function inDates(date?: string) {
-        return !!~source.indexOf(date);
-    }
 
 
     for (let i = 0; i < collection.length; i++) {
