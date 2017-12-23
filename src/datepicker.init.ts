@@ -117,6 +117,7 @@ export function buildCalendar(el: any, language: any) {
         );
         this.update(this.selected);
         //初始化后，清除定时器
+        // window.
         clearTimeout(timer)
     }, 0);
 }

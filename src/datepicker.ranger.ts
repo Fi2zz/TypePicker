@@ -29,12 +29,19 @@ function getDefaultRange(collection: HTMLCollection, start: string, end: string)
     return temp.slice(startIndex + 1, endIndex)
 }
 
-function setStartAndEnd(collection: HTMLCollection, source: Array<any>, data: Array<any>, parse: Function) {
+function setStartAndEnd(
+    collection: HTMLCollection, 
+    source: Array<any>, 
+    data: Array<any>, 
+    parse: Function) 
+{
 
 
     const inDates = (item?: any) => inArray(source, item);
 
     let temp = <Array<string>> [];
+
+
 
     // console.error(data)
     const start = data[0];
@@ -51,8 +58,6 @@ function setStartAndEnd(collection: HTMLCollection, source: Array<any>, data: Ar
                 addClass(item, "end-date")
             }
         } else {
-
-
             if (item && nextItem) {
                 let curr = attr(item, "data-date");
                 let next = attr(nextItem, "data-date");

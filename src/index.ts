@@ -1,8 +1,8 @@
 import Observer from './datepicker.observer';
-import {diff, inArray, isObject, quickSort, isDate, isArray} from "./util"
-import {init, monthSwitch, buildCalendar} from './datepicker.init'
+import { diff, inArray, isObject, quickSort, isDate, isArray } from "./util"
+import { init, monthSwitch, buildCalendar } from './datepicker.init'
 import handlePickDate from './datepicer.picker'
-import {parseFormatted, format as formatter} from "./datepicker.formatter"
+import { parseFormatted, format as formatter } from "./datepicker.formatter"
 
 interface INTERFACES {
     el: string,
@@ -59,6 +59,7 @@ export default class DatePicker {
         }
     };
 
+
     inDates(date: string) {
         return ~this.dates.indexOf(date)
     }
@@ -76,8 +77,8 @@ export default class DatePicker {
             data: (cb: Function) => {
                 function noData(data: any) {
                     return !isObject(data)
-                        || ( Object.keys(data.data).length <= 0
-                        || data.dates.length <= 0)
+                        || (Object.keys(data.data).length <= 0
+                            || data.dates.length <= 0)
                 }
 
                 if (option.bindData) {
@@ -91,13 +92,15 @@ export default class DatePicker {
                     const result = cbData ? cbData : params;
                     if (isDate(params.from)) option.from = params.from;
                     if (isDate(params.to)) option.to = params.to;
+
+                    // console.log(params)
+
                     this.init(
                         option,
                         {
                             data: result.data,
                             dates: result.dates.sort((a: string, b: string) => this.parse(a) - this.parse(b))
                         });
-
                     if (!noData(result)) {
                         this.dataRenderer(result.data);
                     }
@@ -124,8 +127,8 @@ export default class DatePicker {
                         } else if (dates.length > 2) {
                             dates = dates.slice(0, 2)
                         }
-                        const start = <any> dates[0];
-                        const end = <any> dates[dates.length - 1];
+                        const start = <any>dates[0];
+                        const end = <any>dates[dates.length - 1];
                         const startDate = isDate(start) ? start : this.parse(start);
                         const endDate = isDate(end) ? end : this.parse(end);
                         if (!isDate(startDate) || !isDate(endDate)) {

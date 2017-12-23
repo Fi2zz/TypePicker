@@ -24,8 +24,9 @@ export default function (element: any,
     let newRange = <Array<any>>[];
 
     function inDates(date?: string) {
-        return inArray(source, date);
+        return !!~source.indexOf(date);
     }
+
 
     for (let i = 0; i < collection.length; i++) {
         const item = collection[i];
@@ -35,9 +36,13 @@ export default function (element: any,
             const date = attr(item, "data-date");
             const index = selected.indexOf(date);
             //不可选的日期
-            if (!date || index >= 0) {
+            //初始化时，selected的length为0，点击不可选日期
+            if (!date ||
+                index >= 0 ||
+                selected.length <= 0 && !inDates(date)) {
                 return false;
             }
+
             //双选，但选择的日期数量大于2，或单选
             if (isDouble && selected.length >= 2 || !isDouble) {
                 selected = []
@@ -53,7 +58,7 @@ export default function (element: any,
                 const end = selected[selected.length - 1];
                 const diff = gap(parse(start), parse(end));
                 const isOutOfLimit = diff > limit;
-                doublePick(
+                const isValid = doublePick(
                     element,
                     start,
                     end,
@@ -61,10 +66,15 @@ export default function (element: any,
                     isOutOfLimit,
                     allValid
                 );
-                setRange([], element, true);
-                if (allValid) {
+
+                if (isValid) {
+                    setRange([], element, true);
+                }
+                if (allValid && isValid) {
                     setRange(range, element, false)
                 }
+
+
             } else {
                 let selector = item;
                 let shouldChange = true;
@@ -78,7 +88,7 @@ export default function (element: any,
             update(selected)
         });
 
-    //     item.addEventListener("mouseenter", () => {
+        //     item.addEventListener("mouseenter", () => {
         //         const date = attr(item, "data-date");
         //         const prev = attr(item.previousElementSibling, "data-date");
         //         const next = attr(item.nextElementSibling, "data-date");
@@ -124,7 +134,7 @@ export default function (element: any,
         //
         //     });
         //
-        }
+    }
 }
 
 
@@ -223,12 +233,22 @@ function doublePick(collector: HTMLElement,
 
     //选择了开始日期，尚未选择结束日期
     if (diff === 0) {
-        removeClass(cache.start, "start-date");
-        removeClass(cache.start, "active");
-        removeClass(cache.end, "end-date");
-        removeClass(cache.end, "active");
-        addClass(current.start, "active");
-        addClass(current.start, "start-date");
+
+
+        if (!hasClass(current.start, "disabled")) {
+            removeClass(cache.start, "start-date");
+            removeClass(cache.start, "active");
+            removeClass(cache.end, "end-date");
+            removeClass(cache.end, "active");
+            addClass(current.start, "active");
+            addClass(current.start, "start-date");
+
+            return true
+        }
+        else {
+            return false
+        }
+
     } else {
         addClass(current.end, "active");
         if (diff > 0) {
@@ -253,6 +273,9 @@ function doublePick(collector: HTMLElement,
     }
 
 
+    return true
+
+
 }
 function gap(d1: Date, d2: Date) {
     let value = diff(d1, d2, "days");
@@ -269,7 +292,7 @@ function doubleSelectHandler(date: any,
         return inArray(source, item);
     }
 
-    let range = <Array<any>> [];
+    let range = <Array<any>>[];
     let inRange = <Array<any>>[];
     //获取已选的开始日期
     const start = selected[0];

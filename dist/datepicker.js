@@ -808,6 +808,7 @@ function buildCalendar(el, language) {
         _this.selected = datepicker_ranger.setDefaultRange(_this.element, _this.element.querySelectorAll(".calendar-date-cell:not(.empty)"), initSelected, _this.dates, _this.double, _this.parse, _this.format);
         _this.update(_this.selected);
         //初始化后，清除定时器
+        // window.
         clearTimeout(timer);
     }, 0);
 }
@@ -883,7 +884,7 @@ exports.__esModule = true;
 function default_1(element, selected, isDouble, source, parse, format, limit, update) {
     var collection = element.querySelectorAll(".calendar-date-cell");
     function inDates(date) {
-        return util.inArray(source, date);
+        return !!~source.indexOf(date);
     }
     var _loop_1 = function (i) {
         var item = collection[i];
@@ -893,7 +894,10 @@ function default_1(element, selected, isDouble, source, parse, format, limit, up
             var date = util.attr(item, "data-date");
             var index = selected.indexOf(date);
             //不可选的日期
-            if (!date || index >= 0) {
+            //初始化时，selected的length为0，点击不可选日期
+            if (!date ||
+                index >= 0 ||
+                selected.length <= 0 && !inDates(date)) {
                 return false;
             }
             //双选，但选择的日期数量大于2，或单选
@@ -911,9 +915,11 @@ function default_1(element, selected, isDouble, source, parse, format, limit, up
                 var end = selected[selected.length - 1];
                 var diff_1 = gap(parse(start), parse(end));
                 var isOutOfLimit = diff_1 > limit;
-                doublePick(element, start, end, diff_1, isOutOfLimit, allValid);
-                datepicker_ranger.ranged([], element, true);
-                if (allValid) {
+                var isValid = doublePick(element, start, end, diff_1, isOutOfLimit, allValid);
+                if (isValid) {
+                    datepicker_ranger.ranged([], element, true);
+                }
+                if (allValid && isValid) {
                     datepicker_ranger.ranged(range, element, false);
                 }
             }
@@ -1003,12 +1009,18 @@ function doublePick(collector, start, end, diff, outOfLimit, valid) {
     };
     //选择了开始日期，尚未选择结束日期
     if (diff === 0) {
-        util.removeClass(cache.start, "start-date");
-        util.removeClass(cache.start, "active");
-        util.removeClass(cache.end, "end-date");
-        util.removeClass(cache.end, "active");
-        util.addClass(current.start, "active");
-        util.addClass(current.start, "start-date");
+        if (!util.hasClass(current.start, "disabled")) {
+            util.removeClass(cache.start, "start-date");
+            util.removeClass(cache.start, "active");
+            util.removeClass(cache.end, "end-date");
+            util.removeClass(cache.end, "active");
+            util.addClass(current.start, "active");
+            util.addClass(current.start, "start-date");
+            return true;
+        }
+        else {
+            return false;
+        }
     }
     else {
         util.addClass(current.end, "active");
@@ -1035,6 +1047,7 @@ function doublePick(collector, start, end, diff, outOfLimit, valid) {
             util.addClass(current.end, "start-date");
         }
     }
+    return true;
 }
 function gap(d1, d2) {
     var value = util.diff(d1, d2, "days");
@@ -1250,6 +1263,7 @@ var DatePicker = /** @class */ (function () {
                         { option.from = params.from; }
                     if (util.isDate(params.to))
                         { option.to = params.to; }
+                    // console.log(params)
                     _this.init(option, {
                         data: result.data,
                         dates: result.dates.sort(function (a, b) { return _this.parse(a) - _this.parse(b); })
