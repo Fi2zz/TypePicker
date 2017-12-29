@@ -12,7 +12,6 @@ const source: any = {
   "2017-11-11": {enable: true, "highlight": false, "value": 1998, "label": "unlimited"},
   // "2017-11-12": {enable:true,"highlight": true, "value": 1198, "label": "unlimited"},
   "2017-11-13": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
-  // "2017-11-14": {enable:true,"highlight": false, "value": 1498, "label": "unlimited"},
   // "2017-11-15": {enable:true,"highlight": false, "value": 1498, "label": "unlimited"},
   "2017-11-16": {enable:true,"highlight": false, "value": 1398, "label": "unlimited"},
   "2017-11-17": {enable: true, "highlight": false, "value": 1798, "label": "unlimited"},

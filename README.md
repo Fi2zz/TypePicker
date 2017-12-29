@@ -6,13 +6,12 @@
 |flatView<sup>*</sup>              |Boolean          |单个日历视图|
 |from<sup>**<sup> 	|Date|                             开始日期|
 |to    |Date|                            结束日期|
-|language<sup>[0]</sup>|Map                         | 语言包| 默认为简体中文语言包
-|defaultLanguage |String                |  当前选择日历语言，需要和language选项配合使用| 没有默认值
+|language<sup>[0]</sup>|Map                         | 语言包，默认为简体中文语言包| 
+|defaultLanguage |String                |  当前选择日历语言，需要和language选项配合使用，没有默认值|
 |format |String|                           日期格式|
 |doubleSelect|Boolean|                      是否双选，对于酒店和车船票机票比较有用|
 |bindData<sup>***</sup>   |Boolean|                      绑定数据到日历，|
 |limit   |Number|                          双选情况下，限制最大跨度,如果`doubleSelect=false`,则自动限制为`1`|
-
 
     *    multiViews和flatView都为true的情况下，自动转换成multiviews
     *    multiViews和flatView都为false的情况下，垂直展示多个月份，移动端会比较有用
