@@ -1,14 +1,14 @@
 
 | api|    类型| 说明|
 |----|----    |----|
-|el|string|选择器,用于挂载日历|
+|el|String|选择器,用于挂载日历|
 |multiViews<sup>*</sup>              |Boolean          |展示多个日历视图，目前支持两个日历横向展示|
 |flatView<sup>*</sup>              |Boolean          |单个日历视图|
 |from<sup>**<sup> 	|Date|                             开始日期|
 |to    |Date|                            结束日期|
 |language<sup>[0]</sup>|Map                         | 语言包|
 |defaultLanguage |String                |  当前选择日历语言，需要和language选项配合使用|
-|format |string|                           日期格式|
+|format |String|                           日期格式|
 |doubleSelect|Boolean|                      是否双选，对于酒店和车船票机票比较有用|
 |bindData<sup>***</sup>   |Boolean|                      绑定数据到日历，|
 |limit   |Number|                          双选情况下，限制最大跨度,如果`doubleSelect=false`,则自动限制为`1`|
@@ -132,9 +132,9 @@
 |parse <sup>[2]</sup>|Function|把格式化后的日期反格式化,返回一个Date对象| `datePicker.parse(dateString)`  |
 |format <sup>[3]</sup>|Function| 把格式化的日期,返回一个对象| `datePicker.format(DateObject)`  |
 |on <sup>[4]</sup>|Function|事件监听器|  `datePicker.on("update",data=>{})`  |
-|update   |event| 更新日历数据|`datePicker,on("update",data=>{ })`|
-|data   |event|  获取日历数据 | `datePicker.on("data",data=>{ })`|
-|data|Function|初始化日历数据，仅在初始化的时候需要调用 `datePicker.data(data)`  |
+|update   |Event| 更新日历数据|`datePicker,on("update",data=>{ })`|
+|data   |Event|  获取日历数据 | `datePicker.on("data",data=>{ })`|
+|data|Function|初始化日历数据，仅在初始化的时候需要调用   |`datePicker.data(options=>{ /* your code */} )`
 |[deprecated]setDefaultDates|Function| 设置默认选中日期 |`datePicker.setDefaultDates([Array<string>])|
 |dateRanges|Function| 设置默认选中日期 |`datePicker.dateRanges([Array<string>])|
 
