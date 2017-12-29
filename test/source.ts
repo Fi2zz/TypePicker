@@ -16,7 +16,6 @@ const source: any = {
   // "2017-11-15": {enable:true,"highlight": false, "value": 1498, "label": "unlimited"},
   "2017-11-16": {enable:true,"highlight": false, "value": 1398, "label": "unlimited"},
   "2017-11-17": {enable: true, "highlight": false, "value": 1798, "label": "unlimited"},
-  // "2017-12-20": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
   "2017-12-21": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
   "2017-12-22": {enable: true, "highlight": false, "value": 1798, "label": "unlimited"},
   "2017-12-23": {enable: true, "highlight": false, "value": 2798, "label": "unlimited"},
