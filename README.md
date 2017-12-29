@@ -134,7 +134,7 @@
 |update   |Event| 更新日历数据|datePicker,on("update",data=>{ <br/> /*your dates array */<br/>})|
 |data   |Event|  获取日历数据 | datePicker.on("data",data=>{ <br/> /* your code */ <br/> })|
 |data|Function|初始化日历数据，仅在初始化的时候需要调用   |datePicker.data(options=>{   <br/>  /* your code */ <br/>   } )
-|dateRanges|Function| 设置默认选中日期 |`datePicker.dateRanges([Array<string>])|
+|dateRanges|Function| 设置默认选中日期 |datePicker.dateRanges([Array<string>])|
 
 [0] language语言包,由以下构成
 	
