@@ -16,7 +16,7 @@ import {setDefaultRange} from './datepicker.ranger'
 /***
  * 月份切换
  * @param size 切换月份数量
- * @param el   挂载日历的元素
+ * @param language 语言包
  * ***/
 export function monthSwitch(size: number, language: any) {
     let curr = {
@@ -35,13 +35,12 @@ export function monthSwitch(size: number, language: any) {
     this.dataRenderer(this.data)
 }
 
-/**
- *
- * 生成日历
- * @param el    挂载日历的元素
- *
- * */
 
+/**
+ * 生成日历
+ * @param lang 语言包
+ *
+ * **/
 export function createDatePicker(lang: any) {
     // this.element = <HTMLElement>parseEl(el);
     if (!this.element) {

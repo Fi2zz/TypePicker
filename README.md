@@ -6,8 +6,8 @@
 |flatView<sup>*</sup>              |Boolean          |单个日历视图|
 |from<sup>**<sup> 	|Date|                             开始日期|
 |to    |Date|                            结束日期|
-|language<sup>[0]</sup>|Map                         | 语言包|
-|defaultLanguage |String                |  当前选择日历语言，需要和language选项配合使用|
+|language<sup>[0]</sup>|Map                         | 语言包| 默认为简体中文语言包
+|defaultLanguage |String                |  当前选择日历语言，需要和language选项配合使用| 没有默认值
 |format |String|                           日期格式|
 |doubleSelect|Boolean|                      是否双选，对于酒店和车船票机票比较有用|
 |bindData<sup>***</sup>   |Boolean|                      绑定数据到日历，|
