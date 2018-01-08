@@ -801,7 +801,12 @@ function createDatePicker(lang) {
                 ? _this.selected
                 : [_this.format(_this.date).value];
         _this.selected = datepicker_ranger.setDefaultRange(_this.element, _this.element.querySelectorAll(".calendar-date-cell:not(.empty)"), initSelected, _this.dates, _this.double, _this.parse, _this.format);
-        _this.update(_this.selected);
+        var updateEventData = {
+            type: 'init',
+            value: _this.selected
+        };
+        // this.update(this.selected);
+        _this.update(updateEventData);
         //初始化后，清除定时器
         // window.
         clearTimeout(timer);
@@ -926,7 +931,10 @@ function default_1(element, selected, isDouble, source, parse, format, limit, in
                 }
                 singlePick(selector, element, shouldChange);
             }
-            update(selected);
+            update({
+                type: 'selected',
+                value: selected
+            });
         });
         //     item.addEventListener("mouseenter", () => {
         //         const date = attr(item, "data-date");

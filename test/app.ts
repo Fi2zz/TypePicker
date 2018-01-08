@@ -48,9 +48,13 @@ const popup = new Pop({
 
 datepicker.on("update", (output: any) => {
     console.log("onupdate", output)
-    document.getElementById("layout").innerHTML = `选中的日期<br/>${output}`;
+
+
+console.log("onupdate")
+
+    document.getElementById("layout").innerHTML = `选中的日期<br/>${output.value}`;
     if (output.length >= 2) {
-        datepicker.dateRanges(output)
+        datepicker.dateRanges(output.value)
     }
 });
 // calendar.dateRanges();

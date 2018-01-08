@@ -85,7 +85,10 @@ export default function (element: any,
 
                 singlePick(selector, element, shouldChange);
             }
-            update(selected)
+            update({
+                type:'selected',
+                value:selected
+            })
         });
 
         //     item.addEventListener("mouseenter", () => {

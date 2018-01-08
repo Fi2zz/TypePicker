@@ -108,7 +108,14 @@ export function createDatePicker(lang: any) {
             this.double,
             this.parse,
             this.format);
-        this.update(this.selected);
+
+        const updateEventData ={
+                type:'init',
+                value:this.selected
+        }
+
+        // this.update(this.selected);
+        this.update(updateEventData)
         //初始化后，清除定时器
         // window.
         clearTimeout(timer)
