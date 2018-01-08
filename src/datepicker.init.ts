@@ -11,7 +11,7 @@ import {
     getDates
 } from "./util"
 import compose from './datepicker.template'
-import {setDefaultRange} from './datepicker.ranger'
+import { setDefaultRange } from './datepicker.ranger'
 
 /***
  * 月份切换
@@ -27,8 +27,9 @@ export function monthSwitch(size: number, language: any) {
     let month = curr.month + size;
     //每次切换两个月份
     if (this.multiViews) {
-        month += size > 0 ? 1 : -1
+        // month += size > 0 ? 1 : -1
     }
+
     this.date = new Date(curr.year, month, curr.date);
     this.createDatePicker(language);
     this.pickDate();
@@ -47,7 +48,8 @@ export function createDatePicker(lang: any) {
         console.error(`[Calendar Warn] invalid selector,current selector ${this.element}`);
         return false
     }
-    const startTime = this.startDate.getTime(), endTime = this.endDate.getTime();
+    const startTime = this.startDate.getTime();
+    const endTime = this.endDate.getTime();
     const currTime = this.date.getTime();
 
 
@@ -95,8 +97,9 @@ export function createDatePicker(lang: any) {
             this.defaultDates.length > 0
                 ? this.defaultDates
                 : this.double
-                ? this.selected
-                : [this.format(this.date).value];
+                    ? this.selected
+                    : [this.format(this.date).value];
+
         this.selected = setDefaultRange(
             this.element,
             this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
@@ -104,8 +107,7 @@ export function createDatePicker(lang: any) {
             this.dates,
             this.double,
             this.parse,
-            this.format
-        );
+            this.format);
         this.update(this.selected);
         //初始化后，清除定时器
         // window.
@@ -157,7 +159,7 @@ export function init(option: any, renderer: any) {
         const date = currDate.getDate();
         let dates = [];
         for (let i = 0; i < gap; i++) {
-            let item = <Date> new Date(year, month, date + i);
+            let item = <Date>new Date(year, month, date + i);
             let formatted = this.format(item).value;
             dates.push(formatted)
         }

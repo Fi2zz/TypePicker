@@ -4,9 +4,11 @@ const webpack = require('webpack');
 const merge = require('webpack-merge');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
+
 function resolve(dir) {
     return path.join(__dirname, '..', dir)
 }
+
 const assetsPath = function (_path) {
     const assetsSubDirectory = config.dev.assetsSubDirectory;
     return path.posix.join(assetsSubDirectory, _path)

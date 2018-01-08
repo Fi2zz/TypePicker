@@ -94,7 +94,7 @@ export default class DatePicker {
                 function noData(data: any) {
                     return !isObject(data)
                         || (Object.keys(data.data).length <= 0
-                        || data.dates.length <= 0)
+                            || data.dates.length <= 0)
                 }
 
                 if (option.bindData) {
@@ -109,14 +109,12 @@ export default class DatePicker {
                     if (isDate(params.from)) option.from = params.from;
                     if (isDate(params.to)) option.to = params.to;
 
-                    // console.log(params)
-
-                    this.init(
-                        option,
-                        {
-                            data: result.data,
-                            dates: result.dates.sort((a: string, b: string) => this.parse(a) - this.parse(b))
-                        });
+                    // const 
+                    const config = {
+                        data: result.data,
+                        dates: result.dates.sort((a: string, b: string) => this.parse(a) - this.parse(b))
+                    }
+                    this.init(option, config);
                     if (!noData(result)) {
                         this.dataRenderer(result.data);
                     }

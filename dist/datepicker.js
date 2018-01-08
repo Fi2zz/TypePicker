@@ -733,7 +733,7 @@ exports.__esModule = true;
 /***
  * 月份切换
  * @param size 切换月份数量
- * @param el   挂载日历的元素
+ * @param language 语言包
  * ***/
 function monthSwitch(size, language) {
     var curr = {
@@ -743,9 +743,6 @@ function monthSwitch(size, language) {
     };
     var month = curr.month + size;
     //每次切换两个月份
-    if (this.multiViews) {
-        month += size > 0 ? 1 : -1;
-    }
     this.date = new Date(curr.year, month, curr.date);
     this.createDatePicker(language);
     this.pickDate();
@@ -753,11 +750,10 @@ function monthSwitch(size, language) {
 }
 exports.monthSwitch = monthSwitch;
 /**
- *
  * 生成日历
- * @param el    挂载日历的元素
+ * @param lang 语言包
  *
- * */
+ * **/
 function createDatePicker(lang) {
     var _this = this;
     // this.element = <HTMLElement>parseEl(el);
@@ -765,7 +761,8 @@ function createDatePicker(lang) {
         console.error("[Calendar Warn] invalid selector,current selector " + this.element);
         return false;
     }
-    var startTime = this.startDate.getTime(), endTime = this.endDate.getTime();
+    var startTime = this.startDate.getTime();
+    var endTime = this.endDate.getTime();
     var currTime = this.date.getTime();
     this.element.innerHTML = datepicker_template["default"](this.date, this.endDate, this.dateFormat, this.multiViews, this.flatView, util.setLanguage(lang));
     //日期切换
@@ -1256,11 +1253,12 @@ var DatePicker = /** @class */ (function () {
                         { option.from = params.from; }
                     if (util.isDate(params.to))
                         { option.to = params.to; }
-                    // console.log(params)
-                    _this.init(option, {
+                    // const 
+                    var config = {
                         data: result.data,
                         dates: result.dates.sort(function (a, b) { return _this.parse(a) - _this.parse(b); })
-                    });
+                    };
+                    _this.init(option, config);
                     if (!noData(result)) {
                         _this.dataRenderer(result.data);
                     }
