@@ -42,7 +42,11 @@
     });
     //更新选择的日期
     datePicker.on("update", (output: any) => {
-        document.getElementById("layout").innerHTML = `选中的日期${output}`
+
+        const {type,value}=output;
+        //type => 'init'或'selected'
+        //valye => 选择的日期
+        document.getElementById("layout").innerHTML = `选中的日期${value}`
     });
     
     //设置默认日期，在 datePicker.get()或datePicker.data() 之前或在 datePicker.data()内调用调用，
