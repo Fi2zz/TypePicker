@@ -40,7 +40,7 @@ export const source: any = {
     "2018-2-3": {enable: true, "highlight": false, "value": 1998, "label": "unlimited"},
     "2018-2-9": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
     "2018-2-8": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
-    "2018-2-05": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-2-5": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
     "2018-2-7": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
     "2018-2-1": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
     "2018-2-6": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},

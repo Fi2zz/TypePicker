@@ -67,7 +67,7 @@ export default class DatePicker {
     };
     defaultDates: Array<string>[];
     defaults: Array<any>[];
-    format = (date: Date) => formatter(date, this.dateFormat,this.zeroPadding);
+    format = (date: Date,zeroPadding?:boolean) => formatter(date, this.dateFormat,this.zeroPadding);
     parse = (string: string) => parseFormatted(string, this.dateFormat);
     inDates = (date: string) => !!~this.dates.indexOf(date);
     update = (value: Array<any>) => Observer.$emit("update", value);
@@ -111,7 +111,7 @@ export default class DatePicker {
                     if (isDate(params.from)) option.from = params.from;
                     if (isDate(params.to)) option.to = params.to;
 
-                    // const 
+                    // const
                     const config = {
                         data: result.data,
                         dates: result.dates.sort((a: string, b: string) => this.parse(a) - this.parse(b))

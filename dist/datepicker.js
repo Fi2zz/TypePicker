@@ -808,6 +808,7 @@ function createDatePicker(lang) {
                 ? _this.selected
                 : [_this.format(_this.date).value];
         _this.selected = datepicker_ranger.setDefaultRange(_this.element, _this.element.querySelectorAll(".calendar-date-cell:not(.empty)"), initSelected, _this.dates, _this.double, _this.parse, _this.format);
+        // console.log(this.dates)
         var updateEventData = {
             type: 'init',
             value: _this.selected
@@ -856,6 +857,7 @@ function init(option, renderer) {
         var date = this.endDate.getDate();
         this.endDate = new Date(year, month + 1, date);
     }
+    this.zeroPadding = !(!option.zeroPadding);
     if (!renderer.dates || renderer.dates && renderer.dates.length <= 0) {
         var currDate = new Date();
         var gap = util.diff(this.endDate, currDate, "days");
@@ -875,8 +877,6 @@ function init(option, renderer) {
         this.dates = renderer.dates;
         this.data = renderer.data;
     }
-    this.zeroPadding = !(!option.zeroPadding);
-    console.log(this.zeroPadding);
     this.element = util.parseEl(option.el);
     var lang = util.getLanguage(option.language, option.defaultLanguage);
     this.createDatePicker(lang);
@@ -1230,7 +1230,7 @@ var DatePicker = /** @class */ (function () {
         this.pickDate = function () {
             datepicer_picker["default"](_this.element, _this.selected, _this.double, _this.dates, _this.parse, _this.format, _this.limit, _this.inDates, _this.update);
         };
-        this.format = function (date) { return datepicker_formatter.format(date, _this.dateFormat, _this.zeroPadding); };
+        this.format = function (date, zeroPadding) { return datepicker_formatter.format(date, _this.dateFormat, _this.zeroPadding); };
         this.parse = function (string) { return datepicker_formatter.parseFormatted(string, _this.dateFormat); };
         this.inDates = function (date) { return !!~_this.dates.indexOf(date); };
         this.update = function (value) { return datepicker_observer["default"].$emit("update", value); };
@@ -1271,7 +1271,7 @@ var DatePicker = /** @class */ (function () {
                         { option.from = params.from; }
                     if (util.isDate(params.to))
                         { option.to = params.to; }
-                    // const 
+                    // const
                     var config = {
                         data: result.data,
                         dates: result.dates.sort(function (a, b) { return _this.parse(a) - _this.parse(b); })

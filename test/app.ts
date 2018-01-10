@@ -26,7 +26,7 @@ const datepicker = <any>new DatePicker({
     language: languages,
     format: "YYYY-MM-DD",
     doubleSelect: true,
-    limit: 2,
+    limit: 7,
     defaultLanguage: "zh-cn",
     multiViews: true,
     flatView: true,
@@ -48,11 +48,11 @@ datepicker.on("update", (output: any) => {
 
     document.getElementById("layout").innerHTML = `选中的日期<br/>${output.value}`;
     if (output.length >= 2) {
-        datepicker.dateRanges(output.value)
+        // datepicker.dateRanges(output.value)
     }
 });
 // calendar.dateRanges();
-datepicker.dateRanges([new Date(dist.year, dist.month, dist.date), "2018-01-03"]);
+datepicker.dateRanges(["2018-1-10", "2018-1-14"]);
 
 
 datepicker.on("data", (result: any) => {
@@ -61,6 +61,7 @@ datepicker.on("data", (result: any) => {
     for (let i = 0; i < nodeList.length; i++) {
         let node = nodeList[i];
         let date = node.getAttribute("data-date");
+
         if (date in data) {
             let itemData = source[date];
             if (itemData.highlight) {
@@ -69,7 +70,7 @@ datepicker.on("data", (result: any) => {
             let placeholder: HTMLElement = node.querySelector(".placeholder");
             placeholder.innerHTML = itemData.value
         } else {
-            // addClass(node, "disabled")
+            addClass(node, "disabled")
         }
     }
 });
@@ -77,6 +78,7 @@ datepicker.on("data", (result: any) => {
 
 datepicker.data((params: any) => {
     const keys = Object.keys(source);
+
     const currDate = new Date(dist.year, dist.month, dist.date);
     for (let i = 0; i < keys.length; i++) {
         let item = datepicker.parse(keys[i]);

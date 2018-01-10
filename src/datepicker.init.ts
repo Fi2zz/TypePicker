@@ -101,6 +101,7 @@ export function createDatePicker(lang: any) {
                 ? this.selected
                 : [this.format(this.date).value];
 
+
         this.selected = setDefaultRange(
             this.element,
             this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
@@ -110,10 +111,14 @@ export function createDatePicker(lang: any) {
             this.parse,
             this.format);
 
+
+        // console.log(this.dates)
+
         const updateEventData = {
             type: 'init',
             value: this.selected
         }
+
 
         // this.update(this.selected);
         this.update(updateEventData)
@@ -159,6 +164,8 @@ export function init(option: any, renderer: any) {
         this.endDate = new Date(year, month + 1, date)
     }
 
+    this.zeroPadding = !(!option.zeroPadding);
+
     if (!renderer.dates || renderer.dates && renderer.dates.length <= 0) {
         const currDate = new Date();
         const gap = diff(this.endDate, currDate, "days");
@@ -178,8 +185,7 @@ export function init(option: any, renderer: any) {
         this.data = renderer.data;
     }
 
-    this.zeroPadding = !(!option.zeroPadding);
-    console.log(this.zeroPadding)
+
     this.element = parseEl(option.el);
     const lang = getLanguage(option.language, option.defaultLanguage);
     this.createDatePicker(lang);
