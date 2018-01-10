@@ -30,7 +30,8 @@ interface INTERFACES {
     multiViews: boolean,
     doubleSelect: boolean,
     defaultLanguage: string,
-    bindData: boolean
+    bindData: boolean,
+    zeroPadding:boolean
 }
 
 
@@ -50,6 +51,7 @@ export default class DatePicker {
     multiViews: boolean = false;
     monthSwitch = monthSwitch;
     createDatePicker = createDatePicker;
+    zeroPadding:boolean=true;
     pickDate = () => {
         handlePickDate(
             this.element,
@@ -65,7 +67,7 @@ export default class DatePicker {
     };
     defaultDates: Array<string>[];
     defaults: Array<any>[];
-    format = (date: Date) => formatter(date, this.dateFormat);
+    format = (date: Date) => formatter(date, this.dateFormat,this.zeroPadding);
     parse = (string: string) => parseFormatted(string, this.dateFormat);
     inDates = (date: string) => !!~this.dates.indexOf(date);
     update = (value: Array<any>) => Observer.$emit("update", value);

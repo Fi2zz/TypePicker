@@ -18,12 +18,17 @@ function parse(string: string | Date): any {
 }
 
 
-export function format(date: Date, format: string, lang?: any) {
+export function format(date: Date, format: string, zeroPadding:boolean=true) {
 
 
+
+    let shouldPadStart =true
+    if(!zeroPadding){
+        shouldPadStart =false
+    }
     let parts = <any>{
-        DD: padding(date.getDate()),
-        MM: padding(date.getMonth() + 1),
+        DD:shouldPadStart?padding(date.getDate()):date.getDate(),
+        MM: shouldPadStart?padding(date.getMonth() + 1):date.getMonth()+1,
         YYYY: date.getFullYear()
 
     };
@@ -31,7 +36,7 @@ export function format(date: Date, format: string, lang?: any) {
         origin: date,
         date: parts["DD"],
         month: parts["MM"],
-        year: parts["YYYy"],
+        year: parts["YYYY"],
         day: date.getDay(),
         value: format.replace(/(?:\b|%)([dDMyYHhaAmsz]+|ap|AP)(?:\b|%)/g, function (match, $1) {
             return parts[$1] === undefined ? $1 : parts[$1]
@@ -39,6 +44,10 @@ export function format(date: Date, format: string, lang?: any) {
     }
 
 }
+
+
+
+// console.log(format(new Date,'DD/MM/YYYY',false))
 
 export function parseFormatted(strDate: string, format: string) {
     const parts = <any>{

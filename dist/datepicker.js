@@ -322,17 +322,22 @@ function parse(string) {
         { date = null; }
     return date;
 }
-function format(date, format, lang) {
+function format(date, format, zeroPadding) {
+    if (zeroPadding === void 0) { zeroPadding = true; }
+    var shouldPadStart = true;
+    if (!zeroPadding) {
+        shouldPadStart = false;
+    }
     var parts = {
-        DD: util.padding(date.getDate()),
-        MM: util.padding(date.getMonth() + 1),
+        DD: shouldPadStart ? util.padding(date.getDate()) : date.getDate(),
+        MM: shouldPadStart ? util.padding(date.getMonth() + 1) : date.getMonth() + 1,
         YYYY: date.getFullYear()
     };
     return {
         origin: date,
         date: parts["DD"],
         month: parts["MM"],
-        year: parts["YYYy"],
+        year: parts["YYYY"],
         day: date.getDay(),
         value: format.replace(/(?:\b|%)([dDMyYHhaAmsz]+|ap|AP)(?:\b|%)/g, function (match, $1) {
             return parts[$1] === undefined ? $1 : parts[$1];
@@ -340,6 +345,7 @@ function format(date, format, lang) {
     };
 }
 exports.format = format;
+// console.log(format(new Date,'DD/MM/YYYY',false))
 function parseFormatted(strDate, format) {
     var parts = {
         DD: '([0-9][0-9])',
@@ -480,7 +486,7 @@ function setItemClassName(date) {
     }
     return classStack.toString();
 }
-function setDates(year, month, formater) {
+function setDates(year, month, formater, zeroPadding) {
     var List = [];
     var d = new Date(year, month, 1);
     var curr = {
@@ -500,8 +506,8 @@ function setDates(year, month, formater) {
     }
     for (var date = 1; date <= util.getDates(curr.year, curr.month); date++) {
         var currDate_1 = new Date(curr.year, curr.month, date);
-        var key = datepicker_formatter.format(currDate_1, formater).value;
-        var text = "<div class=\"date\">" + util.padding(date) + "</div><div class=\"placeholder\"></div>";
+        var key = datepicker_formatter.format(currDate_1, formater, zeroPadding).value;
+        var text = "<div class=\"date\">" + (zeroPadding ? util.padding(date) : date) + "</div><div class=\"placeholder\"></div>";
         List.push({
             date: date,
             className: setItemClassName(currDate_1),
@@ -515,11 +521,12 @@ function setDates(year, month, formater) {
 /**
  * 集合月历，把多个月份的何在一起，构成日历
  * **/
-function map(startDate, format, gap) {
+function map(startDate, format, gap, zeroPadding) {
+    if (zeroPadding === void 0) { zeroPadding = true; }
     var template = [];
     for (var i = 0; i <= gap; i++) {
         var date = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
-        var paint = setDates(date.getFullYear(), date.getMonth(), format);
+        var paint = setDates(date.getFullYear(), date.getMonth(), format, zeroPadding);
         template.push({ template: paint.template, year: paint.year, month: paint.month });
     }
     return template;
@@ -527,7 +534,7 @@ function map(startDate, format, gap) {
 function viewMainClassName(index, flatView) {
     return flatView ? "" : " calendar-" + index;
 }
-function template(template, multiViews, flatView, language) {
+function template(template, multiViews, flatView, language, zeroPadding) {
     var weekDays = language.week.map(function (day, index) {
         var className = new stack["default"](["calendar-cell", "calendar-day-cell",
             index === 0 ? "calendar-cell-weekday" : index === 6 ? "calendar-cell-weekend" : ""]);
@@ -554,10 +561,10 @@ function template(template, multiViews, flatView, language) {
  * 生成完整日历
  *
  * **/
-function compose(startDate, endDate, format, multiViews, flatView, language) {
+function compose(startDate, endDate, format, multiViews, flatView, language, zeroPadding) {
     var className = "calendar-" + (multiViews ? "double-views" : flatView ? "single-view" : "flat-view");
     var gap = multiViews ? 1 : flatView ? 0 : util.diff(startDate, endDate);
-    var tpl = template(map(startDate, format, gap), multiViews, flatView, language);
+    var tpl = template(map(startDate, format, gap, zeroPadding), multiViews, flatView, language, zeroPadding);
     var controller = multiViews || flatView ? "\n         <div class=\"calendar-action-bar\">\n            <button class='calendar-action calendar-action-prev'><span>prev</span></button>\n            <button class='calendar-action calendar-action-next'><span>next</span></button>\n         </div>\n        " : "";
     return "<div class=\"calendar " + className + "\"> " + controller + tpl + "</div>";
 }
@@ -764,7 +771,7 @@ function createDatePicker(lang) {
     var startTime = this.startDate.getTime();
     var endTime = this.endDate.getTime();
     var currTime = this.date.getTime();
-    this.element.innerHTML = datepicker_template["default"](this.date, this.endDate, this.dateFormat, this.multiViews, this.flatView, util.setLanguage(lang));
+    this.element.innerHTML = datepicker_template["default"](this.date, this.endDate, this.dateFormat, this.multiViews, this.flatView, util.setLanguage(lang), this.zeroPadding);
     //日期切换
     var prev = this.element.querySelector(".calendar-action-prev");
     var next = this.element.querySelector(".calendar-action-next");
@@ -868,6 +875,8 @@ function init(option, renderer) {
         this.dates = renderer.dates;
         this.data = renderer.data;
     }
+    this.zeroPadding = !(!option.zeroPadding);
+    console.log(this.zeroPadding);
     this.element = util.parseEl(option.el);
     var lang = util.getLanguage(option.language, option.defaultLanguage);
     this.createDatePicker(lang);
@@ -1217,10 +1226,11 @@ var DatePicker = /** @class */ (function () {
         this.multiViews = false;
         this.monthSwitch = datepicker_init.monthSwitch;
         this.createDatePicker = datepicker_init.createDatePicker;
+        this.zeroPadding = true;
         this.pickDate = function () {
             datepicer_picker["default"](_this.element, _this.selected, _this.double, _this.dates, _this.parse, _this.format, _this.limit, _this.inDates, _this.update);
         };
-        this.format = function (date) { return datepicker_formatter.format(date, _this.dateFormat); };
+        this.format = function (date) { return datepicker_formatter.format(date, _this.dateFormat, _this.zeroPadding); };
         this.parse = function (string) { return datepicker_formatter.parseFormatted(string, _this.dateFormat); };
         this.inDates = function (date) { return !!~_this.dates.indexOf(date); };
         this.update = function (value) { return datepicker_observer["default"].$emit("update", value); };

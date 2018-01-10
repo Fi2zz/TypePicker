@@ -22,7 +22,7 @@ function setItemClassName(date?: any) {
     }
     return classStack.toString()
 }
-function setDates(year: any, month: any, formater: string) {
+function setDates(year: any, month: any, formater: string,zeroPadding:boolean) {
     let List = <Array<any>>[];
     const d = new Date(year, month, 1);
     const curr = {
@@ -42,8 +42,8 @@ function setDates(year: any, month: any, formater: string) {
     }
     for (let date = 1; date <= getDates(curr.year, curr.month); date++) {
         const currDate = new Date(curr.year, curr.month, date);
-        const key = format(currDate, formater).value;
-        const text = `<div class="date">${padding(date)}</div><div class="placeholder"></div>`;
+        const key = format(currDate, formater,zeroPadding).value;
+        const text = `<div class="date">${zeroPadding?padding(date):date}</div><div class="placeholder"></div>`;
 
         List.push({
             date,
@@ -60,11 +60,11 @@ function setDates(year: any, month: any, formater: string) {
 /**
  * 集合月历，把多个月份的何在一起，构成日历
  * **/
-function map(startDate: Date, format: string, gap: number) {
+function map(startDate: Date, format: string, gap: number,zeroPadding:boolean=true) {
     let template = [];
     for (let i = 0; i <= gap; i++) {
         const date = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
-        const paint = setDates(date.getFullYear(), date.getMonth(), format);
+        const paint = setDates(date.getFullYear(), date.getMonth(), format,zeroPadding);
         template.push({template: paint.template, year: paint.year, month: paint.month})
     }
     return template
@@ -76,7 +76,10 @@ function viewMainClassName(index: number, flatView: boolean) {
 function template(template: any,
                   multiViews: boolean,
                   flatView: boolean,
-                  language: any,) {
+                  language: any,
+                  zeroPadding:boolean
+
+                  ) {
 
     const weekDays = language.week.map((day: any, index: number) => {
         const className = new Stack(["calendar-cell", "calendar-day-cell",
@@ -86,6 +89,9 @@ function template(template: any,
 
     let tpl = template.map((item: any, index: any) => {
         let year = item.year, month = item.month;
+
+
+
         let title = `<div class="calendar-title">${language.title(year, month)}</div>`,
             body = item.template;
         let tpl = "";
@@ -117,12 +123,15 @@ export default function compose(startDate: Date,
                                 format: string,
                                 multiViews: boolean,
                                 flatView: boolean,
-                                language: any) {
+                                language: any,
+                                zeroPadding:boolean
+
+                                ) {
     const className = `calendar-${multiViews ? "double-views" : flatView ? "single-view" : "flat-view"}`;
 
 
     const gap = multiViews ? 1 : flatView ? 0 : diff(startDate, endDate);
-    const tpl = template(map(startDate, format, gap), multiViews, flatView, language);
+    const tpl = template(map(startDate, format, gap,zeroPadding), multiViews, flatView, language,zeroPadding);
 
     const controller = multiViews || flatView ? `
          <div class="calendar-action-bar">

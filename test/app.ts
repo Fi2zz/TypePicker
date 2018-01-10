@@ -2,15 +2,13 @@ import '../src/style.styl'
 import './test.styl'
 
 
-
 import Pop from './popup'
-
 
 
 import DatePicker from '../src/index'
 
-import { source, languages } from './mock'
-import { addClass } from "../src/util";
+import {source, languages} from './mock'
+import {addClass} from "../src/util";
 
 
 const date = new Date();
@@ -29,28 +27,24 @@ const datepicker = <any>new DatePicker({
     format: "YYYY-MM-DD",
     doubleSelect: true,
     limit: 2,
-    defaultLanguage: "en-us",
+    defaultLanguage: "zh-cn",
     multiViews: true,
     flatView: true,
-    bindData: true
+    bindData: true,
+    zeroPadding: false
 });
 
 
 const popup = new Pop({
     el: '.popup'
-})
-
-
-
-
-
+});
 
 
 datepicker.on("update", (output: any) => {
     console.log("onupdate", output)
 
 
-console.log("onupdate")
+    console.log("onupdate")
 
     document.getElementById("layout").innerHTML = `选中的日期<br/>${output.value}`;
     if (output.length >= 2) {
@@ -81,7 +75,6 @@ datepicker.on("data", (result: any) => {
 });
 
 
-
 datepicker.data((params: any) => {
     const keys = Object.keys(source);
     const currDate = new Date(dist.year, dist.month, dist.date);
@@ -97,9 +90,6 @@ datepicker.data((params: any) => {
     params.to = to;
     params.data = source;
 });
-
-
-
 
 
 const dateValue: HTMLElement = document.getElementById('date-value');

@@ -11,7 +11,7 @@ import {
     getDates
 } from "./util"
 import compose from './datepicker.template'
-import { setDefaultRange } from './datepicker.ranger'
+import {setDefaultRange} from './datepicker.ranger'
 
 /***
  * 月份切换
@@ -59,7 +59,8 @@ export function createDatePicker(lang: any) {
         this.dateFormat,
         this.multiViews,
         this.flatView,
-        setLanguage(lang)
+        setLanguage(lang),
+        this.zeroPadding
     );
 
 
@@ -97,8 +98,8 @@ export function createDatePicker(lang: any) {
             this.defaultDates.length > 0
                 ? this.defaultDates
                 : this.double
-                    ? this.selected
-                    : [this.format(this.date).value];
+                ? this.selected
+                : [this.format(this.date).value];
 
         this.selected = setDefaultRange(
             this.element,
@@ -109,9 +110,9 @@ export function createDatePicker(lang: any) {
             this.parse,
             this.format);
 
-        const updateEventData ={
-                type:'init',
-                value:this.selected
+        const updateEventData = {
+            type: 'init',
+            value: this.selected
         }
 
         // this.update(this.selected);
@@ -177,6 +178,8 @@ export function init(option: any, renderer: any) {
         this.data = renderer.data;
     }
 
+    this.zeroPadding = !(!option.zeroPadding);
+    console.log(this.zeroPadding)
     this.element = parseEl(option.el);
     const lang = getLanguage(option.language, option.defaultLanguage);
     this.createDatePicker(lang);
