@@ -24,20 +24,27 @@ const datepicker = <any>new DatePicker({
     from,
     to,
     language: languages,
-    format: "YYYY-MM-DD",
+    format: "YYYY-M-D",
     doubleSelect: true,
     limit: 7,
     defaultLanguage: "zh-cn",
-    multiViews: true,
+    multiViews: false,
     flatView: true,
-    bindData: true,
-    zeroPadding: false
+    bindData: false,
+    zeroPadding: true
 });
 
 
-const popup = new Pop({
-    el: '.popup'
-});
+// const popup = new Pop({
+//     el: '.popup'
+// });
+//
+
+// YYYY/MM/DD YYYY-MM-DD
+
+
+// console.log(new Date("2018-01-01"),new Date("2018/01/01"),)
+
 
 
 datepicker.on("update", (output: any) => {
@@ -52,7 +59,7 @@ datepicker.on("update", (output: any) => {
     }
 });
 // calendar.dateRanges();
-datepicker.dateRanges(["2018-1-10", "2018-1-14"]);
+// datepicker.dateRanges(["2018-1-10", "2018-1-14"]);
 
 
 datepicker.on("data", (result: any) => {
@@ -81,7 +88,12 @@ datepicker.data((params: any) => {
 
     const currDate = new Date(dist.year, dist.month, dist.date);
     for (let i = 0; i < keys.length; i++) {
+
+
         let item = datepicker.parse(keys[i]);
+
+        // console.info(item)
+
         if (datepicker.diff(item, currDate) >= 0) {
             params.dates.push(keys[i])
         } else {
@@ -93,16 +105,16 @@ datepicker.data((params: any) => {
     params.data = source;
 });
 
-
-const dateValue: HTMLElement = document.getElementById('date-value');
-
-
-console.log(popup)
-
-dateValue.addEventListener("click", () => {
-
-
-
-    // popup.open();
-
-})
+//
+// const dateValue: HTMLElement = document.getElementById('date-value');
+//
+//
+//
+//
+// dateValue.addEventListener("click", () => {
+//
+//
+//
+//     // popup.open();
+//
+// })

@@ -69,6 +69,7 @@ var util = createCommonjsModule(function (module, exports) {
 "use strict";
 exports.__esModule = true;
 function diff(start, end, type) {
+    // console.trace(start,end)
     if (type === void 0) { type = "month"; }
     if (type == "month") {
         return Math.abs((start.getFullYear() * 12 + start.getMonth()) - (end.getFullYear() * 12 + end.getMonth()));
@@ -309,9 +310,6 @@ var datepicker_formatter = createCommonjsModule(function (module, exports) {
 "use strict";
 exports.__esModule = true;
 
-function parseToInt(value) {
-    return parseInt(value, 10);
-}
 function parse(string) {
     if (!string)
         { return new Date(); }
@@ -319,8 +317,8 @@ function parse(string) {
         { return string; }
     var date = new Date(string);
     if (!date.getTime())
-        { date = null; }
-    return date;
+        { return null; }
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 function format(date, format, zeroPadding) {
     if (zeroPadding === void 0) { zeroPadding = true; }
@@ -330,8 +328,14 @@ function format(date, format, zeroPadding) {
     }
     var parts = {
         DD: shouldPadStart ? util.padding(date.getDate()) : date.getDate(),
+        dd: shouldPadStart ? util.padding(date.getDate()) : date.getDate(),
         MM: shouldPadStart ? util.padding(date.getMonth() + 1) : date.getMonth() + 1,
-        YYYY: date.getFullYear()
+        mm: shouldPadStart ? util.padding(date.getMonth() + 1) : date.getMonth() + 1,
+        YYYY: date.getFullYear(),
+        D: date.getDate(),
+        d: date.getDate(),
+        M: date.getMonth() + 1,
+        m: date.getMonth() + 1
     };
     return {
         origin: date,
@@ -345,60 +349,57 @@ function format(date, format, zeroPadding) {
     };
 }
 exports.format = format;
-// console.log(format(new Date,'DD/MM/YYYY',false))
 function parseFormatted(strDate, format) {
-    var parts = {
-        DD: '([0-9][0-9])',
-        dd: '([0-9][0-9])',
-        MM: '([0-9][0-9])',
-        mm: '([0-9][0-9])',
-        YYYY: '([0-9][0-9][0-9][0-9])',
-        yyyy: '([0-9][0-9][0-9][0-9])',
-        '%': ''
-    };
-    var regex = '', i = 0, outputs = [''], token, matches, len;
-    var tmp = "";
+    //能直接解析成日期对象的，直接返回日期对象
+    //如 YYYY/MM/DD YYYY-MM-DD
     var ret = parse(strDate);
     if (ret)
         { return ret; }
-    ret = new Date(2000, 0, 1);
-    while (i < format.length) {
-        token = format.charAt(i);
-        while ((i + 1 < format.length) && parts[token + format.charAt(i + 1)] !== undefined) {
-            token += format.charAt(++i);
+    var token = /d{1,4}|M{1,4}|YY(?:YY)?|S{1,3}|Do|ZZ|([HhMsDm])\1?|[aA]|"[^"]*"|'[^']*'/g;
+    var parseFlags = {
+        D: [/\d{1,2}/, function (d, v) { return d.day = parseInt(v); }],
+        M: [/\d{1,2}/, function (d, v) { return (d.month = parseInt(v) - 1); }],
+        DD: [/\d{2}/, function (d, v) { return d.day = parseInt(v); }],
+        MM: [/\d{2}/, function (d, v) { return d.month = parseInt(v) - 1; }],
+        YY: [/\d{2,4}/, function (d, v) { return d.year = parseInt(v); }],
+        YYYY: [/\d{2,4}/, function (d, v) { return d.year = parseInt(v); }]
+    };
+    ret = function (dateStr, format) {
+        if (dateStr.length > 1000) {
+            return null;
         }
-        if ((tmp = parts[token]) !== undefined) {
-            if (tmp !== '') {
-                regex += parts[token];
-                outputs.push(token);
+        var isValid = true;
+        var dateInfo = {
+            year: 0,
+            month: 0,
+            day: 0
+        };
+        format.replace(token, function ($0) {
+            if (parseFlags[$0]) {
+                var info = parseFlags[$0];
+                var regExp = info[0];
+                var handler_1 = info[info.length - 1];
+                var index_1 = dateStr.search(regExp);
+                if (!~index_1) {
+                    isValid = false;
+                }
+                else {
+                    dateStr.replace(info[0], function (result) {
+                        handler_1(dateInfo, result);
+                        dateStr = dateStr.substr(index_1 + result.length);
+                        return result;
+                    });
+                }
             }
+            return parseFlags[$0] ? '' : $0.slice(1, $0.length - 1);
+        });
+        if (!isValid) {
+            return null;
         }
-        else {
-            regex += token;
-        }
-        i++;
-    }
-    matches = strDate.match(new RegExp(regex));
-    len = outputs.length;
-    if (!matches || matches.length !== len)
-        { return null; }
-    for (i = 0; i < len; i++) {
-        if ((token = outputs[i]) !== '') {
-            tmp = parseToInt(matches[i]);
-            switch (token) {
-                case 'YYYY':
-                    ret.setYear(tmp);
-                    break;
-                case 'MM':
-                    ret.setMonth(tmp);
-                    break;
-                case 'DD':
-                    ret.setDate(tmp);
-                    break;
-            }
-        }
-    }
-    return ret;
+        var parsed = new Date(dateInfo.year, dateInfo.month, dateInfo.day);
+        return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+    };
+    return ret(strDate, format);
 }
 exports.parseFormatted = parseFormatted;
 });
@@ -606,6 +607,7 @@ function getDefaultRange(collection, start, end) {
 function setStartAndEnd(collection, source, data, parse) {
     var inDates = function (item) { return util.inArray(source, item); };
     var temp = [];
+    // console.info(data,source)
     // console.error(data)
     var start = data[0];
     var end = data[data.length - 1];
@@ -626,6 +628,7 @@ function setStartAndEnd(collection, source, data, parse) {
                 var curr = util.attr(item, "data-date");
                 var next = util.attr(nextItem, "data-date");
                 if (curr && next) {
+                    // console.info(curr)
                     var start_1 = parse(curr);
                     if (util.diff(start_1, currDate, "days") >= 0) {
                         var hasItem = inDates(next) && inDates(curr) || inDates(curr) && !inDates(next);
@@ -710,6 +713,7 @@ function setDefaultRange(collector, collection, data, source, isDouble, parse, f
         else if (data.length === 1) {
             data = [];
         }
+        console.log(source);
         dates = setStartAndEnd(collection, source, data, parse);
         var start = dates[0];
         var end = dates[dates.length - 1];
@@ -825,7 +829,7 @@ function init(option, renderer) {
     var this$1 = this;
 
     if (option.format) {
-        this.dateFormat = option.format;
+        this.dateFormat = option.format || "YYYY-MM-DD";
     }
     //單視圖，即單個日曆視圖
     if (!option.multiViews && option.flatView) {
@@ -1217,7 +1221,6 @@ var DatePicker = /** @class */ (function () {
         this.date = new Date();
         this.limit = 1;
         this.double = false;
-        this.dateFormat = "YYYY-MM-DD";
         this.element = null;
         this.startDate = new Date();
         this.endDate = null;
@@ -1245,6 +1248,7 @@ var DatePicker = /** @class */ (function () {
                 });
             }
         };
+        this.dateFormat = option.format || "YYYY-MM-DD";
         this.defaultDates = [];
         if (!option.bindData) {
             this.init(option, {});

@@ -13,24 +13,29 @@ function parse(string: string | Date): any {
     if (!string) return new Date();
     if (string instanceof Date) return string;
     let date = new Date(string);
-    if (!date.getTime()) date = null;
-    return date;
+
+    if (!date.getTime()) return null;
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
 
-export function format(date: Date, format: string, zeroPadding:boolean=true) {
+export function format(date: Date, format: string, zeroPadding: boolean = true) {
 
 
-
-    let shouldPadStart =true
-    if(!zeroPadding){
-        shouldPadStart =false
+    let shouldPadStart = true
+    if (!zeroPadding) {
+        shouldPadStart = false
     }
     let parts = <any>{
-        DD:shouldPadStart?padding(date.getDate()):date.getDate(),
-        MM: shouldPadStart?padding(date.getMonth() + 1):date.getMonth()+1,
-        YYYY: date.getFullYear()
-
+        DD: shouldPadStart ? padding(date.getDate()) : date.getDate(),
+        dd: shouldPadStart ? padding(date.getDate()) : date.getDate(),
+        MM: shouldPadStart ? padding(date.getMonth() + 1) : date.getMonth() + 1,
+        mm: shouldPadStart ? padding(date.getMonth() + 1) : date.getMonth() + 1,
+        YYYY: date.getFullYear(),
+        D: date.getDate(),
+        d: date.getDate(),
+        M: date.getMonth() + 1,
+        m: date.getMonth() + 1,
     };
     return {
         origin: date,
@@ -46,62 +51,63 @@ export function format(date: Date, format: string, zeroPadding:boolean=true) {
 }
 
 
-
-// console.log(format(new Date,'DD/MM/YYYY',false))
-
 export function parseFormatted(strDate: string, format: string) {
-    const parts = <any>{
-        DD: '([0-9][0-9])',
-        dd: '([0-9][0-9])',
-        MM: '([0-9][0-9])',
-        mm: '([0-9][0-9])',
-        YYYY: '([0-9][0-9][0-9][0-9])',
-        yyyy: '([0-9][0-9][0-9][0-9])',
-        '%': '',
-    };
-    let regex = '', i = 0, outputs = [''],
-        token, matches, len;
-    let tmp: any = ""
+    //能直接解析成日期对象的，直接返回日期对象
+    //如 YYYY/MM/DD YYYY-MM-DD
     let ret = parse(strDate);
     if (ret) return ret;
-    ret = new Date(2000, 0, 1);
-    while (i < format.length) {
-        token = format.charAt(i);
-        while ((i + 1 < format.length) && parts[token + format.charAt(i + 1)] !== undefined) {
-            token += format.charAt(++i);
+
+    const token = /d{1,4}|M{1,4}|YY(?:YY)?|S{1,3}|Do|ZZ|([HhMsDm])\1?|[aA]|"[^"]*"|'[^']*'/g;
+    const parseFlags: any = {
+        D: [/\d{1,2}/, (d: any, v: any) => d.day = parseInt(v)],
+        M: [/\d{1,2}/, (d: any, v: any) => (d.month = parseInt(v) - 1)],
+        DD: [/\d{2}/, (d: any, v: any) => d.day = parseInt(v)],
+        MM: [/\d{2}/, (d: any, v: any) => d.month = parseInt(v) - 1],
+        YY: [/\d{2,4}/, (d: any, v: any) => d.year = parseInt(v)],
+        YYYY: [/\d{2,4}/, (d: any, v: any) => d.year = parseInt(v)],
+    };
+
+
+    ret = function (dateStr: string, format: string) {
+
+
+        if (dateStr.length > 1000) {
+            return null;
         }
 
+        let isValid = true;
+        const dateInfo = {
+            year: 0,
+            month: 0,
+            day: 0
+        };
 
-        if ((tmp = parts[token]) !== undefined) {
-            if (tmp !== '') {
-                regex += parts[token];
-                outputs.push(token);
+        format.replace(token, function ($0) {
+            if (parseFlags[$0]) {
+                const info = parseFlags[$0];
+                const regExp = info[0];
+                const handler = info[info.length - 1];
+                const index = dateStr.search(regExp);
+                if (!~index) {
+                    isValid = false;
+                } else {
+                    dateStr.replace(info[0], function (result) {
+                        handler(dateInfo, result);
+                        dateStr = dateStr.substr(index + result.length);
+                        return result;
+                    });
+                }
             }
-        } else {
-            regex += token;
-        }
-        i++;
-    }
 
-    matches = strDate.match(new RegExp(regex));
-    len = outputs.length;
-    if (!matches || matches.length !== len) return null;
-    for (i = 0; i < len; i++) {
-        if ((token = outputs[i]) !== '') {
-            tmp = parseToInt(matches[i]);
-            switch (token) {
-                case 'YYYY':
-                    ret.setYear(tmp);
-                    break;
-                case 'MM':
-                    ret.setMonth(tmp);
-                    break;
-                case 'DD':
-                    ret.setDate(tmp);
-                    break;
-            }
-        }
+            return parseFlags[$0] ? '' : $0.slice(1, $0.length - 1);
+        });
 
-    }
-    return ret;
+        if (!isValid) {
+            return null;
+        }
+        const parsed = new Date(dateInfo.year, dateInfo.month, dateInfo.day);
+        return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+    };
+
+    return ret(strDate, format)
 }

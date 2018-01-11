@@ -30,10 +30,10 @@ function getDefaultRange(collection: HTMLCollection, start: string, end: string)
 }
 
 function setStartAndEnd(
-    collection: HTMLCollection, 
-    source: Array<any>, 
-    data: Array<any>, 
-    parse: Function) 
+    collection: HTMLCollection,
+    source: Array<any>,
+    data: Array<any>,
+    parse: Function)
 {
 
 
@@ -42,6 +42,7 @@ function setStartAndEnd(
     let temp = <Array<string>> [];
 
 
+    // console.info(data,source)
 
     // console.error(data)
     const start = data[0];
@@ -62,6 +63,9 @@ function setStartAndEnd(
                 let curr = attr(item, "data-date");
                 let next = attr(nextItem, "data-date");
                 if (curr && next) {
+
+                    // console.info(curr)
+
                     let start = parse(curr);
                     if (diff(start, currDate, "days") >= 0) {
                         let hasItem = inDates(next) && inDates(curr) || inDates(curr) && !inDates(next);
@@ -183,6 +187,7 @@ export function setDefaultRange(collector: HTMLElement,
             data = []
         }
 
+        console.log(source)
 
         dates = setStartAndEnd(collection, source, data, parse);
 

@@ -130,8 +130,9 @@ export function createDatePicker(lang: any) {
 
 export function init(option: any, renderer: any) {
 
+
     if (option.format) {
-        this.dateFormat = option.format
+        this.dateFormat = option.format || "YYYY-MM-DD"
     }
     //單視圖，即單個日曆視圖
     if (!option.multiViews && option.flatView) {

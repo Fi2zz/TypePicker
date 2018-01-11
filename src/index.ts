@@ -16,9 +16,6 @@ import {
 } from "./datepicker.formatter"
 
 
-
-
-
 interface INTERFACES {
     el: string,
     to: Date | any,
@@ -31,7 +28,7 @@ interface INTERFACES {
     doubleSelect: boolean,
     defaultLanguage: string,
     bindData: boolean,
-    zeroPadding:boolean
+    zeroPadding: boolean
 }
 
 
@@ -42,7 +39,7 @@ export default class DatePicker {
     dates: Array<any>;
     limit: number = 1;
     double: boolean = false;
-    dateFormat: string = "YYYY-MM-DD";
+    dateFormat: string;//= "YYYY-MM-DD";
     element: any = null;
     startDate: Date = new Date();
     endDate: Date | any = null;
@@ -51,7 +48,7 @@ export default class DatePicker {
     multiViews: boolean = false;
     monthSwitch = monthSwitch;
     createDatePicker = createDatePicker;
-    zeroPadding:boolean=true;
+    zeroPadding: boolean = true;
     pickDate = () => {
         handlePickDate(
             this.element,
@@ -67,7 +64,7 @@ export default class DatePicker {
     };
     defaultDates: Array<string>[];
     defaults: Array<any>[];
-    format = (date: Date,zeroPadding?:boolean) => formatter(date, this.dateFormat,this.zeroPadding);
+    format = (date: Date, zeroPadding?: boolean) => formatter(date, this.dateFormat, this.zeroPadding);
     parse = (string: string) => parseFormatted(string, this.dateFormat);
     inDates = (date: string) => !!~this.dates.indexOf(date);
     update = (value: Array<any>) => Observer.$emit("update", value);
@@ -85,6 +82,8 @@ export default class DatePicker {
 
     constructor(option: INTERFACES) {
 
+
+        this.dateFormat = option.format || "YYYY-MM-DD";
         this.defaultDates = [];
         if (!option.bindData) {
             this.init(option, {});
