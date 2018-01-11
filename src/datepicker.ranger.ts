@@ -29,12 +29,10 @@ function getDefaultRange(collection: HTMLCollection, start: string, end: string)
     return temp.slice(startIndex + 1, endIndex)
 }
 
-function setStartAndEnd(
-    collection: HTMLCollection,
-    source: Array<any>,
-    data: Array<any>,
-    parse: Function)
-{
+function setStartAndEnd(collection: HTMLCollection,
+                        source: Array<any>,
+                        data: Array<any>,
+                        parse: Function) {
 
 
     const inDates = (item?: any) => inArray(source, item);
@@ -142,9 +140,9 @@ export function setDefaultRange(collector: HTMLElement,
 
 
             //开始日期不能为无效日期
-            if(!inDates(start)){
+            if (!inDates(start)) {
 
-                data=[]
+                data = []
 
             }
 
@@ -156,9 +154,6 @@ export function setDefaultRange(collector: HTMLElement,
             const month = startDate.getMonth()
             const date = startDate.getDate();
             let inValidDates = [];
-
-
-
 
 
             const gap = diff(endDate, startDate, "days") + 1;
@@ -187,8 +182,7 @@ export function setDefaultRange(collector: HTMLElement,
             data = []
         }
 
-        console.log(source)
-
+        
         dates = setStartAndEnd(collection, source, data, parse);
 
 

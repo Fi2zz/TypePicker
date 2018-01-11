@@ -713,7 +713,6 @@ function setDefaultRange(collector, collection, data, source, isDouble, parse, f
         else if (data.length === 1) {
             data = [];
         }
-        console.log(source);
         dates = setStartAndEnd(collection, source, data, parse);
         var start = dates[0];
         var end = dates[dates.length - 1];
