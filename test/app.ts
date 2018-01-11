@@ -24,7 +24,7 @@ const datepicker = <any>new DatePicker({
     from,
     to,
     language: languages,
-    format: "YYYY/M/D",
+    format: "YYYY-M-D",
     doubleSelect: true,
     limit: 7,
     defaultLanguage: "zh-cn",

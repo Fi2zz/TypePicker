@@ -182,7 +182,7 @@ export function setDefaultRange(collector: HTMLElement,
             data = []
         }
 
-        
+
         dates = setStartAndEnd(collection, source, data, parse);
 
 
