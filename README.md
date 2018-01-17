@@ -48,9 +48,12 @@
         //type => 'init'或'selected'
         //valye => 选择的日期
         document.getElementById("layout").innerHTML = `选中的日期${value}`
+        //每次update，都需要手動調用dateRanges方法，設置選中的日期
+        datePicker.dateRanges(output.value);
+        
     });
     
-    //设置默认日期，在 datePicker.get()或datePicker.data() 之前或在 datePicker.data()内调用调用，
+    //设置默认日期，datePicker.data() 之前或在 datePicker.data()内调用调用，
     //如果不需要设置默认选中的日期，不执行此方法即可    
     //[deprecated]datePicker.setDefaultDates(["2017-11-27","2017-12-05"]);
     //dateRanges =<Array<any>>[<Date>|<string>]

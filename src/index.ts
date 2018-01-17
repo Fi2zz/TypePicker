@@ -50,7 +50,6 @@ export default class DatePicker {
     createDatePicker = createDatePicker;
     zeroPadding: boolean = true;
     pickDate = (dates?: Array<any>) => {
-
         handlePickDate(
             this.element,
             this.selected,
