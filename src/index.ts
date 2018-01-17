@@ -49,7 +49,8 @@ export default class DatePicker {
     monthSwitch = monthSwitch;
     createDatePicker = createDatePicker;
     zeroPadding: boolean = true;
-    pickDate = () => {
+    pickDate = (dates?: Array<any>) => {
+
         handlePickDate(
             this.element,
             this.selected,
@@ -114,7 +115,8 @@ export default class DatePicker {
                     const config = {
                         data: result.data,
                         dates: result.dates.sort((a: string, b: string) => this.parse(a) - this.parse(b))
-                    }
+                    };
+
                     this.init(option, config);
                     if (!noData(result)) {
                         this.dataRenderer(result.data);
@@ -138,25 +140,41 @@ export default class DatePicker {
                     }
                     if (option.doubleSelect) {
                         if (dates.length === 1) {
-                            console.error("[dateRanges] please provide end date")
+
+
+                            const start = this.parse(dates[0]);
+                            const next = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1);
+                            const nextDate = this.format(next, option.zeroPadding).value;
+
+                            // dates.push(nextDate)
+
                         } else if (dates.length > 2) {
                             dates = dates.slice(0, 2)
                         }
+
                         const start = <any>dates[0];
                         const end = <any>dates[dates.length - 1];
+
                         const startDate = isDate(start) ? start : this.parse(start);
                         const endDate = isDate(end) ? end : this.parse(end);
                         if (!isDate(startDate) || !isDate(endDate)) {
                             console.error("[dateRanges error] illegal dates,", dates);
                             return
                         }
-                        const gap = diff(startDate, endDate, "days");
-                        const endGap = diff(endDate, startDate, "days");
+                        let gap = diff(startDate, endDate, "days");
+                        gap = gap !== 0 ? gap * -1 : gap;
+
+                        let endGap = diff(endDate, startDate, "days");
+
+                        endGap = endGap !== 0 ? endGap * -1 : gap
+
+                        // console.log(endGap)
                         if (!option.limit) {
                             option.limit = 2
                         }
                         //计算日期范围
-                        if (gap > 0
+                        // console.log(gap)
+                        if (gap < 0
                             || endGap > option.limit
                             || endGap < option.limit * -1
                         ) {
@@ -171,6 +189,9 @@ export default class DatePicker {
                         let date = dates[i];
                         tempDatesArray.push(isDate(date) ? this.format(date).value : date)
                     }
+
+                    // console.log(tempDatesArray)
+
                     this.defaultDates = tempDatesArray;
                 }
             },

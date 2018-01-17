@@ -29,10 +29,13 @@ export function monthSwitch(size: number, language: any) {
     if (this.multiViews) {
         // month += size > 0 ? 1 : -1
     }
+    if (this.defaultDates.length > 0) {
+        this.selected = this.defaultDates;
+    }
 
     this.date = new Date(curr.year, month, curr.date);
-    this.createDatePicker(language);
-    this.pickDate();
+    this.createDatePicker(language, false);
+    this.pickDate(this.selected);
     this.dataRenderer(this.data)
 }
 
@@ -42,14 +45,12 @@ export function monthSwitch(size: number, language: any) {
  * @param lang 语言包
  *
  * **/
-export function createDatePicker(lang: any) {
-    // this.element = <HTMLElement>parseEl(el);
+export function createDatePicker(lang: any, isInit: boolean) {
     if (!this.element) {
         console.error(`[Calendar Warn] invalid selector,current selector ${this.element}`);
         return false
     }
     const startTime = this.startDate.getTime();
-    const endTime = this.endDate.getTime();
     const currTime = this.date.getTime();
 
 
@@ -62,6 +63,36 @@ export function createDatePicker(lang: any) {
         setLanguage(lang),
         this.zeroPadding
     );
+
+
+    //加个定时器，保证初始化时，可以得到选中的日期
+    const timer = setTimeout(() => {
+        const initSelected =
+
+            this.defaultDates.length > 0
+
+                ? this.defaultDates
+
+                : this.double
+                ? this.selected
+                : [this.format(this.date).value];
+
+
+        this.selected = setDefaultRange(
+            this.element,
+            this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
+            initSelected,
+            this.dates,
+            this.double,
+            this.parse,
+            this.format);
+        const updateEventData = {
+            type: 'init',
+            value: this.selected
+        };
+        this.update(updateEventData)
+        clearTimeout(timer)
+    }, 0);
 
 
     //日期切换
@@ -92,40 +123,11 @@ export function createDatePicker(lang: any) {
             addClass(prev, "calendar-action-disabled")
         }
     }
-    //加个定时器，保证初始化时，可以得到选中的日期
-    const timer = setTimeout(() => {
-        const initSelected =
-            this.defaultDates.length > 0
-                ? this.defaultDates
-                : this.double
-                ? this.selected
-                : [this.format(this.date).value];
 
 
-        this.selected = setDefaultRange(
-            this.element,
-            this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
-            initSelected,
-            this.dates,
-            this.double,
-            this.parse,
-            this.format);
+    // cb()
 
 
-        // console.log(this.dates)
-
-        const updateEventData = {
-            type: 'init',
-            value: this.selected
-        }
-
-
-        // this.update(this.selected);
-        this.update(updateEventData)
-        //初始化后，清除定时器
-        // window.
-        clearTimeout(timer)
-    }, 0);
 }
 
 export function init(option: any, renderer: any) {
@@ -189,7 +191,7 @@ export function init(option: any, renderer: any) {
 
     this.element = parseEl(option.el);
     const lang = getLanguage(option.language, option.defaultLanguage);
-    this.createDatePicker(lang);
-    this.pickDate()
+    this.createDatePicker(lang, true);
+    this.pickDate();
 
 }

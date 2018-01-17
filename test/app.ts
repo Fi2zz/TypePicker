@@ -18,7 +18,7 @@ const dist = {
     date: date.getDate()
 };
 const from = new Date(dist.year, dist.month, dist.date)
-const to = new Date(dist.year, dist.month + 5, dist.date);
+const to = new Date(dist.year, dist.month + 8, dist.date);
 const datepicker = <any>new DatePicker({
     el: '#datepicker',
     from,
@@ -28,38 +28,22 @@ const datepicker = <any>new DatePicker({
     doubleSelect: true,
     limit: 7,
     defaultLanguage: "zh-cn",
-    multiViews: false,
+    multiViews: true,
     flatView: true,
-    bindData: true,
-    zeroPadding: true
+    bindData: false,
+    zeroPadding: false
 });
-
-
-// const popup = new Pop({
-//     el: '.popup'
-// });
-//
-
-// YYYY/MM/DD YYYY-MM-DD
-
-
-// console.log(new Date("2018-01-01"),new Date("2018/01/01"),)
-
 
 
 datepicker.on("update", (output: any) => {
-    console.log("onupdate", output)
-
-
-    console.log("onupdate")
-
-    document.getElementById("layout").innerHTML = `选中的日期<br/>${output.value}`;
-    if (output.length >= 2) {
-        // datepicker.dateRanges(output.value)
-    }
+    document.getElementById("layout").innerHTML = `选中的日期<br/>${output.type} / ${output.value}`;
+    // if (output.type === "selected") {
+        datepicker.dateRanges(output.value)
+    // }
 });
-// calendar.dateRanges();
-// datepicker.dateRanges(["2018-1-10", "2018-1-14"]);
+
+// datepicker.dateRanges(["2018-1-20","2018-1-25"])
+
 
 
 datepicker.on("data", (result: any) => {
@@ -92,16 +76,14 @@ datepicker.data((params: any) => {
 
         let item = datepicker.parse(keys[i]);
 
-        // console.info(item)
-
         if (datepicker.diff(item, currDate) >= 0) {
             params.dates.push(keys[i])
         } else {
             // delete source[keys[i]]
         }
     }
-    params.from = from;
-    params.to = to;
+    // params.from = from;
+    // params.to = to;
     params.data = source;
 });
 

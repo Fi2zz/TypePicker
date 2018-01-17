@@ -607,10 +607,9 @@ function getDefaultRange(collection, start, end) {
 function setStartAndEnd(collection, source, data, parse) {
     var inDates = function (item) { return util.inArray(source, item); };
     var temp = [];
-    // console.info(data,source)
-    // console.error(data)
     var start = data[0];
     var end = data[data.length - 1];
+    // console.log(start, end)
     for (var i = 0; i < collection.length; i++) {
         var item = collection[i];
         var nextItem = collection[i + 1];
@@ -628,7 +627,6 @@ function setStartAndEnd(collection, source, data, parse) {
                 var curr = util.attr(item, "data-date");
                 var next = util.attr(nextItem, "data-date");
                 if (curr && next) {
-                    // console.info(curr)
                     var start_1 = parse(curr);
                     if (util.diff(start_1, currDate, "days") >= 0) {
                         var hasItem = inDates(next) && inDates(curr) || inDates(curr) && !inDates(next);
@@ -711,8 +709,10 @@ function setDefaultRange(collector, collection, data, source, isDouble, parse, f
             }
         }
         else if (data.length === 1) {
-            data = [];
+            // console.log("clearing")
+            // data = []
         }
+        // console.log(data)
         dates = setStartAndEnd(collection, source, data, parse);
         var start = dates[0];
         var end = dates[dates.length - 1];
@@ -753,9 +753,12 @@ function monthSwitch(size, language) {
     };
     var month = curr.month + size;
     //每次切换两个月份
+    if (this.defaultDates.length > 0) {
+        this.selected = this.defaultDates;
+    }
     this.date = new Date(curr.year, month, curr.date);
-    this.createDatePicker(language);
-    this.pickDate();
+    this.createDatePicker(language, false);
+    this.pickDate(this.selected);
     this.dataRenderer(this.data);
 }
 exports.monthSwitch = monthSwitch;
@@ -764,17 +767,30 @@ exports.monthSwitch = monthSwitch;
  * @param lang 语言包
  *
  * **/
-function createDatePicker(lang) {
+function createDatePicker(lang, isInit) {
     var _this = this;
-    // this.element = <HTMLElement>parseEl(el);
     if (!this.element) {
         console.error("[Calendar Warn] invalid selector,current selector " + this.element);
         return false;
     }
     var startTime = this.startDate.getTime();
-    var endTime = this.endDate.getTime();
     var currTime = this.date.getTime();
     this.element.innerHTML = datepicker_template["default"](this.date, this.endDate, this.dateFormat, this.multiViews, this.flatView, util.setLanguage(lang), this.zeroPadding);
+    //加个定时器，保证初始化时，可以得到选中的日期
+    var timer = setTimeout(function () {
+        var initSelected = _this.defaultDates.length > 0
+            ? _this.defaultDates
+            : _this.double
+                ? _this.selected
+                : [_this.format(_this.date).value];
+        _this.selected = datepicker_ranger.setDefaultRange(_this.element, _this.element.querySelectorAll(".calendar-date-cell:not(.empty)"), initSelected, _this.dates, _this.double, _this.parse, _this.format);
+        var updateEventData = {
+            type: 'init',
+            value: _this.selected
+        };
+        _this.update(updateEventData);
+        clearTimeout(timer);
+    }, 0);
     //日期切换
     var prev = this.element.querySelector(".calendar-action-prev");
     var next = this.element.querySelector(".calendar-action-next");
@@ -803,25 +819,7 @@ function createDatePicker(lang) {
             util.addClass(prev, "calendar-action-disabled");
         }
     }
-    //加个定时器，保证初始化时，可以得到选中的日期
-    var timer = setTimeout(function () {
-        var initSelected = _this.defaultDates.length > 0
-            ? _this.defaultDates
-            : _this.double
-                ? _this.selected
-                : [_this.format(_this.date).value];
-        _this.selected = datepicker_ranger.setDefaultRange(_this.element, _this.element.querySelectorAll(".calendar-date-cell:not(.empty)"), initSelected, _this.dates, _this.double, _this.parse, _this.format);
-        // console.log(this.dates)
-        var updateEventData = {
-            type: 'init',
-            value: _this.selected
-        };
-        // this.update(this.selected);
-        _this.update(updateEventData);
-        //初始化后，清除定时器
-        // window.
-        clearTimeout(timer);
-    }, 0);
+    // cb()
 }
 exports.createDatePicker = createDatePicker;
 function init(option, renderer) {
@@ -882,7 +880,7 @@ function init(option, renderer) {
     }
     this.element = util.parseEl(option.el);
     var lang = util.getLanguage(option.language, option.defaultLanguage);
-    this.createDatePicker(lang);
+    this.createDatePicker(lang, true);
     this.pickDate();
 }
 exports.init = init;
@@ -920,6 +918,7 @@ function default_1(element, selected, isDouble, source, parse, format, limit, in
             if (isDouble) {
                 var handled = doubleSelectHandler(date, selected, cache, limit, source, format, parse);
                 selected = handled.selected;
+                // console.log(selected)
                 var range = handled.range;
                 var allValid = handled.allValid;
                 var start = selected[0];
@@ -1229,7 +1228,7 @@ var DatePicker = /** @class */ (function () {
         this.monthSwitch = datepicker_init.monthSwitch;
         this.createDatePicker = datepicker_init.createDatePicker;
         this.zeroPadding = true;
-        this.pickDate = function () {
+        this.pickDate = function (dates) {
             datepicer_picker["default"](_this.element, _this.selected, _this.double, _this.dates, _this.parse, _this.format, _this.limit, _this.inDates, _this.update);
         };
         this.format = function (date, zeroPadding) { return datepicker_formatter.format(date, _this.dateFormat, _this.zeroPadding); };
@@ -1301,7 +1300,10 @@ var DatePicker = /** @class */ (function () {
                     }
                     if (option.doubleSelect) {
                         if (dates.length === 1) {
-                            console.error("[dateRanges] please provide end date");
+                            var start_1 = _this.parse(dates[0]);
+                            var next = new Date(start_1.getFullYear(), start_1.getMonth(), start_1.getDate() + 1);
+                            var nextDate = _this.format(next, option.zeroPadding).value;
+                            // dates.push(nextDate)
                         }
                         else if (dates.length > 2) {
                             dates = dates.slice(0, 2);
@@ -1315,12 +1317,16 @@ var DatePicker = /** @class */ (function () {
                             return;
                         }
                         var gap = util.diff(startDate, endDate, "days");
+                        gap = gap !== 0 ? gap * -1 : gap;
                         var endGap = util.diff(endDate, startDate, "days");
+                        endGap = endGap !== 0 ? endGap * -1 : gap;
+                        // console.log(endGap)
                         if (!option.limit) {
                             option.limit = 2;
                         }
                         //计算日期范围
-                        if (gap > 0
+                        // console.log(gap)
+                        if (gap < 0
                             || endGap > option.limit
                             || endGap < option.limit * -1) {
                             console.error("[dateRanges error] illegal start date or end date or out of limit,your selected dates:[" + dates + "],limit:[" + option.limit + "]");
@@ -1334,6 +1340,7 @@ var DatePicker = /** @class */ (function () {
                         var date = dates[i];
                         tempDatesArray.push(util.isDate(date) ? _this.format(date).value : date);
                     }
+                    // console.log(tempDatesArray)
                     _this.defaultDates = tempDatesArray;
                 }
             },

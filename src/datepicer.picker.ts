@@ -18,14 +18,11 @@ export default function (element: any,
                          format: Function,
                          limit: number,
                          inDates: Function,
-                         update: Function
-
-) {
+                         update: Function) {
     const collection = element.querySelectorAll(".calendar-date-cell");
     let hoverRange = <Array<any>>[];
     let inHoverRange = <Array<any>>[];
     let newRange = <Array<any>>[];
-
 
 
     for (let i = 0; i < collection.length; i++) {
@@ -43,6 +40,8 @@ export default function (element: any,
                 return false;
             }
 
+
+
             //双选，但选择的日期数量大于2，或单选
             if (isDouble && selected.length >= 2 || !isDouble) {
                 selected = []
@@ -52,6 +51,10 @@ export default function (element: any,
             if (isDouble) {
                 const handled = doubleSelectHandler(date, selected, cache, limit, source, format, parse);
                 selected = handled.selected;
+
+                // console.log(selected)
+
+
                 const range = handled.range;
                 const allValid = handled.allValid;
                 const start = selected[0];
@@ -74,7 +77,6 @@ export default function (element: any,
                     setRange(range, element, false)
                 }
 
-
             } else {
                 let selector = item;
                 let shouldChange = true;
@@ -86,8 +88,8 @@ export default function (element: any,
                 singlePick(selector, element, shouldChange);
             }
             update({
-                type:'selected',
-                value:selected
+                type: 'selected',
+                value: selected
             })
         });
 
@@ -218,6 +220,7 @@ function singlePick(selector: string, collector: HTMLElement, shouldChange: bool
     }
 
 }
+
 function doublePick(collector: HTMLElement,
                     start: string,
                     end: string,
@@ -280,10 +283,12 @@ function doublePick(collector: HTMLElement,
 
 
 }
+
 function gap(d1: Date, d2: Date) {
     let value = diff(d1, d2, "days");
     return value === 0 ? 0 : value * -1
 }
+
 function doubleSelectHandler(date: any,
                              selected: Array<any>,
                              cache: Array<any>,

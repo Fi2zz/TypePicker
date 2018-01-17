@@ -37,19 +37,21 @@ function setStartAndEnd(collection: HTMLCollection,
 
     const inDates = (item?: any) => inArray(source, item);
 
+
     let temp = <Array<string>> [];
-
-
-    // console.info(data,source)
-
-    // console.error(data)
     const start = data[0];
     const end = data[data.length - 1];
+
+    // console.log(start, end)
+
+
     for (let i = 0; i < collection.length; i++) {
         let item = collection[i];
         let nextItem = collection[i + 1];
         if (data.length > 0) {
-            let date = attr(collection[i], "data-date");
+
+            const date = attr(collection[i], "data-date");
+
             if (date === start) {
                 addClass(item, "start-date")
             }
@@ -61,9 +63,6 @@ function setStartAndEnd(collection: HTMLCollection,
                 let curr = attr(item, "data-date");
                 let next = attr(nextItem, "data-date");
                 if (curr && next) {
-
-                    // console.info(curr)
-
                     let start = parse(curr);
                     if (diff(start, currDate, "days") >= 0) {
                         let hasItem = inDates(next) && inDates(curr) || inDates(curr) && !inDates(next);
@@ -79,6 +78,8 @@ function setStartAndEnd(collection: HTMLCollection,
             }
         }
     }
+
+
     if (data.length > 0) {
         temp = data
     }
@@ -120,11 +121,8 @@ export function setDefaultRange(collector: HTMLElement,
 
 
     function inDates(date: string) {
-
         return ~source.indexOf(date)
-
     }
-
 
     let dates = [];
     if (!isDouble) {
@@ -178,10 +176,13 @@ export function setDefaultRange(collector: HTMLElement,
             }
 
 
-        } else if (data.length === 1) {
-            data = []
+        }
+        else if (data.length === 1) {
+            // console.log("clearing")
+            // data = []
         }
 
+        // console.log(data)
 
         dates = setStartAndEnd(collection, source, data, parse);
 
