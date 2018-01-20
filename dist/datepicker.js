@@ -69,7 +69,6 @@ var util = createCommonjsModule(function (module, exports) {
 "use strict";
 exports.__esModule = true;
 function diff(start, end, type) {
-    // console.trace(start,end)
     if (type === void 0) { type = "month"; }
     if (type == "month") {
         return Math.abs((start.getFullYear() * 12 + start.getMonth()) - (end.getFullYear() * 12 + end.getMonth()));
@@ -118,7 +117,7 @@ function inArray(array, item) {
     if (!isArray(array) || array.length <= 0 || !item) {
         return false;
     }
-    return ~array.indexOf(item); //>= 0
+    return ~array.indexOf(item);
 }
 exports.inArray = inArray;
 function attr(el, attr, attrvalue) {
@@ -192,12 +191,8 @@ function removeClass(el, className) {
 }
 exports.removeClass = removeClass;
 function addClass(el, className) {
-    if (!el) {
-        return;
-    }
-    if (el.classList.contains(className)) {
-        return;
-    }
+    if (!el || el && el.classList.contains(className))
+        { return; }
     return el.classList.add(className);
 }
 exports.addClass = addClass;
@@ -609,7 +604,6 @@ function setStartAndEnd(collection, source, data, parse) {
     var temp = [];
     var start = data[0];
     var end = data[data.length - 1];
-    // console.log(start, end)
     for (var i = 0; i < collection.length; i++) {
         var item = collection[i];
         var nextItem = collection[i + 1];
@@ -708,11 +702,6 @@ function setDefaultRange(collector, collection, data, source, isDouble, parse, f
                 data = [];
             }
         }
-        else if (data.length === 1) {
-            // console.log("clearing")
-            // data = []
-        }
-        // console.log(data)
         dates = setStartAndEnd(collection, source, data, parse);
         var start = dates[0];
         var end = dates[dates.length - 1];
@@ -918,7 +907,6 @@ function default_1(element, selected, isDouble, source, parse, format, limit, in
             if (isDouble) {
                 var handled = doubleSelectHandler(date, selected, cache, limit, source, format, parse);
                 selected = handled.selected;
-                // console.log(selected)
                 var range = handled.range;
                 var allValid = handled.allValid;
                 var start = selected[0];
@@ -947,52 +935,6 @@ function default_1(element, selected, isDouble, source, parse, format, limit, in
                 value: selected
             });
         });
-        //     item.addEventListener("mouseenter", () => {
-        //         const date = attr(item, "data-date");
-        //         const prev = attr(item.previousElementSibling, "data-date");
-        //         const next = attr(item.nextElementSibling, "data-date");
-        //         const start = selected[0];
-        //         const end = selected[selected.length - 1];
-        //         const range = hoverHandler(
-        //             hoverRange,
-        //             date,
-        //             start,
-        //             end,
-        //             prev,
-        //             next,
-        //             limit,
-        //             inDates,
-        //             parse,
-        //             format);
-        //         hoverRange = setRange(range, element, false, true);
-        //     });
-        //
-        //     item.addEventListener("mouseleave", () => {
-        //
-        //         const ranges = Array.prototype.slice.call(element.querySelectorAll(".in-range"));
-        //
-        //         const date = attr(item, "data-date")
-        //         let outOfRange = [];
-        //         let index = -1
-        //
-        //         for (let i = 0; i < ranges.length; i++) {
-        //
-        //             let d = attr(ranges[i], "data-date");
-        //
-        //
-        //             if (d === date) {
-        //                 index = i
-        //                 // outOfRange = ranges.slice(i, ranges.length - 1)
-        //             }
-        //
-        //         }
-        //
-        //         console.log(ranges.slice(index))
-        //
-        //         // console.log(outOfRange)
-        //
-        //     });
-        //
     };
     for (var i = 0; i < collection.length; i++) {
         _loop_1(i);
@@ -1098,9 +1040,9 @@ function doubleSelectHandler(date, selected, cache, limit, source, format, parse
         else {
             if (inDates(end)) {
                 //得到选择范围
-                var year = startDate.getFullYear(), month = startDate.getMonth(), date_2 = startDate.getDate();
+                var year = startDate.getFullYear(), month = startDate.getMonth(), date_1 = startDate.getDate();
                 for (var i = 1; i < diff; i++) {
-                    var d = new Date(year, month, date_2 + i);
+                    var d = new Date(year, month, date_1 + i);
                     var formatted = format(d).value;
                     if (inDates(formatted)) {
                         inRange.push(formatted);
@@ -1147,14 +1089,14 @@ function doubleSelectHandler(date, selected, cache, limit, source, format, parse
         // 得到日期范围
         var diff_2 = gap(endDate_1, startDate_1) * -1;
         if (diff_2 > 0) {
-            var year = startDate_1.getFullYear(), month = startDate_1.getMonth(), date_3 = startDate_1.getDate();
+            var year = startDate_1.getFullYear(), month = startDate_1.getMonth(), date_2 = startDate_1.getDate();
             range = [];
             inRange = [];
             //第一天为有效日期，最后一天为无效日期
             //判断最后一个有效日期与最后一天的区间
             //如果区间大于1或小于-1，则为无效区间，
             for (var i = 0; i < diff_2; i++) {
-                var d = new Date(year, month, date_3 + i);
+                var d = new Date(year, month, date_2 + i);
                 var string = format(d).value;
                 if (inDates(string)) {
                     lastValidDate = d;
@@ -1246,14 +1188,12 @@ var DatePicker = /** @class */ (function () {
                 });
             }
         };
-        this.dateFormat = option.format || "YYYY-MM-DD";
         this.defaultDates = [];
         if (!option.bindData) {
             this.init(option, {});
         }
         var output = {
             on: datepicker_observer["default"].$on,
-            get: this.update,
             data: function (cb) {
                 function noData(data) {
                     return !util.isObject(data)
@@ -1273,7 +1213,6 @@ var DatePicker = /** @class */ (function () {
                         { option.from = params.from; }
                     if (util.isDate(params.to))
                         { option.to = params.to; }
-                    // const
                     var config = {
                         data: result.data,
                         dates: result.dates.sort(function (a, b) { return _this.parse(a) - _this.parse(b); })
@@ -1303,7 +1242,6 @@ var DatePicker = /** @class */ (function () {
                             var start_1 = _this.parse(dates[0]);
                             var next = new Date(start_1.getFullYear(), start_1.getMonth(), start_1.getDate() + 1);
                             var nextDate = _this.format(next, option.zeroPadding).value;
-                            // dates.push(nextDate)
                         }
                         else if (dates.length > 2) {
                             dates = dates.slice(0, 2);
@@ -1320,12 +1258,10 @@ var DatePicker = /** @class */ (function () {
                         gap = gap !== 0 ? gap * -1 : gap;
                         var endGap = util.diff(endDate, startDate, "days");
                         endGap = endGap !== 0 ? endGap * -1 : gap;
-                        // console.log(endGap)
                         if (!option.limit) {
                             option.limit = 2;
                         }
                         //计算日期范围
-                        // console.log(gap)
                         if (gap < 0
                             || endGap > option.limit
                             || endGap < option.limit * -1) {
@@ -1340,7 +1276,6 @@ var DatePicker = /** @class */ (function () {
                         var date = dates[i];
                         tempDatesArray.push(util.isDate(date) ? _this.format(date).value : date);
                     }
-                    // console.log(tempDatesArray)
                     _this.defaultDates = tempDatesArray;
                 }
             },

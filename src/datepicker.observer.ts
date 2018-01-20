@@ -1,4 +1,3 @@
-
 export default (function () {
     let clientList = <any>{};
     const $remove = function (key: string, fn?: any | undefined) {
@@ -22,15 +21,12 @@ export default (function () {
             }
         }
     };
-
     const $on = function (key: string, fn: Function) {
-
         if (!clientList[key]) {
             clientList[key] = [];
         }
         clientList[key].push(fn);
     };
-
     const $emit = function (evt: string, value: any) {
         let key = [].shift.call(arguments);
         let fns = clientList[key];

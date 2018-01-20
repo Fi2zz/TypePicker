@@ -3,12 +3,10 @@ import {padding} from "./util"
 function parseToInt(value: any) {
     return parseInt(value, 10);
 }
-
 function convertTo24Hour(hour: any, ap: any = "am") {
     let curr = parseToInt(hour);
     return ap.toLowerCase() === 'pm' ? (curr < 12 ? (curr + 12) : curr) : (curr === 12 ? 0 : curr);
 }
-
 function parse(string: string | Date): any {
     if (!string) return new Date();
     if (string instanceof Date) return string;
@@ -17,12 +15,8 @@ function parse(string: string | Date): any {
     if (!date.getTime()) return null;
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
-
-
 export function format(date: Date, format: string, zeroPadding: boolean = true) {
-
-
-    let shouldPadStart = true
+    let shouldPadStart = true;
     if (!zeroPadding) {
         shouldPadStart = false
     }
@@ -56,7 +50,6 @@ export function parseFormatted(strDate: string, format: string) {
     //如 YYYY/MM/DD YYYY-MM-DD
     let ret = parse(strDate);
     if (ret) return ret;
-
     const token = /d{1,4}|M{1,4}|YY(?:YY)?|S{1,3}|Do|ZZ|([HhMsDm])\1?|[aA]|"[^"]*"|'[^']*'/g;
     const parseFlags: any = {
         D: [/\d{1,2}/, (d: any, v: any) => d.day = parseInt(v)],
@@ -66,22 +59,16 @@ export function parseFormatted(strDate: string, format: string) {
         YY: [/\d{2,4}/, (d: any, v: any) => d.year = parseInt(v)],
         YYYY: [/\d{2,4}/, (d: any, v: any) => d.year = parseInt(v)],
     };
-
-
     ret = function (dateStr: string, format: string) {
-
-
         if (dateStr.length > 1000) {
             return null;
         }
-
         let isValid = true;
         const dateInfo = {
             year: 0,
             month: 0,
             day: 0
         };
-
         format.replace(token, function ($0) {
             if (parseFlags[$0]) {
                 const info = parseFlags[$0];

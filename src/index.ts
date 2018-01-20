@@ -34,12 +34,11 @@ interface INTERFACES {
 
 export default class DatePicker {
     init = init;
-
     date: Date = new Date();
     dates: Array<any>;
     limit: number = 1;
     double: boolean = false;
-    dateFormat: string;//= "YYYY-MM-DD";
+    dateFormat: string;
     element: any = null;
     startDate: Date = new Date();
     endDate: Date | any = null;
@@ -81,16 +80,12 @@ export default class DatePicker {
 
 
     constructor(option: INTERFACES) {
-
-
-        this.dateFormat = option.format || "YYYY-MM-DD";
         this.defaultDates = [];
         if (!option.bindData) {
             this.init(option, {});
         }
         const output: any = {
             on: Observer.$on,
-            get: this.update,
             data: (cb: Function) => {
                 function noData(data: any) {
                     return !isObject(data)
@@ -109,13 +104,10 @@ export default class DatePicker {
                     const result = cbData ? cbData : params;
                     if (isDate(params.from)) option.from = params.from;
                     if (isDate(params.to)) option.to = params.to;
-
-                    // const
                     const config = {
                         data: result.data,
                         dates: result.dates.sort((a: string, b: string) => this.parse(a) - this.parse(b))
                     };
-
                     this.init(option, config);
                     if (!noData(result)) {
                         this.dataRenderer(result.data);
@@ -139,21 +131,14 @@ export default class DatePicker {
                     }
                     if (option.doubleSelect) {
                         if (dates.length === 1) {
-
-
                             const start = this.parse(dates[0]);
                             const next = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1);
                             const nextDate = this.format(next, option.zeroPadding).value;
-
-                            // dates.push(nextDate)
-
                         } else if (dates.length > 2) {
                             dates = dates.slice(0, 2)
                         }
-
                         const start = <any>dates[0];
                         const end = <any>dates[dates.length - 1];
-
                         const startDate = isDate(start) ? start : this.parse(start);
                         const endDate = isDate(end) ? end : this.parse(end);
                         if (!isDate(startDate) || !isDate(endDate)) {
@@ -162,17 +147,12 @@ export default class DatePicker {
                         }
                         let gap = diff(startDate, endDate, "days");
                         gap = gap !== 0 ? gap * -1 : gap;
-
                         let endGap = diff(endDate, startDate, "days");
-
-                        endGap = endGap !== 0 ? endGap * -1 : gap
-
-                        // console.log(endGap)
+                        endGap = endGap !== 0 ? endGap * -1 : gap;
                         if (!option.limit) {
                             option.limit = 2
                         }
                         //计算日期范围
-                        // console.log(gap)
                         if (gap < 0
                             || endGap > option.limit
                             || endGap < option.limit * -1
@@ -188,9 +168,6 @@ export default class DatePicker {
                         let date = dates[i];
                         tempDatesArray.push(isDate(date) ? this.format(date).value : date)
                     }
-
-                    // console.log(tempDatesArray)
-
                     this.defaultDates = tempDatesArray;
                 }
             },

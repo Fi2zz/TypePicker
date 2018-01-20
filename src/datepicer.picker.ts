@@ -3,13 +3,9 @@ import {
     removeClass,
     addClass,
     attrSelector,
-    quickSort,
     inArray, hasClass
 } from "./util"
-
-
 import {ranged as setRange} from './datepicker.ranger'
-
 export default function (element: any,
                          selected: Array<any>,
                          isDouble: boolean,
@@ -20,11 +16,6 @@ export default function (element: any,
                          inDates: Function,
                          update: Function) {
     const collection = element.querySelectorAll(".calendar-date-cell");
-    let hoverRange = <Array<any>>[];
-    let inHoverRange = <Array<any>>[];
-    let newRange = <Array<any>>[];
-
-
     for (let i = 0; i < collection.length; i++) {
         const item = collection[i];
         item.addEventListener("click", (e: any) => {
@@ -39,9 +30,6 @@ export default function (element: any,
                 selected.length <= 0 && !inDates(date)) {
                 return false;
             }
-
-
-
             //双选，但选择的日期数量大于2，或单选
             if (isDouble && selected.length >= 2 || !isDouble) {
                 selected = []
@@ -51,10 +39,6 @@ export default function (element: any,
             if (isDouble) {
                 const handled = doubleSelectHandler(date, selected, cache, limit, source, format, parse);
                 selected = handled.selected;
-
-                // console.log(selected)
-
-
                 const range = handled.range;
                 const allValid = handled.allValid;
                 const start = selected[0];
@@ -69,14 +53,12 @@ export default function (element: any,
                     isOutOfLimit,
                     allValid
                 );
-
                 if (isValid) {
                     setRange([], element, true);
                 }
                 if (allValid && isValid) {
                     setRange(range, element, false)
                 }
-
             } else {
                 let selector = item;
                 let shouldChange = true;
@@ -84,7 +66,6 @@ export default function (element: any,
                     selected = cache;
                     shouldChange = false;
                 }
-
                 singlePick(selector, element, shouldChange);
             }
             update({
@@ -92,122 +73,8 @@ export default function (element: any,
                 value: selected
             })
         });
-
-        //     item.addEventListener("mouseenter", () => {
-        //         const date = attr(item, "data-date");
-        //         const prev = attr(item.previousElementSibling, "data-date");
-        //         const next = attr(item.nextElementSibling, "data-date");
-        //         const start = selected[0];
-        //         const end = selected[selected.length - 1];
-        //         const range = hoverHandler(
-        //             hoverRange,
-        //             date,
-        //             start,
-        //             end,
-        //             prev,
-        //             next,
-        //             limit,
-        //             inDates,
-        //             parse,
-        //             format);
-        //         hoverRange = setRange(range, element, false, true);
-        //     });
-        //
-        //     item.addEventListener("mouseleave", () => {
-        //
-        //         const ranges = Array.prototype.slice.call(element.querySelectorAll(".in-range"));
-        //
-        //         const date = attr(item, "data-date")
-        //         let outOfRange = [];
-        //         let index = -1
-        //
-        //         for (let i = 0; i < ranges.length; i++) {
-        //
-        //             let d = attr(ranges[i], "data-date");
-        //
-        //
-        //             if (d === date) {
-        //                 index = i
-        //                 // outOfRange = ranges.slice(i, ranges.length - 1)
-        //             }
-        //
-        //         }
-        //
-        //         console.log(ranges.slice(index))
-        //
-        //         // console.log(outOfRange)
-        //
-        //     });
-        //
     }
 }
-
-
-function hoverHandler(range: Array<any>,
-                      date: string,
-                      start: string,
-                      end: string,
-                      prev: string,
-                      next: string,
-                      limit: number,
-                      inDates: Function,
-                      parse: Function,
-                      format: Function) {
-    const startDate = parse(start)
-    const endDate = parse(end);
-    const currDate = parse(date);
-    const diffStart = gap(currDate, startDate) * -1;
-    const diffEnd = gap(endDate, currDate);
-
-
-    if (date === start
-        || date === end
-        || diffStart < 0
-        || diffStart > limit
-        || start !== end && diffEnd > 0
-        || diffEnd > limit
-        || ~range.indexOf(parse(date).getTime())
-        || !inDates(date) && !inDates(next) && !inDates(prev)
-        || inDates(date) && !inDates(prev)
-        || !inDates(date) && inDates(next)
-
-    ) {
-        range = [];
-    } else {
-        range.push(parse(date).getTime());
-        if (range.length < diffStart) {
-            range = [];
-            const year = startDate.getFullYear();
-            const month = startDate.getMonth();
-            const date = startDate.getDate();
-            for (let i = 0; i <= diffStart; i++) {
-                let d = new Date(year, month, date + i);
-                range.push(d.getTime())
-            }
-            let inDatesDate = [];
-            for (let i = 0; i < range.length; i++) {
-                let d = new Date(range[i])
-                let formatted = format(d).value;
-                if (inDates(formatted)) {
-                    inDatesDate.push(formatted);
-                }
-            }
-            if (inDatesDate.length < range.length - 1) {
-                range = []
-            }
-        }
-
-
-        range = quickSort(range).reverse().map((time: number) => {
-            return format(new Date(time)).value
-        });
-    }
-    return range
-
-
-}
-
-
 function singlePick(selector: string, collector: HTMLElement, shouldChange: boolean) {
     if (shouldChange) {
         const actives = collector.querySelectorAll(".active");
@@ -220,7 +87,6 @@ function singlePick(selector: string, collector: HTMLElement, shouldChange: bool
     }
 
 }
-
 function doublePick(collector: HTMLElement,
                     start: string,
                     end: string,
@@ -236,11 +102,8 @@ function doublePick(collector: HTMLElement,
         start: collector.querySelector(<string>attrSelector("data-date", start)),
         end: collector.querySelector(<string>attrSelector("data-date", end))
     };
-
     //选择了开始日期，尚未选择结束日期
     if (diff === 0) {
-
-
         if (!hasClass(current.start, "disabled")) {
             removeClass(cache.start, "start-date");
             removeClass(cache.start, "active");
@@ -248,13 +111,11 @@ function doublePick(collector: HTMLElement,
             removeClass(cache.end, "active");
             addClass(current.start, "active");
             addClass(current.start, "start-date");
-
             return true
         }
         else {
             return false
         }
-
     } else {
         addClass(current.end, "active");
         if (diff > 0) {
@@ -277,18 +138,13 @@ function doublePick(collector: HTMLElement,
             addClass(current.end, "start-date")
         }
     }
-
-
     return true
-
-
 }
 
 function gap(d1: Date, d2: Date) {
     let value = diff(d1, d2, "days");
     return value === 0 ? 0 : value * -1
 }
-
 function doubleSelectHandler(date: any,
                              selected: Array<any>,
                              cache: Array<any>,
@@ -299,7 +155,6 @@ function doubleSelectHandler(date: any,
     function inDates(item?: any) {
         return inArray(source, item);
     }
-
     let range = <Array<any>>[];
     let inRange = <Array<any>>[];
     //获取已选的开始日期
@@ -365,7 +220,6 @@ function doubleSelectHandler(date: any,
     else {
         selected = cache;
     }
-
     //重合
     let allValid = range.length === inRange.length;
 

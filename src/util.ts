@@ -1,15 +1,5 @@
 export function diff(start: Date, end: Date, type: string = "month") {
-
-    // console.trace(start,end)
-
-
-
-    if(!start){
-        // start =new Date()
-    }
-
     if (type == "month") {
-
         return Math.abs((start.getFullYear() * 12 + start.getMonth()) - ( end.getFullYear() * 12 + end.getMonth()))
     } else if (type === "days") {
         const startTime = <any>new Date(start.getFullYear(), start.getMonth(), start.getDate())
@@ -56,8 +46,7 @@ export function inArray(array: Array<any>, item?: any) {
     if (!isArray(array) || array.length <= 0 || !item) {
         return false
     }
-
-    return ~array.indexOf(item) //>= 0
+    return ~array.indexOf(item)
 }
 
 export function attr(el: any, attr: any, attrvalue: any | undefined = undefined) {
@@ -71,7 +60,7 @@ export function attr(el: any, attr: any, attrvalue: any | undefined = undefined)
     return value ? value : el.setAttribute(attr, attrvalue)
 }
 
-export function remove (arr: Array<any>, item: any): Array<any> | void {
+export function remove(arr: Array<any>, item: any): Array<any> | void {
     if (arr.length) {
         const index = arr.indexOf(item)
         if (index > -1) {
@@ -117,32 +106,22 @@ export function isPrimitive(value: any): boolean {
         typeof value === 'boolean'
     )
 }
-
-
 export function hasClass(el: any, className: string) {
     if (!el) {
         return false
     }
     return el.classList.contains(className)
 }
-
 export function removeClass(el: any, className: string) {
     if (!el) {
         return
     }
     return el.classList.remove(className)
 }
-
 export function addClass(el: any, className: string) {
-    if (!el) {
-        return
-    }
-    if (el.classList.contains(className)) {
-        return
-    }
+    if (!el || el && el.classList.contains(className)) return
     return el.classList.add(className)
 }
-
 
 export function parseEl(el: string) {
     if (!el) {
@@ -192,7 +171,7 @@ export function setLanguage(option: any) {
     const locale = option.locale.toLowerCase();
     const curr = option.pack;
     const monthName = curr.months;
-    const week = curr.days
+    const week = curr.days;
     let title;
     if (locale === "en" || locale === "en-us" || locale === "en-gb") {
         title = (year: any, month: any) => `${monthName[month]} ${year}`
@@ -205,7 +184,6 @@ export function setLanguage(option: any) {
 
 
 export function getLanguage(language: any, key: string) {
-
     let output = {};
     if (!key || !language[key]) {
         output = defaultLanguage
@@ -219,15 +197,12 @@ export function getLanguage(language: any, key: string) {
 }
 
 export function quickSort(arr: number[], isAscending?: boolean): number[] {
-
     if (1 === arr.length) return arr;
     if (0 === arr.length) return [];
-
     let small: number[] = [];
     let big: number[] = [];
     let equal: number[] = [];
     let key = arr[0];
-
     for (let i: number = 0; i < arr.length; i++) {
         if (arr[i] < key) {
             small.push(arr[i]);
@@ -237,7 +212,6 @@ export function quickSort(arr: number[], isAscending?: boolean): number[] {
             equal.push(arr[i]);
         }
     }
-
     if (isAscending) {
         return [].concat(quickSort(small, isAscending), equal, quickSort(big, isAscending));
     }

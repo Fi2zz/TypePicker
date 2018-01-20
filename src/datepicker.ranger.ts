@@ -1,8 +1,16 @@
-import {attr, addClass, hasClass, removeClass, attrSelector, diff, inArray} from "./util"
+import {
+    attr,
+    diff,
+    inArray,
+    addClass,
+    hasClass,
+    removeClass,
+    attrSelector,
+
+} from "./util"
 
 const date = new Date();
 const currDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-
 function getDefaultRange(collection: HTMLCollection, start: string, end: string) {
     let temp = [];
     for (let i = 0; i < collection.length; i++) {
@@ -36,15 +44,9 @@ function setStartAndEnd(collection: HTMLCollection,
 
 
     const inDates = (item?: any) => inArray(source, item);
-
-
     let temp = <Array<string>> [];
     const start = data[0];
     const end = data[data.length - 1];
-
-    // console.log(start, end)
-
-
     for (let i = 0; i < collection.length; i++) {
         let item = collection[i];
         let nextItem = collection[i + 1];
@@ -102,13 +104,9 @@ export function ranged(data: Array<any>, collector: HTMLElement, remove: boolean
             }
         }
     }
-
-
     if (clearRange) {
         return <Array<any>>[]
     }
-
-
 }
 
 export function setDefaultRange(collector: HTMLElement,
@@ -128,42 +126,27 @@ export function setDefaultRange(collector: HTMLElement,
     if (!isDouble) {
         dates = data
     } else {
-
-
-        let first, last, firstPrevDate, firstNextDate;
         if (data.length >= 2) {
-
             let start = data[0];
             let end = data[data.length - 1];
-
-
             //开始日期不能为无效日期
             if (!inDates(start)) {
-
                 data = []
-
             }
-
-
             const startDate = parse(start);
             const endDate = parse(end);
-
             const year = startDate.getFullYear();
-            const month = startDate.getMonth()
+            const month = startDate.getMonth();
             const date = startDate.getDate();
             let inValidDates = [];
-
-
             const gap = diff(endDate, startDate, "days") + 1;
-
             for (let i = 0; i < gap; i++) {
-                let d = new Date(year, month, date + i)
+                let d = new Date(year, month, date + i);
                 let formatted = format(d).value;
                 if (!inDates(formatted)) {
                     inValidDates.push(formatted);
                 }
             }
-
             // 前提 无效日期可以作为endDate
             // 但不能做为startDate
             // 即选中的日期中只能包含[一个]无效日期
@@ -177,16 +160,7 @@ export function setDefaultRange(collector: HTMLElement,
 
 
         }
-        else if (data.length === 1) {
-            // console.log("clearing")
-            // data = []
-        }
-
-        // console.log(data)
-
         dates = setStartAndEnd(collection, source, data, parse);
-
-
         const start = dates[0];
         const end = dates[dates.length - 1];
         const range = getDefaultRange(collection, start, end);
