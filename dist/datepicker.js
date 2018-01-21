@@ -401,73 +401,16 @@ exports.parseFormatted = parseFormatted;
 
 unwrapExports(datepicker_formatter);
 
-var stack = createCommonjsModule(function (module, exports) {
-"use strict";
-exports.__esModule = true;
-
-var Stack = /** @class */ (function () {
-    function Stack(stack) {
-        this.stack = [];
-        // this.stack = <Array<any>> [];
-        if (this.isEmpty()) {
-            this.push(stack);
-        }
-        // return <Array<any>>this.stack
-    }
-    Stack.prototype.pop = function () {
-        return this.stack.pop();
-    };
-    Stack.prototype.push = function (stack) {
-        var this$1 = this;
-
-        if (util.isArray(stack)) {
-            for (var i = 0; i < stack.length; i++) {
-                this$1.stack.push(stack[i]);
-            }
-        }
-        else {
-            this.stack.push(stack);
-        }
-    };
-    Stack.prototype.clear = function () {
-        this.stack = [];
-    };
-    Stack.prototype.size = function () {
-        return this.stack.length;
-    };
-    Stack.prototype.peek = function () {
-        return this.stack[this.stack.length - 1];
-    };
-    Stack.prototype.isEmpty = function () {
-        return this.stack.length === 0;
-    };
-    Stack.prototype.shift = function (stack) {
-        return this.stack.shift();
-    };
-    Stack.prototype.unshift = function (stack) {
-        this.stack.unshift(stack);
-    };
-    Stack.prototype.toString = function (string) {
-        return string ? this.stack.join(string) : this.stack.join(" ");
-    };
-    return Stack;
-}());
-exports["default"] = Stack;
-});
-
-unwrapExports(stack);
-
 var datepicker_template = createCommonjsModule(function (module, exports) {
 "use strict";
 exports.__esModule = true;
 
 
-
 var currDate = new Date();
 function setItemClassName(date) {
-    var classStack = new stack["default"](["calendar-cell", "calendar-date-cell"]);
+    var classStack = ["calendar-cell", "calendar-date-cell"];
     if (!date) {
-        classStack.push(["disabled", "empty"]);
+        classStack.push("disabled", "empty");
     }
     else {
         if (util.diff(date, currDate, "days") < 0) {
@@ -480,7 +423,7 @@ function setItemClassName(date) {
             classStack.push("calendar-cell-weekday");
         }
     }
-    return classStack.toString();
+    return classStack.join(" ");
 }
 function setDates(year, month, formater, zeroPadding) {
     var List = [];
@@ -532,9 +475,9 @@ function viewMainClassName(index, flatView) {
 }
 function template(template, multiViews, flatView, language, zeroPadding) {
     var weekDays = language.week.map(function (day, index) {
-        var className = new stack["default"](["calendar-cell", "calendar-day-cell",
-            index === 0 ? "calendar-cell-weekday" : index === 6 ? "calendar-cell-weekend" : ""]);
-        return "<div class=\"" + className.toString() + "\">" + day + "</div>";
+        var className = ["calendar-cell", "calendar-day-cell",
+            index === 0 ? "calendar-cell-weekday" : index === 6 ? "calendar-cell-weekend" : ""];
+        return "<div class=\"" + className.join(" ") + "\">" + day + "</div>";
     }).join("");
     var tpl = template.map(function (item, index) {
         var year = item.year, month = item.month;
@@ -747,7 +690,7 @@ function monthSwitch(size, language) {
     }
     this.date = new Date(curr.year, month, curr.date);
     this.createDatePicker(language, false);
-    this.pickDate(this.selected);
+    this.pickDate();
     this.dataRenderer(this.data);
 }
 exports.monthSwitch = monthSwitch;
@@ -762,9 +705,8 @@ function createDatePicker(lang, isInit) {
         console.error("[Calendar Warn] invalid selector,current selector " + this.element);
         return false;
     }
-    var startTime = this.startDate.getTime();
-    var currTime = this.date.getTime();
     this.element.innerHTML = datepicker_template["default"](this.date, this.endDate, this.dateFormat, this.multiViews, this.flatView, util.setLanguage(lang), this.zeroPadding);
+    this.bindMonthSwitch(lang);
     //加个定时器，保证初始化时，可以得到选中的日期
     var timer = setTimeout(function () {
         var initSelected = _this.defaultDates.length > 0
@@ -777,9 +719,18 @@ function createDatePicker(lang, isInit) {
             type: 'init',
             value: _this.selected
         };
-        _this.update(updateEventData);
+        //初始化的时候，需要获取初始化的日期
+        if (isInit) {
+            _this.update(updateEventData);
+        }
         clearTimeout(timer);
     }, 0);
+}
+exports.createDatePicker = createDatePicker;
+function bindMonthSwitch(lang) {
+    var _this = this;
+    var startTime = this.startDate.getTime();
+    var currTime = this.date.getTime();
     //日期切换
     var prev = this.element.querySelector(".calendar-action-prev");
     var next = this.element.querySelector(".calendar-action-next");
@@ -808,9 +759,8 @@ function createDatePicker(lang, isInit) {
             util.addClass(prev, "calendar-action-disabled");
         }
     }
-    // cb()
 }
-exports.createDatePicker = createDatePicker;
+exports.bindMonthSwitch = bindMonthSwitch;
 function init(option, renderer) {
     var this$1 = this;
 
@@ -867,8 +817,8 @@ function init(option, renderer) {
         this.dates = renderer.dates;
         this.data = renderer.data;
     }
-    this.element = util.parseEl(option.el);
     var lang = util.getLanguage(option.language, option.defaultLanguage);
+    this.element = util.parseEl(option.el);
     this.createDatePicker(lang, true);
     this.pickDate();
 }
@@ -1170,13 +1120,16 @@ var DatePicker = /** @class */ (function () {
         this.monthSwitch = datepicker_init.monthSwitch;
         this.createDatePicker = datepicker_init.createDatePicker;
         this.zeroPadding = true;
-        this.pickDate = function (dates) {
-            datepicer_picker["default"](_this.element, _this.selected, _this.double, _this.dates, _this.parse, _this.format, _this.limit, _this.inDates, _this.update);
-        };
+        this.pickDate = function () { return datepicer_picker["default"](_this.element, _this.selected, _this.double, _this.dates, _this.parse, _this.format, _this.limit, _this.inDates, _this.update); };
         this.format = function (date, zeroPadding) { return datepicker_formatter.format(date, _this.dateFormat, _this.zeroPadding); };
         this.parse = function (string) { return datepicker_formatter.parseFormatted(string, _this.dateFormat); };
         this.inDates = function (date) { return !!~_this.dates.indexOf(date); };
-        this.update = function (value) { return datepicker_observer["default"].$emit("update", value); };
+        this.update = function (result) {
+            if (result.type === 'selected') {
+                _this.dateRanges(result.value);
+            }
+            datepicker_observer["default"].$emit("update", result);
+        };
         this.dataRenderer = function (data) {
             if (Object.keys(data).length <= 0) {
                 datepicker_observer["default"].$remove("data");
@@ -1188,101 +1141,93 @@ var DatePicker = /** @class */ (function () {
                 });
             }
         };
+        this.dateRanges = function (dates) {
+            var datesList = [];
+            if (!util.isArray(dates)) {
+                dates = [];
+                console.error("[dateRanges error] no dates provided", dates);
+                return;
+            }
+            if (_this.double) {
+                if (dates.length > 2) {
+                    dates = dates.slice(0, 2);
+                }
+                var start = dates[0];
+                var end = dates[dates.length - 1];
+                var startDate = util.isDate(start) ? start : _this.parse(start);
+                var endDate = util.isDate(end) ? end : _this.parse(end);
+                if (!util.isDate(startDate) || !util.isDate(endDate)) {
+                    console.error("[dateRanges error] illegal dates,", dates);
+                    return;
+                }
+                var gap = util.diff(startDate, endDate, "days");
+                gap = gap !== 0 ? gap * -1 : gap;
+                var endGap = util.diff(endDate, startDate, "days");
+                endGap = endGap !== 0 ? endGap * -1 : gap;
+                if (!_this.limit) {
+                    _this.limit = 2;
+                }
+                //计算日期范围
+                if (gap < 0 || endGap > _this.limit || endGap < _this.limit * -1) {
+                    console.error("[dateRanges error] illegal start date or end date or out of limit,your selected dates:[" + dates + "],limit:[" + _this.limit + "]");
+                    return;
+                }
+            }
+            else {
+                dates = [dates[dates.length - 1]];
+            }
+            for (var i = 0; i < dates.length; i++) {
+                var date = dates[i];
+                datesList.push(util.isDate(date) ? _this.format(date).value : date);
+            }
+            _this.defaultDates = datesList;
+        };
+        this.bindMonthSwitch = datepicker_init.bindMonthSwitch;
         this.defaultDates = [];
         if (!option.bindData) {
             this.init(option, {});
         }
-        var output = {
+        return {
             on: datepicker_observer["default"].$on,
-            data: function (cb) {
-                function noData(data) {
-                    return !util.isObject(data)
-                        || (Object.keys(data.data).length <= 0
-                            || data.dates.length <= 0);
-                }
-                if (option.bindData) {
-                    var params = {
-                        dates: [],
-                        data: {},
-                        from: Date,
-                        to: Date
-                    };
-                    var cbData = cb && cb(params);
-                    var result = cbData ? cbData : params;
-                    if (util.isDate(params.from))
-                        { option.from = params.from; }
-                    if (util.isDate(params.to))
-                        { option.to = params.to; }
-                    var config = {
-                        data: result.data,
-                        dates: result.dates.sort(function (a, b) { return _this.parse(a) - _this.parse(b); })
-                    };
-                    _this.init(option, config);
-                    if (!noData(result)) {
-                        _this.dataRenderer(result.data);
-                    }
-                }
-            },
+            data: function (cb) { return _this._bindDataInit(option, cb); },
             diff: function (d1, d2) { return util.diff(d1, d2, "days"); },
             parse: this.parse,
             format: this.format,
-            dateRanges: function (dates) {
-                var tempDatesArray = [];
-                if (!dates) {
-                    dates = [];
-                    return;
-                }
-                if (dates && dates instanceof Array) {
-                    if (dates.length <= 0) {
-                        console.error("[dateRanges error] no dates provided", dates);
-                        return;
-                    }
-                    if (option.doubleSelect) {
-                        if (dates.length === 1) {
-                            var start_1 = _this.parse(dates[0]);
-                            var next = new Date(start_1.getFullYear(), start_1.getMonth(), start_1.getDate() + 1);
-                            var nextDate = _this.format(next, option.zeroPadding).value;
-                        }
-                        else if (dates.length > 2) {
-                            dates = dates.slice(0, 2);
-                        }
-                        var start = dates[0];
-                        var end = dates[dates.length - 1];
-                        var startDate = util.isDate(start) ? start : _this.parse(start);
-                        var endDate = util.isDate(end) ? end : _this.parse(end);
-                        if (!util.isDate(startDate) || !util.isDate(endDate)) {
-                            console.error("[dateRanges error] illegal dates,", dates);
-                            return;
-                        }
-                        var gap = util.diff(startDate, endDate, "days");
-                        gap = gap !== 0 ? gap * -1 : gap;
-                        var endGap = util.diff(endDate, startDate, "days");
-                        endGap = endGap !== 0 ? endGap * -1 : gap;
-                        if (!option.limit) {
-                            option.limit = 2;
-                        }
-                        //计算日期范围
-                        if (gap < 0
-                            || endGap > option.limit
-                            || endGap < option.limit * -1) {
-                            console.error("[dateRanges error] illegal start date or end date or out of limit,your selected dates:[" + dates + "],limit:[" + option.limit + "]");
-                            return;
-                        }
-                    }
-                    else {
-                        dates = [dates[dates.length - 1]];
-                    }
-                    for (var i = 0; i < dates.length; i++) {
-                        var date = dates[i];
-                        tempDatesArray.push(util.isDate(date) ? _this.format(date).value : date);
-                    }
-                    _this.defaultDates = tempDatesArray;
-                }
-            },
-            setDefaultDates: function (dates) { return output.dateRanges(dates); }
+            dateRanges: this.dateRanges,
+            setDefaultDates: this.dateRanges
         };
-        return output;
     }
+    DatePicker.prototype._bindDataInit = function (option, cb) {
+        var _this = this;
+        function noData(data) {
+            return !util.isObject(data)
+                || (Object.keys(data.data).length <= 0
+                    || data.dates.length <= 0);
+        }
+        if (option.bindData) {
+            var params = {
+                dates: [],
+                data: {},
+                from: Date,
+                to: Date
+            };
+            var cbData = cb && cb(params);
+            var result = cbData ? cbData : params;
+            if (util.isDate(params.from))
+                { option.from = params.from; }
+            if (util.isDate(params.to))
+                { option.to = params.to; }
+            var config = {
+                data: result.data,
+                dates: result.dates.sort(function (a, b) { return _this.parse(a) - _this.parse(b); })
+            };
+            this.init(option, config);
+            if (!noData(result)) {
+                this.dataRenderer(result.data);
+            }
+        }
+    };
+    
     return DatePicker;
 }());
 exports["default"] = DatePicker;

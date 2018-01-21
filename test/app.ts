@@ -27,25 +27,18 @@ const datepicker = <any>new DatePicker({
     format: "YYYY-M-D",
     doubleSelect: true,
     limit: 7,
-    defaultLanguage: "zh-cn",
+    defaultLanguage: "en-us",
     multiViews: true,
     flatView: true,
-    bindData: false,
+    bindData: true,
     zeroPadding: false
 });
 
 
+
 datepicker.on("update", (output: any) => {
     document.getElementById("layout").innerHTML = `选中的日期<br/>${output.type} / ${output.value}`;
-    // if (output.type === "selected") {
-        datepicker.dateRanges(output.value)
-    // }
 });
-
-// datepicker.dateRanges(["2018-1-20","2018-1-25"])
-
-
-
 datepicker.on("data", (result: any) => {
     const data = result.data;
     const nodeList = result.nodeList;
@@ -64,39 +57,25 @@ datepicker.on("data", (result: any) => {
             addClass(node, "disabled")
         }
     }
+
+    datepicker.dateRanges(["2018-1-22", "2018-1-23"]);
+
 });
 
-
 datepicker.data((params: any) => {
-    const keys = Object.keys(source);
-
     const currDate = new Date(dist.year, dist.month, dist.date);
-    for (let i = 0; i < keys.length; i++) {
-
-
-        let item = datepicker.parse(keys[i]);
-
+    Object.keys(source).forEach(date => {
+        let item = datepicker.parse(date);
         if (datepicker.diff(item, currDate) >= 0) {
-            params.dates.push(keys[i])
+            params.dates.push(date)
         } else {
-            // delete source[keys[i]]
+            delete source[date]
         }
-    }
+    });
     // params.from = from;
     // params.to = to;
+    console.log(source)
     params.data = source;
 });
 
-//
-// const dateValue: HTMLElement = document.getElementById('date-value');
-//
-//
-//
-//
-// dateValue.addEventListener("click", () => {
-//
-//
-//
-//     // popup.open();
-//
-// })
+

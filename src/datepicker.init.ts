@@ -1,17 +1,6 @@
-import {
-    isDate,
-    isBoolean,
-    isNumber,
-    diff,
-    parseEl,
-    addClass,
-    removeClass,
-    getLanguage,
-    setLanguage,
-    getDates
-} from "./util"
-import compose from './datepicker.template'
-import {setDefaultRange} from './datepicker.ranger'
+import {addClass, diff, getLanguage, isBoolean, isDate, isNumber, parseEl, removeClass, setLanguage} from "./util";
+import compose from "./datepicker.template";
+import {setDefaultRange} from "./datepicker.ranger";
 
 /***
  * 月份切换
@@ -35,7 +24,7 @@ export function monthSwitch(size: number, language: any) {
 
     this.date = new Date(curr.year, month, curr.date);
     this.createDatePicker(language, false);
-    this.pickDate(this.selected);
+    this.pickDate();
     this.dataRenderer(this.data)
 }
 
@@ -50,9 +39,6 @@ export function createDatePicker(lang: any, isInit: boolean) {
         console.error(`[Calendar Warn] invalid selector,current selector ${this.element}`);
         return false
     }
-    const startTime = this.startDate.getTime();
-    const currTime = this.date.getTime();
-
 
     this.element.innerHTML = compose(
         this.date,
@@ -63,21 +49,15 @@ export function createDatePicker(lang: any, isInit: boolean) {
         setLanguage(lang),
         this.zeroPadding
     );
-
-
+    this.bindMonthSwitch(lang);
     //加个定时器，保证初始化时，可以得到选中的日期
     const timer = setTimeout(() => {
         const initSelected =
-
             this.defaultDates.length > 0
-
                 ? this.defaultDates
-
                 : this.double
                 ? this.selected
                 : [this.format(this.date).value];
-
-
         this.selected = setDefaultRange(
             this.element,
             this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
@@ -90,11 +70,16 @@ export function createDatePicker(lang: any, isInit: boolean) {
             type: 'init',
             value: this.selected
         };
-        this.update(updateEventData)
+        //初始化的时候，需要获取初始化的日期
+        if (isInit) {
+            this.update(updateEventData);
+        }
         clearTimeout(timer)
     }, 0);
-
-
+}
+export function bindMonthSwitch(lang: any) {
+    const startTime = this.startDate.getTime();
+    const currTime = this.date.getTime();
     //日期切换
     const prev = this.element.querySelector(".calendar-action-prev");
     const next = this.element.querySelector(".calendar-action-next");
@@ -124,15 +109,10 @@ export function createDatePicker(lang: any, isInit: boolean) {
         }
     }
 
-
-    // cb()
-
-
 }
 
+
 export function init(option: any, renderer: any) {
-
-
     if (option.format) {
         this.dateFormat = option.format || "YYYY-MM-DD"
     }
@@ -168,7 +148,6 @@ export function init(option: any, renderer: any) {
     }
 
     this.zeroPadding = !(!option.zeroPadding);
-
     if (!renderer.dates || renderer.dates && renderer.dates.length <= 0) {
         const currDate = new Date();
         const gap = diff(this.endDate, currDate, "days");
@@ -188,9 +167,8 @@ export function init(option: any, renderer: any) {
         this.data = renderer.data;
     }
 
-
-    this.element = parseEl(option.el);
     const lang = getLanguage(option.language, option.defaultLanguage);
+    this.element = parseEl(option.el);
     this.createDatePicker(lang, true);
     this.pickDate();
 

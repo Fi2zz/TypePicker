@@ -3,10 +3,12 @@ import {
     diff,
     isObject,
     isDate,
+    isArray
 } from "./util"
 import {
     init,
     monthSwitch,
+    bindMonthSwitch,
     createDatePicker
 } from './datepicker.init'
 import handlePickDate from './datepicer.picker'
@@ -48,25 +50,27 @@ export default class DatePicker {
     monthSwitch = monthSwitch;
     createDatePicker = createDatePicker;
     zeroPadding: boolean = true;
-    pickDate = (dates?: Array<any>) => {
-        handlePickDate(
-            this.element,
-            this.selected,
-            this.double,
-            this.dates,
-            this.parse,
-            this.format,
-            this.limit,
-            this.inDates,
-            this.update
-        )
-    };
+    pickDate = () => handlePickDate(
+        this.element,
+        this.selected,
+        this.double,
+        this.dates,
+        this.parse,
+        this.format,
+        this.limit,
+        this.inDates,
+        this.update
+    );
     defaultDates: Array<string>[];
-    defaults: Array<any>[];
     format = (date: Date, zeroPadding?: boolean) => formatter(date, this.dateFormat, this.zeroPadding);
     parse = (string: string) => parseFormatted(string, this.dateFormat);
     inDates = (date: string) => !!~this.dates.indexOf(date);
-    update = (value: Array<any>) => Observer.$emit("update", value);
+    update = (result: any) => {
+        if (result.type === 'selected') {
+            this.dateRanges(result.value)
+        }
+        Observer.$emit("update", result);
+    };
     dataRenderer = (data: any) => {
         if (Object.keys(data).length <= 0) {
             Observer.$remove("data")
@@ -77,102 +81,94 @@ export default class DatePicker {
             })
         }
     };
+    dateRanges = (dates: Array<any>) => {
+        const datesList = <Array<any>>[];
+        if (!isArray(dates)) {
+            dates = [];
+            console.error("[dateRanges error] no dates provided", dates);
+            return
+        }
 
+        if (this.double) {
+            if (dates.length > 2) {
+                dates = dates.slice(0, 2)
+            }
+            const start = <any>dates[0];
+            const end = <any>dates[dates.length - 1];
+            const startDate = isDate(start) ? start : this.parse(start);
+            const endDate = isDate(end) ? end : this.parse(end);
+            if (!isDate(startDate) || !isDate(endDate)) {
+                console.error("[dateRanges error] illegal dates,", dates);
+                return
+            }
+            let gap = diff(startDate, endDate, "days");
+            gap = gap !== 0 ? gap * -1 : gap;
+            let endGap = diff(endDate, startDate, "days");
+            endGap = endGap !== 0 ? endGap * -1 : gap;
+            if (!this.limit) {
+                this.limit = 2
+            }
+            //计算日期范围
+            if (gap < 0 || endGap > this.limit || endGap < this.limit * -1) {
+                console.error(`[dateRanges error] illegal start date or end date or out of limit,your selected dates:[${dates}],limit:[${this.limit}]`);
+                return
+            }
+        }
+        else {
+            dates = [dates[dates.length - 1]];
+        }
+        for (let i = 0; i < dates.length; i++) {
+            let date = dates[i];
+            datesList.push(isDate(date) ? this.format(date).value : date)
+        }
+        this.defaultDates = datesList;
+    };
+    bindMonthSwitch: Function = bindMonthSwitch;
+
+    _bindDataInit(option: any, cb: Function) {
+        function noData(data: any) {
+            return !isObject(data)
+                || (Object.keys(data.data).length <= 0
+                || data.dates.length <= 0)
+        }
+
+        if (option.bindData) {
+            const params = {
+                dates: <Array<string>>[],
+                data: <any>{},
+                from: Date,
+                to: Date
+            };
+            const cbData = cb && cb(params);
+            const result = cbData ? cbData : params;
+            if (isDate(params.from)) option.from = params.from;
+            if (isDate(params.to)) option.to = params.to;
+            const config = {
+                data: result.data,
+                dates: result.dates.sort((a: string, b: string) => this.parse(a) - this.parse(b))
+            };
+            this.init(option, config);
+            if (!noData(result)) {
+                this.dataRenderer(result.data);
+            }
+        }
+
+
+    };
 
     constructor(option: INTERFACES) {
         this.defaultDates = [];
         if (!option.bindData) {
             this.init(option, {});
         }
-        const output: any = {
+        return <any> {
             on: Observer.$on,
-            data: (cb: Function) => {
-                function noData(data: any) {
-                    return !isObject(data)
-                        || (Object.keys(data.data).length <= 0
-                            || data.dates.length <= 0)
-                }
-
-                if (option.bindData) {
-                    const params = {
-                        dates: <Array<string>>[],
-                        data: <any>{},
-                        from: Date,
-                        to: Date
-                    };
-                    const cbData = cb && cb(params);
-                    const result = cbData ? cbData : params;
-                    if (isDate(params.from)) option.from = params.from;
-                    if (isDate(params.to)) option.to = params.to;
-                    const config = {
-                        data: result.data,
-                        dates: result.dates.sort((a: string, b: string) => this.parse(a) - this.parse(b))
-                    };
-                    this.init(option, config);
-                    if (!noData(result)) {
-                        this.dataRenderer(result.data);
-                    }
-                }
-            },
+            data: (cb: Function) => this._bindDataInit(option, cb),
             diff: (d1: Date, d2: Date) => diff(d1, d2, "days"),
             parse: this.parse,
             format: this.format,
-            dateRanges: (dates: Array<any>) => {
-
-                const tempDatesArray = <Array<any>>[];
-                if (!dates) {
-                    dates = [];
-                    return
-                }
-                if (dates && dates instanceof Array) {
-                    if (dates.length <= 0) {
-                        console.error("[dateRanges error] no dates provided", dates);
-                        return
-                    }
-                    if (option.doubleSelect) {
-                        if (dates.length === 1) {
-                            const start = this.parse(dates[0]);
-                            const next = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1);
-                            const nextDate = this.format(next, option.zeroPadding).value;
-                        } else if (dates.length > 2) {
-                            dates = dates.slice(0, 2)
-                        }
-                        const start = <any>dates[0];
-                        const end = <any>dates[dates.length - 1];
-                        const startDate = isDate(start) ? start : this.parse(start);
-                        const endDate = isDate(end) ? end : this.parse(end);
-                        if (!isDate(startDate) || !isDate(endDate)) {
-                            console.error("[dateRanges error] illegal dates,", dates);
-                            return
-                        }
-                        let gap = diff(startDate, endDate, "days");
-                        gap = gap !== 0 ? gap * -1 : gap;
-                        let endGap = diff(endDate, startDate, "days");
-                        endGap = endGap !== 0 ? endGap * -1 : gap;
-                        if (!option.limit) {
-                            option.limit = 2
-                        }
-                        //计算日期范围
-                        if (gap < 0
-                            || endGap > option.limit
-                            || endGap < option.limit * -1
-                        ) {
-                            console.error(`[dateRanges error] illegal start date or end date or out of limit,your selected dates:[${dates}],limit:[${option.limit}]`);
-                            return
-                        }
-                    }
-                    else {
-                        dates = [dates[dates.length - 1]];
-                    }
-                    for (let i = 0; i < dates.length; i++) {
-                        let date = dates[i];
-                        tempDatesArray.push(isDate(date) ? this.format(date).value : date)
-                    }
-                    this.defaultDates = tempDatesArray;
-                }
-            },
-            setDefaultDates: (dates: Array<any>) => output.dateRanges(dates),
+            dateRanges: this.dateRanges,
+            setDefaultDates: this.dateRanges,
         };
-        return output
     }
 }

@@ -43,22 +43,25 @@
     });
     //更新选择的日期
     datePicker.on("update", (output: any) => {
-
         const {type,value}=output;
         //type => 'init'或'selected'
         //valye => 选择的日期
         document.getElementById("layout").innerHTML = `选中的日期${value}`
-        //每次update，都需要手動調用dateRanges方法，設置選中的日期
-        datePicker.dateRanges(output.value);
-        
+        //当 type ='selected'时，将自动执行 dateRanges方法，避免切换月份之后，日期发生变化
     });
-    
-    //设置默认日期，datePicker.data() 之前或在 datePicker.data()内调用调用，
+    //设置默认日期，使用datePicker.dateRanges方法
     //如果不需要设置默认选中的日期，不执行此方法即可    
-    //[deprecated]datePicker.setDefaultDates(["2017-11-27","2017-12-05"]);
     //dateRanges =<Array<any>>[<Date>|<string>]
+    //[deprecated]datePicker.setDefaultDates(["2017-11-27","2017-12-05"]);
     //example:  dateRanges =<Array<any>>[new Date(),"2017-12-20"];
-    datePicker.dateRanges(dateRanges);
+    //分两种情况
+        1、 bindData =true,在data event callback里调用，方可生效
+            datePicker.on("data",()=>{
+                    datePicker.dateRanges(dateRanges);
+            })，
+        2、 bindData =false，在new 之后执行即可
+            datePicker.dateRanges(dateRanges);
+
     
     
     
@@ -106,26 +109,21 @@
                 "2017-11-23":<any>,
             }
         */
-
-        const keys = Object.keys(source);
         const currDate = new Date(dist.year, dist.month, dist.date);
-        for (let i = 0; i < keys.length; i++) {
-            let item = datePicker.parse(keys[i]);
-            //筛选有效日期
-            if (datePicker.diff(item, currDate) >= 0) {
-                params.dates.push(keys[i])
-            } else {
-                delete source[keys[i]]
-            }
-        }
+        Object.keys(source).forEach(date=>{
+          let item = datePicker.parse(date);
+               if (datePicker.diff(item, currDate) >= 0) {
+                  params.dates.push(item)
+              } else {
+                  delete source[date]
+              }      
+        })
+
         params.data = source;
         //开始日期和结束日期
         //此为避免重复 new DatePicker();
-        
         params.from =<Date>
         params.to   =<Date>
-        
-        return params
     });
         
         
