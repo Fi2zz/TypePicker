@@ -449,7 +449,6 @@ function compose(option) {
         formatter: formatter,
         parse: parse
     };
-    console.log(gap, flatView, singleView);
     var templateConf = {
         template: calendarTemplateList(mapConf),
         multiViews: multiViews,
@@ -563,7 +562,6 @@ function setInitRange(options) {
         dates = data;
     }
     else {
-        console.log({ data: data });
         if (data.length >= 2) {
             var start_2 = data[0];
             var end_1 = data[data.length - 1];

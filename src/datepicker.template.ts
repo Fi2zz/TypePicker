@@ -208,7 +208,6 @@ export default function compose(option: templateComposeOption) {
         formatter,
         parse
     };
-    console.log(gap, flatView, singleView)
     const templateConf = {
         template: calendarTemplateList(mapConf),
         multiViews,

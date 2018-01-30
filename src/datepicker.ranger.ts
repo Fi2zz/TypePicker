@@ -130,7 +130,6 @@ export function setInitRange(options: initRangeOptions) {
         dates = data
     } else {
 
-        console.log({data})
 
 
         if (data.length >= 2) {
