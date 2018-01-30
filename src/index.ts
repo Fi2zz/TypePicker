@@ -100,19 +100,23 @@ export default class DatePicker {
                 if (dates.length > 2) {
                     dates = dates.slice(0, 2)
                 }
+
                 start = <any>dates[0];
                 end = <any>dates[dates.length - 1];
-                const startDate = this.parse(start);
-                const endDate = this.parse(end);
+
+
+                const startDate = isDate(start) ? start : this.parse(start);
+                const endDate = isDate(end) ? end : this.parse(end);
                 const diffed = diff(startDate, endDate, "days") * -1;
                 if (diffed < 0
                     || diffed > this.limit
-                    || !this.inDates(start) && !this.inDates(end) //开始日期和结束日期均为无效日期
-                    || !this.inDates(start)
+                    || !this.inDates(this.format(startDate).value) && !this.inDates(this.format(endDate).value) //开始日期和结束日期均为无效日期
+                    || !this.inDates(this.format(startDate).value)
                 ) {
                     console.error(`[dateRanges Warn]Illegal dates,[${dates}]`);
                     return false;
                 }
+
                 for (let i = 0; i <= diffed; i++) {
                     const date = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
                     const formatted = this.format(date).value;
@@ -121,10 +125,12 @@ export default class DatePicker {
                         return false
                     }
                 }
-                datesList = [start, end]
+
+                datesList = [this.format(startDate).value, this.format(endDate).value]
             }
             else {
-                datesList = [dates[dates.length - 1]]
+                const d = dates[dates.length - 1];
+                datesList = [isDate(d) ? this.format(d).value : d]
             }
             this.defaultDates = datesList;
         };

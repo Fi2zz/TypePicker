@@ -64,8 +64,7 @@ datepicker.on("data", (result: any) => {
 });
 
 
-
-datepicker.dateRanges(["2018-2-3", "2018-2-7"], true);
+datepicker.dateRanges([new Date(2018, 0, 30), new Date(2018, 1, 2)], true);
 
 datepicker.data((params: any) => {
     const currDate = new Date(dist.year, dist.month, dist.date);

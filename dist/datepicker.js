@@ -1269,13 +1269,13 @@ var DatePicker = /** @class */ (function () {
                     }
                     start = dates[0];
                     end = dates[dates.length - 1];
-                    var startDate = _this.parse(start);
-                    var endDate = _this.parse(end);
+                    var startDate = util.isDate(start) ? start : _this.parse(start);
+                    var endDate = util.isDate(end) ? end : _this.parse(end);
                     var diffed = util.diff(startDate, endDate, "days") * -1;
                     if (diffed < 0
                         || diffed > _this.limit
-                        || !_this.inDates(start) && !_this.inDates(end) //开始日期和结束日期均为无效日期
-                        || !_this.inDates(start)) {
+                        || !_this.inDates(_this.format(startDate).value) && !_this.inDates(_this.format(endDate).value) //开始日期和结束日期均为无效日期
+                        || !_this.inDates(_this.format(startDate).value)) {
                         console.error("[dateRanges Warn]Illegal dates,[" + dates + "]");
                         return false;
                     }
@@ -1287,10 +1287,11 @@ var DatePicker = /** @class */ (function () {
                             return false;
                         }
                     }
-                    datesList = [start, end];
+                    datesList = [_this.format(startDate).value, _this.format(endDate).value];
                 }
                 else {
-                    datesList = [dates[dates.length - 1]];
+                    var d = dates[dates.length - 1];
+                    datesList = [util.isDate(d) ? _this.format(d).value : d];
                 }
                 _this.defaultDates = datesList;
             };
