@@ -133,6 +133,7 @@ function calendarViewTemplate(options: templateFunctionOption) {
         template,
         multiViews,
         flatView,
+        singleView,
         language,
         // zeroPadding
     } = options;
@@ -146,21 +147,21 @@ function calendarViewTemplate(options: templateFunctionOption) {
         const title = `<div class="calendar-title">${language.title(year, month)}</div>`,
             body = item.template;
         let tpl = "";
-        if (!multiViews && !flatView) {
+        if (multiViews || singleView) {
             tpl += `<div class='calendar-main calendar-${index}'>
                     <div class="calendar-head">${title}</div>
+                   <div class="calendar-day"> ${weekDays}</div>
                     <div class="calendar-body">${body}</div>
               </div>`
         } else {
             tpl = `<div class="calendar-main">
                    <div class="calendar-head">${title}</div>  
-                   <div class="calendar-day"> ${weekDays}</div>
                     <div class="calendar-body">${body}</div>
             </div>`
         }
         return tpl
     });
-    if (!multiViews && !flatView) {
+    if (flatView) {
         tpl.unshift(`<div class="calendar-day">${weekDays}</div>`)
     }
     return tpl.join("")
@@ -168,7 +169,7 @@ function calendarViewTemplate(options: templateFunctionOption) {
 
 function calendarTemplateCompose(multiViews: boolean, flatView: boolean, singleView: boolean, template: any) {
 
-    return `<div class="calendar calendar-${multiViews ? "double-views" : flatView ? "single-view" : "flat-view"}">${calendarActionBar(multiViews || singleView)}${template}</div>`
+    return `<div class="calendar calendar-${multiViews ? "double-views" : singleView ? "single-view" : "flat-view"}">${calendarActionBar(multiViews || singleView)}${template}</div>`
 }
 
 function calendarActionBar(actionbar: boolean) {
@@ -213,6 +214,7 @@ export default function compose(option: templateComposeOption) {
         multiViews,
         flatView,
         language,
+        singleView
     };
     return calendarTemplateCompose(multiViews, flatView, singleView, calendarViewTemplate(templateConf))
 }

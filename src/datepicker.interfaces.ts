@@ -20,6 +20,7 @@ export interface templateFunctionOption {
     template: any,
     multiViews: boolean,
     flatView: boolean,
+    singleView:boolean,
 
     language: any,
 }

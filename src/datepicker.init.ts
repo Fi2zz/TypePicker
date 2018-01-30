@@ -229,7 +229,11 @@ export function init(option: any, renderer: any) {
     const next = nextTick(() => {
         if (this.defaultDates.length > 0) {
             let date = this.defaultDates[0];
-            this.date = this.parse(date)
+
+            if(!this.flatView){
+                this.date = this.parse(date)
+
+            }
         }
         this.createDatePicker(true);
         this.pickDate();

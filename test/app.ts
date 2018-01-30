@@ -29,8 +29,8 @@ const datepicker = <any>new DatePicker({
     doubleSelect: true,
     limit: 7,
     defaultLanguage: "jp",
-    multiViews: true,
-    flatView: false,
+    multiViews: false,
+    flatView: true,
     singleView: false,
     bindData: true,
     zeroPadding: false,
@@ -64,7 +64,7 @@ datepicker.on("data", (result: any) => {
 });
 
 
-datepicker.dateRanges([new Date(2018, 0, 30), new Date(2018, 1, 2)], true);
+datepicker.dateRanges([new Date(2018, 1, 3), new Date(2018, 1, 5)], true);
 
 datepicker.data((params: any) => {
     const currDate = new Date(dist.year, dist.month, dist.date);

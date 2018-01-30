@@ -402,7 +402,7 @@ function calendarTemplateList(option) {
     return template;
 }
 function calendarViewTemplate(options) {
-    var template = options.template, multiViews = options.multiViews, flatView = options.flatView, language = options.language;
+    var template = options.template, multiViews = options.multiViews, flatView = options.flatView, singleView = options.singleView, language = options.language;
     var weekDays = language.week.map(function (day, index) {
         var className = ["calendar-cell", "calendar-day-cell",
             index === 0 ? "calendar-cell-weekday" : index === 6 ? "calendar-cell-weekend" : ""];
@@ -412,21 +412,21 @@ function calendarViewTemplate(options) {
         var year = item.year, month = item.month;
         var title = "<div class=\"calendar-title\">" + language.title(year, month) + "</div>", body = item.template;
         var tpl = "";
-        if (!multiViews && !flatView) {
-            tpl += "<div class='calendar-main calendar-" + index + "'>\n                    <div class=\"calendar-head\">" + title + "</div>\n                    <div class=\"calendar-body\">" + body + "</div>\n              </div>";
+        if (multiViews || singleView) {
+            tpl += "<div class='calendar-main calendar-" + index + "'>\n                    <div class=\"calendar-head\">" + title + "</div>\n                   <div class=\"calendar-day\"> " + weekDays + "</div>\n                    <div class=\"calendar-body\">" + body + "</div>\n              </div>";
         }
         else {
-            tpl = "<div class=\"calendar-main\">\n                   <div class=\"calendar-head\">" + title + "</div>  \n                   <div class=\"calendar-day\"> " + weekDays + "</div>\n                    <div class=\"calendar-body\">" + body + "</div>\n            </div>";
+            tpl = "<div class=\"calendar-main\">\n                   <div class=\"calendar-head\">" + title + "</div>  \n                    <div class=\"calendar-body\">" + body + "</div>\n            </div>";
         }
         return tpl;
     });
-    if (!multiViews && !flatView) {
+    if (flatView) {
         tpl.unshift("<div class=\"calendar-day\">" + weekDays + "</div>");
     }
     return tpl.join("");
 }
 function calendarTemplateCompose(multiViews, flatView, singleView, template) {
-    return "<div class=\"calendar calendar-" + (multiViews ? "double-views" : flatView ? "single-view" : "flat-view") + "\">" + calendarActionBar(multiViews || singleView) + template + "</div>";
+    return "<div class=\"calendar calendar-" + (multiViews ? "double-views" : singleView ? "single-view" : "flat-view") + "\">" + calendarActionBar(multiViews || singleView) + template + "</div>";
 }
 function calendarActionBar(actionbar) {
     if (!actionbar) {
@@ -453,7 +453,8 @@ function compose(option) {
         template: calendarTemplateList(mapConf),
         multiViews: multiViews,
         flatView: flatView,
-        language: language
+        language: language,
+        singleView: singleView
     };
     return calendarTemplateCompose(multiViews, flatView, singleView, calendarViewTemplate(templateConf));
 }
@@ -811,7 +812,9 @@ function init(option, renderer) {
     var next = util.nextTick(function () {
         if (_this.defaultDates.length > 0) {
             var date = _this.defaultDates[0];
-            _this.date = _this.parse(date);
+            if (!_this.flatView) {
+                _this.date = _this.parse(date);
+            }
         }
         _this.createDatePicker(true);
         _this.pickDate();
