@@ -1,4 +1,9 @@
-import {addClass, diff, getLanguage, isBoolean, isDate, isNumber, parseEl, removeClass, setLanguage} from "./util";
+import {
+    addClass, diff, getLanguage,
+    isBoolean, isDate, isNumber, parseEl, removeClass, setLanguage,
+    clearNextTick,
+    nextTick
+} from "./util";
 import compose from "./datepicker.template";
 import {setDefaultRange} from "./datepicker.ranger";
 
@@ -16,14 +21,13 @@ export function monthSwitch(size: number, language: any) {
     let month = curr.month + size;
     //每次切换两个月份
     if (this.multiViews) {
-        // month += size > 0 ? 1 : -1
+        month += size > 0 ? 1 : -1
     }
     if (this.defaultDates.length > 0) {
         this.selected = this.defaultDates;
     }
-
     this.date = new Date(curr.year, month, curr.date);
-    this.createDatePicker(language, false);
+    this.createDatePicker(language);
     this.pickDate();
     this.dataRenderer(this.data)
 }
@@ -34,24 +38,23 @@ export function monthSwitch(size: number, language: any) {
  * @param lang 语言包
  *
  * **/
-export function createDatePicker(lang: any, isInit: boolean) {
-    if (!this.element) {
-        console.error(`[Calendar Warn] invalid selector,current selector ${this.element}`);
-        return false
-    }
+export function createDatePicker(lang: any, isInit?: Boolean) {
 
-    this.element.innerHTML = compose(
-        this.date,
-        this.endDate,
-        this.dateFormat,
-        this.multiViews,
-        this.flatView,
-        setLanguage(lang),
-        this.zeroPadding
-    );
+
+    this.element.innerHTML = compose({
+        startDate: this.date,
+        endDate: this.endDate,
+        multiViews: this.multiViews,
+        flatView: this.flatView,
+        language: setLanguage(lang),
+        infiniteMode: this.infiniteMode,
+        formatter: this.format,
+        parse: this.parse
+    });
     this.bindMonthSwitch(lang);
-    //加个定时器，保证初始化时，可以得到选中的日期
-    const timer = setTimeout(() => {
+    if (this.initWithSelected) {
+
+
         const initSelected =
             this.defaultDates.length > 0
                 ? this.defaultDates
@@ -74,45 +77,66 @@ export function createDatePicker(lang: any, isInit: boolean) {
         if (isInit) {
             this.update(updateEventData);
         }
-        clearTimeout(timer)
-    }, 0);
+    }
 }
+
 export function bindMonthSwitch(lang: any) {
     const startTime = this.startDate.getTime();
     const currTime = this.date.getTime();
     //日期切换
     const prev = this.element.querySelector(".calendar-action-prev");
     const next = this.element.querySelector(".calendar-action-next");
+
     if (prev && next) {
-        let gap = diff(this.date, this.endDate);
-        if (gap >= 2) {
+
+        if (this.infiniteMode) {
             next.addEventListener("click", () => {
                 this.monthSwitch(1, lang);
-                removeClass(prev, "disabled");
-                removeClass(prev, "calendar-action-disabled")
             });
-        }
-        else {
-            addClass(next, "disabled");
-            addClass(next, "calendar-action-disabled")
-        }
-
-        if (currTime > startTime) {
             prev.addEventListener("click", () => {
                 this.monthSwitch(-1, lang);
-                removeClass(next, "disabled");
-                removeClass(next, "calendar-action-disabled")
-            });
+            })
         } else {
-            addClass(prev, "disabled");
-            addClass(prev, "calendar-action-disabled")
+            let gap = diff(this.date, this.endDate);
+            if (gap >= 2) {
+                next.addEventListener("click", () => {
+                    this.monthSwitch(1, lang);
+                    removeClass(prev, "disabled");
+                    removeClass(prev, "calendar-action-disabled")
+                });
+            }
+            else {
+                addClass(next, "disabled");
+                addClass(next, "calendar-action-disabled")
+            }
+            if (currTime > startTime) {
+                prev.addEventListener("click", () => {
+                    this.monthSwitch(-1, lang);
+                    removeClass(next, "disabled");
+                    removeClass(next, "calendar-action-disabled")
+                });
+            } else {
+                addClass(prev, "disabled");
+                addClass(prev, "calendar-action-disabled")
+            }
         }
     }
+
 
 }
 
 
 export function init(option: any, renderer: any) {
+
+    if (option.initWithSelected) {
+        this.initWithSelected = option.initWithSelected
+
+    }
+
+    if (option.doubleSelect) {
+        this.double = option.doubleSelect
+    }
+
     if (option.format) {
         this.dateFormat = option.format || "YYYY-MM-DD"
     }
@@ -131,8 +155,8 @@ export function init(option: any, renderer: any) {
         this.flatView = false;
         this.multiViews = false
     }
-    //雙選
-    this.double = isBoolean(option.doubleSelect) ? option.doubleSelect : false;
+
+
     //开始日期
     this.startDate = isDate(option.from) ? option.from : new Date();
     this.date = this.startDate;
@@ -145,9 +169,16 @@ export function init(option: any, renderer: any) {
         const month = this.endDate.getMonth();
         const date = this.endDate.getDate();
         this.endDate = new Date(year, month + 1, date)
+
     }
 
     this.zeroPadding = !(!option.zeroPadding);
+
+    if (option.infiniteMode) {
+        this.infiniteMode = option.infiniteMode;
+    }
+
+
     if (!renderer.dates || renderer.dates && renderer.dates.length <= 0) {
         const currDate = new Date();
         const gap = diff(this.endDate, currDate, "days");
@@ -165,11 +196,30 @@ export function init(option: any, renderer: any) {
     } else {
         this.dates = renderer.dates;
         this.data = renderer.data;
+        this.infiniteMode = false;
+        this.endDate = this.parse(this.dates[this.dates.length - 1])
     }
+
 
     const lang = getLanguage(option.language, option.defaultLanguage);
     this.element = parseEl(option.el);
-    this.createDatePicker(lang, true);
-    this.pickDate();
+
+
+    if (!this.element) {
+        console.error(`[Calendar Warn] invalid selector,current selector ${this.element}`);
+        return false
+    }
+
+    const next = nextTick(() => {
+
+        if (this.defaultDates.length > 0) {
+            let date = this.defaultDates[0];
+            this.date = this.parse(date)
+        }
+
+        this.createDatePicker(lang, true);
+        this.pickDate();
+        clearNextTick(next)
+    })
 
 }

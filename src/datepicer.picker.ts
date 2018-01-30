@@ -6,6 +6,7 @@ import {
     inArray, hasClass
 } from "./util"
 import {ranged as setRange} from './datepicker.ranger'
+
 export default function (element: any,
                          selected: Array<any>,
                          isDouble: boolean,
@@ -26,9 +27,15 @@ export default function (element: any,
             //不可选的日期
             //初始化时，selected的length为0，点击不可选日期
             if (!date ||
-                index >= 0 ||
                 selected.length <= 0 && !inDates(date)) {
                 return false;
+            }
+            //重复选择
+            //如选择了 2018-02-04 ~ 2018-02-06
+            //但是用户实际想选择的是 2018-02-04~2018-02-05，
+            //此时 用户再次选择 2018-02-04，其他日期将被删除
+            if (index >= 0) {
+                selected = [selected[0]]
             }
             //双选，但选择的日期数量大于2，或单选
             if (isDouble && selected.length >= 2 || !isDouble) {
@@ -75,6 +82,7 @@ export default function (element: any,
         });
     }
 }
+
 function singlePick(selector: string, collector: HTMLElement, shouldChange: boolean) {
     if (shouldChange) {
         const actives = collector.querySelectorAll(".active");
@@ -87,6 +95,7 @@ function singlePick(selector: string, collector: HTMLElement, shouldChange: bool
     }
 
 }
+
 function doublePick(collector: HTMLElement,
                     start: string,
                     end: string,
@@ -145,6 +154,7 @@ function gap(d1: Date, d2: Date) {
     let value = diff(d1, d2, "days");
     return value === 0 ? 0 : value * -1
 }
+
 function doubleSelectHandler(date: any,
                              selected: Array<any>,
                              cache: Array<any>,
@@ -155,6 +165,7 @@ function doubleSelectHandler(date: any,
     function inDates(item?: any) {
         return inArray(source, item);
     }
+
     let range = <Array<any>>[];
     let inRange = <Array<any>>[];
     //获取已选的开始日期

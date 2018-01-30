@@ -106,18 +106,21 @@ export function isPrimitive(value: any): boolean {
         typeof value === 'boolean'
     )
 }
+
 export function hasClass(el: any, className: string) {
     if (!el) {
         return false
     }
     return el.classList.contains(className)
 }
+
 export function removeClass(el: any, className: string) {
     if (!el) {
         return
     }
     return el.classList.remove(className)
 }
+
 export function addClass(el: any, className: string) {
     if (!el || el && el.classList.contains(className)) return
     return el.classList.add(className)
@@ -217,5 +220,19 @@ export function quickSort(arr: number[], isAscending?: boolean): number[] {
     }
     return [].concat(quickSort(big, isAscending), equal, quickSort(small, isAscending));
 }
+
+
+export function nextTick(func: Function) {
+    window.setTimeout(func, 0);
+}
+
+export function clearNextTick(id: any) {
+
+
+    window.clearTimeout(id)
+
+}
+
+
 
 

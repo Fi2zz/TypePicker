@@ -297,124 +297,38 @@ function quickSort(arr, isAscending) {
     return [].concat(quickSort(big, isAscending), equal, quickSort(small, isAscending));
 }
 exports.quickSort = quickSort;
+function nextTick(func) {
+    window.setTimeout(func, 0);
+}
+exports.nextTick = nextTick;
+function clearNextTick(id) {
+    window.clearTimeout(id);
+}
+exports.clearNextTick = clearNextTick;
 });
 
 unwrapExports(util);
-
-var datepicker_formatter = createCommonjsModule(function (module, exports) {
-"use strict";
-exports.__esModule = true;
-
-function parse(string) {
-    if (!string)
-        { return new Date(); }
-    if (string instanceof Date)
-        { return string; }
-    var date = new Date(string);
-    if (!date.getTime())
-        { return null; }
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-function format(date, format, zeroPadding) {
-    if (zeroPadding === void 0) { zeroPadding = true; }
-    var shouldPadStart = true;
-    if (!zeroPadding) {
-        shouldPadStart = false;
-    }
-    var parts = {
-        DD: shouldPadStart ? util.padding(date.getDate()) : date.getDate(),
-        dd: shouldPadStart ? util.padding(date.getDate()) : date.getDate(),
-        MM: shouldPadStart ? util.padding(date.getMonth() + 1) : date.getMonth() + 1,
-        mm: shouldPadStart ? util.padding(date.getMonth() + 1) : date.getMonth() + 1,
-        YYYY: date.getFullYear(),
-        D: date.getDate(),
-        d: date.getDate(),
-        M: date.getMonth() + 1,
-        m: date.getMonth() + 1
-    };
-    return {
-        origin: date,
-        date: parts["DD"],
-        month: parts["MM"],
-        year: parts["YYYY"],
-        day: date.getDay(),
-        value: format.replace(/(?:\b|%)([dDMyYHhaAmsz]+|ap|AP)(?:\b|%)/g, function (match, $1) {
-            return parts[$1] === undefined ? $1 : parts[$1];
-        })
-    };
-}
-exports.format = format;
-function parseFormatted(strDate, format) {
-    //能直接解析成日期对象的，直接返回日期对象
-    //如 YYYY/MM/DD YYYY-MM-DD
-    var ret = parse(strDate);
-    if (ret)
-        { return ret; }
-    var token = /d{1,4}|M{1,4}|YY(?:YY)?|S{1,3}|Do|ZZ|([HhMsDm])\1?|[aA]|"[^"]*"|'[^']*'/g;
-    var parseFlags = {
-        D: [/\d{1,2}/, function (d, v) { return d.day = parseInt(v); }],
-        M: [/\d{1,2}/, function (d, v) { return (d.month = parseInt(v) - 1); }],
-        DD: [/\d{2}/, function (d, v) { return d.day = parseInt(v); }],
-        MM: [/\d{2}/, function (d, v) { return d.month = parseInt(v) - 1; }],
-        YY: [/\d{2,4}/, function (d, v) { return d.year = parseInt(v); }],
-        YYYY: [/\d{2,4}/, function (d, v) { return d.year = parseInt(v); }]
-    };
-    ret = function (dateStr, format) {
-        if (dateStr.length > 1000) {
-            return null;
-        }
-        var isValid = true;
-        var dateInfo = {
-            year: 0,
-            month: 0,
-            day: 0
-        };
-        format.replace(token, function ($0) {
-            if (parseFlags[$0]) {
-                var info = parseFlags[$0];
-                var regExp = info[0];
-                var handler_1 = info[info.length - 1];
-                var index_1 = dateStr.search(regExp);
-                if (!~index_1) {
-                    isValid = false;
-                }
-                else {
-                    dateStr.replace(info[0], function (result) {
-                        handler_1(dateInfo, result);
-                        dateStr = dateStr.substr(index_1 + result.length);
-                        return result;
-                    });
-                }
-            }
-            return parseFlags[$0] ? '' : $0.slice(1, $0.length - 1);
-        });
-        if (!isValid) {
-            return null;
-        }
-        var parsed = new Date(dateInfo.year, dateInfo.month, dateInfo.day);
-        return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
-    };
-    return ret(strDate, format);
-}
-exports.parseFormatted = parseFormatted;
-});
-
-unwrapExports(datepicker_formatter);
 
 var datepicker_template = createCommonjsModule(function (module, exports) {
 "use strict";
 exports.__esModule = true;
 
-
 var currDate = new Date();
-function setItemClassName(date) {
+function calendarDateCellClassName(options) {
+    var date = options.date, infiniteMode = options.infiniteMode, endDate = options.endDate;
     var classStack = ["calendar-cell", "calendar-date-cell"];
     if (!date) {
         classStack.push("disabled", "empty");
     }
     else {
-        if (util.diff(date, currDate, "days") < 0) {
-            classStack.push("disabled");
+        // console.log({infiniteMode})
+        if (!infiniteMode) {
+            if (util.diff(date, currDate, "days") < 0) {
+                classStack.push("disabled");
+            }
+            if (endDate && util.diff(date, endDate, "days") > 0) {
+                classStack.push("disabled");
+            }
         }
         if (date.getDay() === 0) {
             classStack.push("calendar-cell-weekend");
@@ -425,8 +339,9 @@ function setItemClassName(date) {
     }
     return classStack.join(" ");
 }
-function setDates(year, month, formater, zeroPadding) {
-    var List = [];
+function calendarDateCellTemplate(options) {
+    var year = options.year, month = options.month, infiniteMode = options.infiniteMode, formatter = options.formatter, endDate = options.endDate;
+    var template = [];
     var d = new Date(year, month, 1);
     var curr = {
         year: d.getFullYear(),
@@ -436,44 +351,60 @@ function setDates(year, month, formater, zeroPadding) {
     };
     var firstDay = util.getFirstDay(curr.year, curr.month);
     for (var i = 0; i < firstDay; i++) {
-        List.push({
+        template.push({
             date: "",
-            className: setItemClassName(),
-            text: "<div class='date'></div><div class='placeholder'></div>",
+            className: calendarDateCellClassName({}),
+            text: calendarSingleDateCellTemplate(),
             key: ""
         });
     }
-    for (var date = 1; date <= util.getDates(curr.year, curr.month); date++) {
-        var currDate_1 = new Date(curr.year, curr.month, date);
-        var key = datepicker_formatter.format(currDate_1, formater, zeroPadding).value;
-        var text = "<div class=\"date\">" + (zeroPadding ? util.padding(date) : date) + "</div><div class=\"placeholder\"></div>";
-        List.push({
-            date: date,
-            className: setItemClassName(currDate_1),
-            text: text,
-            key: key
-        });
+    for (var i = 1; i <= util.getDates(curr.year, curr.month); i++) {
+        var date = new Date(curr.year, curr.month, i);
+        var formatted = formatter(date);
+        var key = formatted.value;
+        var text = calendarSingleDateCellTemplate(formatted.date);
+        var className = calendarDateCellClassName({ date: date, infiniteMode: infiniteMode, endDate: endDate });
+        template.push({ className: className, text: text, key: key });
     }
-    var template = List.map(function (item) { return "<div class=\"" + item.className + "\"\n            " + (item.key ? "data-date=" + item.key : "") + ">" + item.text + "</div>"; }).join(" ");
-    return { template: template, year: curr.year, month: curr.index };
+    var tpl = template.map(function (item) { return calendarCellGenerate(item.className, item.key, item.text); }).join(" ");
+    return {
+        template: tpl,
+        year: curr.year,
+        month: curr.index
+    };
+}
+function calendarSingleDateCellTemplate(date) {
+    return "<div class=\"date\">" + (date ? date : '') + "</div><div class=\"placeholder\"></div>";
+}
+function calendarCellGenerate(className, key, text) {
+    return "<div class=\"" + className + "\"" + (key ? "data-date=" + key : "") + ">" + text + "</div>";
 }
 /**
  * 集合月历，把多个月份的何在一起，构成日历
  * **/
-function map(startDate, format, gap, zeroPadding) {
-    if (zeroPadding === void 0) { zeroPadding = true; }
+function calendarTemplateList(option) {
+    var startDate = option.startDate, endDate = option.endDate, gap = option.gap, 
+    // zeroPadding,
+    infiniteMode = option.infiniteMode, formatter = option.formatter, parse = option.parse;
     var template = [];
+    var size = util.diff(startDate, endDate);
+    console.log(size, gap);
     for (var i = 0; i <= gap; i++) {
         var date = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
-        var paint = setDates(date.getFullYear(), date.getMonth(), format, zeroPadding);
+        var paint = calendarDateCellTemplate({
+            year: date.getFullYear(),
+            month: date.getMonth(),
+            formatter: formatter,
+            parse: parse,
+            infiniteMode: infiniteMode,
+            endDate: endDate
+        });
         template.push({ template: paint.template, year: paint.year, month: paint.month });
     }
     return template;
 }
-function viewMainClassName(index, flatView) {
-    return flatView ? "" : " calendar-" + index;
-}
-function template(template, multiViews, flatView, language, zeroPadding) {
+function calendarViewTemplate(options) {
+    var template = options.template, multiViews = options.multiViews, flatView = options.flatView, language = options.language;
     var weekDays = language.week.map(function (day, index) {
         var className = ["calendar-cell", "calendar-day-cell",
             index === 0 ? "calendar-cell-weekday" : index === 6 ? "calendar-cell-weekend" : ""];
@@ -487,7 +418,7 @@ function template(template, multiViews, flatView, language, zeroPadding) {
             tpl += "<div class='calendar-main calendar-" + index + "'>\n                    <div class=\"calendar-head\">" + title + "</div>\n                    <div class=\"calendar-body\">" + body + "</div>\n              </div>";
         }
         else {
-            tpl = "<div class=\"calendar-main" + viewMainClassName(index, flatView) + "\">\n                   <div class=\"calendar-head\">" + title + "</div>  \n                   <div class=\"calendar-day\"> " + weekDays + "</div>\n                    <div class=\"calendar-body\">" + body + "</div>\n            </div>";
+            tpl = "<div class=\"calendar-main\">\n                   <div class=\"calendar-head\">" + title + "</div>  \n                   <div class=\"calendar-day\"> " + weekDays + "</div>\n                    <div class=\"calendar-body\">" + body + "</div>\n            </div>";
         }
         return tpl;
     });
@@ -496,16 +427,37 @@ function template(template, multiViews, flatView, language, zeroPadding) {
     }
     return tpl.join("");
 }
+function calendarTemplateCompose(multiViews, flatView, template) {
+    return "<div class=\"calendar calendar-" + (multiViews ? "double-views" : flatView ? "single-view" : "flat-view") + "\">" + calendarActionBar(multiViews || flatView) + template + "</div>";
+}
+function calendarActionBar(actionbar) {
+    if (!actionbar) {
+        return '';
+    }
+    return "<div class=\"calendar-action-bar\">\n            <button class='calendar-action calendar-action-prev'><span>prev</span></button>\n            <button class='calendar-action calendar-action-next'><span>next</span></button>\n         </div>\n    ";
+}
 /**
  * 生成完整日历
  *
  * **/
-function compose(startDate, endDate, format, multiViews, flatView, language, zeroPadding) {
-    var className = "calendar-" + (multiViews ? "double-views" : flatView ? "single-view" : "flat-view");
+function compose(option) {
+    var startDate = option.startDate, endDate = option.endDate, multiViews = option.multiViews, flatView = option.flatView, language = option.language, infiniteMode = option.infiniteMode, parse = option.parse, formatter = option.formatter;
     var gap = multiViews ? 1 : flatView ? 0 : util.diff(startDate, endDate);
-    var tpl = template(map(startDate, format, gap, zeroPadding), multiViews, flatView, language, zeroPadding);
-    var controller = multiViews || flatView ? "\n         <div class=\"calendar-action-bar\">\n            <button class='calendar-action calendar-action-prev'><span>prev</span></button>\n            <button class='calendar-action calendar-action-next'><span>next</span></button>\n         </div>\n        " : "";
-    return "<div class=\"calendar " + className + "\"> " + controller + tpl + "</div>";
+    var mapConf = {
+        startDate: startDate,
+        endDate: endDate,
+        gap: gap,
+        infiniteMode: infiniteMode,
+        formatter: formatter,
+        parse: parse
+    };
+    var templateConf = {
+        template: calendarTemplateList(mapConf),
+        multiViews: multiViews,
+        flatView: flatView,
+        language: language
+    };
+    return calendarTemplateCompose(multiViews, flatView, calendarViewTemplate(templateConf));
 }
 exports["default"] = compose;
 });
@@ -685,11 +637,14 @@ function monthSwitch(size, language) {
     };
     var month = curr.month + size;
     //每次切换两个月份
+    if (this.multiViews) {
+        month += size > 0 ? 1 : -1;
+    }
     if (this.defaultDates.length > 0) {
         this.selected = this.defaultDates;
     }
     this.date = new Date(curr.year, month, curr.date);
-    this.createDatePicker(language, false);
+    this.createDatePicker(language);
     this.pickDate();
     this.dataRenderer(this.data);
 }
@@ -700,31 +655,33 @@ exports.monthSwitch = monthSwitch;
  *
  * **/
 function createDatePicker(lang, isInit) {
-    var _this = this;
-    if (!this.element) {
-        console.error("[Calendar Warn] invalid selector,current selector " + this.element);
-        return false;
-    }
-    this.element.innerHTML = datepicker_template["default"](this.date, this.endDate, this.dateFormat, this.multiViews, this.flatView, util.setLanguage(lang), this.zeroPadding);
+    this.element.innerHTML = datepicker_template["default"]({
+        startDate: this.date,
+        endDate: this.endDate,
+        multiViews: this.multiViews,
+        flatView: this.flatView,
+        language: util.setLanguage(lang),
+        infiniteMode: this.infiniteMode,
+        formatter: this.format,
+        parse: this.parse
+    });
     this.bindMonthSwitch(lang);
-    //加个定时器，保证初始化时，可以得到选中的日期
-    var timer = setTimeout(function () {
-        var initSelected = _this.defaultDates.length > 0
-            ? _this.defaultDates
-            : _this.double
-                ? _this.selected
-                : [_this.format(_this.date).value];
-        _this.selected = datepicker_ranger.setDefaultRange(_this.element, _this.element.querySelectorAll(".calendar-date-cell:not(.empty)"), initSelected, _this.dates, _this.double, _this.parse, _this.format);
+    if (this.initWithSelected) {
+        var initSelected = this.defaultDates.length > 0
+            ? this.defaultDates
+            : this.double
+                ? this.selected
+                : [this.format(this.date).value];
+        this.selected = datepicker_ranger.setDefaultRange(this.element, this.element.querySelectorAll(".calendar-date-cell:not(.empty)"), initSelected, this.dates, this.double, this.parse, this.format);
         var updateEventData = {
             type: 'init',
-            value: _this.selected
+            value: this.selected
         };
         //初始化的时候，需要获取初始化的日期
         if (isInit) {
-            _this.update(updateEventData);
+            this.update(updateEventData);
         }
-        clearTimeout(timer);
-    }, 0);
+    }
 }
 exports.createDatePicker = createDatePicker;
 function bindMonthSwitch(lang) {
@@ -735,28 +692,38 @@ function bindMonthSwitch(lang) {
     var prev = this.element.querySelector(".calendar-action-prev");
     var next = this.element.querySelector(".calendar-action-next");
     if (prev && next) {
-        var gap = util.diff(this.date, this.endDate);
-        if (gap >= 2) {
+        if (this.infiniteMode) {
             next.addEventListener("click", function () {
                 _this.monthSwitch(1, lang);
-                util.removeClass(prev, "disabled");
-                util.removeClass(prev, "calendar-action-disabled");
             });
-        }
-        else {
-            util.addClass(next, "disabled");
-            util.addClass(next, "calendar-action-disabled");
-        }
-        if (currTime > startTime) {
             prev.addEventListener("click", function () {
                 _this.monthSwitch(-1, lang);
-                util.removeClass(next, "disabled");
-                util.removeClass(next, "calendar-action-disabled");
             });
         }
         else {
-            util.addClass(prev, "disabled");
-            util.addClass(prev, "calendar-action-disabled");
+            var gap = util.diff(this.date, this.endDate);
+            if (gap >= 2) {
+                next.addEventListener("click", function () {
+                    _this.monthSwitch(1, lang);
+                    util.removeClass(prev, "disabled");
+                    util.removeClass(prev, "calendar-action-disabled");
+                });
+            }
+            else {
+                util.addClass(next, "disabled");
+                util.addClass(next, "calendar-action-disabled");
+            }
+            if (currTime > startTime) {
+                prev.addEventListener("click", function () {
+                    _this.monthSwitch(-1, lang);
+                    util.removeClass(next, "disabled");
+                    util.removeClass(next, "calendar-action-disabled");
+                });
+            }
+            else {
+                util.addClass(prev, "disabled");
+                util.addClass(prev, "calendar-action-disabled");
+            }
         }
     }
 }
@@ -764,6 +731,13 @@ exports.bindMonthSwitch = bindMonthSwitch;
 function init(option, renderer) {
     var this$1 = this;
 
+    var _this = this;
+    if (option.initWithSelected) {
+        this.initWithSelected = option.initWithSelected;
+    }
+    if (option.doubleSelect) {
+        this.double = option.doubleSelect;
+    }
     if (option.format) {
         this.dateFormat = option.format || "YYYY-MM-DD";
     }
@@ -782,8 +756,6 @@ function init(option, renderer) {
         this.flatView = false;
         this.multiViews = false;
     }
-    //雙選
-    this.double = util.isBoolean(option.doubleSelect) ? option.doubleSelect : false;
     //开始日期
     this.startDate = util.isDate(option.from) ? option.from : new Date();
     this.date = this.startDate;
@@ -798,6 +770,9 @@ function init(option, renderer) {
         this.endDate = new Date(year, month + 1, date);
     }
     this.zeroPadding = !(!option.zeroPadding);
+    if (option.infiniteMode) {
+        this.infiniteMode = option.infiniteMode;
+    }
     if (!renderer.dates || renderer.dates && renderer.dates.length <= 0) {
         var currDate = new Date();
         var gap = util.diff(this.endDate, currDate, "days");
@@ -816,11 +791,24 @@ function init(option, renderer) {
     else {
         this.dates = renderer.dates;
         this.data = renderer.data;
+        this.infiniteMode = false;
+        this.endDate = this.parse(this.dates[this.dates.length - 1]);
     }
     var lang = util.getLanguage(option.language, option.defaultLanguage);
     this.element = util.parseEl(option.el);
-    this.createDatePicker(lang, true);
-    this.pickDate();
+    if (!this.element) {
+        console.error("[Calendar Warn] invalid selector,current selector " + this.element);
+        return false;
+    }
+    var next = util.nextTick(function () {
+        if (_this.defaultDates.length > 0) {
+            var date = _this.defaultDates[0];
+            _this.date = _this.parse(date);
+        }
+        _this.createDatePicker(lang, true);
+        _this.pickDate();
+        util.clearNextTick(next);
+    });
 }
 exports.init = init;
 });
@@ -844,9 +832,15 @@ function default_1(element, selected, isDouble, source, parse, format, limit, in
             //不可选的日期
             //初始化时，selected的length为0，点击不可选日期
             if (!date ||
-                index >= 0 ||
                 selected.length <= 0 && !inDates(date)) {
                 return false;
+            }
+            //重复选择
+            //如选择了 2018-02-04 ~ 2018-02-06
+            //但是用户实际想选择的是 2018-02-04~2018-02-05，
+            //此时 用户再次选择 2018-02-04，其他日期将被删除
+            if (index >= 0) {
+                selected = [selected[0]];
             }
             //双选，但选择的日期数量大于2，或单选
             if (isDouble && selected.length >= 2 || !isDouble) {
@@ -1096,6 +1090,106 @@ function doubleSelectHandler(date, selected, cache, limit, source, format, parse
 
 unwrapExports(datepicer_picker);
 
+var datepicker_formatter = createCommonjsModule(function (module, exports) {
+"use strict";
+exports.__esModule = true;
+
+function parse(string) {
+    if (!string)
+        { return new Date(); }
+    if (string instanceof Date)
+        { return string; }
+    var date = new Date(string);
+    if (!date.getTime())
+        { return null; }
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+function format(date, format, zeroPadding) {
+    if (zeroPadding === void 0) { zeroPadding = true; }
+    var shouldPadStart = true;
+    if (!zeroPadding) {
+        shouldPadStart = false;
+    }
+    var parts = {
+        DD: shouldPadStart ? util.padding(date.getDate()) : date.getDate(),
+        dd: shouldPadStart ? util.padding(date.getDate()) : date.getDate(),
+        MM: shouldPadStart ? util.padding(date.getMonth() + 1) : date.getMonth() + 1,
+        mm: shouldPadStart ? util.padding(date.getMonth() + 1) : date.getMonth() + 1,
+        YYYY: date.getFullYear(),
+        D: date.getDate(),
+        d: date.getDate(),
+        M: date.getMonth() + 1,
+        m: date.getMonth() + 1
+    };
+    return {
+        origin: date,
+        date: parts["DD"],
+        month: parts["MM"],
+        year: parts["YYYY"],
+        day: date.getDay(),
+        value: format.replace(/(?:\b|%)([dDMyYHhaAmsz]+|ap|AP)(?:\b|%)/g, function (match, $1) {
+            return parts[$1] === undefined ? $1 : parts[$1];
+        })
+    };
+}
+exports.format = format;
+function parseFormatted(strDate, format) {
+    //能直接解析成日期对象的，直接返回日期对象
+    //如 YYYY/MM/DD YYYY-MM-DD
+    var ret = parse(strDate);
+    if (ret)
+        { return ret; }
+    var token = /d{1,4}|M{1,4}|YY(?:YY)?|S{1,3}|Do|ZZ|([HhMsDm])\1?|[aA]|"[^"]*"|'[^']*'/g;
+    var parseFlags = {
+        D: [/\d{1,2}/, function (d, v) { return d.day = parseInt(v); }],
+        M: [/\d{1,2}/, function (d, v) { return (d.month = parseInt(v) - 1); }],
+        DD: [/\d{2}/, function (d, v) { return d.day = parseInt(v); }],
+        MM: [/\d{2}/, function (d, v) { return d.month = parseInt(v) - 1; }],
+        YY: [/\d{2,4}/, function (d, v) { return d.year = parseInt(v); }],
+        YYYY: [/\d{2,4}/, function (d, v) { return d.year = parseInt(v); }]
+    };
+    ret = function (dateStr, format) {
+        if (dateStr.length > 1000) {
+            return null;
+        }
+        var isValid = true;
+        var dateInfo = {
+            year: 0,
+            month: 0,
+            day: 0
+        };
+        format.replace(token, function ($0) {
+            if (parseFlags[$0]) {
+                var info = parseFlags[$0];
+                var regExp = info[0];
+                var handler_1 = info[info.length - 1];
+                var index_1 = dateStr.search(regExp);
+                if (!~index_1) {
+                    isValid = false;
+                }
+                else {
+                    dateStr.replace(info[0], function (result) {
+                        handler_1(dateInfo, result);
+                        dateStr = dateStr.substr(index_1 + result.length);
+                        return result;
+                    });
+                }
+            }
+            return parseFlags[$0] ? '' : $0.slice(1, $0.length - 1);
+        });
+        if (!isValid) {
+            return null;
+        }
+        var parsed = new Date(dateInfo.year, dateInfo.month, dateInfo.day);
+        return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+    };
+    return ret(strDate, format);
+}
+exports.parseFormatted = parseFormatted;
+});
+
+unwrapExports(datepicker_formatter);
+
 var lib = createCommonjsModule(function (module, exports) {
 "use strict";
 exports.__esModule = true;
@@ -1120,6 +1214,9 @@ var DatePicker = /** @class */ (function () {
         this.monthSwitch = datepicker_init.monthSwitch;
         this.createDatePicker = datepicker_init.createDatePicker;
         this.zeroPadding = true;
+        this.initWithSelected = false;
+        this.bindData = false;
+        this.infiniteMode = false;
         this.pickDate = function () { return datepicer_picker["default"](_this.element, _this.selected, _this.double, _this.dates, _this.parse, _this.format, _this.limit, _this.inDates, _this.update); };
         this.format = function (date, zeroPadding) { return datepicker_formatter.format(date, _this.dateFormat, _this.zeroPadding); };
         this.parse = function (string) { return datepicker_formatter.parseFormatted(string, _this.dateFormat); };
@@ -1135,9 +1232,12 @@ var DatePicker = /** @class */ (function () {
                 datepicker_observer["default"].$remove("data");
             }
             else {
-                datepicker_observer["default"].$emit("data", {
-                    data: data,
-                    nodeList: _this.element.querySelectorAll(".calendar-date-cell")
+                var next_1 = util.nextTick(function () {
+                    datepicker_observer["default"].$emit("data", {
+                        data: data,
+                        nodeList: _this.element.querySelectorAll(".calendar-cell")
+                    });
+                    util.clearNextTick(next_1);
                 });
             }
         };
@@ -1148,42 +1248,54 @@ var DatePicker = /** @class */ (function () {
                 console.error("[dateRanges error] no dates provided", dates);
                 return;
             }
-            if (_this.double) {
-                if (dates.length > 2) {
-                    dates = dates.slice(0, 2);
+            var handler = function () {
+                if (_this.double) {
+                    if (dates.length > 2) {
+                        dates = dates.slice(0, 2);
+                    }
+                    var start = dates[0];
+                    var end = dates[dates.length - 1];
+                    var startDate = util.isDate(start) ? start : _this.parse(start);
+                    var endDate = util.isDate(end) ? end : _this.parse(end);
+                    if (!util.isDate(startDate) || !util.isDate(endDate)) {
+                        console.error("[dateRanges error] illegal dates,", dates);
+                        return;
+                    }
+                    var gap = util.diff(startDate, endDate, "days");
+                    gap = gap !== 0 ? gap * -1 : gap;
+                    var endGap = util.diff(endDate, startDate, "days");
+                    endGap = endGap !== 0 ? endGap * -1 : gap;
+                    if (!_this.limit) {
+                        _this.limit = 2;
+                    }
+                    //计算日期范围
+                    if (gap < 0 || endGap > _this.limit || endGap < _this.limit * -1) {
+                        console.error("[dateRanges error] illegal start date or end date or out of limit,your selected dates:[" + dates + "],limit:[" + _this.limit + "]");
+                        return;
+                    }
                 }
-                var start = dates[0];
-                var end = dates[dates.length - 1];
-                var startDate = util.isDate(start) ? start : _this.parse(start);
-                var endDate = util.isDate(end) ? end : _this.parse(end);
-                if (!util.isDate(startDate) || !util.isDate(endDate)) {
-                    console.error("[dateRanges error] illegal dates,", dates);
-                    return;
+                else {
+                    dates = [dates[dates.length - 1]];
                 }
-                var gap = util.diff(startDate, endDate, "days");
-                gap = gap !== 0 ? gap * -1 : gap;
-                var endGap = util.diff(endDate, startDate, "days");
-                endGap = endGap !== 0 ? endGap * -1 : gap;
-                if (!_this.limit) {
-                    _this.limit = 2;
+                for (var i = 0; i < dates.length; i++) {
+                    var date = dates[i];
+                    datesList.push(util.isDate(date) ? _this.format(date).value : date);
                 }
-                //计算日期范围
-                if (gap < 0 || endGap > _this.limit || endGap < _this.limit * -1) {
-                    console.error("[dateRanges error] illegal start date or end date or out of limit,your selected dates:[" + dates + "],limit:[" + _this.limit + "]");
-                    return;
-                }
+                _this.defaultDates = datesList;
+            };
+            if (!_this.bindData) {
+                handler();
             }
             else {
-                dates = [dates[dates.length - 1]];
+                var next_2 = util.nextTick(function () {
+                    handler();
+                    util.clearNextTick(next_2);
+                });
             }
-            for (var i = 0; i < dates.length; i++) {
-                var date = dates[i];
-                datesList.push(util.isDate(date) ? _this.format(date).value : date);
-            }
-            _this.defaultDates = datesList;
         };
         this.bindMonthSwitch = datepicker_init.bindMonthSwitch;
         this.defaultDates = [];
+        this.bindData = option.bindData;
         if (!option.bindData) {
             this.init(option, {});
         }

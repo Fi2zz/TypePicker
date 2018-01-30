@@ -1,9 +1,14 @@
+import {datePickerOptions} from "./datepicker.interfaces";
 import Observer from './datepicker.observer';
 import {
     diff,
     isObject,
     isDate,
-    isArray
+    isArray,
+    isBoolean,
+    nextTick,
+    clearNextTick
+
 } from "./util"
 import {
     init,
@@ -16,22 +21,6 @@ import {
     parseFormatted,
     format as formatter
 } from "./datepicker.formatter"
-
-
-interface INTERFACES {
-    el: string,
-    to: Date | any,
-    from: Date | any,
-    limit: number,
-    format: string,
-    language: any,
-    flatView: boolean,
-    multiViews: boolean,
-    doubleSelect: boolean,
-    defaultLanguage: string,
-    bindData: boolean,
-    zeroPadding: boolean
-}
 
 
 export default class DatePicker {
@@ -50,6 +39,9 @@ export default class DatePicker {
     monthSwitch = monthSwitch;
     createDatePicker = createDatePicker;
     zeroPadding: boolean = true;
+    initWithSelected: boolean = false;
+    bindData: boolean = false;
+    infiniteMode: boolean = false;
     pickDate = () => handlePickDate(
         this.element,
         this.selected,
@@ -64,21 +56,27 @@ export default class DatePicker {
     defaultDates: Array<string>[];
     format = (date: Date, zeroPadding?: boolean) => formatter(date, this.dateFormat, this.zeroPadding);
     parse = (string: string) => parseFormatted(string, this.dateFormat);
-    inDates = (date: string) => !!~this.dates.indexOf(date);
+    inDates = (date: string | any) => !!~this.dates.indexOf(date);
     update = (result: any) => {
         if (result.type === 'selected') {
             this.dateRanges(result.value)
         }
+
         Observer.$emit("update", result);
     };
     dataRenderer = (data: any) => {
+
         if (Object.keys(data).length <= 0) {
             Observer.$remove("data")
         } else {
-            Observer.$emit("data", {
-                data: data,
-                nodeList: this.element.querySelectorAll(".calendar-date-cell")
+            const next = nextTick(() => {
+                Observer.$emit("data", {
+                    data: data,
+                    nodeList: this.element.querySelectorAll(".calendar-cell")
+                });
+                clearNextTick(next)
             })
+
         }
     };
     dateRanges = (dates: Array<any>) => {
@@ -89,39 +87,54 @@ export default class DatePicker {
             return
         }
 
-        if (this.double) {
-            if (dates.length > 2) {
-                dates = dates.slice(0, 2)
+
+        const handler = () => {
+
+
+            if (this.double) {
+                if (dates.length > 2) {
+                    dates = dates.slice(0, 2)
+                }
+                const start = <any>dates[0];
+                const end = <any>dates[dates.length - 1];
+                const startDate = isDate(start) ? start : this.parse(start);
+                const endDate = isDate(end) ? end : this.parse(end);
+                if (!isDate(startDate) || !isDate(endDate)) {
+                    console.error("[dateRanges error] illegal dates,", dates);
+                    return
+                }
+                let gap = diff(startDate, endDate, "days");
+                gap = gap !== 0 ? gap * -1 : gap;
+                let endGap = diff(endDate, startDate, "days");
+                endGap = endGap !== 0 ? endGap * -1 : gap;
+                if (!this.limit) {
+                    this.limit = 2
+                }
+                //计算日期范围
+                if (gap < 0 || endGap > this.limit || endGap < this.limit * -1) {
+                    console.error(`[dateRanges error] illegal start date or end date or out of limit,your selected dates:[${dates}],limit:[${this.limit}]`);
+                    return
+                }
             }
-            const start = <any>dates[0];
-            const end = <any>dates[dates.length - 1];
-            const startDate = isDate(start) ? start : this.parse(start);
-            const endDate = isDate(end) ? end : this.parse(end);
-            if (!isDate(startDate) || !isDate(endDate)) {
-                console.error("[dateRanges error] illegal dates,", dates);
-                return
+            else {
+                dates = [dates[dates.length - 1]];
             }
-            let gap = diff(startDate, endDate, "days");
-            gap = gap !== 0 ? gap * -1 : gap;
-            let endGap = diff(endDate, startDate, "days");
-            endGap = endGap !== 0 ? endGap * -1 : gap;
-            if (!this.limit) {
-                this.limit = 2
+            for (let i = 0; i < dates.length; i++) {
+                let date = dates[i];
+                datesList.push(isDate(date) ? this.format(date).value : date)
             }
-            //计算日期范围
-            if (gap < 0 || endGap > this.limit || endGap < this.limit * -1) {
-                console.error(`[dateRanges error] illegal start date or end date or out of limit,your selected dates:[${dates}],limit:[${this.limit}]`);
-                return
-            }
+            this.defaultDates = datesList;
+
+
+        };
+        if (!this.bindData) {
+            handler()
+        } else {
+            const next = nextTick(() => {
+                handler();
+                clearNextTick(next);
+            });
         }
-        else {
-            dates = [dates[dates.length - 1]];
-        }
-        for (let i = 0; i < dates.length; i++) {
-            let date = dates[i];
-            datesList.push(isDate(date) ? this.format(date).value : date)
-        }
-        this.defaultDates = datesList;
     };
     bindMonthSwitch: Function = bindMonthSwitch;
 
@@ -129,8 +142,9 @@ export default class DatePicker {
         function noData(data: any) {
             return !isObject(data)
                 || (Object.keys(data.data).length <= 0
-                || data.dates.length <= 0)
+                    || data.dates.length <= 0)
         }
+
 
         if (option.bindData) {
             const params = {
@@ -148,16 +162,16 @@ export default class DatePicker {
                 dates: result.dates.sort((a: string, b: string) => this.parse(a) - this.parse(b))
             };
             this.init(option, config);
+
             if (!noData(result)) {
                 this.dataRenderer(result.data);
             }
         }
-
-
     };
 
-    constructor(option: INTERFACES) {
+    constructor(option: datePickerOptions) {
         this.defaultDates = [];
+        this.bindData = option.bindData;
         if (!option.bindData) {
             this.init(option, {});
         }

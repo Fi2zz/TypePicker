@@ -31,15 +31,21 @@ const datepicker = <any>new DatePicker({
     multiViews: true,
     flatView: true,
     bindData: true,
-    zeroPadding: false
+    zeroPadding: false,
+    initWithSelected: true,
+    infiniteMode: false
 });
-
-
 
 datepicker.on("update", (output: any) => {
     document.getElementById("layout").innerHTML = `选中的日期<br/>${output.type} / ${output.value}`;
 });
+
+datepicker.dateRanges(["2018-2-3", "2018-2-9"]);
+
+
 datepicker.on("data", (result: any) => {
+
+
     const data = result.data;
     const nodeList = result.nodeList;
     for (let i = 0; i < nodeList.length; i++) {
@@ -52,15 +58,19 @@ datepicker.on("data", (result: any) => {
                 addClass(node, "highlight")
             }
             let placeholder: HTMLElement = node.querySelector(".placeholder");
+
+            console.log(placeholder)
+
+
             placeholder.innerHTML = itemData.value
         } else {
             addClass(node, "disabled")
         }
     }
 
-    datepicker.dateRanges(["2018-1-22", "2018-1-23"]);
 
 });
+
 
 datepicker.data((params: any) => {
     const currDate = new Date(dist.year, dist.month, dist.date);
