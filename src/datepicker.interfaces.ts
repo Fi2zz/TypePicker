@@ -5,15 +5,14 @@ export interface datePickerOptions {
     limit: number,
     format: string,
     language: any,
+    singleView: boolean,
     flatView: boolean,
     multiViews: boolean,
     doubleSelect: boolean,
     defaultLanguage: string,
     bindData: boolean,
     zeroPadding: boolean,
-    initWithSelected: boolean,
-    infiniteMode: boolean
-
+    infiniteMode: boolean,
 }
 
 
@@ -21,6 +20,7 @@ export interface templateFunctionOption {
     template: any,
     multiViews: boolean,
     flatView: boolean,
+
     language: any,
 }
 
@@ -30,6 +30,7 @@ export interface templateComposeOption {
     endDate: Date,
     multiViews: boolean,
     flatView: boolean,
+    singleView: boolean,
     language: any,
     infiniteMode: boolean,
     formatter: Function,
@@ -61,3 +62,17 @@ export interface templateDateCellClassNameOption {
     infiniteMode?: boolean
 }
 
+
+export interface initRangeOptions {
+
+
+    collector: HTMLElement,
+    collection: HTMLCollection,
+    data: Array<string>,
+    // source: Array<any>,
+    isDouble: boolean,
+    parse: Function,
+    format: Function,
+    inDates: Function,
+    isInit: boolean
+}

@@ -1,3 +1,4 @@
+import {initRangeOptions} from './datepicker.interfaces'
 import {
     attr,
     diff,
@@ -11,7 +12,8 @@ import {
 
 const date = new Date();
 const currDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-function getDefaultRange(collection: HTMLCollection, start: string, end: string) {
+
+function getRange(collection: HTMLCollection, start: string, end: string) {
     let temp = [];
     for (let i = 0; i < collection.length; i++) {
         let date = attr(collection[i], "data-date");
@@ -38,12 +40,9 @@ function getDefaultRange(collection: HTMLCollection, start: string, end: string)
 }
 
 function setStartAndEnd(collection: HTMLCollection,
-                        source: Array<any>,
+                        inDates: Function,
                         data: Array<any>,
                         parse: Function) {
-
-
-    const inDates = (item?: any) => inArray(source, item);
     let temp = <Array<string>> [];
     const start = data[0];
     const end = data[data.length - 1];
@@ -109,23 +108,31 @@ export function ranged(data: Array<any>, collector: HTMLElement, remove: boolean
     }
 }
 
-export function setDefaultRange(collector: HTMLElement,
-                                collection: HTMLCollection,
-                                data: Array<string>,
-                                source: Array<any>,
-                                isDouble: boolean,
-                                parse: Function,
-                                format: Function) {
+export function setInitRange(options: initRangeOptions) {
+
+    // console.log(options)
 
 
-    function inDates(date: string) {
-        return ~source.indexOf(date)
-    }
+    let {
+        collector,
+        collection,
+        data,
+        isDouble,
+        parse,
+        format,
+        inDates,
+        isInit
+    } = options;
 
-    let dates = [];
+
+    let dates: Array<any> = [];
     if (!isDouble) {
         dates = data
     } else {
+
+        console.log({data})
+
+
         if (data.length >= 2) {
             let start = data[0];
             let end = data[data.length - 1];
@@ -157,17 +164,26 @@ export function setDefaultRange(collector: HTMLElement,
             if (inValidDates.length >= 2) {
                 data = []
             }
-
-
         }
-        dates = setStartAndEnd(collection, source, data, parse);
+
+        if (data.length > 0 && isInit || !isInit) {
+            dates = setStartAndEnd(collection, inDates, data, parse);
+        }
+
         const start = dates[0];
         const end = dates[dates.length - 1];
-        const range = getDefaultRange(collection, start, end);
+
+        const startDate = parse(start);
+        const endDate = parse(end);
+
+        const range = getRange(collection, start, end);
         if (range.length > 0) {
             ranged(range, collector, false)
         }
+
     }
+
+
     //设置激活状态
     for (let i = 0; i < dates.length; i++) {
         let selector = <string>attrSelector("data-date", dates[i]);

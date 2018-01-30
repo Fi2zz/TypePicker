@@ -19,6 +19,7 @@ const dist = {
 };
 const from = new Date(dist.year, dist.month, dist.date)
 const to = new Date(dist.year, dist.month + 8, dist.date);
+
 const datepicker = <any>new DatePicker({
     el: '#datepicker',
     from,
@@ -27,41 +28,32 @@ const datepicker = <any>new DatePicker({
     format: "YYYY-M-D",
     doubleSelect: true,
     limit: 7,
-    defaultLanguage: "en-us",
+    defaultLanguage: "jp",
     multiViews: true,
-    flatView: true,
+    flatView: false,
+    singleView: false,
     bindData: true,
     zeroPadding: false,
-    initWithSelected: true,
-    infiniteMode: false
+    infiniteMode: true
 });
 
 datepicker.on("update", (output: any) => {
     document.getElementById("layout").innerHTML = `选中的日期<br/>${output.type} / ${output.value}`;
 });
 
-datepicker.dateRanges(["2018-2-3", "2018-2-9"]);
-
 
 datepicker.on("data", (result: any) => {
-
-
     const data = result.data;
     const nodeList = result.nodeList;
     for (let i = 0; i < nodeList.length; i++) {
         let node = nodeList[i];
         let date = node.getAttribute("data-date");
-
         if (date in data) {
             let itemData = source[date];
             if (itemData.highlight) {
                 addClass(node, "highlight")
             }
             let placeholder: HTMLElement = node.querySelector(".placeholder");
-
-            console.log(placeholder)
-
-
             placeholder.innerHTML = itemData.value
         } else {
             addClass(node, "disabled")
@@ -71,6 +63,9 @@ datepicker.on("data", (result: any) => {
 
 });
 
+
+
+datepicker.dateRanges(["2018-2-3", "2018-2-7"], true);
 
 datepicker.data((params: any) => {
     const currDate = new Date(dist.year, dist.month, dist.date);
@@ -87,5 +82,6 @@ datepicker.data((params: any) => {
     console.log(source)
     params.data = source;
 });
+
 
 

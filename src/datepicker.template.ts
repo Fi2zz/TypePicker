@@ -8,6 +8,7 @@ import {
 import {
     getFirstDay, getDates, diff, padding
 } from "./util"
+import {stringify} from "querystring";
 
 
 const currDate = new Date();
@@ -111,12 +112,6 @@ function calendarTemplateList(option: templateMapOption) {
 
     const template = [];
 
-
-    const size = diff(startDate, endDate);
-
-    console.log(size, gap)
-
-
     for (let i = 0; i <= gap; i++) {
         const date = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
         const paint = calendarDateCellTemplate({
@@ -171,8 +166,9 @@ function calendarViewTemplate(options: templateFunctionOption) {
     return tpl.join("")
 }
 
-function calendarTemplateCompose(multiViews: boolean, flatView: boolean, template: any) {
-    return `<div class="calendar calendar-${multiViews ? "double-views" : flatView ? "single-view" : "flat-view"}">${calendarActionBar(multiViews || flatView)}${template}</div>`
+function calendarTemplateCompose(multiViews: boolean, flatView: boolean, singleView: boolean, template: any) {
+
+    return `<div class="calendar calendar-${multiViews ? "double-views" : flatView ? "single-view" : "flat-view"}">${calendarActionBar(multiViews || singleView)}${template}</div>`
 }
 
 function calendarActionBar(actionbar: boolean) {
@@ -192,19 +188,18 @@ function calendarActionBar(actionbar: boolean) {
  *
  * **/
 export default function compose(option: templateComposeOption) {
-
-
     const {
         startDate,
         endDate,
         multiViews,
         flatView,
+        singleView,
         language,
         infiniteMode,
         parse,
         formatter
     } = option;
-    const gap = multiViews ? 1 : flatView ? 0 : diff(startDate, endDate);
+    const gap = multiViews ? 1 : flatView ? diff(startDate, endDate) : 0;
     const mapConf = {
         startDate,
         endDate,
@@ -213,11 +208,12 @@ export default function compose(option: templateComposeOption) {
         formatter,
         parse
     };
+    console.log(gap, flatView, singleView)
     const templateConf = {
         template: calendarTemplateList(mapConf),
         multiViews,
         flatView,
         language,
     };
-    return calendarTemplateCompose(multiViews, flatView, calendarViewTemplate(templateConf))
+    return calendarTemplateCompose(multiViews, flatView, singleView, calendarViewTemplate(templateConf))
 }

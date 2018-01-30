@@ -12,6 +12,7 @@ import {
 } from "./util"
 import {
     init,
+    currentRange,
     monthSwitch,
     bindMonthSwitch,
     createDatePicker
@@ -36,12 +37,17 @@ export default class DatePicker {
     selected: Array<any> = [];
     flatView: boolean = false;
     multiViews: boolean = false;
+
+    singleView: boolean = false;
     monthSwitch = monthSwitch;
     createDatePicker = createDatePicker;
     zeroPadding: boolean = true;
     initWithSelected: boolean = false;
     bindData: boolean = false;
     infiniteMode: boolean = false;
+    currentRange: Function = currentRange;
+    isInitRange: boolean = false;
+    language: any = {};
     pickDate = () => handlePickDate(
         this.element,
         this.selected,
@@ -56,12 +62,11 @@ export default class DatePicker {
     defaultDates: Array<string>[];
     format = (date: Date, zeroPadding?: boolean) => formatter(date, this.dateFormat, this.zeroPadding);
     parse = (string: string) => parseFormatted(string, this.dateFormat);
-    inDates = (date: string | any) => !!~this.dates.indexOf(date);
+    inDates = (date: string | any) => this.dates.indexOf(date) >= 0;
     update = (result: any) => {
         if (result.type === 'selected') {
-            this.dateRanges(result.value)
+            this.dateRanges(result.value, false)
         }
-
         Observer.$emit("update", result);
     };
     dataRenderer = (data: any) => {
@@ -79,53 +84,49 @@ export default class DatePicker {
 
         }
     };
-    dateRanges = (dates: Array<any>) => {
-        const datesList = <Array<any>>[];
+    dateRanges = (dates: Array<any>, isInit?: boolean) => {
+
+
         if (!isArray(dates)) {
             dates = [];
             console.error("[dateRanges error] no dates provided", dates);
             return
         }
-
-
+        this.isInitRange = !(!isInit);
         const handler = () => {
-
-
+            let datesList: Array<any> = []
+            let start: string = '', end: string = ''
             if (this.double) {
                 if (dates.length > 2) {
                     dates = dates.slice(0, 2)
                 }
-                const start = <any>dates[0];
-                const end = <any>dates[dates.length - 1];
-                const startDate = isDate(start) ? start : this.parse(start);
-                const endDate = isDate(end) ? end : this.parse(end);
-                if (!isDate(startDate) || !isDate(endDate)) {
-                    console.error("[dateRanges error] illegal dates,", dates);
-                    return
+                start = <any>dates[0];
+                end = <any>dates[dates.length - 1];
+                const startDate = this.parse(start);
+                const endDate = this.parse(end);
+                const diffed = diff(startDate, endDate, "days") * -1;
+                if (diffed < 0
+                    || diffed > this.limit
+                    || !this.inDates(start) && !this.inDates(end) //开始日期和结束日期均为无效日期
+                    || !this.inDates(start)
+                ) {
+                    console.error(`[dateRanges Warn]Illegal dates,[${dates}]`);
+                    return false;
                 }
-                let gap = diff(startDate, endDate, "days");
-                gap = gap !== 0 ? gap * -1 : gap;
-                let endGap = diff(endDate, startDate, "days");
-                endGap = endGap !== 0 ? endGap * -1 : gap;
-                if (!this.limit) {
-                    this.limit = 2
+                for (let i = 0; i <= diffed; i++) {
+                    const date = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
+                    const formatted = this.format(date).value;
+                    if (i < diffed && !this.inDates(formatted)) {
+                        console.error(`[dateRanges Warn]Illegal date,[${formatted}]`);
+                        return false
+                    }
                 }
-                //计算日期范围
-                if (gap < 0 || endGap > this.limit || endGap < this.limit * -1) {
-                    console.error(`[dateRanges error] illegal start date or end date or out of limit,your selected dates:[${dates}],limit:[${this.limit}]`);
-                    return
-                }
+                datesList = [start, end]
             }
             else {
-                dates = [dates[dates.length - 1]];
-            }
-            for (let i = 0; i < dates.length; i++) {
-                let date = dates[i];
-                datesList.push(isDate(date) ? this.format(date).value : date)
+                datesList = [dates[dates.length - 1]]
             }
             this.defaultDates = datesList;
-
-
         };
         if (!this.bindData) {
             handler()
@@ -135,6 +136,10 @@ export default class DatePicker {
                 clearNextTick(next);
             });
         }
+    };
+    disableRange = () => {
+
+
     };
     bindMonthSwitch: Function = bindMonthSwitch;
 
@@ -183,6 +188,7 @@ export default class DatePicker {
             format: this.format,
             dateRanges: this.dateRanges,
             setDefaultDates: this.dateRanges,
+            disableRange: this.disableRange
         };
     }
 }

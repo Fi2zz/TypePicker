@@ -5,7 +5,7 @@ import {
     nextTick
 } from "./util";
 import compose from "./datepicker.template";
-import {setDefaultRange} from "./datepicker.ranger";
+import {setInitRange} from "./datepicker.ranger";
 
 /***
  * 月份切换
@@ -27,7 +27,7 @@ export function monthSwitch(size: number, language: any) {
         this.selected = this.defaultDates;
     }
     this.date = new Date(curr.year, month, curr.date);
-    this.createDatePicker(language);
+    this.createDatePicker(false);
     this.pickDate();
     this.dataRenderer(this.data)
 }
@@ -35,10 +35,9 @@ export function monthSwitch(size: number, language: any) {
 
 /**
  * 生成日历
- * @param lang 语言包
  *
  * **/
-export function createDatePicker(lang: any, isInit?: Boolean) {
+export function createDatePicker(isInit?: Boolean) {
 
 
     this.element.innerHTML = compose({
@@ -46,44 +45,60 @@ export function createDatePicker(lang: any, isInit?: Boolean) {
         endDate: this.endDate,
         multiViews: this.multiViews,
         flatView: this.flatView,
-        language: setLanguage(lang),
+        singleView: this.singleView,
+        language: this.language,
         infiniteMode: this.infiniteMode,
         formatter: this.format,
         parse: this.parse
     });
-    this.bindMonthSwitch(lang);
-    if (this.initWithSelected) {
-
-
-        const initSelected =
-            this.defaultDates.length > 0
-                ? this.defaultDates
-                : this.double
-                ? this.selected
-                : [this.format(this.date).value];
-        this.selected = setDefaultRange(
-            this.element,
-            this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
-            initSelected,
-            this.dates,
-            this.double,
-            this.parse,
-            this.format);
-        const updateEventData = {
-            type: 'init',
-            value: this.selected
-        };
-        //初始化的时候，需要获取初始化的日期
-        if (isInit) {
-            this.update(updateEventData);
-        }
+    this.bindMonthSwitch(this.language);
+    this.selected = this.currentRange(this.isInitRange);
+    const updateEventData = {
+        type: 'init',
+        value: this.selected
+    };
+    //初始化的时候，需要获取初始化的日期
+    if (isInit) {
+        this.update(updateEventData);
     }
 }
 
+
+export function currentRange(isInit: boolean) {
+
+
+    const initSelected =
+        this.defaultDates.length > 0
+            ? this.defaultDates
+            : this.double
+            ? this.selected
+            : [this.format(this.date).value];
+
+    if (isInit) {
+
+
+    }
+
+
+    const rangeOption = {
+        collector: this.element,
+        collection: this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
+        data: initSelected,
+        isDouble: this.double,
+        parse: this.parse,
+        format: this.format,
+        inDates: this.inDates,
+        isInit
+    };
+    return setInitRange(rangeOption);
+}
+
+
 export function bindMonthSwitch(lang: any) {
-    const startTime = this.startDate.getTime();
-    const currTime = this.date.getTime();
+    const startTime = new Date(this.startDate).getTime();
+    const currTime = new Date(this.date).getTime();
     //日期切换
+
     const prev = this.element.querySelector(".calendar-action-prev");
     const next = this.element.querySelector(".calendar-action-next");
 
@@ -91,27 +106,30 @@ export function bindMonthSwitch(lang: any) {
 
         if (this.infiniteMode) {
             next.addEventListener("click", () => {
-                this.monthSwitch(1, lang);
+                this.monthSwitch(1);
             });
             prev.addEventListener("click", () => {
-                this.monthSwitch(-1, lang);
+                this.monthSwitch(-1);
             })
         } else {
             let gap = diff(this.date, this.endDate);
             if (gap >= 2) {
                 next.addEventListener("click", () => {
-                    this.monthSwitch(1, lang);
+                    this.monthSwitch(1);
                     removeClass(prev, "disabled");
                     removeClass(prev, "calendar-action-disabled")
                 });
+
             }
             else {
                 addClass(next, "disabled");
                 addClass(next, "calendar-action-disabled")
             }
-            if (currTime > startTime) {
+
+            if (currTime >= startTime) {
+
                 prev.addEventListener("click", () => {
-                    this.monthSwitch(-1, lang);
+                    this.monthSwitch(-1);
                     removeClass(next, "disabled");
                     removeClass(next, "calendar-action-disabled")
                 });
@@ -140,22 +158,17 @@ export function init(option: any, renderer: any) {
     if (option.format) {
         this.dateFormat = option.format || "YYYY-MM-DD"
     }
-    //單視圖，即單個日曆視圖
-    if (!option.multiViews && option.flatView) {
-        this.multiViews = false;
-        this.flatView = true;
-    }
-    //雙視圖，即雙月份橫向展示
-    if (option.flatView && option.multiViews || !option.flatView && option.multiViews) {
-        this.flatView = false;
+
+
+    if (option.multiViews && ( !option.flatView && !option.singleView)) {
         this.multiViews = true
     }
-    //扁平視圖，即多月份垂直展示
-    if (!option.flatView && !option.multiViews) {
-        this.flatView = false;
-        this.multiViews = false
+    else if (option.flatView && (!option.singleView && !option.multiViews)) {
+        this.flatView = true
     }
-
+    else if (option.singleView && (!option.multiViews && !option.flatView)) {
+        this.singleView = true
+    }
 
     //开始日期
     this.startDate = isDate(option.from) ? option.from : new Date();
@@ -168,11 +181,18 @@ export function init(option: any, renderer: any) {
         const year = this.endDate.getFullYear();
         const month = this.endDate.getMonth();
         const date = this.endDate.getDate();
-        this.endDate = new Date(year, month + 1, date)
+        // this.endDate = new Date(year, month + 1, date)
 
     }
 
-    this.zeroPadding = !(!option.zeroPadding);
+
+    // console.log(this.flatView)
+
+
+    if (option.zeroPadding) {
+        this.zeroPadding = option.zeroPadding
+    }
+
 
     if (option.infiniteMode) {
         this.infiniteMode = option.infiniteMode;
@@ -197,27 +217,21 @@ export function init(option: any, renderer: any) {
         this.dates = renderer.dates;
         this.data = renderer.data;
         this.infiniteMode = false;
-        this.endDate = this.parse(this.dates[this.dates.length - 1])
     }
 
 
-    const lang = getLanguage(option.language, option.defaultLanguage);
+    this.language = setLanguage(getLanguage(option.language, option.defaultLanguage));
     this.element = parseEl(option.el);
-
-
     if (!this.element) {
         console.error(`[Calendar Warn] invalid selector,current selector ${this.element}`);
         return false
     }
-
     const next = nextTick(() => {
-
         if (this.defaultDates.length > 0) {
             let date = this.defaultDates[0];
             this.date = this.parse(date)
         }
-
-        this.createDatePicker(lang, true);
+        this.createDatePicker(true);
         this.pickDate();
         clearNextTick(next)
     })
