@@ -226,11 +226,13 @@ export function init(option: any, renderer: any) {
         console.error(`[Calendar Warn] invalid selector,current selector ${this.element}`);
         return false
     }
+
+    this.element.className = `${this.element.className} calendar calendar-${this.multiViews ? "double-views" : this.singleView ? "single-view" : "flat-view"}`
     const next = nextTick(() => {
         if (this.defaultDates.length > 0) {
             let date = this.defaultDates[0];
 
-            if(!this.flatView){
+            if (!this.flatView) {
                 this.date = this.parse(date)
 
             }

@@ -3,10 +3,12 @@ import {padding} from "./util"
 function parseToInt(value: any) {
     return parseInt(value, 10);
 }
+
 function convertTo24Hour(hour: any, ap: any = "am") {
     let curr = parseToInt(hour);
     return ap.toLowerCase() === 'pm' ? (curr < 12 ? (curr + 12) : curr) : (curr === 12 ? 0 : curr);
 }
+
 function parse(string: string | Date): any {
     if (!string) return new Date();
     if (string instanceof Date) return string;
@@ -15,11 +17,11 @@ function parse(string: string | Date): any {
     if (!date.getTime()) return null;
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
+
 export function format(date: Date, format: string, zeroPadding: boolean = true) {
-    let shouldPadStart = true;
-    if (!zeroPadding) {
-        shouldPadStart = false
-    }
+    const shouldPadStart = zeroPadding;
+
+
     let parts = <any>{
         DD: shouldPadStart ? padding(date.getDate()) : date.getDate(),
         dd: shouldPadStart ? padding(date.getDate()) : date.getDate(),
@@ -33,8 +35,8 @@ export function format(date: Date, format: string, zeroPadding: boolean = true) 
     };
     return {
         origin: date,
-        date: parts["DD"],
-        month: parts["MM"],
+        date: shouldPadStart ? parts["DD"] : parts["D"],
+        month: shouldPadStart ? parts["MM"] : parts["M"],
         year: parts["YYYY"],
         day: date.getDay(),
         value: format.replace(/(?:\b|%)([dDMyYHhaAmsz]+|ap|AP)(?:\b|%)/g, function (match, $1) {

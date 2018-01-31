@@ -111,19 +111,36 @@ export function hasClass(el: any, className: string) {
     if (!el) {
         return false
     }
-    return el.classList.contains(className)
+    return el.className.indexOf(className) >= 0
 }
 
 export function removeClass(el: any, className: string) {
-    if (!el) {
+    if (!el || el && !el.className) {
         return
     }
-    return el.classList.remove(className)
+
+
+    let classNames = el.className;
+    const classList = classNames.split(' ')
+    const newClassList = [];
+    for (let i = 0; i < classList.length; i++) {
+        let name = classNames[i];
+        if (name !== className) {
+            newClassList.push(name)
+        }
+    }
+    newClassList.join(" ");
+    return newClassList
 }
 
 export function addClass(el: any, className: string) {
-    if (!el || el && el.classList.contains(className)) return
-    return el.classList.add(className)
+
+
+    if (!el || el && hasClass(el, className)) return;
+    
+    const currentClassName = el.className;
+    el.className = `${currentClassName} ${className}`;
+    return el
 }
 
 export function parseEl(el: string) {

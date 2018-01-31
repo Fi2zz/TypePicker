@@ -38,6 +38,10 @@ const datepicker = <any>new DatePicker({
 });
 
 datepicker.on("update", (output: any) => {
+
+    // console.log(output.value)
+
+
     document.getElementById("layout").innerHTML = `选中的日期<br/>${output.type} / ${output.value}`;
 });
 
@@ -64,7 +68,7 @@ datepicker.on("data", (result: any) => {
 });
 
 
-datepicker.dateRanges([new Date(2018, 1, 3), new Date(2018, 1, 5)], true);
+// datepicker.dateRanges([new Date(2018, 1, 3), new Date(2018, 1, 5)], true);
 
 datepicker.data((params: any) => {
     const currDate = new Date(dist.year, dist.month, dist.date);
@@ -73,7 +77,7 @@ datepicker.data((params: any) => {
         if (datepicker.diff(item, currDate) >= 0) {
             params.dates.push(date)
         } else {
-            delete source[date]
+            // delete source[date]
         }
     });
     // params.from = from;

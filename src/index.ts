@@ -41,7 +41,7 @@ export default class DatePicker {
     singleView: boolean = false;
     monthSwitch = monthSwitch;
     createDatePicker = createDatePicker;
-    zeroPadding: boolean = true;
+    zeroPadding: boolean = false;
     initWithSelected: boolean = false;
     bindData: boolean = false;
     infiniteMode: boolean = false;

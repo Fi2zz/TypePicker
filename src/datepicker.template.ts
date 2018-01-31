@@ -167,11 +167,6 @@ function calendarViewTemplate(options: templateFunctionOption) {
     return tpl.join("")
 }
 
-function calendarTemplateCompose(multiViews: boolean, flatView: boolean, singleView: boolean, template: any) {
-
-    return `<div class="calendar calendar-${multiViews ? "double-views" : singleView ? "single-view" : "flat-view"}">${calendarActionBar(multiViews || singleView)}${template}</div>`
-}
-
 function calendarActionBar(actionbar: boolean) {
     if (!actionbar) {
         return ''
@@ -216,5 +211,8 @@ export default function compose(option: templateComposeOption) {
         language,
         singleView
     };
-    return calendarTemplateCompose(multiViews, flatView, singleView, calendarViewTemplate(templateConf))
+
+
+    return `${calendarActionBar(multiViews || singleView)}${calendarViewTemplate(templateConf)}`
+
 }

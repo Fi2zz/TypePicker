@@ -180,20 +180,32 @@ function hasClass(el, className) {
     if (!el) {
         return false;
     }
-    return el.classList.contains(className);
+    return el.className.indexOf(className) >= 0;
 }
 exports.hasClass = hasClass;
 function removeClass(el, className) {
-    if (!el) {
+    if (!el || el && !el.className) {
         return;
     }
-    return el.classList.remove(className);
+    var classNames = el.className;
+    var classList = classNames.split(' ');
+    var newClassList = [];
+    for (var i = 0; i < classList.length; i++) {
+        var name_1 = classNames[i];
+        if (name_1 !== className) {
+            newClassList.push(name_1);
+        }
+    }
+    newClassList.join(" ");
+    return newClassList;
 }
 exports.removeClass = removeClass;
 function addClass(el, className) {
-    if (!el || el && el.classList.contains(className))
+    if (!el || el && hasClass(el, className))
         { return; }
-    return el.classList.add(className);
+    var currentClassName = el.className;
+    el.className = currentClassName + " " + className;
+    return el;
 }
 exports.addClass = addClass;
 function parseEl(el) {
@@ -425,9 +437,6 @@ function calendarViewTemplate(options) {
     }
     return tpl.join("");
 }
-function calendarTemplateCompose(multiViews, flatView, singleView, template) {
-    return "<div class=\"calendar calendar-" + (multiViews ? "double-views" : singleView ? "single-view" : "flat-view") + "\">" + calendarActionBar(multiViews || singleView) + template + "</div>";
-}
 function calendarActionBar(actionbar) {
     if (!actionbar) {
         return '';
@@ -456,7 +465,7 @@ function compose(option) {
         language: language,
         singleView: singleView
     };
-    return calendarTemplateCompose(multiViews, flatView, singleView, calendarViewTemplate(templateConf));
+    return "" + calendarActionBar(multiViews || singleView) + calendarViewTemplate(templateConf);
 }
 exports["default"] = compose;
 });
@@ -809,6 +818,7 @@ function init(option, renderer) {
         console.error("[Calendar Warn] invalid selector,current selector " + this.element);
         return false;
     }
+    this.element.className = this.element.className + " calendar calendar-" + (this.multiViews ? "double-views" : this.singleView ? "single-view" : "flat-view");
     var next = util.nextTick(function () {
         if (_this.defaultDates.length > 0) {
             var date = _this.defaultDates[0];
@@ -1117,10 +1127,7 @@ function parse(string) {
 }
 function format(date, format, zeroPadding) {
     if (zeroPadding === void 0) { zeroPadding = true; }
-    var shouldPadStart = true;
-    if (!zeroPadding) {
-        shouldPadStart = false;
-    }
+    var shouldPadStart = zeroPadding;
     var parts = {
         DD: shouldPadStart ? util.padding(date.getDate()) : date.getDate(),
         dd: shouldPadStart ? util.padding(date.getDate()) : date.getDate(),
@@ -1134,8 +1141,8 @@ function format(date, format, zeroPadding) {
     };
     return {
         origin: date,
-        date: parts["DD"],
-        month: parts["MM"],
+        date: shouldPadStart ? parts["DD"] : parts["D"],
+        month: shouldPadStart ? parts["MM"] : parts["M"],
         year: parts["YYYY"],
         day: date.getDay(),
         value: format.replace(/(?:\b|%)([dDMyYHhaAmsz]+|ap|AP)(?:\b|%)/g, function (match, $1) {
@@ -1225,7 +1232,7 @@ var DatePicker = /** @class */ (function () {
         this.singleView = false;
         this.monthSwitch = datepicker_init.monthSwitch;
         this.createDatePicker = datepicker_init.createDatePicker;
-        this.zeroPadding = true;
+        this.zeroPadding = false;
         this.initWithSelected = false;
         this.bindData = false;
         this.infiniteMode = false;
