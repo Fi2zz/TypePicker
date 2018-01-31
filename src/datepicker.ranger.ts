@@ -87,7 +87,8 @@ function setStartAndEnd(collection: HTMLCollection,
     return temp
 }
 
-export function ranged(data: Array<any>, collector: HTMLElement, remove: boolean, clearRange?: boolean) {
+export function setRange(data: Array<any>, collector: HTMLElement, remove: boolean, clearRange?: boolean) {
+
     if (remove) {
         let collection = collector.querySelectorAll(".in-range");
         for (let i = 0; i < collection.length; i++) {
@@ -129,7 +130,6 @@ export function setInitRange(options: initRangeOptions) {
     if (!isDouble) {
         dates = data
     } else {
-
 
 
         if (data.length >= 2) {
@@ -177,7 +177,7 @@ export function setInitRange(options: initRangeOptions) {
 
         const range = getRange(collection, start, end);
         if (range.length > 0) {
-            ranged(range, collector, false)
+            setRange(range, collector, false)
         }
 
     }

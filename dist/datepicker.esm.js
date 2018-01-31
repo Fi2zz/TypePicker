@@ -1,9 +1,3 @@
-(function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-	typeof define === 'function' && define.amd ? define(factory) :
-	(global.DatePicker = factory());
-}(this, (function () { 'use strict';
-
 function unwrapExports (x) {
 	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
 }
@@ -1363,6 +1357,4 @@ exports["default"] = DatePicker;
 
 var index = unwrapExports(lib);
 
-return index;
-
-})));
+export default index;

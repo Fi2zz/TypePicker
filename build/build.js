@@ -9,42 +9,48 @@ const cjs = require('rollup-plugin-commonjs');
 const replace = require('rollup-plugin-replace');
 const node = require('rollup-plugin-node-resolve');
 
-config.plugins = [buble(),
-    cjs(),
-    node(),
-];
-const mkdirp = require("mkdirp");
 const exec = require("shelljs").exec;
 
-const output = config.output;
-
-rollup.rollup(config)
-    .then(bundle => bundle.generate(output))
-    .then(({code}) => {
-        const minified = uglify.minify(code, {
-            output: {
-                ascii_only: true
-            },
-            compress: {
-                pure_funcs: ['makeMap']
-            }
-        }).code;
+function logError(err) {
+    if (err) {
+        console.log(err)
+    }
+}
 
 
-        console.log("> start building ...");
-        fs.writeFile(output.file.normal, code, err => {
-            if (err) console.log(err);
-            console.log("> start compressing");
-
-            fs.writeFile(output.file.compressed, minified, err => {
-                if (err) console.log(err);
-                console.log("> start compiling style ....");
-                exec("stylus ./src/style.styl -c -o ./dist");
-                console.log("> build done !")
-            })
 
 
-        });
 
 
+function generate(config) {
+
+
+    config.plugins = [buble(),
+        cjs(),
+        node(),
+    ];
+
+    console.log("> start building ...");
+
+    config.output.forEach(item => {
+        rollup.rollup(config)
+            .then(bundle => bundle.generate(item))
+            .then(({code}) => {
+                const minified = uglify.minify(code, {
+                    output: {
+                        ascii_only: true
+                    },
+                    compress: {
+                        pure_funcs: ['makeMap']
+                    }
+                }).code;
+                fs.writeFile(item.file.normal, code, err => logError(err));
+                fs.writeFile(item.file.compressed, minified, err => logError(err))
+            });
     });
+    console.log("> start compiling style ....");
+    exec("stylus ./src/style.styl -c -o ./dist");
+    console.log("> build done !")
+}
+
+generate(config)

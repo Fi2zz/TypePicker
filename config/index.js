@@ -11,14 +11,30 @@ module.exports = {
     },
     build: {
         input: "./lib/index.js",
-        output: {
-            file: {
-                compressed: path.resolve("dist", "datepicker.min.js"),
-                normal: path.resolve("dist", "datepicker.js")
+
+
+        output: [
+
+            {
+
+                file: {
+                    compressed: path.resolve("dist", "datepicker.min.js"),
+                    normal: path.resolve("dist", "datepicker.js")
+                },
+                format: "umd",
+                name: "DatePicker"
             },
-            format: "umd",
-            name: "DatePicker"
-        },
+            {
+                file: {
+                    compressed: path.resolve("dist", "datepicker.esm.min.js"),
+                    normal: path.resolve("dist", "datepicker.esm.js")
+                },
+                format: "es",
+                name: "DatePicker"
+            }
+
+
+        ],
 
     },
     test: {

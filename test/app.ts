@@ -29,8 +29,8 @@ const datepicker = <any>new DatePicker({
     doubleSelect: true,
     limit: 7,
     defaultLanguage: "jp",
-    multiViews: false,
-    flatView: true,
+    multiViews: true,
+    flatView: false,
     singleView: false,
     bindData: true,
     zeroPadding: false,
@@ -38,10 +38,6 @@ const datepicker = <any>new DatePicker({
 });
 
 datepicker.on("update", (output: any) => {
-
-    // console.log(output.value)
-
-
     document.getElementById("layout").innerHTML = `选中的日期<br/>${output.type} / ${output.value}`;
 });
 

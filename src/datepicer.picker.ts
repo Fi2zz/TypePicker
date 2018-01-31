@@ -5,7 +5,7 @@ import {
     attrSelector,
     inArray, hasClass
 } from "./util"
-import {ranged as setRange} from './datepicker.ranger'
+import {setRange} from './datepicker.ranger'
 
 export default function (element: any,
                          selected: Array<any>,
@@ -27,6 +27,7 @@ export default function (element: any,
             //不可选的日期
             //初始化时，selected的length为0，点击不可选日期
             if (!date ||
+                index >= 0 ||
                 selected.length <= 0 && !inDates(date)) {
                 return false;
             }
@@ -34,9 +35,9 @@ export default function (element: any,
             //如选择了 2018-02-04 ~ 2018-02-06
             //但是用户实际想选择的是 2018-02-04~2018-02-05，
             //此时 用户再次选择 2018-02-04，其他日期将被删除
-            if (index >= 0) {
-                selected = [selected[0]]
-            }
+            // if (index >= 0) {
+            //     selected = [selected[0]]
+            // }
             //双选，但选择的日期数量大于2，或单选
             if (isDouble && selected.length >= 2 || !isDouble) {
                 selected = []
@@ -44,6 +45,8 @@ export default function (element: any,
             selected.push(date);
             //选择日期
             if (isDouble) {
+
+
                 const handled = doubleSelectHandler(date, selected, cache, limit, source, format, parse);
                 selected = handled.selected;
                 const range = handled.range;
@@ -66,6 +69,10 @@ export default function (element: any,
                 if (allValid && isValid) {
                     setRange(range, element, false)
                 }
+
+                // console.trace(1111)
+
+
             } else {
                 let selector = item;
                 let shouldChange = true;
@@ -111,6 +118,11 @@ function doublePick(collector: HTMLElement,
         start: collector.querySelector(<string>attrSelector("data-date", start)),
         end: collector.querySelector(<string>attrSelector("data-date", end))
     };
+
+    console.log({start,end})
+
+
+
     //选择了开始日期，尚未选择结束日期
     if (diff === 0) {
         if (!hasClass(current.start, "disabled")) {
@@ -166,6 +178,7 @@ function doubleSelectHandler(date: any,
         return inArray(source, item);
     }
 
+
     let range = <Array<any>>[];
     let inRange = <Array<any>>[];
     //获取已选的开始日期
@@ -179,9 +192,15 @@ function doubleSelectHandler(date: any,
     //对比开始日期和结束日期
     const diff = gap(startDate, endDate);
     const length = selected.length;
+
+
     //已有开始日期和结束日期
     //重新选择开始日期
+
+
+
     if (length >= 2) {
+
         //同一日
         if (diff <= 0) {
             if (inDates(date)) {
@@ -220,6 +239,8 @@ function doubleSelectHandler(date: any,
         //如果在data选项里有当前选择的日期
         //则选择的日期为当前当前点击的元素
         if (inDates(start)) {
+
+
             selected = [start];
         } else {
             //如果选择的日期不在data里，则读取缓存的数据
@@ -228,6 +249,7 @@ function doubleSelectHandler(date: any,
     }
     //既没有开始日期也没有结束日期
     //选择缓存的作为被选的值
+
     else {
         selected = cache;
     }

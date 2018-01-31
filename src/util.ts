@@ -106,41 +106,23 @@ export function isPrimitive(value: any): boolean {
         typeof value === 'boolean'
     )
 }
-
 export function hasClass(el: any, className: string) {
     if (!el) {
         return false
     }
-    return el.className.indexOf(className) >= 0
+    return el.classList.contains(className)
 }
 
 export function removeClass(el: any, className: string) {
-    if (!el || el && !el.className) {
+    if (!el) {
         return
     }
-
-
-    let classNames = el.className;
-    const classList = classNames.split(' ')
-    const newClassList = [];
-    for (let i = 0; i < classList.length; i++) {
-        let name = classNames[i];
-        if (name !== className) {
-            newClassList.push(name)
-        }
-    }
-    newClassList.join(" ");
-    return newClassList
+    return el.classList.remove(className)
 }
 
 export function addClass(el: any, className: string) {
-
-
-    if (!el || el && hasClass(el, className)) return;
-    
-    const currentClassName = el.className;
-    el.className = `${currentClassName} ${className}`;
-    return el
+    if (!el || el && el.classList.contains(className)) return
+    return el.classList.add(className)
 }
 
 export function parseEl(el: string) {

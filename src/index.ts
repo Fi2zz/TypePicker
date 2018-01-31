@@ -23,7 +23,6 @@ import {
     format as formatter
 } from "./datepicker.formatter"
 
-
 export default class DatePicker {
     init = init;
     date: Date = new Date();
