@@ -1,15 +1,10 @@
 export function diff(start: Date, end: Date, type: string = "month") {
-
-
     if (!start) {
         start = new Date()
     }
-
     if (!end) {
         end = new Date()
     }
-
-
     if (type == "month") {
         return Math.abs((start.getFullYear() * 12 + start.getMonth()) - ( end.getFullYear() * 12 + end.getMonth()))
     } else if (type === "days") {
@@ -117,11 +112,7 @@ export function isPrimitive(value: any): boolean {
         typeof value === 'boolean'
     )
 }
-
-
 export function hasClass(ele: any, className: string) {
-
-
     if (!ele || !className || !ele.className || ele.className.search(new RegExp("\\b" + className + "\\b")) == -1) {
         return false;
     }
@@ -182,8 +173,6 @@ export function setLanguage(option: any) {
     }
     return {week, title}
 }
-
-
 export function getLanguage(language: any, key: string) {
     let output = {};
     if (!key || !language[key]) {
@@ -218,24 +207,16 @@ export function quickSort(arr: number[], isAscending?: boolean): number[] {
     }
     return [].concat(quickSort(big, isAscending), equal, quickSort(small, isAscending));
 }
-
-
 export function nextTick(func: Function) {
     window.setTimeout(func, 0);
 }
 
 export function clearNextTick(id: any) {
-
-
     window.clearTimeout(id)
 
 }
-
-
 export function noop() {
 }
-
-
 export function warn(where: string, msg: any) {
     let message = msg;
     if (isObject(msg) || isArray(msg)) {

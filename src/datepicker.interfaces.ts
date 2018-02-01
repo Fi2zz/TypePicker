@@ -15,7 +15,6 @@ export interface datePickerOptions {
     infiniteMode: boolean | undefined,
 }
 
-
 export interface templateFunctionOption {
     template: any,
     multiViews: boolean,
@@ -23,8 +22,6 @@ export interface templateFunctionOption {
     singleView: boolean,
     language: any,
 }
-
-
 export interface templateComposeOption {
     startDate: Date,
     endDate: Date,
@@ -36,8 +33,6 @@ export interface templateComposeOption {
     formatter: Function,
     parse: Function
 }
-
-
 export interface templateMapOption {
     startDate: Date,
     endDate: Date,
@@ -62,14 +57,10 @@ export interface templateDateCellClassNameOption {
     infiniteMode?: boolean
 }
 
-
 export interface initRangeOptions {
-
-
     collector: HTMLElement,
     collection: HTMLCollection,
     data: Array<string>,
-    // source: Array<any>,
     isDouble: boolean,
     parse: Function,
     format: Function,
@@ -83,14 +74,12 @@ export interface pickerDoubleSelectHandler {
     selected: Array<any>,
     cache: Array<any>,
     limit: number,
-    // source: any,
     format: Function,
     parse: Function,
     inDates: Function,
     infiniteMode: boolean,
     bindData: boolean
 }
-
 
 export interface pickerHandler {
     element: any,
