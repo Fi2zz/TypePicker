@@ -1,4 +1,15 @@
 export function diff(start: Date, end: Date, type: string = "month") {
+
+
+    if (!start) {
+        start = new Date()
+    }
+
+    if (!end) {
+        end = new Date()
+    }
+
+
     if (type == "month") {
         return Math.abs((start.getFullYear() * 12 + start.getMonth()) - ( end.getFullYear() * 12 + end.getMonth()))
     } else if (type === "days") {
@@ -107,23 +118,27 @@ export function isPrimitive(value: any): boolean {
     )
 }
 
-export function hasClass(el: any, className: string) {
-    if (!el) {
-        return false
+
+export function hasClass(ele: any, className: string) {
+
+
+    if (!ele || !className || !ele.className || ele.className.search(new RegExp("\\b" + className + "\\b")) == -1) {
+        return false;
     }
-    return el.classList.contains(className)
+    return true;
 }
 
-export function removeClass(el: any, className: string) {
-    if (!el) {
-        return
-    }
-    return el.classList.remove(className)
+export function addClass(ele: any, className: string) {
+    if (!ele || !className || (ele.className && ele.className.search(new RegExp("\\b" + className + "\\b")) != -1))
+        return;
+    ele.className += (ele.className ? " " : "") + className;
 }
 
-export function addClass(el: any, className: string) {
-    if (!el || el && el.classList.contains(className)) return
-    return el.classList.add(className)
+export function removeClass(ele: any, className: string) {
+    if (!ele || !className || (ele.className && ele.className.search(new RegExp("\\b" + className + "\\b")) == -1))
+        return;
+    ele.className = ele.className.replace(new RegExp("\\s*\\b" + className + "\\b", "g"), "");
+
 }
 
 export function parseEl(el: string) {
@@ -136,28 +151,11 @@ export function parseEl(el: string) {
         return document.querySelectorAll(el)[0]
     }
     else {
-        let preserve = [
-            "a",
-            "p",
-            "div",
-            "section",
-            "span",
-            "article",
-            "header",
-            "footer",
-            "main",
-            "aside",
-            "i",
-            "strong",
-            "small",
-            "tr",
-            "table"];
-        if (~preserve.indexOf(el)) {
-            console.error("[DatePicker Warn] do not mount datepicker to pure html tag, use class name or id instead ")
-            return null
-        } else {
-            return document.querySelector(el)
+        if (el.indexOf("#") <= -1 || el.indexOf(".") <= -1) {
+            console.error(`[ParseEl Error] do not mount DatePicker to a pure html tag,${el}`)
+            return false;
         }
+        return document.querySelector(el)
     }
 }
 

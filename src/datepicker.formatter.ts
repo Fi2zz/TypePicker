@@ -18,7 +18,7 @@ function parse(string: string | Date): any {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
-export function format(date: Date, format: string, zeroPadding: boolean = true) {
+export function format(date: Date, format: string , zeroPadding: boolean = true) {
     const shouldPadStart = zeroPadding;
 
 
@@ -54,6 +54,13 @@ export function format(date: Date, format: string, zeroPadding: boolean = true) 
 export function parseFormatted(strDate: string, format: string) {
     //能直接解析成日期对象的，直接返回日期对象
     //如 YYYY/MM/DD YYYY-MM-DD
+
+    if (!format) {
+        format = 'YYYY-MM-DD'
+    }
+
+
+
     let ret = parse(strDate);
     if (ret) return ret;
     const token = /d{1,4}|M{1,4}|YY(?:YY)?|S{1,3}|Do|ZZ|([HhMsDm])\1?|[aA]|"[^"]*"|'[^']*'/g;

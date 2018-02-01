@@ -5,7 +5,8 @@ import {
     removeClass,
     addClass,
     attrSelector,
-    inArray, hasClass
+    inArray,
+    hasClass
 } from "./util"
 
 import {setRange} from './datepicker.ranger'
@@ -121,14 +122,6 @@ function singlePick(selector: string, collector: HTMLElement, shouldChange: bool
         }
     }
 
-}
-
-
-function bindDataPicker() {
-}
-
-
-function notBindDataPicker() {
 }
 
 
@@ -306,21 +299,14 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
                         range.push(string);
                     }
                 }
-
-                console.log({lastValidDate, endDate, date, diff})
-
-
-                if (bindData) {
-                    const newDiff = gap(lastValidDate, endDate);
-                    if (newDiff === 1 || newDiff === -1) {
-                        allValid = true;
-                    } else {
-                        range = [];
-                        selected = [selected[0]];
-                        allValid = false
-                    }
+                const newDiff = gap(lastValidDate, endDate);
+                if (newDiff === 1 || newDiff === -1) {
+                    allValid = true;
+                } else {
+                    range = [];
+                    selected = [selected[0]];
+                    allValid = false
                 }
-
             }
 
 

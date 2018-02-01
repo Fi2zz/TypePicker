@@ -30,7 +30,7 @@ const to = new Date(dist.year, dist.month + 2, 0);
 const options: any = {
     el: '#datepicker',
     from,
-    to,
+    // to,
     language: languages,
     format: "YYYY-M-D",
     doubleSelect: true,
@@ -41,7 +41,7 @@ const options: any = {
     singleView: false,
     bindData: false,
     zeroPadding: false,
-    infiniteMode: false
+    infiniteMode: true
 };
 const datepicker = <any>new DatePicker(options);
 datepicker.on("update", (output: any) => layout(output));

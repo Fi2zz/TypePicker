@@ -47,6 +47,12 @@ var Observer = (function () {
 
 function diff(start, end, type) {
     if (type === void 0) { type = "month"; }
+    if (!start) {
+        start = new Date();
+    }
+    if (!end) {
+        end = new Date();
+    }
     if (type == "month") {
         return Math.abs((start.getFullYear() * 12 + start.getMonth()) - (end.getFullYear() * 12 + end.getMonth()));
     }
@@ -102,22 +108,21 @@ function isDate(object) {
 }
 
 
-function hasClass(el, className) {
-    if (!el) {
+function hasClass(ele, className) {
+    if (!ele || !className || !ele.className || ele.className.search(new RegExp("\\b" + className + "\\b")) == -1) {
         return false;
     }
-    return el.classList.contains(className);
+    return true;
 }
-function removeClass(el, className) {
-    if (!el) {
-        return;
-    }
-    return el.classList.remove(className);
-}
-function addClass(el, className) {
-    if (!el || el && el.classList.contains(className))
+function addClass(ele, className) {
+    if (!ele || !className || (ele.className && ele.className.search(new RegExp("\\b" + className + "\\b")) != -1))
         { return; }
-    return el.classList.add(className);
+    ele.className += (ele.className ? " " : "") + className;
+}
+function removeClass(ele, className) {
+    if (!ele || !className || (ele.className && ele.className.search(new RegExp("\\b" + className + "\\b")) == -1))
+        { return; }
+    ele.className = ele.className.replace(new RegExp("\\s*\\b" + className + "\\b", "g"), "");
 }
 function parseEl(el) {
     if (!el) {
@@ -130,30 +135,11 @@ function parseEl(el) {
         return document.querySelectorAll(el)[0];
     }
     else {
-        var preserve = [
-            "a",
-            "p",
-            "div",
-            "section",
-            "span",
-            "article",
-            "header",
-            "footer",
-            "main",
-            "aside",
-            "i",
-            "strong",
-            "small",
-            "tr",
-            "table"
-        ];
-        if (~preserve.indexOf(el)) {
-            console.error("[DatePicker Warn] do not mount datepicker to pure html tag, use class name or id instead ");
-            return null;
+        if (el.indexOf("#") <= -1 || el.indexOf(".") <= -1) {
+            console.error("[ParseEl Error] do not mount DatePicker to a pure html tag," + el);
+            return false;
         }
-        else {
-            return document.querySelector(el);
-        }
+        return document.querySelector(el);
     }
 }
 var defaultLanguage = {
@@ -530,6 +516,9 @@ function format(date, format, zeroPadding) {
 function parseFormatted(strDate, format) {
     //能直接解析成日期对象的，直接返回日期对象
     //如 YYYY/MM/DD YYYY-MM-DD
+    if (!format) {
+        format = 'YYYY-MM-DD';
+    }
     var ret = parse(strDate);
     if (ret)
         { return ret; }
@@ -1006,17 +995,14 @@ function doubleSelectHandler(options) {
                         range.push(string);
                     }
                 }
-                console.log({ lastValidDate: lastValidDate, endDate: endDate_1, date: date_2, diff: diff_3 });
-                if (bindData) {
-                    var newDiff = gap(lastValidDate, endDate_1);
-                    if (newDiff === 1 || newDiff === -1) {
-                        allValid = true;
-                    }
-                    else {
-                        range = [];
-                        selected = [selected[0]];
-                        allValid = false;
-                    }
+                var newDiff = gap(lastValidDate, endDate_1);
+                if (newDiff === 1 || newDiff === -1) {
+                    allValid = true;
+                }
+                else {
+                    range = [];
+                    selected = [selected[0]];
+                    allValid = false;
                 }
             }
             if (inRange.length === range.length) {

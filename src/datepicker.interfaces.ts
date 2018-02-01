@@ -11,8 +11,8 @@ export interface datePickerOptions {
     doubleSelect: boolean,
     defaultLanguage: string,
     bindData: boolean,
-    zeroPadding: boolean,
-    infiniteMode: boolean,
+    zeroPadding: boolean | undefined,
+    infiniteMode: boolean | undefined,
 }
 
 
@@ -21,7 +21,6 @@ export interface templateFunctionOption {
     multiViews: boolean,
     flatView: boolean,
     singleView: boolean,
-
     language: any,
 }
 
@@ -88,8 +87,8 @@ export interface pickerDoubleSelectHandler {
     format: Function,
     parse: Function,
     inDates: Function,
-    infiniteMode:boolean,
-    bindData:boolean
+    infiniteMode: boolean,
+    bindData: boolean
 }
 
 
@@ -104,7 +103,7 @@ export interface pickerHandler {
     inDates: Function,
     update: Function,
     infiniteMode: boolean,
-    bindData:boolean
+    bindData: boolean
 
 }
 
