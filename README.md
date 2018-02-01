@@ -20,10 +20,15 @@
     *    multiViews和flatView都为false的情况下，垂直展示多个月份，移动端会比较有用
     **   from默认是new Date(),to默认为new Date()往后推6个月
     ***  bindData,如果不想显示价格，开启此项即可，同时将移除data事件,此时再调用data相关的事件和方法无法生效
+    
+    
+    
+    
                 
 *使用方法
+```typescript
 
-        
+
     const date = new Date();
     const dist = {
         year: date.getFullYear(),
@@ -31,18 +36,21 @@
         date: date.getDate()
     };
     
-    const datePicker = <any>new DatePicker({
-        el: '.datePicker-container',
-        from: new Date(dist.year, dist.month, dist.date),
-        to: new Date(dist.year, dist.month + 4, dist.date),
-        language: languages,
-        format: "YYYY-MM-DD",
-        doubleSelect: true,
-        limit: 7,
-        defaultLanguage: "en-us",
-        multiViews: true,
-        flatView: false,
-    });
+    
+    
+    const options ={
+           el: '.datePicker-container',
+           from: new Date(dist.year, dist.month, dist.date),
+           to: new Date(dist.year, dist.month + 4, dist.date),
+           language: languages,
+           format: "YYYY-MM-DD",
+           doubleSelect: true,
+           limit: 7,
+           defaultLanguage: "en-us",
+           multiViews: true,
+           flatView: false,
+        }
+    const datePicker = <any>new DatePicker(options);
     //更新选择的日期
     datePicker.on("update", (output: any) => {
         const {type,value}=output;
@@ -57,14 +65,14 @@
     //[deprecated]datePicker.setDefaultDates(["2017-11-27","2017-12-05"]);
     //example:  dateRanges =<Array<any>>[new Date(),"2017-12-20"];
     //分两种情况
+    /*
         1、 bindData =true,在data event callback里调用，方可生效
             datePicker.on("data",()=>{
                     datePicker.dateRanges(dateRanges);
             })，
         2、 bindData =false，在new 之后执行即可
             datePicker.dateRanges(dateRanges);
-
-    
+    */
     
     
     //通过data事件来控制每个日期格子展示的数据
@@ -78,13 +86,10 @@
             let date = node.getAttribute("data-date");
             if (date in data) {
                 let itemData = data[date];
-                if (itemData.highlight) {
-                    addClass(node, "highlight")
-                }
                 let placeholder: HTMLElement = node.querySelector(".placeholder");
                 placeholder.innerHTML = itemData.value
             } else {
-                addClass(node, "disabled")
+                node.classList.add("disabled")
             }
         }
     });
@@ -125,9 +130,10 @@
         //开始日期和结束日期
         //此为避免重复 new DatePicker();
         params.from =<Date>
-        params.to   =<Date>
+        params.to   = <Date>
     });
-        
+   ```
+ 
         
 	
 * datePicker实例返回一个对象，对象包含以下
@@ -176,7 +182,17 @@
 [4] 事件监听,`update`事件，获取日期选择更新,`data`事件，渲染日历数据
 	
 	
-	
+* utils方法
+```javascript
+    const {diff,parse,format} =new DatePicker()
+   // diff   比較兩個日期相差幾天       const days= diff(new Date(2018,1,1),new Date(2018,1,5)) => 4
+   // parse  把格式化后的日期反格式化   const  parsed  = parse("2018-02-01","YYYY-MM-DD");   =>  Thu Feb 01 2018 00:00:00 GMT+0800 (CST)
+   // format 格式化日期                  const  formatted  = parse(new Date(),"YYYY-MM-DD");  =>    2018-02-01           
+    
+
+```    
+    
+    
 	
 	
 	

@@ -19,7 +19,7 @@ const dist = {
     date: date.getDate()
 };
 const from = new Date(dist.year, dist.month, dist.date)
-const to = new Date(dist.year, dist.month + 2, 0);
+const to = new Date(dist.year, dist.month + 3, 0);
 
 
 const options: any = {
@@ -34,9 +34,9 @@ const options: any = {
     multiViews: false,
     flatView: true,
     singleView: false,
-    bindData: false,
+    bindData: true,
     zeroPadding: false,
-    infiniteMode: true
+    infiniteMode: false
 };
 const datepicker = <any>new DatePicker(options);
 datepicker.on("update", (output: any) => layout(output));

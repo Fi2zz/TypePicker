@@ -896,10 +896,29 @@ function doubleSelectHandler(options) {
                 selected = [start_1];
             }
             else {
-                selected = cache;
+                if (cache.length >= 2) {
+                    var validDates = [];
+                    for (var i = 0; i < cache.length; i++) {
+                        if (inDates(cache[i])) {
+                            validDates.push(cache[i]);
+                        }
+                    }
+                    if (validDates.length === cache.length) {
+                        selected = cache;
+                    }
+                    else {
+                        selected = [];
+                    }
+                }
+                else {
+                    selected = [cache[0]];
+                }
             }
         }
         else {
+            selected = cache;
+        }
+        if (selected.length <= 0) {
             selected = cache;
         }
         allValid = range.length === inRange.length;
@@ -907,6 +926,7 @@ function doubleSelectHandler(options) {
             selected = [selected[selected.length - 1]];
         }
         if (selected.length === 2) {
+            console.log("1");
             var lastValidDate = null;
             var end_1 = selected[selected.length - 1];
             var endDate_1 = parse(end_1);

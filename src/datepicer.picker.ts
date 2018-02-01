@@ -90,6 +90,8 @@ export default function (options: pickerHandler) {
                 }
                 singlePick(selector, element, shouldChange);
             }
+
+
             update({
                 type: 'selected',
                 value: selected
@@ -194,6 +196,7 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
 
         //已有开始日期和结束日期
         //重新选择开始日期
+        // debugger
         if (length >= 2) {
             //同一日
             if (diff <= 0) {
@@ -203,6 +206,8 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
                 else {
                     selected = [selected[0]]
                 }
+
+
             } else {
                 if (inDates(end)) {
                     //得到选择范围
@@ -228,21 +233,47 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
         }
         //选择了开始日期，尚未选择结束日期
         else if (length === 1) {
+
+
+
             //开始日期为当前点击的元素
             const start = selected[selected.length - 1];
             //如果在data选项里有当前选择的日期
             //则选择的日期为当前当前点击的元素
             if (inDates(start)) {
+
+
                 selected = [start];
             } else {
-                //如果选择的日期不在data里，则读取缓存的数据
-                selected = cache;
+                if (cache.length >= 2) {
+                    const validDates = [];
+                    for (let i = 0; i < cache.length; i++) {
+                        if (inDates(cache[i])) {
+                            validDates.push(cache[i]);
+                        }
+                    }
+                    if (validDates.length === cache.length) {
+                        selected = cache
+                    } else {
+                        selected = []
+                    }
+
+                } else {
+
+                    selected = [cache[0]];
+                }
+
+
             }
         }
         //既没有开始日期也没有结束日期
         //选择缓存的作为被选的值
         else {
             selected = cache;
+        }
+
+        if (selected.length <= 0) {
+            selected = cache
         }
         //重合
         allValid = range.length === inRange.length;
@@ -252,6 +283,10 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
         }
         //选完开始日期和结束日期
         if (selected.length === 2) {
+
+
+            console.log("1")
+
             let lastValidDate = null;
             const end = selected[selected.length - 1];
             const endDate = parse(end);
@@ -307,9 +342,7 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
                 }
             }
         }
-    }
-
-    else {
+    } else {
         if (selected.length >= 2) {
             if (start === end) {
                 selected.pop()
@@ -327,6 +360,8 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
             selected.shift();
         }
     }
+
+
     return {
         selected,
         allValid,
