@@ -1030,16 +1030,21 @@ function doubleSelectHandler(options) {
         }
     }
     else {
-        if (selected.length >= 2 && start === end) {
-            selected.pop();
+        if (selected.length >= 2) {
+            if (start === end) {
+                selected.pop();
+            }
         }
         var diff_4 = gap(startDate, endDate);
-        if (diff_4 > 0 && diff_4 < limit) {
+        if (diff_4 > 0 && diff_4 <= limit) {
             for (var i = 1; i < diff_4; i++) {
                 var date_3 = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
                 range.push(format(date_3).value);
             }
             allValid = true;
+        }
+        else if (diff_4 > limit || diff_4 < 0) {
+            selected.shift();
         }
     }
     return {

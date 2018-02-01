@@ -111,6 +111,7 @@ function singlePick(selector: string, collector: HTMLElement, shouldChange: bool
     }
 
 }
+
 function doublePick(collector: HTMLElement,
                     start: string,
                     end: string,
@@ -310,17 +311,21 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
     }
 
     else {
-        if (selected.length >= 2 && start === end) {
-            selected.pop()
+        if (selected.length >= 2) {
+            if (start === end) {
+                selected.pop()
+            }
         }
         const diff = gap(startDate, endDate);
-
-        if (diff > 0 && diff < limit) {
+        if (diff > 0 && diff <=limit) {
             for (let i = 1; i < diff; i++) {
-                let date = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i)
+                let date = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
                 range.push(format(date).value)
             }
             allValid = true
+
+        } else if (diff > limit || diff < 0) {
+            selected.shift();
         }
     }
     return {
