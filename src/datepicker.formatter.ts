@@ -1,13 +1,7 @@
 import {padding} from "./util"
 
-function parseToInt(value: any) {
-    return parseInt(value, 10);
-}
 
-function convertTo24Hour(hour: any, ap: any = "am") {
-    let curr = parseToInt(hour);
-    return ap.toLowerCase() === 'pm' ? (curr < 12 ? (curr + 12) : curr) : (curr === 12 ? 0 : curr);
-}
+
 
 function parse(string: string | Date): any {
     if (!string) return new Date();
@@ -42,9 +36,19 @@ export function format(date: Date, format: string , zeroPadding: boolean = true)
         year: parts["YYYY"],
         day: date.getDay(),
         value: format.replace(/(?:\b|%)([dDMyYHhaAmsz]+|ap|AP)(?:\b|%)/g, function (match, $1) {
+
+
+            noop(match)
+
+
             return parts[$1] === undefined ? $1 : parts[$1]
         })
     }
+
+}
+function noop(a:any){
+    return a
+
 
 }
 export function parseFormatted(strDate: string, format: string) {

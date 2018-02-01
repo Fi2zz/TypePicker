@@ -160,8 +160,6 @@ export function setInitRange(options: initRangeOptions) {
         const start = dates[0];
         const end = dates[dates.length - 1];
 
-        const startDate = parse(start);
-        const endDate = parse(end);
 
         const range = getRange(collection, start, end);
         if (range.length > 0) {

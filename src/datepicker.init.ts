@@ -19,9 +19,8 @@ import {format} from './datepicker.formatter'
 /***
  * 月份切换
  * @param size 切换月份数量
- * @param language 语言包
  * ***/
-export function monthSwitch(size: number, language: any) {
+export function monthSwitch(size: number) {
     let curr = {
         year: this.date.getFullYear(),
         month: this.date.getMonth(),
@@ -89,7 +88,7 @@ export function currentRange(isInit: boolean) {
     return setInitRange(rangeOption);
 }
 
-export function bindMonthSwitch(lang: any) {
+export function bindMonthSwitch() {
     const startTime = new Date(this.startDate).getTime();
     const currTime = new Date(this.date).getTime();
     //日期切换

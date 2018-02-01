@@ -5,10 +5,8 @@ import {
     isObject,
     isDate,
     isArray,
-    isBoolean,
     nextTick,
     clearNextTick,
-    noop,
     warn
 } from "./util"
 import {
@@ -93,7 +91,7 @@ export default class DatePicker {
         })
     };
     defaultDates: Array<string>[];
-    format = (date: Date, zeroPadding?: boolean) => formatter(date, this.dateFormat, this.zeroPadding);
+    format = (date: Date) => formatter(date, this.dateFormat, this.zeroPadding);
     parse = (string: string) => parseFormatted(string, this.dateFormat);
     inDates = (date: string | any) => this.dates.indexOf(date) >= 0;
     update = (result: any) => {

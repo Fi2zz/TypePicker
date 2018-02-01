@@ -6,10 +6,13 @@ import {
     templateFunctionOption
 } from './datepicker.interfaces'
 import {
-    getFirstDay, getDates, diff, padding
+    getFirstDay,
+    getDates,
+    diff,
 } from "./util"
 
 const currDate = new Date();
+
 function calendarDateCellClassName(options: templateDateCellClassNameOption) {
     const {date, infiniteMode, endDate} = options;
     const classStack = ["calendar-cell", "calendar-date-cell"];
@@ -77,6 +80,7 @@ function calendarDateCellTemplate(options: templateSetDatesOption) {
         month: curr.index
     }
 }
+
 function calendarSingleDateCellTemplate(date?: number) {
     return `<div class="date">${date ? date : ''}</div><div class="placeholder"></div>`
 }
@@ -115,6 +119,7 @@ function calendarTemplateList(option: templateMapOption) {
     }
     return template
 }
+
 function calendarViewTemplate(options: templateFunctionOption) {
     const {
         template,
@@ -129,7 +134,7 @@ function calendarViewTemplate(options: templateFunctionOption) {
             index === 0 ? "calendar-cell-weekday" : index === 6 ? "calendar-cell-weekend" : ""];
         return `<div class="${className.join(" ")}">${day}</div>`
     }).join("");
-    const tpl = template.map((item: any, index: any) => {
+    const tpl = template.map((item: any) => {
         const year = item.year, month = item.month;
         const title = `<div class="calendar-title">${language.title(year, month)}</div>`,
             body = item.template;
@@ -164,6 +169,7 @@ function calendarActionBar(actionbar: boolean) {
          </div>
     `
 }
+
 /**
  * 生成完整日历
  *

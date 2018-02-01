@@ -8,20 +8,16 @@ var Observer = (function () {
     var clientList = {};
     var $remove = function (key, fn) {
         var fns = clientList[key];
-        // key对应的消息么有被人订阅
         if (!fns) {
             return false;
         }
-        // 没有传入fn(具体的回调函数), 表示取消key对应的所有订阅
         if (!fn) {
             fns && (fns.length = 0);
         }
         else {
-            // 反向遍历
             for (var i = fns.length - 1; i >= 0; i--) {
                 var _fn = fns[i];
                 if (_fn === fn) {
-                    // 删除订阅回调函数
                     fns.splice(i, 1);
                 }
             }
@@ -33,17 +29,21 @@ var Observer = (function () {
         }
         clientList[key].push(fn);
     };
-    var $emit = function (evt, value) {
+    var $emit = function () {
         var arguments$1 = arguments;
         var this$1 = this;
 
-        var key = [].shift.call(arguments);
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments$1[_i];
+        }
+        var key = [].shift.call(args);
         var fns = clientList[key];
         if (!fns || fns.length === 0) {
             return false;
         }
         for (var i = 0, fn = void 0; fn = fns[i++];) {
-            fn.apply(this$1, arguments$1);
+            fn.apply(this$1, args);
         }
     };
     return {
@@ -59,7 +59,7 @@ function diff(start, end, type) {
     if (!end) {
         end = new Date();
     }
-    if (type == "month") {
+    if (type === "month") {
         return Math.abs((start.getFullYear() * 12 + start.getMonth()) - (end.getFullYear() * 12 + end.getMonth()));
     }
     else if (type === "days") {
@@ -75,14 +75,11 @@ var getDates = function (year, month) {
     return new Date(utc).getUTCDate();
 };
 var padding = function (n) { return "" + (n > 9 ? n : "0" + n); };
-//获取每月的1号的周几
 var getFirstDay = function (year, month) {
     return new Date(year, month, 1).getDay();
 };
 
-//获取该月的最后一天的星期
 
-//获取该月的最后几天
 
 
 function attr(el, attr, attrvalue) {
@@ -264,13 +261,8 @@ function calendarSingleDateCellTemplate(date) {
 function calendarCellGenerate(className, key, text) {
     return "<div class=\"" + className + "\"" + (key ? "data-date=" + key : "") + ">" + text + "</div>";
 }
-/**
- * 集合月历，把多个月份的何在一起，构成日历
- * **/
 function calendarTemplateList(option) {
-    var startDate = option.startDate, endDate = option.endDate, gap = option.gap, 
-    // zeroPadding,
-    infiniteMode = option.infiniteMode, formatter = option.formatter, parse = option.parse;
+    var startDate = option.startDate, endDate = option.endDate, gap = option.gap, infiniteMode = option.infiniteMode, formatter = option.formatter, parse = option.parse;
     var template = [];
     for (var i = 0; i <= gap; i++) {
         var date = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
@@ -293,7 +285,7 @@ function calendarViewTemplate(options) {
             index === 0 ? "calendar-cell-weekday" : index === 6 ? "calendar-cell-weekend" : ""];
         return "<div class=\"" + className.join(" ") + "\">" + day + "</div>";
     }).join("");
-    var tpl = template.map(function (item, index) {
+    var tpl = template.map(function (item) {
         var year = item.year, month = item.month;
         var title = "<div class=\"calendar-title\">" + language.title(year, month) + "</div>", body = item.template;
         var tpl = "";
@@ -316,10 +308,6 @@ function calendarActionBar(actionbar) {
     }
     return "<div class=\"calendar-action-bar\">\n            <button class='calendar-action calendar-action-prev'><span>prev</span></button>\n            <button class='calendar-action calendar-action-next'><span>next</span></button>\n         </div>\n    ";
 }
-/**
- * 生成完整日历
- *
- * **/
 function compose(option) {
     var startDate = option.startDate, endDate = option.endDate, multiViews = option.multiViews, flatView = option.flatView, singleView = option.singleView, language = option.language, infiniteMode = option.infiniteMode, parse = option.parse, formatter = option.formatter;
     var gap = multiViews ? 1 : flatView ? diff(startDate, endDate) : 0;
@@ -438,17 +426,16 @@ function setInitRange(options) {
         if (data.length >= 2) {
             var start_2 = data[0];
             var end_1 = data[data.length - 1];
-            //开始日期不能为无效日期
             if (!inDates(start_2)) {
                 data = [];
             }
-            var startDate_1 = parse(start_2);
-            var endDate_1 = parse(end_1);
-            var year = startDate_1.getFullYear();
-            var month = startDate_1.getMonth();
-            var date_3 = startDate_1.getDate();
+            var startDate = parse(start_2);
+            var endDate = parse(end_1);
+            var year = startDate.getFullYear();
+            var month = startDate.getMonth();
+            var date_3 = startDate.getDate();
             var inValidDates = [];
-            var gap = diff(endDate_1, startDate_1, "days") + 1;
+            var gap = diff(endDate, startDate, "days") + 1;
             for (var i = 0; i < gap; i++) {
                 var d = new Date(year, month, date_3 + i);
                 var formatted = format(d).value;
@@ -456,12 +443,6 @@ function setInitRange(options) {
                     inValidDates.push(formatted);
                 }
             }
-            // 前提 无效日期可以作为endDate
-            // 但不能做为startDate
-            // 即选中的日期中只能包含[一个]无效日期
-            // 例如 选中的日期为 ["2017-12-01","2017-12-06"]
-            // 2017-12-04 为有效日期，2017-12-05为无效日期,2017-12-16为无效日期
-            // 那么此时无效日期有两个，故此时会被重置
             if (inValidDates.length >= 2) {
                 data = [];
             }
@@ -471,14 +452,11 @@ function setInitRange(options) {
         }
         var start = dates[0];
         var end = dates[dates.length - 1];
-        var startDate = parse(start);
-        var endDate = parse(end);
         var range = getRange(collection, start, end);
         if (range.length > 0) {
             setRange(range, collector, false);
         }
     }
-    //设置激活状态
     for (var i = 0; i < dates.length; i++) {
         var selector = attrSelector("data-date", dates[i]);
         var element = collector.querySelector(selector);
@@ -526,8 +504,6 @@ function format(date, format, zeroPadding) {
     };
 }
 function parseFormatted(strDate, format) {
-    //能直接解析成日期对象的，直接返回日期对象
-    //如 YYYY/MM/DD YYYY-MM-DD
     if (!format) {
         format = 'YYYY-MM-DD';
     }
@@ -581,19 +557,13 @@ function parseFormatted(strDate, format) {
     return ret(strDate, format);
 }
 
-/***
- * 月份切换
- * @param size 切换月份数量
- * @param language 语言包
- * ***/
-function monthSwitch(size, language) {
+function monthSwitch(size) {
     var curr = {
         year: this.date.getFullYear(),
         month: this.date.getMonth(),
         date: this.date.getDate()
     };
     var month = curr.month + size;
-    //每次切换两个月份
     if (this.multiViews) {
         month += size > 0 ? 1 : -1;
     }
@@ -605,10 +575,6 @@ function monthSwitch(size, language) {
     this.pickDate();
     this.dataRenderer(this.data);
 }
-/**
- * 生成日历
- *
- * **/
 function createDatePicker(isInit) {
     this.element.innerHTML = compose({
         startDate: this.date,
@@ -627,7 +593,6 @@ function createDatePicker(isInit) {
         type: 'init',
         value: this.selected
     };
-    //初始化的时候，需要获取初始化的日期
     if (isInit) {
         this.update(updateEventData);
     }
@@ -650,11 +615,10 @@ function currentRange(isInit) {
     };
     return setInitRange(rangeOption);
 }
-function bindMonthSwitch(lang) {
+function bindMonthSwitch() {
     var _this = this;
     var startTime = new Date(this.startDate).getTime();
     var currTime = new Date(this.date).getTime();
-    //日期切换
     var prev = this.element.querySelector(".calendar-action-prev");
     var next = this.element.querySelector(".calendar-action-next");
     if (prev && next) {
@@ -715,12 +679,9 @@ function init(option, renderer) {
     else if (option.singleView && (!option.multiViews && !option.flatView)) {
         this.singleView = true;
     }
-    //开始日期
     this.startDate = isDate(option.from) ? option.from : new Date();
     this.date = this.startDate;
-    //结束日期
     this.endDate = isDate(option.to) ? option.to : new Date(this.date.getFullYear(), this.date.getMonth() + 6, 0);
-    //選擇日期區間最大限制
     this.limit = this.double ? isNumber(option.limit) ? option.limit : 1 : 1;
     if (option.zeroPadding) {
         this.zeroPadding = option.zeroPadding;
@@ -770,33 +731,24 @@ function init(option, renderer) {
 }
 
 var handlePickDate = function (options) {
-    var element = options.element, selected = options.selected, isDouble = options.isDouble, source = options.source, parse = options.parse, format = options.format, limit = options.limit, inDates = options.inDates, update = options.update, infiniteMode = options.infiniteMode, bindData = options.bindData;
+    var element = options.element, selected = options.selected, isDouble = options.isDouble, parse = options.parse, format = options.format, limit = options.limit, inDates = options.inDates, update = options.update, infiniteMode = options.infiniteMode, bindData = options.bindData;
     var collection = element.querySelectorAll(".calendar-date-cell");
     var _loop_1 = function (i) {
         var item = collection[i];
-        item.addEventListener("click", function (e) {
-            //缓存已选的日期
+        item.addEventListener("click", function () {
             var cache = selected;
             var date = attr(item, "data-date");
             var index = selected.indexOf(date);
-            //不可选的日期
-            //初始化时，selected的length为0，点击不可选日期
             if (!date || (selected.length <= 0 && !inDates(date)) && bindData) {
                 return false;
             }
-            //重复选择
-            //如选择了 2018-02-04 ~ 2018-02-06
-            //但是用户实际想选择的是 2018-02-04~2018-02-05，
-            //此时 用户再次选择 2018-02-04，其他日期将被删除
             if (index >= 0) {
                 selected = [selected[0]];
             }
-            //双选，但选择的日期数量大于2，或单选
             if (isDouble && selected.length >= 2 || !isDouble) {
                 selected = [];
             }
             selected.push(date);
-            //选择日期
             if (isDouble) {
                 var handlerOptions = {
                     date: date, selected: selected, cache: cache, limit: limit, format: format, parse: parse,
@@ -851,7 +803,6 @@ function singlePick(selector, collector, shouldChange) {
     }
 }
 function doublePick(collector, start, end, diff$$1, outOfLimit, valid) {
-    //缓存已选的开始日期和结束日期
     var cache = {
         start: collector.querySelector(".start-date"),
         end: collector.querySelector(".end-date")
@@ -860,7 +811,6 @@ function doublePick(collector, start, end, diff$$1, outOfLimit, valid) {
         start: collector.querySelector(attrSelector("data-date", start)),
         end: collector.querySelector(attrSelector("data-date", end))
     };
-    //选择了开始日期，尚未选择结束日期
     if (diff$$1 === 0) {
         if (!hasClass(current.start, "disabled")) {
             removeClass(cache.start, "start-date");
@@ -907,26 +857,17 @@ function gap(d1, d2) {
     return value === 0 ? 0 : value * -1;
 }
 function doubleSelectHandler(options) {
-    var selected = options.selected, date = options.date, cache = options.cache, limit = options.limit, format = options.format, parse = options.parse, inDates = options.inDates, infiniteMode = options.infiniteMode, bindData = options.bindData;
+    var selected = options.selected, date = options.date, cache = options.cache, limit = options.limit, format = options.format, parse = options.parse, inDates = options.inDates, bindData = options.bindData;
     var range = [];
     var inRange = [];
     var allValid = false;
-    //获取已选的开始日期
     var start = selected[0];
-    //获取已选的结束日期
-    //结束日期和开始日期有可能重合，
-    //此时为只选了开始日期，尚未选择结束日期
     var end = selected[selected.length - 1];
-    //转换成日期对象
     var startDate = parse(start), endDate = parse(end);
     if (bindData) {
-        //对比开始日期和结束日期
         var diff_2 = gap(startDate, endDate);
         var length_1 = selected.length;
-        //已有开始日期和结束日期
-        //重新选择开始日期
         if (length_1 >= 2) {
-            //同一日
             if (diff_2 <= 0) {
                 if (inDates(date)) {
                     selected.shift();
@@ -937,7 +878,6 @@ function doubleSelectHandler(options) {
             }
             else {
                 if (inDates(end)) {
-                    //得到选择范围
                     var year = startDate.getFullYear(), month = startDate.getMonth(), date_1 = startDate.getDate();
                     for (var i = 1; i < diff_2; i++) {
                         var d = new Date(year, month, date_1 + i);
@@ -957,42 +897,31 @@ function doubleSelectHandler(options) {
             }
         }
         else if (length_1 === 1) {
-            //开始日期为当前点击的元素
             var start_1 = selected[selected.length - 1];
-            //如果在data选项里有当前选择的日期
-            //则选择的日期为当前当前点击的元素
             if (inDates(start_1)) {
                 selected = [start_1];
             }
             else {
-                //如果选择的日期不在data里，则读取缓存的数据
                 selected = cache;
             }
         }
         else {
             selected = cache;
         }
-        //重合
         allValid = range.length === inRange.length;
         if (!allValid) {
             selected = [selected[selected.length - 1]];
         }
-        //选完开始日期和结束日期
         if (selected.length === 2) {
             var lastValidDate = null;
             var end_1 = selected[selected.length - 1];
             var endDate_1 = parse(end_1);
             var startDate_1 = parse(selected[0]);
-            //计算开始日期和结束日期之间的间隔，
-            // 得到日期范围
             var diff_3 = gap(endDate_1, startDate_1) * -1;
             if (diff_3 > 0) {
                 var year = startDate_1.getFullYear(), month = startDate_1.getMonth(), date_2 = startDate_1.getDate();
                 range = [];
                 inRange = [];
-                //第一天为有效日期，最后一天为无效日期
-                //判断最后一个有效日期与最后一天的区间
-                //如果区间大于1或小于-1，则为无效区间，
                 for (var i = 0; i < diff_3; i++) {
                     var d = new Date(year, month, date_2 + i);
                     var string = format(d).value;
@@ -1021,8 +950,6 @@ function doubleSelectHandler(options) {
                 allValid = false;
                 selected = [selected[0]];
             }
-            //超出限制范围
-            //取最后一天
             if (range.length > limit) {
                 allValid = false;
                 var peek = selected[selected.length - 1];
@@ -1090,7 +1017,7 @@ function initWithDataBind(option, cb) {
         }
     }
 }
-var DatePicker = /** @class */ (function () {
+var DatePicker = (function () {
     function DatePicker(option) {
         var _this = this;
         this.init = init;
@@ -1128,7 +1055,7 @@ var DatePicker = /** @class */ (function () {
                 bindData: _this.bindData
             });
         };
-        this.format = function (date, zeroPadding) { return format(date, _this.dateFormat, _this.zeroPadding); };
+        this.format = function (date) { return format(date, _this.dateFormat, _this.zeroPadding); };
         this.parse = function (string) { return parseFormatted(string, _this.dateFormat); };
         this.inDates = function (date) { return _this.dates.indexOf(date) >= 0; };
         this.update = function (result) {
@@ -1173,7 +1100,7 @@ var DatePicker = /** @class */ (function () {
                     if (_this.bindData) {
                         if (diffed < 0
                             || diffed > _this.limit
-                            || !_this.inDates(_this.format(startDate).value) && !_this.inDates(_this.format(endDate).value) //开始日期和结束日期均为无效日期
+                            || !_this.inDates(_this.format(startDate).value) && !_this.inDates(_this.format(endDate).value)
                             || !_this.inDates(_this.format(startDate).value)) {
                             warn("dateRanges", "Illegal dates,[" + dates + "]");
                             return false;

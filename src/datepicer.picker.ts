@@ -1,13 +1,13 @@
-import {pickerDoubleSelectHandler, pickerHandler} from './datepicker.interfaces'
-
+import {
+    pickerDoubleSelectHandler,
+    pickerHandler
+} from './datepicker.interfaces'
 import {
     diff, attr,
     removeClass,
     addClass,
     attrSelector,
-    inArray,
     hasClass,
-    warn
 } from "./util"
 
 import {setRange} from './datepicker.ranger'
@@ -17,7 +17,6 @@ export default function (options: pickerHandler) {
         element,
         selected,
         isDouble,
-        source,
         parse,
         format,
         limit,
@@ -30,7 +29,7 @@ export default function (options: pickerHandler) {
     const collection = element.querySelectorAll(".calendar-date-cell");
     for (let i = 0; i < collection.length; i++) {
         const item = collection[i];
-        item.addEventListener("click", (e: any) => {
+        item.addEventListener("click", () => {
             //缓存已选的日期
             const cache = selected;
             const date = attr(item, "data-date");
@@ -173,7 +172,7 @@ function gap(d1: Date, d2: Date) {
 }
 
 function doubleSelectHandler(options: pickerDoubleSelectHandler) {
-    let {selected, date, cache, limit, format, parse, inDates, infiniteMode, bindData} = options;
+    let {selected, date, cache, limit, format, parse, inDates, bindData} = options;
     let range = <Array<any>>[];
     let inRange = <Array<any>>[];
     let allValid = false;
@@ -317,7 +316,7 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
             }
         }
         const diff = gap(startDate, endDate);
-        if (diff > 0 && diff <=limit) {
+        if (diff > 0 && diff <= limit) {
             for (let i = 1; i < diff; i++) {
                 let date = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
                 range.push(format(date).value)

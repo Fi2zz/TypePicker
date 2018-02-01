@@ -2,15 +2,11 @@ import '../src/style.styl'
 import './test.styl'
 
 
-import Pop from './popup'
-
 
 import DatePicker from '../src/index'
 
-// console.log(DatePicker.util)
-// window.DatePicker =DatePicker
 import {source, languages} from './mock'
-import {addClass, isObject, isArray} from "../src/util";
+import {addClass} from "../src/util";
 
 
 // const datePickerUtils = new DatePicker();
@@ -25,18 +21,17 @@ const dist = {
 const from = new Date(dist.year, dist.month, dist.date)
 const to = new Date(dist.year, dist.month + 2, 0);
 
-// console.log(to)
 
 const options: any = {
     el: '#datepicker',
     from,
-    // to,
+    to,
     language: languages,
     format: "YYYY-M-D",
     doubleSelect: true,
     limit: 7,
     defaultLanguage: "jp",
-    multiViews:false,
+    multiViews: false,
     flatView: true,
     singleView: false,
     bindData: false,
@@ -139,7 +134,7 @@ function merge(...args: Array<any>) {
 }
 
 
-const merged = merge(new Date(), options, [], 123, [123, {120: 0}, new Date()], {abc: 123}, "123456", null, "", true, 0)
+
+ merge(new Date(), options, [], 123, [123, {120: 0}, new Date()], {abc: 123}, "123456", null, "", true, 0)
 
 
-// console.log(JSON.stringify(merged, null, 2))

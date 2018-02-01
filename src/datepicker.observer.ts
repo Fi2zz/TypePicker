@@ -27,8 +27,8 @@ export default (function () {
         }
         clientList[key].push(fn);
     };
-    const $emit = function (evt: string, value: any) {
-        let key = [].shift.call(arguments);
+    const $emit = function (...args:Array<any>) {
+        let key = [].shift.call(args);
         let fns = clientList[key];
 
         if (!fns || fns.length === 0) {
@@ -36,7 +36,7 @@ export default (function () {
         }
 
         for (let i = 0, fn; fn = fns[i++];) {
-            fn.apply(this, arguments);
+            fn.apply(this, args);
         }
     };
     return {

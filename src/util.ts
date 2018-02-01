@@ -5,7 +5,7 @@ export function diff(start: Date, end: Date, type: string = "month") {
     if (!end) {
         end = new Date()
     }
-    if (type == "month") {
+    if (type === "month") {
         return Math.abs((start.getFullYear() * 12 + start.getMonth()) - ( end.getFullYear() * 12 + end.getMonth()))
     } else if (type === "days") {
         const startTime = <any>new Date(start.getFullYear(), start.getMonth(), start.getDate())
