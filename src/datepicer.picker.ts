@@ -10,7 +10,7 @@ import {
     hasClass,
 } from "./util"
 
-import {setRange} from './datepicker.ranger'
+import { setRange } from './datepicker.ranger'
 
 export default function (options: pickerHandler) {
     let {
@@ -91,11 +91,11 @@ export default function (options: pickerHandler) {
                 singlePick(selector, element, shouldChange);
             }
 
-
             update({
                 type: 'selected',
                 value: selected
             })
+
         });
     }
 }
@@ -114,11 +114,11 @@ function singlePick(selector: string, collector: HTMLElement, shouldChange: bool
 }
 
 function doublePick(collector: HTMLElement,
-                    start: string,
-                    end: string,
-                    diff: number,
-                    outOfLimit: boolean,
-                    valid: boolean) {
+    start: string,
+    end: string,
+    diff: number,
+    outOfLimit: boolean,
+    valid: boolean) {
     //缓存已选的开始日期和结束日期
     const cache = {
         start: collector.querySelector(".start-date"),
@@ -174,7 +174,7 @@ function gap(d1: Date, d2: Date) {
 }
 
 function doubleSelectHandler(options: pickerDoubleSelectHandler) {
-    let {selected, date, cache, limit, format, parse, inDates, bindData} = options;
+    let { selected, date, cache, limit, format, parse, inDates, bindData } = options;
     let range = <Array<any>>[];
     let inRange = <Array<any>>[];
     let allValid = false;
@@ -233,16 +233,11 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
         }
         //选择了开始日期，尚未选择结束日期
         else if (length === 1) {
-
-
-
             //开始日期为当前点击的元素
             const start = selected[selected.length - 1];
             //如果在data选项里有当前选择的日期
             //则选择的日期为当前当前点击的元素
             if (inDates(start)) {
-
-
                 selected = [start];
             } else {
                 if (cache.length >= 2) {
@@ -253,17 +248,20 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
                         }
                     }
                     if (validDates.length === cache.length) {
-                        selected = cache
+                        //multiviews 切换后的selected两个值相同的bug
+                        const front = cache[0];
+                        const last = cache[cache.length - 1];
+                        if (front !== last) {
+                            selected = cache
+                        } else {
+                            selected = [front]
+                        }
                     } else {
                         selected = []
                     }
-
                 } else {
-
                     selected = [cache[0]];
                 }
-
-
             }
         }
         //既没有开始日期也没有结束日期
@@ -277,16 +275,11 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
         }
         //重合
         allValid = range.length === inRange.length;
-
         if (!allValid) {
             selected = [selected[selected.length - 1]]
         }
         //选完开始日期和结束日期
         if (selected.length === 2) {
-
-
-            console.log("1")
-
             let lastValidDate = null;
             const end = selected[selected.length - 1];
             const endDate = parse(end);

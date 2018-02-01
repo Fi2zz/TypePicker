@@ -5,8 +5,8 @@ import './test.styl'
 
 import DatePicker from '../src/index'
 
-import {source, languages} from './mock'
-import {addClass} from "../src/util";
+import { source, languages } from './mock'
+import { addClass } from "../src/util";
 
 
 // const datePickerUtils = new DatePicker();
@@ -31,8 +31,8 @@ const options: any = {
     doubleSelect: true,
     limit: 7,
     defaultLanguage: "jp",
-    multiViews: false,
-    flatView: true,
+    multiViews: true,
+    flatView: false,
     singleView: false,
     bindData: true,
     zeroPadding: false,
@@ -81,10 +81,10 @@ datepicker.data((params: any) => {
 });
 
 
-function layout(result: any = {value: <Array<string>>[], type: <string>''}) {
+function layout(result: any = { value: <Array<string>>[], type: <string>'' }) {
 
 
-    // console.log(result)
+    // console.log(JSON.stringify(result, null, 2))
 
     document.getElementById("layout").innerHTML = `选中的日期<br/>${result.type} / ${result.value}`;
 }
@@ -135,6 +135,6 @@ function merge(...args: Array<any>) {
 
 
 
- merge(new Date(), options, [], 123, [123, {120: 0}, new Date()], {abc: 123}, "123456", null, "", true, 0)
+merge(new Date(), options, [], 123, [123, { 120: 0 }, new Date()], { abc: 123 }, "123456", null, "", true, 0)
 
 

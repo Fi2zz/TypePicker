@@ -904,7 +904,14 @@ function doubleSelectHandler(options) {
                         }
                     }
                     if (validDates.length === cache.length) {
-                        selected = cache;
+                        var front = cache[0];
+                        var last = cache[cache.length - 1];
+                        if (front !== last) {
+                            selected = cache;
+                        }
+                        else {
+                            selected = [front];
+                        }
                     }
                     else {
                         selected = [];
@@ -926,7 +933,6 @@ function doubleSelectHandler(options) {
             selected = [selected[selected.length - 1]];
         }
         if (selected.length === 2) {
-            console.log("1");
             var lastValidDate = null;
             var end_1 = selected[selected.length - 1];
             var endDate_1 = parse(end_1);
