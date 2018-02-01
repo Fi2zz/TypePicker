@@ -20,8 +20,6 @@ function parse(string: string | Date): any {
 
 export function format(date: Date, format: string , zeroPadding: boolean = true) {
     const shouldPadStart = zeroPadding;
-
-
     if (!format) {
         format = 'YYYY-MM-DD'
     }
@@ -49,8 +47,6 @@ export function format(date: Date, format: string , zeroPadding: boolean = true)
     }
 
 }
-
-
 export function parseFormatted(strDate: string, format: string) {
     //能直接解析成日期对象的，直接返回日期对象
     //如 YYYY/MM/DD YYYY-MM-DD
@@ -58,8 +54,6 @@ export function parseFormatted(strDate: string, format: string) {
     if (!format) {
         format = 'YYYY-MM-DD'
     }
-
-
 
     let ret = parse(strDate);
     if (ret) return ret;

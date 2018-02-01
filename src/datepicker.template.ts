@@ -8,19 +8,14 @@ import {
 import {
     getFirstDay, getDates, diff, padding
 } from "./util"
-import {stringify} from "querystring";
-
 
 const currDate = new Date();
-
 function calendarDateCellClassName(options: templateDateCellClassNameOption) {
     const {date, infiniteMode, endDate} = options;
-
     const classStack = ["calendar-cell", "calendar-date-cell"];
     if (!date) {
         classStack.push("disabled", "empty")
     } else {
-        // console.log({infiniteMode})
         if (!infiniteMode) {
             if (diff(date, currDate, "days") < 0) {
                 classStack.push("disabled")
@@ -48,8 +43,6 @@ function calendarDateCellTemplate(options: templateSetDatesOption) {
         formatter,
         endDate
     } = options;
-
-
     let template = <Array<any>>[];
     const d = new Date(year, month, 1);
     const curr = {
@@ -84,8 +77,6 @@ function calendarDateCellTemplate(options: templateSetDatesOption) {
         month: curr.index
     }
 }
-
-
 function calendarSingleDateCellTemplate(date?: number) {
     return `<div class="date">${date ? date : ''}</div><div class="placeholder"></div>`
 }
@@ -108,8 +99,6 @@ function calendarTemplateList(option: templateMapOption) {
         formatter,
         parse
     } = option;
-
-
     const template = [];
 
     for (let i = 0; i <= gap; i++) {
@@ -126,8 +115,6 @@ function calendarTemplateList(option: templateMapOption) {
     }
     return template
 }
-
-
 function calendarViewTemplate(options: templateFunctionOption) {
     const {
         template,
@@ -177,8 +164,6 @@ function calendarActionBar(actionbar: boolean) {
          </div>
     `
 }
-
-
 /**
  * 生成完整日历
  *
@@ -211,8 +196,6 @@ export default function compose(option: templateComposeOption) {
         language,
         singleView
     };
-
-
     return `${calendarActionBar(multiViews || singleView)}${calendarViewTemplate(templateConf)}`
 
 }

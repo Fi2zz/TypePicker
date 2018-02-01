@@ -1,14 +1,20 @@
 import {
-    addClass, diff, getLanguage,
-    isBoolean, isDate, isNumber, parseEl, removeClass, setLanguage,
+    addClass,
+    diff,
+    isDate,
+    isNumber,
+    parseEl,
+    removeClass,
+    getLanguage,
+    setLanguage,
     clearNextTick,
-    nextTick
+    nextTick,
+    warn
 } from "./util";
 import compose from "./datepicker.template";
 import {setInitRange} from "./datepicker.ranger";
 
 import {format} from './datepicker.formatter'
-
 
 /***
  * 月份切换
@@ -29,25 +35,17 @@ export function monthSwitch(size: number, language: any) {
     if (this.defaultDates.length > 0) {
         this.selected = this.defaultDates;
     }
-
-
-    // console.log(this.selected,this)
-
-
     this.date = new Date(curr.year, month, curr.date);
     this.createDatePicker(false);
     this.pickDate();
     this.dataRenderer(this.data)
 }
 
-
 /**
  * 生成日历
  *
  * **/
 export function createDatePicker(isInit?: Boolean) {
-
-
     this.element.innerHTML = compose({
         startDate: this.date,
         endDate: this.endDate,
@@ -71,10 +69,7 @@ export function createDatePicker(isInit?: Boolean) {
     }
 }
 
-
 export function currentRange(isInit: boolean) {
-
-
     const initSelected =
         this.defaultDates.length > 0
             ? this.defaultDates
@@ -94,16 +89,10 @@ export function currentRange(isInit: boolean) {
     return setInitRange(rangeOption);
 }
 
-
 export function bindMonthSwitch(lang: any) {
     const startTime = new Date(this.startDate).getTime();
-
-
     const currTime = new Date(this.date).getTime();
-
-
     //日期切换
-
     const prev = this.element.querySelector(".calendar-action-prev");
     const next = this.element.querySelector(".calendar-action-next");
 
@@ -142,10 +131,7 @@ export function bindMonthSwitch(lang: any) {
             }
         }
     }
-
-
 }
-
 
 export function init(option: any, renderer: any) {
 
@@ -161,8 +147,6 @@ export function init(option: any, renderer: any) {
     if (option.format) {
         this.dateFormat = option.format || "YYYY-MM-DD"
     }
-
-
     if (option.multiViews && ( !option.flatView && !option.singleView)) {
         this.multiViews = true
     }
@@ -180,8 +164,6 @@ export function init(option: any, renderer: any) {
     this.endDate = isDate(option.to) ? option.to : new Date(this.date.getFullYear(), this.date.getMonth() + 6, 0);
     //選擇日期區間最大限制
     this.limit = this.double ? isNumber(option.limit) ? option.limit : 1 : 1;
-
-
     if (option.zeroPadding) {
         this.zeroPadding = option.zeroPadding
     }
@@ -210,15 +192,12 @@ export function init(option: any, renderer: any) {
     }
 
     this.format = (date: Date) => format(date, this.dateFormat, this.zeroPadding);
-
-
     this.language = setLanguage(getLanguage(option.language, option.defaultLanguage));
     this.element = parseEl(option.el);
     if (!this.element) {
-        console.error(`[Calendar Warn] invalid selector,current selector ${this.element}`);
+        warn('init', `invalid selector,current selector ${this.element}`);
         return false
     }
-
     this.element.className = `${this.element.className} calendar calendar-${this.multiViews ? "double-views" : this.singleView ? "single-view" : "flat-view"}`
     const next = nextTick(() => {
         if (this.defaultDates.length > 0) {

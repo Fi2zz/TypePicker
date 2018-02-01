@@ -142,7 +142,7 @@ function parseEl(el) {
     }
     else {
         if (el.indexOf("#") <= -1 || el.indexOf(".") <= -1) {
-            console.error("[ParseEl Error] do not mount DatePicker to a pure html tag," + el);
+            warn("ParseEl ", "do not mount DatePicker to a pure html tag," + el);
             return false;
         }
         return document.querySelector(el);
@@ -191,6 +191,14 @@ function clearNextTick(id) {
     window.clearTimeout(id);
 }
 
+function warn(where, msg) {
+    var message = msg;
+    if (isObject(msg) || isArray(msg)) {
+        message = JSON.stringify(msg);
+    }
+    console.error("[" + where + "] " + message + " ");
+}
+
 var currDate = new Date();
 function calendarDateCellClassName(options) {
     var date = options.date, infiniteMode = options.infiniteMode, endDate = options.endDate;
@@ -199,7 +207,6 @@ function calendarDateCellClassName(options) {
         classStack.push("disabled", "empty");
     }
     else {
-        // console.log({infiniteMode})
         if (!infiniteMode) {
             if (diff(date, currDate, "days") < 0) {
                 classStack.push("disabled");
@@ -422,7 +429,6 @@ function setRange(data, collector, remove$$1, clearRange) {
     }
 }
 function setInitRange(options) {
-    // console.log(options)
     var collector = options.collector, collection = options.collection, data = options.data, isDouble = options.isDouble, parse = options.parse, format = options.format, inDates = options.inDates, isInit = options.isInit;
     var dates = [];
     if (!isDouble) {
@@ -594,7 +600,6 @@ function monthSwitch(size, language) {
     if (this.defaultDates.length > 0) {
         this.selected = this.defaultDates;
     }
-    // console.log(this.selected,this)
     this.date = new Date(curr.year, month, curr.date);
     this.createDatePicker(false);
     this.pickDate();
@@ -747,7 +752,7 @@ function init(option, renderer) {
     this.language = setLanguage(getLanguage(option.language, option.defaultLanguage));
     this.element = parseEl(option.el);
     if (!this.element) {
-        console.error("[Calendar Warn] invalid selector,current selector " + this.element);
+        warn('init', "invalid selector,current selector " + this.element);
         return false;
     }
     this.element.className = this.element.className + " calendar calendar-" + (this.multiViews ? "double-views" : this.singleView ? "single-view" : "flat-view");
@@ -766,7 +771,6 @@ function init(option, renderer) {
 
 var handlePickDate = function (options) {
     var element = options.element, selected = options.selected, isDouble = options.isDouble, source = options.source, parse = options.parse, format = options.format, limit = options.limit, inDates = options.inDates, update = options.update, infiniteMode = options.infiniteMode, bindData = options.bindData;
-    // console.log(bindData)
     var collection = element.querySelectorAll(".calendar-date-cell");
     var _loop_1 = function (i) {
         var item = collection[i];
@@ -775,9 +779,9 @@ var handlePickDate = function (options) {
             var cache = selected;
             var date = attr(item, "data-date");
             var index = selected.indexOf(date);
-            // console.log(selected)
+            //不可选的日期
+            //初始化时，selected的length为0，点击不可选日期
             if (!date || (selected.length <= 0 && !inDates(date)) && bindData) {
-                console.log("illegal date");
                 return false;
             }
             //重复选择
@@ -825,7 +829,6 @@ var handlePickDate = function (options) {
                 }
                 singlePick(selector, element, shouldChange);
             }
-            // console.log(selected)
             update({
                 type: 'selected',
                 value: selected
@@ -1023,16 +1026,11 @@ function doubleSelectHandler(options) {
             if (range.length > limit) {
                 allValid = false;
                 var peek = selected[selected.length - 1];
-                if (bindData && !infiniteMode) {
-                    if (inDates(peek)) {
-                        selected = [peek];
-                    }
-                    else {
-                        selected = [cache[0]];
-                    }
+                if (inDates(peek)) {
+                    selected = [peek];
                 }
                 else {
-                    selected = [peek];
+                    selected = [cache[0]];
                 }
             }
         }
@@ -1151,7 +1149,7 @@ var DatePicker = /** @class */ (function () {
         this.dateRanges = function (dates, isInit) {
             if (!isArray(dates)) {
                 dates = [];
-                console.error("[dateRanges error] no dates provided", dates);
+                warn("dateRanges", "no dates provided," + dates);
                 return;
             }
             _this.isInitRange = !(!isInit);
@@ -1172,7 +1170,7 @@ var DatePicker = /** @class */ (function () {
                             || diffed > _this.limit
                             || !_this.inDates(_this.format(startDate).value) && !_this.inDates(_this.format(endDate).value) //开始日期和结束日期均为无效日期
                             || !_this.inDates(_this.format(startDate).value)) {
-                            console.error("[dateRanges Warn]Illegal dates,[" + dates + "]");
+                            warn("dateRanges", "Illegal dates,[" + dates + "]");
                             return false;
                         }
                     }
@@ -1180,7 +1178,7 @@ var DatePicker = /** @class */ (function () {
                         var date = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
                         var formatted = _this.format(date).value;
                         if (i < diffed && !_this.inDates(formatted)) {
-                            console.error("[dateRanges Warn] Illegal date,{dates:[" + formatted + "]}");
+                            warn("dateRanges", "Illegal date,{dates:[" + formatted + "]}");
                             return false;
                         }
                     }

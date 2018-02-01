@@ -6,7 +6,8 @@ import {
     addClass,
     attrSelector,
     inArray,
-    hasClass
+    hasClass,
+    warn
 } from "./util"
 
 import {setRange} from './datepicker.ranger'
@@ -26,7 +27,6 @@ export default function (options: pickerHandler) {
         bindData
     } = options;
 
-    // console.log(bindData)
     const collection = element.querySelectorAll(".calendar-date-cell");
     for (let i = 0; i < collection.length; i++) {
         const item = collection[i];
@@ -35,14 +35,9 @@ export default function (options: pickerHandler) {
             const cache = selected;
             const date = attr(item, "data-date");
             const index = selected.indexOf(date);
-
-            // console.log(selected)
-            const nextItem = item.nextElementSibling;
-            const prevItem = item.previousElementSibling;
             //不可选的日期
             //初始化时，selected的length为0，点击不可选日期
             if (!date || (selected.length <= 0 && !inDates(date)) && bindData) {
-                console.log("illegal date")
                 return false;
             }
             //重复选择
@@ -87,8 +82,6 @@ export default function (options: pickerHandler) {
                 if (allValid && isValid) {
                     setRange(range, element, false)
                 }
-
-
             } else {
                 let selector = item;
                 let shouldChange = true;
@@ -97,16 +90,11 @@ export default function (options: pickerHandler) {
                     shouldChange = false;
                 }
                 singlePick(selector, element, shouldChange);
-
-
             }
-            // console.log(selected)
-
             update({
                 type: 'selected',
                 value: selected
             })
-
         });
     }
 }
@@ -123,8 +111,6 @@ function singlePick(selector: string, collector: HTMLElement, shouldChange: bool
     }
 
 }
-
-
 function doublePick(collector: HTMLElement,
                     start: string,
                     end: string,
@@ -181,18 +167,12 @@ function doublePick(collector: HTMLElement,
 }
 
 function gap(d1: Date, d2: Date) {
-
-
     let value = diff(d1, d2, "days");
     return value === 0 ? 0 : value * -1
 }
 
 function doubleSelectHandler(options: pickerDoubleSelectHandler) {
-
-
     let {selected, date, cache, limit, format, parse, inDates, infiniteMode, bindData} = options;
-
-
     let range = <Array<any>>[];
     let inRange = <Array<any>>[];
     let allValid = false;
@@ -308,8 +288,6 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
                     allValid = false
                 }
             }
-
-
             if (inRange.length === range.length) {
                 allValid = true
 
@@ -322,22 +300,11 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
             if (range.length > limit) {
                 allValid = false;
                 const peek = selected[selected.length - 1];
-
-
-                if (bindData && !infiniteMode) {
-
-
-                    if (inDates(peek)) {
-                        selected = [peek]
-                    } else {
-                        selected = [cache[0]]
-                    }
-                }
-                else {
+                if (inDates(peek)) {
                     selected = [peek]
+                } else {
+                    selected = [cache[0]]
                 }
-
-
             }
         }
     }

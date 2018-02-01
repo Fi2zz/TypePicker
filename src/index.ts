@@ -8,7 +8,8 @@ import {
     isBoolean,
     nextTick,
     clearNextTick,
-    noop
+    noop,
+    warn
 } from "./util"
 import {
     init,
@@ -23,16 +24,12 @@ import {
     format as formatter
 } from "./datepicker.formatter"
 
-
 function initWithDataBind(option: any, cb: Function) {
-
-
     function noData(data: any) {
         return !isObject(data)
             || (Object.keys(data.data).length <= 0
                 || data.dates.length <= 0)
     }
-
 
     if (option.bindData) {
         const params = {
@@ -55,10 +52,7 @@ function initWithDataBind(option: any, cb: Function) {
             this.dataRenderer(result.data);
         }
     }
-
-
 }
-
 
 export default class DatePicker {
     init = init;
@@ -73,7 +67,6 @@ export default class DatePicker {
     selected: Array<any> = [];
     flatView: boolean = false;
     multiViews: boolean = false;
-
     singleView: boolean = false;
     monthSwitch = monthSwitch;
     createDatePicker = createDatePicker;
@@ -84,8 +77,6 @@ export default class DatePicker {
     currentRange: Function = currentRange;
     isInitRange: boolean = false;
     language: any = {};
-
-
     pickDate = () => {
         handlePickDate({
             element: this.element,
@@ -127,11 +118,10 @@ export default class DatePicker {
         }
     };
     dateRanges = (dates: Array<any>, isInit?: boolean) => {
-
-
         if (!isArray(dates)) {
             dates = [];
-            console.error("[dateRanges error] no dates provided", dates);
+
+            warn("dateRanges", `no dates provided,${dates}`);
             return
         }
         this.isInitRange = !(!isInit);
@@ -145,33 +135,24 @@ export default class DatePicker {
 
                 start = <any>dates[0];
                 end = <any>dates[dates.length - 1];
-
-
                 const startDate = isDate(start) ? start : this.parse(start);
                 const endDate = isDate(end) ? end : this.parse(end);
                 const diffed = diff(startDate, endDate, "days") * -1;
-
-
                 if (this.bindData) {
-
-
                     if (diffed < 0
                         || diffed > this.limit
                         || !this.inDates(this.format(startDate).value) && !this.inDates(this.format(endDate).value) //开始日期和结束日期均为无效日期
                         || !this.inDates(this.format(startDate).value)
                     ) {
-                        console.error(`[dateRanges Warn]Illegal dates,[${dates}]`);
+                        warn(`dateRanges`, `Illegal dates,[${dates}]`);
                         return false;
                     }
-
                 }
-
-
                 for (let i = 0; i <= diffed; i++) {
                     const date = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
                     const formatted = this.format(date).value;
                     if (i < diffed && !this.inDates(formatted)) {
-                        console.error(`[dateRanges Warn] Illegal date,{dates:[${formatted}]}`);
+                        warn("dateRanges", `Illegal date,{dates:[${formatted}]}`)
                         return false
                     }
                 }
@@ -181,8 +162,6 @@ export default class DatePicker {
                 const d = dates[dates.length - 1];
                 datesList = [isDate(d) ? this.format(d).value : d]
             }
-
-
             this.defaultDates = datesList;
         };
         if (!this.bindData) {
@@ -203,8 +182,6 @@ export default class DatePicker {
     };
 
     constructor(option?: datePickerOptions) {
-
-
         if (!option) {
             return <any>{
                 format: (date: Date, format: string) => (date && format) ? formatter(date, format).value : null,

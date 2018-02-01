@@ -152,7 +152,7 @@ export function parseEl(el: string) {
     }
     else {
         if (el.indexOf("#") <= -1 || el.indexOf(".") <= -1) {
-            console.error(`[ParseEl Error] do not mount DatePicker to a pure html tag,${el}`)
+            warn(`ParseEl `,`do not mount DatePicker to a pure html tag,${el}`)
             return false;
         }
         return document.querySelector(el)
@@ -235,4 +235,12 @@ export function clearNextTick(id: any) {
 export function noop() {
 }
 
+
+export function warn(where: string, msg: any) {
+    let message = msg;
+    if (isObject(msg) || isArray(msg)) {
+        message = JSON.stringify(msg)
+    }
+    console.error(`[${where}] ${message} `)
+}
 

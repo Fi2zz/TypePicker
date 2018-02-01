@@ -2,7 +2,6 @@ import {initRangeOptions} from './datepicker.interfaces'
 import {
     attr,
     diff,
-    inArray,
     addClass,
     hasClass,
     removeClass,
@@ -35,7 +34,6 @@ function getRange(collection: HTMLCollection, start: string, end: string) {
     if (endIndex === startIndex || endIndex < 0) {
         return [];
     }
-
     return temp.slice(startIndex + 1, endIndex)
 }
 
@@ -79,8 +77,6 @@ function setStartAndEnd(collection: HTMLCollection,
             }
         }
     }
-
-
     if (data.length > 0) {
         temp = data
     }
@@ -110,10 +106,6 @@ export function setRange(data: Array<any>, collector: HTMLElement, remove: boole
 }
 
 export function setInitRange(options: initRangeOptions) {
-
-    // console.log(options)
-
-
     let {
         collector,
         collection,
@@ -124,14 +116,10 @@ export function setInitRange(options: initRangeOptions) {
         inDates,
         isInit
     } = options;
-
-
     let dates: Array<any> = [];
     if (!isDouble) {
         dates = data
     } else {
-
-
         if (data.length >= 2) {
             let start = data[0];
             let end = data[data.length - 1];
@@ -181,8 +169,6 @@ export function setInitRange(options: initRangeOptions) {
         }
 
     }
-
-
     //设置激活状态
     for (let i = 0; i < dates.length; i++) {
         let selector = <string>attrSelector("data-date", dates[i]);
