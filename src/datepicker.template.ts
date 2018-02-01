@@ -148,7 +148,7 @@ function calendarViewTemplate(options: templateFunctionOption) {
             body = item.template;
         let tpl = "";
         if (multiViews || singleView) {
-            tpl += `<div class='calendar-main calendar-${index}'>
+            tpl += `<div class='calendar-main'>
                     <div class="calendar-head">${title}</div>
                    <div class="calendar-day"> ${weekDays}</div>
                     <div class="calendar-body">${body}</div>

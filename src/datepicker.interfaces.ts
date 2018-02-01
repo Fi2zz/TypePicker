@@ -1,7 +1,7 @@
 export interface datePickerOptions {
     el: string,
-    to: Date | any,
-    from: Date | any,
+    to: Date | null | undefined,
+    from: Date | null | undefined,
     limit: number,
     format: string,
     language: any,
@@ -20,7 +20,7 @@ export interface templateFunctionOption {
     template: any,
     multiViews: boolean,
     flatView: boolean,
-    singleView:boolean,
+    singleView: boolean,
 
     language: any,
 }
@@ -75,5 +75,36 @@ export interface initRangeOptions {
     parse: Function,
     format: Function,
     inDates: Function,
-    isInit: boolean
+    isInit: boolean,
+
 }
+
+export interface pickerDoubleSelectHandler {
+    date: any,
+    selected: Array<any>,
+    cache: Array<any>,
+    limit: number,
+    // source: any,
+    format: Function,
+    parse: Function,
+    inDates: Function,
+    infiniteMode:boolean,
+    bindData:boolean
+}
+
+
+export interface pickerHandler {
+    element: any,
+    selected: Array<any>,
+    isDouble: boolean,
+    source: any,
+    parse: Function,
+    format: Function,
+    limit: number,
+    inDates: Function,
+    update: Function,
+    infiniteMode: boolean,
+    bindData:boolean
+
+}
+

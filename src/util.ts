@@ -106,6 +106,7 @@ export function isPrimitive(value: any): boolean {
         typeof value === 'boolean'
     )
 }
+
 export function hasClass(el: any, className: string) {
     if (!el) {
         return false
@@ -233,5 +234,7 @@ export function clearNextTick(id: any) {
 }
 
 
+export function noop() {
+}
 
 

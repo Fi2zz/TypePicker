@@ -7,8 +7,13 @@ import Pop from './popup'
 
 import DatePicker from '../src/index'
 
+// console.log(DatePicker.util)
+// window.DatePicker =DatePicker
 import {source, languages} from './mock'
-import {addClass} from "../src/util";
+import {addClass, isObject, isArray} from "../src/util";
+
+
+// const datePickerUtils = new DatePicker();
 
 
 const date = new Date();
@@ -18,12 +23,14 @@ const dist = {
     date: date.getDate()
 };
 const from = new Date(dist.year, dist.month, dist.date)
-const to = new Date(dist.year, dist.month + 8, dist.date);
+const to = new Date(dist.year, dist.month + 2, 0);
 
-const datepicker = <any>new DatePicker({
+// console.log(to)
+
+const options: any = {
     el: '#datepicker',
-    from,
-    to,
+    // from,
+    // to,
     language: languages,
     format: "YYYY-M-D",
     doubleSelect: true,
@@ -32,16 +39,12 @@ const datepicker = <any>new DatePicker({
     multiViews: true,
     flatView: false,
     singleView: false,
-    bindData: true,
+    bindData: false,
     zeroPadding: false,
-    infiniteMode: true
-});
-
-datepicker.on("update", (output: any) => {
-    document.getElementById("layout").innerHTML = `选中的日期<br/>${output.type} / ${output.value}`;
-});
-
-
+    infiniteMode: false
+};
+const datepicker = <any>new DatePicker(options);
+datepicker.on("update", (output: any) => layout(output));
 datepicker.on("data", (result: any) => {
     const data = result.data;
     const nodeList = result.nodeList;
@@ -64,7 +67,7 @@ datepicker.on("data", (result: any) => {
 });
 
 
-// datepicker.dateRanges([new Date(2018, 1, 3), new Date(2018, 1, 5)], true);
+// datepicker.dateRanges([new Date(2018, 0, 31), new Date(2018, 1, 2)], true);
 
 datepicker.data((params: any) => {
     const currDate = new Date(dist.year, dist.month, dist.date);
@@ -76,11 +79,67 @@ datepicker.data((params: any) => {
             // delete source[date]
         }
     });
-    // params.from = from;
-    // params.to = to;
-    console.log(source)
+
+
     params.data = source;
+    return params
 });
 
 
+function layout(result: any = {value: <Array<string>>[], type: <string>''}) {
 
+
+    // console.log(result)
+
+    document.getElementById("layout").innerHTML = `选中的日期<br/>${result.type} / ${result.value}`;
+}
+
+function merge(...args: Array<any>) {
+
+
+    let merged: any = {};
+
+    function toString(object: any) {
+        return Object.prototype.toString.call(object)
+    }
+
+    function whichType(object: any, type: string) {
+        return toString(object) === `[object ${type}]`
+    }
+
+    function generateObject(target: any = {}, object: any) {
+        for (let key in object) {
+            if (object.hasOwnProperty(key)) {
+                target[key] = object[key]
+            }
+        }
+        return target
+    }
+
+    for (let i = 0; i < args.length; i++) {
+        let arg = args[i];
+        if (arg) {
+            if (whichType(arg, "Array")) {
+                for (let i = 0; i < arg.length; i++) {
+                    let argItem = arg[i];
+                    if (whichType(argItem, "Object")) {
+                        merged = generateObject(merged, argItem)
+                    } else if (!whichType(argItem, "Date")) {
+                        merged[argItem] = argItem
+                    }
+                }
+            } else if (whichType(arg, "Object")) {
+                merged = generateObject(merged, arg)
+            } else if (whichType(arg, "String") || whichType(arg, "Number")) {
+                merged[arg] = arg
+            }
+        }
+    }
+    return merged
+}
+
+
+const merged = merge(new Date(), options, [], 123, [123, {120: 0}, new Date()], {abc: 123}, "123456", null, "", true, 0)
+
+
+// console.log(JSON.stringify(merged, null, 2))

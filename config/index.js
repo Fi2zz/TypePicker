@@ -11,10 +11,7 @@ module.exports = {
     },
     build: {
         input: "./lib/index.js",
-
-
         output: [
-
             {
 
                 file: {

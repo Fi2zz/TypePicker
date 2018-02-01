@@ -45,8 +45,24 @@ export const source: any = {
     "2018-2-1": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
     "2018-2-6": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
     "2018-2-4": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
-
-}
+    "2018-2-16": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-2-17": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-2-18": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-2-19": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-2-20": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-2-21": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-2-22": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-2-23": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-2-24": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-3-14": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-3-15": {enable: true, "highlight": false, "value": 1498, "label": "unlimited"},
+    "2018-3-10": {enable: true, "highlight": false, "value": 1498, "label": "unlimited"},
+    "2018-4-11": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-5-12": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-6-13": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-8-31": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-9-30": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+};
 
 
 export const languages: any = {

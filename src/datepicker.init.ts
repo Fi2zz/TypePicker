@@ -7,6 +7,9 @@ import {
 import compose from "./datepicker.template";
 import {setInitRange} from "./datepicker.ranger";
 
+import {format} from './datepicker.formatter'
+
+
 /***
  * 月份切换
  * @param size 切换月份数量
@@ -26,6 +29,11 @@ export function monthSwitch(size: number, language: any) {
     if (this.defaultDates.length > 0) {
         this.selected = this.defaultDates;
     }
+
+
+    // console.log(this.selected,this)
+
+
     this.date = new Date(curr.year, month, curr.date);
     this.createDatePicker(false);
     this.pickDate();
@@ -73,13 +81,6 @@ export function currentRange(isInit: boolean) {
             : this.double
             ? this.selected
             : [this.format(this.date).value];
-
-    if (isInit) {
-
-
-    }
-
-
     const rangeOption = {
         collector: this.element,
         collection: this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
@@ -96,14 +97,17 @@ export function currentRange(isInit: boolean) {
 
 export function bindMonthSwitch(lang: any) {
     const startTime = new Date(this.startDate).getTime();
+
+
     const currTime = new Date(this.date).getTime();
+
+
     //日期切换
 
     const prev = this.element.querySelector(".calendar-action-prev");
     const next = this.element.querySelector(".calendar-action-next");
 
     if (prev && next) {
-
         if (this.infiniteMode) {
             next.addEventListener("click", () => {
                 this.monthSwitch(1);
@@ -126,8 +130,7 @@ export function bindMonthSwitch(lang: any) {
                 addClass(next, "calendar-action-disabled")
             }
 
-            if (currTime >= startTime) {
-
+            if (currTime > startTime) {
                 prev.addEventListener("click", () => {
                     this.monthSwitch(-1);
                     removeClass(next, "disabled");
@@ -174,31 +177,18 @@ export function init(option: any, renderer: any) {
     this.startDate = isDate(option.from) ? option.from : new Date();
     this.date = this.startDate;
     //结束日期
-    this.endDate = isDate(option.to) ? option.to : new Date(this.date.getFullYear(), this.date.getMonth() + 6, this.date.getDate());
+    this.endDate = isDate(option.to) ? option.to : new Date(this.date.getFullYear(), this.date.getMonth() + 6, 0);
     //選擇日期區間最大限制
     this.limit = this.double ? isNumber(option.limit) ? option.limit : 1 : 1;
-    if (this.flatView) {
-        const year = this.endDate.getFullYear();
-        const month = this.endDate.getMonth();
-        const date = this.endDate.getDate();
-        // this.endDate = new Date(year, month + 1, date)
-
-    }
-
-
-    // console.log(this.flatView)
 
 
     if (option.zeroPadding) {
         this.zeroPadding = option.zeroPadding
     }
 
-
     if (option.infiniteMode) {
         this.infiniteMode = option.infiniteMode;
     }
-
-
     if (!renderer.dates || renderer.dates && renderer.dates.length <= 0) {
         const currDate = new Date();
         const gap = diff(this.endDate, currDate, "days");
@@ -219,6 +209,8 @@ export function init(option: any, renderer: any) {
         this.infiniteMode = false;
     }
 
+    this.format = (date: Date) => format(date, this.dateFormat, this.zeroPadding);
+
 
     this.language = setLanguage(getLanguage(option.language, option.defaultLanguage));
     this.element = parseEl(option.el);
@@ -231,15 +223,12 @@ export function init(option: any, renderer: any) {
     const next = nextTick(() => {
         if (this.defaultDates.length > 0) {
             let date = this.defaultDates[0];
-
             if (!this.flatView) {
                 this.date = this.parse(date)
-
             }
         }
         this.createDatePicker(true);
         this.pickDate();
         clearNextTick(next)
     })
-
 }

@@ -7,8 +7,8 @@ import {
     isArray,
     isBoolean,
     nextTick,
-    clearNextTick
-
+    clearNextTick,
+    noop
 } from "./util"
 import {
     init,
@@ -22,6 +22,43 @@ import {
     parseFormatted,
     format as formatter
 } from "./datepicker.formatter"
+
+
+function initWithDataBind(option: any, cb: Function) {
+
+
+    function noData(data: any) {
+        return !isObject(data)
+            || (Object.keys(data.data).length <= 0
+                || data.dates.length <= 0)
+    }
+
+
+    if (option.bindData) {
+        const params = {
+            dates: <Array<string>>[],
+            data: <any>{},
+            from: Date,
+            to: Date
+        };
+        const cbData = cb && cb(params);
+        const result = cbData ? cbData : params;
+        if (isDate(params.from)) option.from = params.from;
+        if (isDate(params.to)) option.to = params.to;
+        const config = {
+            data: result.data,
+            dates: result.dates.sort((a: string, b: string) => this.parse(a) - this.parse(b))
+        };
+        this.init(option, config);
+
+        if (!noData(result)) {
+            this.dataRenderer(result.data);
+        }
+    }
+
+
+}
+
 
 export default class DatePicker {
     init = init;
@@ -47,17 +84,23 @@ export default class DatePicker {
     currentRange: Function = currentRange;
     isInitRange: boolean = false;
     language: any = {};
-    pickDate = () => handlePickDate(
-        this.element,
-        this.selected,
-        this.double,
-        this.dates,
-        this.parse,
-        this.format,
-        this.limit,
-        this.inDates,
-        this.update
-    );
+
+
+    pickDate = () => {
+        handlePickDate({
+            element: this.element,
+            selected: this.selected,
+            isDouble: this.double,
+            source: this.dates,
+            parse: this.parse,
+            format: this.format,
+            limit: this.limit,
+            inDates: this.inDates,
+            update: this.update,
+            infiniteMode: this.infiniteMode,
+            bindData: this.bindData
+        })
+    };
     defaultDates: Array<string>[];
     format = (date: Date, zeroPadding?: boolean) => formatter(date, this.dateFormat, this.zeroPadding);
     parse = (string: string) => parseFormatted(string, this.dateFormat);
@@ -107,30 +150,39 @@ export default class DatePicker {
                 const startDate = isDate(start) ? start : this.parse(start);
                 const endDate = isDate(end) ? end : this.parse(end);
                 const diffed = diff(startDate, endDate, "days") * -1;
-                if (diffed < 0
-                    || diffed > this.limit
-                    || !this.inDates(this.format(startDate).value) && !this.inDates(this.format(endDate).value) //开始日期和结束日期均为无效日期
-                    || !this.inDates(this.format(startDate).value)
-                ) {
-                    console.error(`[dateRanges Warn]Illegal dates,[${dates}]`);
-                    return false;
+
+
+                if (this.bindData) {
+
+
+                    if (diffed < 0
+                        || diffed > this.limit
+                        || !this.inDates(this.format(startDate).value) && !this.inDates(this.format(endDate).value) //开始日期和结束日期均为无效日期
+                        || !this.inDates(this.format(startDate).value)
+                    ) {
+                        console.error(`[dateRanges Warn]Illegal dates,[${dates}]`);
+                        return false;
+                    }
+
                 }
+
 
                 for (let i = 0; i <= diffed; i++) {
                     const date = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
                     const formatted = this.format(date).value;
                     if (i < diffed && !this.inDates(formatted)) {
-                        console.error(`[dateRanges Warn]Illegal date,[${formatted}]`);
+                        console.error(`[dateRanges Warn] Illegal date,{dates:[${formatted}]}`);
                         return false
                     }
                 }
-
                 datesList = [this.format(startDate).value, this.format(endDate).value]
             }
             else {
                 const d = dates[dates.length - 1];
                 datesList = [isDate(d) ? this.format(d).value : d]
             }
+
+
             this.defaultDates = datesList;
         };
         if (!this.bindData) {
@@ -142,58 +194,39 @@ export default class DatePicker {
             });
         }
     };
-    disableRange = () => {
-
-
-    };
     bindMonthSwitch: Function = bindMonthSwitch;
+    initWithDataBind: Function = initWithDataBind;
+    utils: Object = {
+        format: (date: Date, format: string) => (date && format) ? formatter(date, format).value : null,
+        parse: (string: string, format: string) => (string && format) ? parseFormatted(string, format) : new Date(),
+        diff: (d1: Date, d2: Date) => diff(d1, d2, "days")
+    };
 
-    _bindDataInit(option: any, cb: Function) {
-        function noData(data: any) {
-            return !isObject(data)
-                || (Object.keys(data.data).length <= 0
-                    || data.dates.length <= 0)
-        }
+    constructor(option?: datePickerOptions) {
 
 
-        if (option.bindData) {
-            const params = {
-                dates: <Array<string>>[],
-                data: <any>{},
-                from: Date,
-                to: Date
-            };
-            const cbData = cb && cb(params);
-            const result = cbData ? cbData : params;
-            if (isDate(params.from)) option.from = params.from;
-            if (isDate(params.to)) option.to = params.to;
-            const config = {
-                data: result.data,
-                dates: result.dates.sort((a: string, b: string) => this.parse(a) - this.parse(b))
-            };
-            this.init(option, config);
-
-            if (!noData(result)) {
-                this.dataRenderer(result.data);
+        if (!option) {
+            return <any>{
+                format: (date: Date, format: string) => (date && format) ? formatter(date, format).value : null,
+                parse: (string: string, format: string) => (string && format) ? parseFormatted(string, format) : new Date(),
+                diff: (d1: Date, d2: Date) => diff(d1, d2, "days")
             }
         }
-    };
 
-    constructor(option: datePickerOptions) {
         this.defaultDates = [];
         this.bindData = option.bindData;
-        if (!option.bindData) {
+        if (!option.bindData && option.el) {
             this.init(option, {});
         }
+
         return <any> {
             on: Observer.$on,
-            data: (cb: Function) => this._bindDataInit(option, cb),
+            data: (cb: Function) => this.initWithDataBind(option, cb),
             diff: (d1: Date, d2: Date) => diff(d1, d2, "days"),
             parse: this.parse,
             format: this.format,
             dateRanges: this.dateRanges,
             setDefaultDates: this.dateRanges,
-            disableRange: this.disableRange
         };
     }
 }
