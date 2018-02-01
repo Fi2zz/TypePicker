@@ -29,8 +29,8 @@ const to = new Date(dist.year, dist.month + 2, 0);
 
 const options: any = {
     el: '#datepicker',
-    // from,
-    // to,
+    from,
+    to,
     language: languages,
     format: "YYYY-M-D",
     doubleSelect: true,

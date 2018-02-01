@@ -502,6 +502,9 @@ function parse(string) {
 function format(date, format, zeroPadding) {
     if (zeroPadding === void 0) { zeroPadding = true; }
     var shouldPadStart = zeroPadding;
+    if (!format) {
+        format = 'YYYY-MM-DD';
+    }
     var parts = {
         DD: shouldPadStart ? padding(date.getDate()) : date.getDate(),
         dd: shouldPadStart ? padding(date.getDate()) : date.getDate(),

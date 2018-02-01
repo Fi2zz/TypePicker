@@ -22,6 +22,10 @@ export function format(date: Date, format: string, zeroPadding: boolean = true) 
     const shouldPadStart = zeroPadding;
 
 
+    if (!format) {
+        format = 'YYYY-MM-DD'
+    }
+
     let parts = <any>{
         DD: shouldPadStart ? padding(date.getDate()) : date.getDate(),
         dd: shouldPadStart ? padding(date.getDate()) : date.getDate(),
