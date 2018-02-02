@@ -608,8 +608,6 @@ function currentRange(isInit) {
 }
 function bindMonthSwitch() {
     var _this = this;
-    var startTime = new Date(this.startDate).getTime();
-    var currTime = new Date(this.date).getTime();
     var prev = this.element.querySelector(".calendar-action-prev");
     var next = this.element.querySelector(".calendar-action-next");
     if (prev && next) {
@@ -622,8 +620,9 @@ function bindMonthSwitch() {
             });
         }
         else {
-            var gap = diff(this.date, this.endDate);
-            if (gap >= 2) {
+            var endGap = diff(this.date, this.endDate);
+            var startGap = diff(this.date, this.startDate);
+            if (endGap >= 2) {
                 next.addEventListener("click", function () {
                     _this.monthSwitch(1);
                     removeClass(prev, "disabled");
@@ -634,7 +633,7 @@ function bindMonthSwitch() {
                 addClass(next, "disabled");
                 addClass(next, "calendar-action-disabled");
             }
-            if (currTime > startTime) {
+            if (startGap >= 2) {
                 prev.addEventListener("click", function () {
                     _this.monthSwitch(-1);
                     removeClass(next, "disabled");
@@ -857,8 +856,8 @@ function doubleSelectHandler(options) {
     var startDate = parse(start), endDate = parse(end);
     if (bindData) {
         var diff_2 = gap(startDate, endDate);
-        var length_1 = selected.length;
-        if (length_1 >= 2) {
+        var length = selected.length;
+        if (length >= 2) {
             if (diff_2 <= 0) {
                 if (inDates(date)) {
                     selected.shift();
@@ -887,7 +886,7 @@ function doubleSelectHandler(options) {
                 }
             }
         }
-        else if (length_1 === 1) {
+        else if (length === 1) {
             var start_1 = selected[selected.length - 1];
             if (inDates(start_1)) {
                 selected = [start_1];

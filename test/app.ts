@@ -12,8 +12,8 @@ const dist = {
     month: date.getMonth(),
     date: date.getDate()
 };
-const from = new Date(dist.year, dist.month, dist.date)
-const to = new Date(dist.year, dist.month + 3, 0);
+const from = new Date(dist.year, dist.month-1, dist.date)
+const to = new Date(dist.year, dist.month + 9, 0);
 
 
 const options: any = {
@@ -56,7 +56,7 @@ datepicker.on("data", (result: any) => {
 });
 
 
-// datepicker.dateRanges([new Date(2018, 0, 31), new Date(2018, 1, 2)], true);
+datepicker.dateRanges([new Date(2018, 3, 11), new Date(2018, 3, 12)], true);
 
 datepicker.data((params: any) => {
     const currDate = new Date(dist.year, dist.month, dist.date);
@@ -127,7 +127,6 @@ function merge(...args: Array<any>) {
 
 
 // const merged =
-
 
 merge(new Date(), options, [], 123, [123, {120: 0}, new Date()], {abc: 123}, "123456", null, "", true, 0)
 

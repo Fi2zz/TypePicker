@@ -12,9 +12,9 @@ import {
     warn
 } from "./util";
 import compose from "./datepicker.template";
-import {setInitRange} from "./datepicker.ranger";
+import { setInitRange } from "./datepicker.ranger";
 
-import {format} from './datepicker.formatter'
+import { format } from './datepicker.formatter'
 
 /***
  * 月份切换
@@ -73,8 +73,8 @@ export function currentRange(isInit: boolean) {
         this.defaultDates.length > 0
             ? this.defaultDates
             : this.double
-            ? this.selected
-            : [this.format(this.date).value];
+                ? this.selected
+                : [this.format(this.date).value];
     const rangeOption = {
         collector: this.element,
         collection: this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
@@ -89,12 +89,9 @@ export function currentRange(isInit: boolean) {
 }
 
 export function bindMonthSwitch() {
-    const startTime = new Date(this.startDate).getTime();
-    const currTime = new Date(this.date).getTime();
     //日期切换
     const prev = this.element.querySelector(".calendar-action-prev");
     const next = this.element.querySelector(".calendar-action-next");
-
     if (prev && next) {
         if (this.infiniteMode) {
             next.addEventListener("click", () => {
@@ -104,21 +101,20 @@ export function bindMonthSwitch() {
                 this.monthSwitch(-1);
             })
         } else {
-            let gap = diff(this.date, this.endDate);
-            if (gap >= 2) {
+            const endGap = diff(this.date, this.endDate);
+            const startGap = diff(this.date, this.startDate)
+            if (endGap >= 2) {
                 next.addEventListener("click", () => {
                     this.monthSwitch(1);
                     removeClass(prev, "disabled");
                     removeClass(prev, "calendar-action-disabled")
                 });
-
             }
             else {
                 addClass(next, "disabled");
                 addClass(next, "calendar-action-disabled")
             }
-
-            if (currTime > startTime) {
+            if (startGap >= 2) {
                 prev.addEventListener("click", () => {
                     this.monthSwitch(-1);
                     removeClass(next, "disabled");
@@ -146,7 +142,7 @@ export function init(option: any, renderer: any) {
     if (option.format) {
         this.dateFormat = option.format || "YYYY-MM-DD"
     }
-    if (option.multiViews && ( !option.flatView && !option.singleView)) {
+    if (option.multiViews && (!option.flatView && !option.singleView)) {
         this.multiViews = true
     }
     else if (option.flatView && (!option.singleView && !option.multiViews)) {
