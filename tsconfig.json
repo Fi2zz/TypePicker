@@ -1,27 +1,26 @@
 {
-    "compilerOptions": {
-        "outDir": "./lib/",
-        "sourceMap": false,
-        "noImplicitAny": true,
-        "module": "ES6",
-        "target": "es3",
-        "noEmitOnError": false,
-        "allowSyntheticDefaultImports": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
-        "pretty": true,
-        "allowJs": true,
-        "removeComments": true,
-        "lib": [
-            "dom",
-            "es5",
-            "es2015.promise"
-        ]
-    },
-    "include": [
-        "./src/**/*"
-    ],
-    "exclude": [
-        "./test/**/*"
+  "compilerOptions": {
+    "sourceMap": false,
+    "noImplicitAny": false,
+    "module": "ES6",
+    "target": "es3",
+    "noEmitOnError": false,
+    "allowSyntheticDefaultImports": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "pretty": true,
+    "allowJs": true,
+    "removeComments": true,
+    "lib": [
+      "dom",
+      "es5",
+      "es2015.promise"
     ]
+  },
+  "include": [
+    "./src/**/*"
+  ],
+  "exclude": [
+    "./test/**/*"
+  ]
 }

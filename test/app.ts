@@ -81,6 +81,9 @@ function layout(result: any = { value: <Array<string>>[], type: <string>'' }) {
 
     console.log(JSON.stringify(result,null,2))
 
+
+
+
     document.getElementById("layout").innerHTML = `选中的日期<br/>${result.type} / ${result.value}`;
 }
 

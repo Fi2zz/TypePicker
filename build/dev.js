@@ -32,7 +32,6 @@ function base() {
                     test: /\.tsx?$/,
                     use: ["awesome-typescript-loader"]
                 },
-
             ]
         },
         resolve: {

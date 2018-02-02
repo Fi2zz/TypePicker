@@ -1,46 +1,37 @@
 {
-    "name": "datepicker",
-    "version": "1.0.0",
-    "description": "A Typescript Datepicker",
-    "author": "Fitzzz <wenjingbiao@outlook.com>",
-    "private": true,
-    "scripts": {
-        "dev": "webpack-dev-server --inline  --config build/development.js",
-        "dist": "tsc && node build/build"
-    },
-    "devDependencies": {
-        "css-loader": "^0.28.7",
-        "style-loader": "^0.19.0",
-        "stylus-loader": "^3.0.1",
-        "awesome-typescript-loader": "^3.1.3",
-        "babel-core": "^6.22.1",
-        "babel-eslint": "^7.2.3",
-        "babel-loader": "^7.1.1",
-        "babel-plugin-istanbul": "^4.1.4",
-        "babel-plugin-syntax-dynamic-import": "^6.18.0",
-        "babel-plugin-transform-runtime": "^6.22.0",
-        "babel-preset-env": "^1.3.2",
-        "babel-preset-es2015": "^6.24.1",
-        "babel-preset-es2015-rollup": "^3.0.0",
-        "babel-preset-stage-2": "^6.22.0",
-        "babel-register": "^6.22.0",
-        "mkdirp": "^0.5.1",
-        "stylus": "^0.54.5",
-        "rollup": "^0.50.0",
-        "rollup-plugin-alias": "^1.3.1",
-        "rollup-plugin-babel": "^3.0.2",
-        "rollup-plugin-buble": "^0.16.0",
-        "rollup-plugin-commonjs": "^8.2.5",
-        "rollup-plugin-flow-no-whitespace": "^1.0.0",
-        "rollup-plugin-node-resolve": "^3.0.0",
-        "rollup-plugin-replace": "^2.0.0",
-        "uglify-js": "^3.1.5",
-        "html-webpack-plugin": "^2.30.1",
-        "webpack": "^3.6.0",
-        "webpack-dev-server": "^2.9.1",
-        "webpack-merge": "^4.1.0"
-    },
-    "dependencies": {
-        "typescript": "^2.3.4"
-    }
+  "name": "datepicker",
+  "version": "1.0.0",
+  "description": "A Typescript Datepicker",
+  "author": "Fitzzz <wenjingbiao@outlook.com>",
+  "private": true,
+  "scripts": {
+    "dev": "webpack-dev-server --inline  --config build/dev.js",
+    "dist": "tsc && node build/build"
+  },
+  "devDependencies": {
+    "awesome-typescript-loader": "^3.1.3",
+    "babel-core": "^6.22.1",
+    "babel-loader": "^7.1.1",
+    "babel-plugin-transform-runtime": "^6.22.0",
+    "babel-preset-env": "^1.3.2",
+    "babel-preset-es2015-rollup": "^3.0.0",
+    "rollup": "^0.50.0",
+    "rollup-plugin-commonjs": "^8.2.5",
+    "rollup-plugin-node-resolve": "^3.0.0",
+    "rollup-plugin-typescript": "^0.8.1",
+    "colors": "^1.1.2",
+    "css-loader": "^0.28.7",
+    "html-webpack-plugin": "^2.30.1",
+    "mkdirp": "^0.5.1",
+    "style-loader": "^0.19.0",
+    "stylus": "^0.54.5",
+    "stylus-loader": "^3.0.1",
+    "uglify-js": "^3.1.5",
+    "webpack": "^3.6.0",
+    "webpack-dev-server": "^2.9.1",
+    "webpack-merge": "^4.1.0"
+  },
+  "dependencies": {
+    "typescript": "^2.3.4"
+  }
 }

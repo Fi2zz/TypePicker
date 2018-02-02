@@ -24,12 +24,9 @@ var Observer = (function () {
         clientList[key].push(fn);
     };
     var $emit = function () {
-        var arguments$1 = arguments;
-        var this$1 = this;
-
         var args = [];
         for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i] = arguments$1[_i];
+            args[_i] = arguments[_i];
         }
         var key = [].shift.call(args);
         var fns = clientList[key];
@@ -37,7 +34,7 @@ var Observer = (function () {
             return false;
         }
         for (var i = 0, fn = void 0; fn = fns[i++];) {
-            fn.apply(this$1, args);
+            fn.apply(this, args);
         }
     };
     return {
@@ -113,12 +110,12 @@ function hasClass(ele, className) {
 }
 function addClass(ele, className) {
     if (!ele || !className || (ele.className && ele.className.search(new RegExp("\\b" + className + "\\b")) != -1))
-        { return; }
+        return;
     ele.className += (ele.className ? " " : "") + className;
 }
 function removeClass(ele, className) {
     if (!ele || !className || (ele.className && ele.className.search(new RegExp("\\b" + className + "\\b")) == -1))
-        { return; }
+        return;
     ele.className = ele.className.replace(new RegExp("\\s*\\b" + className + "\\b", "g"), "");
 }
 function parseEl(el) {
@@ -461,12 +458,12 @@ function setInitRange(options) {
 
 function parse(string) {
     if (!string)
-        { return new Date(); }
+        return new Date();
     if (string instanceof Date)
-        { return string; }
+        return string;
     var date = new Date(string);
     if (!date.getTime())
-        { return null; }
+        return null;
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 function format(date, format, zeroPadding) {
@@ -503,7 +500,7 @@ function parseFormatted(strDate, format) {
     }
     var ret = parse(strDate);
     if (ret)
-        { return ret; }
+        return ret;
     var token = /d{1,4}|M{1,4}|YY(?:YY)?|S{1,3}|Do|ZZ|([HhMsDm])\1?|[aA]|"[^"]*"|'[^']*'/g;
     var parseFlags = {
         D: [/\d{1,2}/, function (d, v) { return d.day = parseInt(v); }],
@@ -652,8 +649,6 @@ function bindMonthSwitch() {
     }
 }
 function init(option, renderer) {
-    var this$1 = this;
-
     var _this = this;
     if (option.initWithSelected) {
         this.initWithSelected = option.initWithSelected;
@@ -692,7 +687,7 @@ function init(option, renderer) {
         var dates = [];
         for (var i = 0; i < gap; i++) {
             var item = new Date(year, month, date + i);
-            var formatted = this$1.format(item).value;
+            var formatted = this.format(item).value;
             dates.push(formatted);
         }
         this.data = {};
@@ -1026,9 +1021,9 @@ function initWithDataBind(option, cb) {
         var cbData = cb && cb(params);
         var result = cbData ? cbData : params;
         if (isDate(params.from))
-            { option.from = params.from; }
+            option.from = params.from;
         if (isDate(params.to))
-            { option.to = params.to; }
+            option.to = params.to;
         var config = {
             data: result.data,
             dates: result.dates.sort(function (a, b) { return _this.parse(a) - _this.parse(b); })
