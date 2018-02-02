@@ -8,10 +8,6 @@ import DatePicker from '../src/index'
 import { source, languages } from './mock'
 import { addClass } from "../src/util";
 
-
-// const datePickerUtils = new DatePicker();
-
-
 const date = new Date();
 const dist = {
     year: date.getFullYear(),
@@ -83,8 +79,7 @@ datepicker.data((params: any) => {
 
 function layout(result: any = { value: <Array<string>>[], type: <string>'' }) {
 
-
-    // console.log(JSON.stringify(result, null, 2))
+    console.log(JSON.stringify(result,null,2))
 
     document.getElementById("layout").innerHTML = `选中的日期<br/>${result.type} / ${result.value}`;
 }

@@ -54,17 +54,21 @@ export const source: any = {
     "2018-2-22": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
     "2018-2-23": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
     "2018-2-24": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
-    "2018-3-14": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
-    "2018-3-15": {enable: true, "highlight": false, "value": 1498, "label": "unlimited"},
-    "2018-3-10": {enable: true, "highlight": false, "value": 1498, "label": "unlimited"},
+    "2018-3-16": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-3-17": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-3-18": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-3-19": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-3-20": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-3-21": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-3-22": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-3-23": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-3-24": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
     "2018-4-11": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
     "2018-5-12": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
     "2018-6-13": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
     "2018-8-31": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
     "2018-9-30": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
 };
-
-
 export const languages: any = {
     "zh-cn": {
         days: ['日', '一', '二', '三', '四', '五', '六'],

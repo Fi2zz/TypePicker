@@ -726,6 +726,7 @@ function init(option, renderer) {
 
 var handlePickDate = function (options) {
     var element = options.element, selected = options.selected, isDouble = options.isDouble, parse = options.parse, format = options.format, limit = options.limit, inDates = options.inDates, update = options.update, infiniteMode = options.infiniteMode, bindData = options.bindData;
+    var init = selected;
     var collection = element.querySelectorAll(".calendar-date-cell");
     var _loop_1 = function (i) {
         var item = collection[i];
@@ -775,8 +776,9 @@ var handlePickDate = function (options) {
                 }
                 singlePick(selector, element, shouldChange);
             }
+            var type = isDouble ? init.join("-") === selected.join("-") ? 'disabled' : 'selected' : 'selected';
             update({
-                type: 'selected',
+                type: type,
                 value: selected
             });
         });

@@ -10,7 +10,7 @@ import {
     hasClass,
 } from "./util"
 
-import { setRange } from './datepicker.ranger'
+import {setRange} from './datepicker.ranger'
 
 export default function (options: pickerHandler) {
     let {
@@ -25,6 +25,10 @@ export default function (options: pickerHandler) {
         infiniteMode,
         bindData
     } = options;
+
+
+    const init = selected;
+
 
     const collection = element.querySelectorAll(".calendar-date-cell");
     for (let i = 0; i < collection.length; i++) {
@@ -91,8 +95,9 @@ export default function (options: pickerHandler) {
                 singlePick(selector, element, shouldChange);
             }
 
+            const type = isDouble ? init.join("-") === selected.join("-") ? 'disabled' : 'selected' : 'selected'
             update({
-                type: 'selected',
+                type: type,
                 value: selected
             })
 
@@ -114,11 +119,11 @@ function singlePick(selector: string, collector: HTMLElement, shouldChange: bool
 }
 
 function doublePick(collector: HTMLElement,
-    start: string,
-    end: string,
-    diff: number,
-    outOfLimit: boolean,
-    valid: boolean) {
+                    start: string,
+                    end: string,
+                    diff: number,
+                    outOfLimit: boolean,
+                    valid: boolean) {
     //缓存已选的开始日期和结束日期
     const cache = {
         start: collector.querySelector(".start-date"),
@@ -174,7 +179,7 @@ function gap(d1: Date, d2: Date) {
 }
 
 function doubleSelectHandler(options: pickerDoubleSelectHandler) {
-    let { selected, date, cache, limit, format, parse, inDates, bindData } = options;
+    let {selected, date, cache, limit, format, parse, inDates, bindData} = options;
     let range = <Array<any>>[];
     let inRange = <Array<any>>[];
     let allValid = false;
