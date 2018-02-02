@@ -3,10 +3,9 @@ node_modules/
 npm-debug.log*
 .idea
 
-lib
+src/**/*.js
 transform
-
-
 demo
 
 dev
+temp

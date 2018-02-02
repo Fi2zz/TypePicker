@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "outDir": "temp",
     "sourceMap": false,
     "noImplicitAny": false,
     "module": "ES6",

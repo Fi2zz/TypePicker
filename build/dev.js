@@ -38,12 +38,8 @@ function base() {
             extensions: ['.js', '.json', ".ts", ".tsx"],
         },
         devtool: '#eval-source-map'
-    }
-
-}
-
-
-function devConfig() {
+    }}
+function devServer() {
     return {
         devServer: {
             clientLogLevel: 'error',
@@ -67,7 +63,5 @@ function devConfig() {
             })
         ]
 
-    }
-}
-
-module.exports = new Promise((resolve, reject) => resolve(merge(base(), devConfig())));
+    }}
+module.exports = new Promise((resolve, reject) => resolve(merge(base(), devServer())));

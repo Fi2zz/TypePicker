@@ -120,6 +120,7 @@ function work(config) {
                         filepath = path.resolve(dest, `${filename}.js`)
                     }
                 }
+                
                 write(filepath, codes).then(res => {
                     if (index === length - 1) {
                         stylusCompiler(style, dest).then(css => {
