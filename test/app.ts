@@ -12,7 +12,7 @@ const dist = {
     month: date.getMonth(),
     date: date.getDate()
 };
-const from = new Date(dist.year, dist.month-1, dist.date)
+const from = new Date(dist.year, dist.month - 1, dist.date)
 const to = new Date(dist.year, dist.month + 9, 0);
 
 
@@ -54,10 +54,7 @@ datepicker.on("data", (result: any) => {
 
 
 });
-
-
-datepicker.dateRanges([new Date(2018, 3, 11), new Date(2018, 3, 12)], true);
-
+datepicker.dateRanges(["2018-4-11", "2018-4-12"], true);
 datepicker.data((params: any) => {
     const currDate = new Date(dist.year, dist.month, dist.date);
     Object.keys(source).forEach(date => {

@@ -1015,61 +1015,6 @@ function initWithDataBind(option, cb) {
         }
     }
 }
-function createDateRanges(dates, isFromSetRange) {
-    var _this = this;
-    if (!isArray(dates)) {
-        dates = [];
-        warn("dateRanges", "no dates provided," + dates);
-        return;
-    }
-    this.isFromSetRange = !(!isFromSetRange);
-    var handler = function () {
-        var datesList = [];
-        var start = '', end = '';
-        if (_this.double) {
-            if (dates.length > 2) {
-                dates = dates.slice(0, 2);
-            }
-            start = dates[0];
-            end = dates[dates.length - 1];
-            var startDate = isDate(start) ? start : _this.parse(start);
-            var endDate = isDate(end) ? end : _this.parse(end);
-            var diffed = diff(startDate, endDate, "days") * -1;
-            if (_this.bindData) {
-                if (diffed < 0
-                    || diffed > _this.limit
-                    || !_this.inDates(_this.format(startDate).value) && !_this.inDates(_this.format(endDate).value)
-                    || !_this.inDates(_this.format(startDate).value)) {
-                    warn("dateRanges", "Illegal dates,[" + dates + "]");
-                    return false;
-                }
-            }
-            for (var i = 0; i <= diffed; i++) {
-                var date = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
-                var formatted = _this.format(date).value;
-                if (i < diffed && !_this.inDates(formatted)) {
-                    warn("dateRanges", "Illegal date,{dates:[" + formatted + "]}");
-                    return false;
-                }
-            }
-            datesList = [_this.format(startDate).value, _this.format(endDate).value];
-        }
-        else {
-            var d = dates[dates.length - 1];
-            datesList = [isDate(d) ? _this.format(d).value : d];
-        }
-        _this.defaultDates = datesList;
-    };
-    if (!this.bindData) {
-        handler();
-    }
-    else {
-        var next_1 = nextTick(function () {
-            handler();
-            clearNextTick(next_1);
-        });
-    }
-}
 function instanceUtils() {
     return {
         format: function (date, format$$1) { return (date && format$$1) ? format(date, format$$1).value : null; },
@@ -1136,16 +1081,72 @@ var DatePicker = (function () {
                 Observer.$remove("data");
             }
             else {
-                var next_2 = nextTick(function () {
+                var next_1 = nextTick(function () {
                     Observer.$emit("data", {
                         data: data,
                         nodeList: _this.element.querySelectorAll(".calendar-cell")
                     });
+                    clearNextTick(next_1);
+                });
+            }
+        };
+        this.dateRanges = function (dates, isFromInitedInstanceDateRangeFunction) {
+            if (!isArray(dates)) {
+                dates = [];
+                warn("dateRanges", "no dates provided," + dates);
+                return;
+            }
+            _this.isFromSetRange = !(!isFromInitedInstanceDateRangeFunction);
+            var bindDataHandler = function (startDate, endDate, diffed) {
+                if (diffed < 0
+                    || diffed > _this.limit
+                    || (!_this.inDates(_this.format(startDate).value) && !_this.inDates(_this.format(endDate).value))
+                    || !_this.inDates(_this.format(startDate).value)) {
+                    warn("dateRanges", "Illegal dates,[" + dates + "]");
+                    return false;
+                }
+                for (var i = 0; i <= diffed; i++) {
+                    var date = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
+                    var formatted = _this.format(date).value;
+                    if (i < diffed && !_this.inDates(formatted)) {
+                        warn("dateRanges", "Illegal date,{dates:[" + formatted + "]}");
+                        return false;
+                    }
+                }
+            };
+            var datesHandler = function (cb) {
+                var datesList = [];
+                var start = '', end = '';
+                if (_this.double) {
+                    if (dates.length > 2) {
+                        dates = dates.slice(0, 2);
+                    }
+                    start = dates[0];
+                    end = dates[dates.length - 1];
+                    var startDate = isDate(start) ? start : _this.parse(start);
+                    var endDate = isDate(end) ? end : _this.parse(end);
+                    var diffed = diff(startDate, endDate, "days") * -1;
+                    if (cb && typeof cb === 'function') {
+                        cb && cb(startDate, endDate, diffed);
+                    }
+                    datesList = [_this.format(startDate).value, _this.format(endDate).value];
+                }
+                else {
+                    var d = dates[dates.length - 1];
+                    datesList = [isDate(d) ? _this.format(d).value : d];
+                }
+                _this.defaultDates = datesList;
+            };
+            if (!_this.bindData) {
+                datesHandler();
+            }
+            else {
+                var next_2 = nextTick(function () {
+                    datesHandler(bindDataHandler);
                     clearNextTick(next_2);
                 });
             }
         };
-        this.dateRanges = createDateRanges;
         this.bindMonthSwitch = bindMonthSwitch;
         this.initWithDataBind = initWithDataBind;
         if (!option) {

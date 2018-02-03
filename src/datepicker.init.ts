@@ -123,6 +123,7 @@ export function currentRange(isInit: boolean) {
         inDates: this.inDates,
         isInit
     };
+
     return setInitRange(rangeOption);
 }
 
