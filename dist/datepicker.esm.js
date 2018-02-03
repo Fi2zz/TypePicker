@@ -1015,6 +1015,68 @@ function initWithDataBind(option, cb) {
         }
     }
 }
+function createDateRanges(dates, isFromSetRange) {
+    var _this = this;
+    if (!isArray(dates)) {
+        dates = [];
+        warn("dateRanges", "no dates provided," + dates);
+        return;
+    }
+    this.isFromSetRange = !(!isFromSetRange);
+    var handler = function () {
+        var datesList = [];
+        var start = '', end = '';
+        if (_this.double) {
+            if (dates.length > 2) {
+                dates = dates.slice(0, 2);
+            }
+            start = dates[0];
+            end = dates[dates.length - 1];
+            var startDate = isDate(start) ? start : _this.parse(start);
+            var endDate = isDate(end) ? end : _this.parse(end);
+            var diffed = diff(startDate, endDate, "days") * -1;
+            if (_this.bindData) {
+                if (diffed < 0
+                    || diffed > _this.limit
+                    || !_this.inDates(_this.format(startDate).value) && !_this.inDates(_this.format(endDate).value)
+                    || !_this.inDates(_this.format(startDate).value)) {
+                    warn("dateRanges", "Illegal dates,[" + dates + "]");
+                    return false;
+                }
+            }
+            for (var i = 0; i <= diffed; i++) {
+                var date = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
+                var formatted = _this.format(date).value;
+                if (i < diffed && !_this.inDates(formatted)) {
+                    warn("dateRanges", "Illegal date,{dates:[" + formatted + "]}");
+                    return false;
+                }
+            }
+            datesList = [_this.format(startDate).value, _this.format(endDate).value];
+        }
+        else {
+            var d = dates[dates.length - 1];
+            datesList = [isDate(d) ? _this.format(d).value : d];
+        }
+        _this.defaultDates = datesList;
+    };
+    if (!this.bindData) {
+        handler();
+    }
+    else {
+        var next_1 = nextTick(function () {
+            handler();
+            clearNextTick(next_1);
+        });
+    }
+}
+function instanceUtils() {
+    return {
+        format: function (date, format$$1) { return (date && format$$1) ? format(date, format$$1).value : null; },
+        parse: function (string, format$$1) { return (string && format$$1) ? parseFormatted(string, format$$1) : new Date(); },
+        diff: function (d1, d2) { return diff(d1, d2, "days"); }
+    };
+}
 var DatePicker = (function () {
     function DatePicker(option) {
         var _this = this;
@@ -1056,97 +1118,38 @@ var DatePicker = (function () {
         this.parse = function (string) { return parseFormatted(string, _this.dateFormat); };
         this.inDates = function (date) { return _this.dates.indexOf(date) >= 0; };
         this.update = function (result) {
-            if (result.type === 'selected') {
-                _this.dateRanges(result.value, false);
+            var type = result.type, value = result.value;
+            if (type === 'selected') {
+                _this.dateRanges(value, false);
             }
-            else if (result.type === 'switch') {
+            else if (type === 'switch') {
                 if (_this.defaultDates.length > 0) {
                     _this.selected = _this.defaultDates;
                 }
             }
-            Observer.$emit("update", result);
+            if (type !== 'disabled' && type !== 'switch') {
+                Observer.$emit("update", result);
+            }
         };
         this.dataRenderer = function (data) {
             if (Object.keys(data).length <= 0) {
                 Observer.$remove("data");
             }
             else {
-                var next_1 = nextTick(function () {
+                var next_2 = nextTick(function () {
                     Observer.$emit("data", {
                         data: data,
                         nodeList: _this.element.querySelectorAll(".calendar-cell")
                     });
-                    clearNextTick(next_1);
-                });
-            }
-        };
-        this.dateRanges = function (dates, isFromSetRange) {
-            if (!isArray(dates)) {
-                dates = [];
-                warn("dateRanges", "no dates provided," + dates);
-                return;
-            }
-            _this.isFromSetRange = !(!isFromSetRange);
-            var handler = function () {
-                var datesList = [];
-                var start = '', end = '';
-                if (_this.double) {
-                    if (dates.length > 2) {
-                        dates = dates.slice(0, 2);
-                    }
-                    start = dates[0];
-                    end = dates[dates.length - 1];
-                    var startDate = isDate(start) ? start : _this.parse(start);
-                    var endDate = isDate(end) ? end : _this.parse(end);
-                    var diffed = diff(startDate, endDate, "days") * -1;
-                    if (_this.bindData) {
-                        if (diffed < 0
-                            || diffed > _this.limit
-                            || !_this.inDates(_this.format(startDate).value) && !_this.inDates(_this.format(endDate).value)
-                            || !_this.inDates(_this.format(startDate).value)) {
-                            warn("dateRanges", "Illegal dates,[" + dates + "]");
-                            return false;
-                        }
-                    }
-                    for (var i = 0; i <= diffed; i++) {
-                        var date = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
-                        var formatted = _this.format(date).value;
-                        if (i < diffed && !_this.inDates(formatted)) {
-                            warn("dateRanges", "Illegal date,{dates:[" + formatted + "]}");
-                            return false;
-                        }
-                    }
-                    datesList = [_this.format(startDate).value, _this.format(endDate).value];
-                }
-                else {
-                    var d = dates[dates.length - 1];
-                    datesList = [isDate(d) ? _this.format(d).value : d];
-                }
-                _this.defaultDates = datesList;
-            };
-            if (!_this.bindData) {
-                handler();
-            }
-            else {
-                var next_2 = nextTick(function () {
-                    handler();
                     clearNextTick(next_2);
                 });
             }
         };
+        this.dateRanges = createDateRanges;
         this.bindMonthSwitch = bindMonthSwitch;
         this.initWithDataBind = initWithDataBind;
-        this.utils = {
-            format: function (date, format$$1) { return (date && format$$1) ? format(date, format$$1).value : null; },
-            parse: function (string, format$$1) { return (string && format$$1) ? parseFormatted(string, format$$1) : new Date(); },
-            diff: function (d1, d2) { return diff(d1, d2, "days"); }
-        };
         if (!option) {
-            return {
-                format: function (date, format$$1) { return (date && format$$1) ? format(date, format$$1).value : null; },
-                parse: function (string, format$$1) { return (string && format$$1) ? parseFormatted(string, format$$1) : new Date(); },
-                diff: function (d1, d2) { return diff(d1, d2, "days"); }
-            };
+            return instanceUtils();
         }
         this.defaultDates = [];
         this.bindData = option.bindData;
