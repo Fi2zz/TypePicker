@@ -2,7 +2,7 @@ const rollup = require('rollup').rollup;
 const fs = require("fs");
 const path = require("path");
 const stylus = require("stylus");
-
+const rm = require("rimraf");
 const colorful = require("colors/safe");
 const mkdirp = require("mkdirp");
 const uglify = require('uglify-js');
@@ -120,15 +120,18 @@ function work(config) {
                         filepath = path.resolve(dest, `${filename}.js`)
                     }
                 }
-                
+
                 write(filepath, codes).then(res => {
                     if (index === length - 1) {
                         stylusCompiler(style, dest).then(css => {
                             write(path.resolve(dest, "style.css"), css)
                                 .then(function () {
                                     log("> style compiled\n", "green");
+                                    rm("./temp", () => {
+                                    });
                                     log("> build done !", "yellow")
-                                })
+                                });
+
                         }).catch(err => loggerError(err));
                     }
                 });
@@ -137,9 +140,8 @@ function work(config) {
 }
 
 function build(config) {
-    log("> building... ", "green");
+    log("> building...\n", "green");
     fs.existsSync(config.dest) ? work(config) : mkdirp(config.dest, () => work(config))
 }
-
 build(config);
 
