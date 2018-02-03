@@ -1,13 +1,8 @@
 import {padding} from "./util"
-
-
-
-
 function parse(string: string | Date): any {
     if (!string) return new Date();
     if (string instanceof Date) return string;
     let date = new Date(string);
-
     if (!date.getTime()) return null;
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
@@ -17,7 +12,6 @@ export function format(date: Date, format: string , zeroPadding: boolean = true)
     if (!format) {
         format = 'YYYY-MM-DD'
     }
-
     let parts = <any>{
         DD: shouldPadStart ? padding(date.getDate()) : date.getDate(),
         dd: shouldPadStart ? padding(date.getDate()) : date.getDate(),
@@ -36,11 +30,7 @@ export function format(date: Date, format: string , zeroPadding: boolean = true)
         year: parts["YYYY"],
         day: date.getDay(),
         value: format.replace(/(?:\b|%)([dDMyYHhaAmsz]+|ap|AP)(?:\b|%)/g, function (match, $1) {
-
-
             noop(match)
-
-
             return parts[$1] === undefined ? $1 : parts[$1]
         })
     }
@@ -48,17 +38,13 @@ export function format(date: Date, format: string , zeroPadding: boolean = true)
 }
 function noop(a:any){
     return a
-
-
 }
 export function parseFormatted(strDate: string, format: string) {
     //能直接解析成日期对象的，直接返回日期对象
     //如 YYYY/MM/DD YYYY-MM-DD
-
     if (!format) {
         format = 'YYYY-MM-DD'
     }
-
     let ret = parse(strDate);
     if (ret) return ret;
     const token = /d{1,4}|M{1,4}|YY(?:YY)?|S{1,3}|Do|ZZ|([HhMsDm])\1?|[aA]|"[^"]*"|'[^']*'/g;
@@ -96,16 +82,13 @@ export function parseFormatted(strDate: string, format: string) {
                     });
                 }
             }
-
             return parseFlags[$0] ? '' : $0.slice(1, $0.length - 1);
         });
-
         if (!isValid) {
             return null;
         }
         const parsed = new Date(dateInfo.year, dateInfo.month, dateInfo.day);
         return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
     };
-
     return ret(strDate, format)
 }

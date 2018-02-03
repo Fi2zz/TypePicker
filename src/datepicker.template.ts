@@ -10,9 +10,7 @@ import {
     getDates,
     diff,
 } from "./util"
-
 const currDate = new Date();
-
 function calendarDateCellClassName(options: templateDateCellClassNameOption) {
     const {date, infiniteMode, endDate} = options;
     const classStack = ["calendar-cell", "calendar-date-cell"];
@@ -38,7 +36,6 @@ function calendarDateCellClassName(options: templateDateCellClassNameOption) {
 }
 
 function calendarDateCellTemplate(options: templateSetDatesOption) {
-
     const {
         year,
         month,
@@ -63,7 +60,6 @@ function calendarDateCellTemplate(options: templateSetDatesOption) {
             key: ""
         })
     }
-
     for (let i = 1; i <= getDates(curr.year, curr.month); i++) {
         const date = new Date(curr.year, curr.month, i);
         const formatted = formatter(date);
@@ -72,7 +68,6 @@ function calendarDateCellTemplate(options: templateSetDatesOption) {
         const className = calendarDateCellClassName({date, infiniteMode, endDate});
         template.push({className, text, key});
     }
-
     const tpl = template.map((item: any) => calendarCellGenerate(item.className, item.key, item.text)).join(" ")
     return {
         template: tpl,
@@ -104,7 +99,6 @@ function calendarTemplateList(option: templateMapOption) {
         parse
     } = option;
     const template = [];
-
     for (let i = 0; i <= gap; i++) {
         const date = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
         const paint = calendarDateCellTemplate({

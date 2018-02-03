@@ -30,11 +30,9 @@ export default (function () {
     const $emit = function (...args:Array<any>) {
         let key = [].shift.call(args);
         let fns = clientList[key];
-
         if (!fns || fns.length === 0) {
             return false;
         }
-
         for (let i = 0, fn; fn = fns[i++];) {
             fn.apply(this, args);
         }

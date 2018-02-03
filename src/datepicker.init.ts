@@ -3,25 +3,71 @@ import {
     diff,
     isDate,
     isNumber,
-    parseEl,
     removeClass,
-    getLanguage,
-    setLanguage,
     clearNextTick,
     nextTick,
     warn
 } from "./util";
 import compose from "./datepicker.template";
-import { setInitRange } from "./datepicker.ranger";
-
-import { format } from './datepicker.formatter'
-
+import {setInitRange} from "./datepicker.ranger";
+import {format} from './datepicker.formatter'
+export function parseEl(el: string) {
+    if (!el) {
+        return null
+    }
+    if (el.indexOf('#') >= 0) {
+        return document.querySelector(el)
+    } else if (el.indexOf('.') >= 0) {
+        return document.querySelectorAll(el)[0]
+    }
+    else {
+        if (el.indexOf("#") <= -1 || el.indexOf(".") <= -1) {
+            warn(`ParseEl `,`do not mount DatePicker to a pure html tag,${el}`)
+            return false;
+        }
+        return document.querySelector(el)
+    }
+}
+const defaultLanguage: any = {
+    locale: "zh-cn",
+    pack: {
+        days: ['日', '一', '二', '三', '四', '五', '六'],
+        months: ['01月', '02月', '03月', '04月', '05月', '06月', '07月', '08月', '09月', '10月', '11月', '12月'],
+        year: "年"
+    }
+};
+function setLanguage(option: any) {
+    const locale = option.locale.toLowerCase();
+    const curr = option.pack;
+    const monthName = curr.months;
+    const week = curr.days;
+    let title;
+    if (locale === "en" || locale === "en-us" || locale === "en-gb") {
+        title = (year: any, month: any) => `${monthName[month]} ${year}`
+    }
+    else {
+        title = (year: any, month: any) => `${year}${curr["year"]}${monthName[month]}`
+    }
+    return {week, title}
+}
+function getLanguage(language: any, key: string) {
+    let output = {};
+    if (!key || !language[key]) {
+        output = defaultLanguage
+    } else {
+        output = {
+            locale: key,
+            pack: language[key]
+        };
+    }
+    return output
+}
 /***
  * 月份切换
  * @param size 切换月份数量
  * ***/
-export function monthSwitch(size: number) {
-    let curr = {
+export function doMonthSwitch(size: number) {
+    const curr = {
         year: this.date.getFullYear(),
         month: this.date.getMonth(),
         date: this.date.getDate()
@@ -31,15 +77,11 @@ export function monthSwitch(size: number) {
     if (this.multiViews) {
         month += size > 0 ? 1 : -1
     }
-    if (this.defaultDates.length > 0) {
-        this.selected = this.defaultDates;
-    }
     this.date = new Date(curr.year, month, curr.date);
     this.createDatePicker(false);
     this.pickDate();
     this.dataRenderer(this.data)
 }
-
 /**
  * 生成日历
  *
@@ -56,25 +98,21 @@ export function createDatePicker(isInit?: Boolean) {
         formatter: this.format,
         parse: this.parse
     });
-    this.bindMonthSwitch(this.language);
-    this.selected = this.currentRange(this.isInitRange);
+    this.bindMonthSwitch();
+    this.selected = this.currentRange(this.isFromSetRange);
     const updateEventData = {
-        type: 'init',
+        type: isInit ? 'init' : 'switch',
         value: this.selected
     };
-    //初始化的时候，需要获取初始化的日期
-    if (isInit) {
-        this.update(updateEventData);
-    }
+    this.update(updateEventData);
 }
-
 export function currentRange(isInit: boolean) {
     const initSelected =
         this.defaultDates.length > 0
             ? this.defaultDates
             : this.double
-                ? this.selected
-                : [this.format(this.date).value];
+            ? this.selected
+            : [this.format(this.date).value];
     const rangeOption = {
         collector: this.element,
         collection: this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
@@ -95,17 +133,17 @@ export function bindMonthSwitch() {
     if (prev && next) {
         if (this.infiniteMode) {
             next.addEventListener("click", () => {
-                this.monthSwitch(1);
+                this.doMonthSwitch(1);
             });
             prev.addEventListener("click", () => {
-                this.monthSwitch(-1);
+                this.doMonthSwitch(-1);
             })
         } else {
             const endGap = diff(this.date, this.endDate);
             const startGap = diff(this.date, this.startDate)
             if (endGap >= 2) {
                 next.addEventListener("click", () => {
-                    this.monthSwitch(1);
+                    this.doMonthSwitch(1);
                     removeClass(prev, "disabled");
                     removeClass(prev, "calendar-action-disabled")
                 });
@@ -116,7 +154,7 @@ export function bindMonthSwitch() {
             }
             if (startGap >= 2) {
                 prev.addEventListener("click", () => {
-                    this.monthSwitch(-1);
+                    this.doMonthSwitch(-1);
                     removeClass(next, "disabled");
                     removeClass(next, "calendar-action-disabled")
                 });
@@ -129,16 +167,9 @@ export function bindMonthSwitch() {
 }
 
 export function init(option: any, renderer: any) {
-
-    if (option.initWithSelected) {
-        this.initWithSelected = option.initWithSelected
-
-    }
-
     if (option.doubleSelect) {
         this.double = option.doubleSelect
     }
-
     if (option.format) {
         this.dateFormat = option.format || "YYYY-MM-DD"
     }
@@ -151,7 +182,6 @@ export function init(option: any, renderer: any) {
     else if (option.singleView && (!option.multiViews && !option.flatView)) {
         this.singleView = true
     }
-
     //开始日期
     this.startDate = isDate(option.from) ? option.from : new Date();
     this.date = this.startDate;
@@ -162,7 +192,6 @@ export function init(option: any, renderer: any) {
     if (option.zeroPadding) {
         this.zeroPadding = option.zeroPadding
     }
-
     if (option.infiniteMode) {
         this.infiniteMode = option.infiniteMode;
     }
@@ -185,7 +214,6 @@ export function init(option: any, renderer: any) {
         this.data = renderer.data;
         this.infiniteMode = false;
     }
-
     this.format = (date: Date) => format(date, this.dateFormat, this.zeroPadding);
     this.language = setLanguage(getLanguage(option.language, option.defaultLanguage));
     this.element = parseEl(option.el);

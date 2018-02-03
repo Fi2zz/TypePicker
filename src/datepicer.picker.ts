@@ -25,11 +25,7 @@ export default function (options: pickerHandler) {
         infiniteMode,
         bindData
     } = options;
-
-
     const init = selected;
-
-
     const collection = element.querySelectorAll(".calendar-date-cell");
     for (let i = 0; i < collection.length; i++) {
         const item = collection[i];
@@ -115,7 +111,6 @@ function singlePick(selector: string, collector: HTMLElement, shouldChange: bool
             addClass(selector, "active")
         }
     }
-
 }
 
 function doublePick(collector: HTMLElement,
@@ -133,7 +128,6 @@ function doublePick(collector: HTMLElement,
         start: collector.querySelector(<string>attrSelector("data-date", start)),
         end: collector.querySelector(<string>attrSelector("data-date", end))
     };
-
     //选择了开始日期，尚未选择结束日期
     if (diff === 0) {
         if (!hasClass(current.start, "disabled")) {
@@ -174,7 +168,7 @@ function doublePick(collector: HTMLElement,
 }
 
 function gap(d1: Date, d2: Date) {
-    let value = diff(d1, d2, "days");
+    const value = diff(d1, d2, "days");
     return value === 0 ? 0 : value * -1
 }
 
@@ -185,20 +179,16 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
     let allValid = false;
     //获取已选的开始日期
     const start = selected[0];
-
     //获取已选的结束日期
     //结束日期和开始日期有可能重合，
     //此时为只选了开始日期，尚未选择结束日期
     const end = selected[selected.length - 1];
-
     //转换成日期对象
     const startDate = parse(start), endDate = parse(end);
-
     if (bindData) {
         //对比开始日期和结束日期
         const diff = gap(startDate, endDate);
         const length = selected.length;
-
         //已有开始日期和结束日期
         //重新选择开始日期
         // debugger
@@ -211,8 +201,6 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
                 else {
                     selected = [selected[0]]
                 }
-
-
             } else {
                 if (inDates(end)) {
                     //得到选择范围
@@ -233,7 +221,6 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
                         range.push(end)
                     }
                 }
-
             }
         }
         //选择了开始日期，尚未选择结束日期
@@ -274,7 +261,6 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
         else {
             selected = cache;
         }
-
         if (selected.length <= 0) {
             selected = cache
         }
@@ -323,7 +309,6 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
             }
             if (inRange.length === range.length) {
                 allValid = true
-
             } else {
                 allValid = false;
                 selected = [selected[0]]
@@ -353,17 +338,13 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
                 range.push(format(date).value)
             }
             allValid = true
-
         } else if (diff > limit || diff < 0) {
             selected.shift();
         }
     }
-
-
     return {
         selected,
         allValid,
         range
     }
 }
-

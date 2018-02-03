@@ -12,7 +12,7 @@ import {
 import {
     init,
     currentRange,
-    monthSwitch,
+    doMonthSwitch,
     bindMonthSwitch,
     createDatePicker
 } from './datepicker.init'
@@ -21,14 +21,14 @@ import {
     parseFormatted,
     format as formatter
 } from "./datepicker.formatter"
+function noData(result: any) {
+    return !isObject(result)
+        || (Object.keys(result.data).length <= 0
+        || result.dates.length <= 0)
+}
+
 
 function initWithDataBind(option: any, cb: Function) {
-    function noData(data: any) {
-        return !isObject(data)
-            || (Object.keys(data.data).length <= 0
-                || data.dates.length <= 0)
-    }
-
     if (option.bindData) {
         const params = {
             dates: <Array<string>>[],
@@ -45,7 +45,6 @@ function initWithDataBind(option: any, cb: Function) {
             dates: result.dates.sort((a: string, b: string) => this.parse(a) - this.parse(b))
         };
         this.init(option, config);
-
         if (!noData(result)) {
             this.dataRenderer(result.data);
         }
@@ -66,15 +65,16 @@ export default class DatePicker {
     flatView: boolean = false;
     multiViews: boolean = false;
     singleView: boolean = false;
-    monthSwitch = monthSwitch;
+
+    doMonthSwitch = doMonthSwitch;
     createDatePicker = createDatePicker;
     zeroPadding: boolean = false;
-    initWithSelected: boolean = false;
     bindData: boolean = false;
     infiniteMode: boolean = false;
     currentRange: Function = currentRange;
-    isInitRange: boolean = false;
+    isFromSetRange: boolean = false;
     language: any = {};
+
     pickDate = () => {
         handlePickDate({
             element: this.element,
@@ -95,9 +95,17 @@ export default class DatePicker {
     parse = (string: string) => parseFormatted(string, this.dateFormat);
     inDates = (date: string | any) => this.dates.indexOf(date) >= 0;
     update = (result: any) => {
+
+
         if (result.type === 'selected') {
             this.dateRanges(result.value, false)
+        } else if (result.type === 'switch') {
+
+            if (this.defaultDates.length > 0) {
+                this.selected = this.defaultDates;
+            }
         }
+
         Observer.$emit("update", result);
     };
     dataRenderer = (data: any) => {
@@ -115,14 +123,14 @@ export default class DatePicker {
 
         }
     };
-    dateRanges = (dates: Array<any>, isInit?: boolean) => {
+    dateRanges = (dates: Array<any>, isFromSetRange?: boolean) => {
         if (!isArray(dates)) {
             dates = [];
 
             warn("dateRanges", `no dates provided,${dates}`);
             return
         }
-        this.isInitRange = !(!isInit);
+        this.isFromSetRange = !(!isFromSetRange);
         const handler = () => {
             let datesList: Array<any> = []
             let start: string = '', end: string = ''
@@ -201,7 +209,9 @@ export default class DatePicker {
             parse: this.parse,
             format: this.format,
             dateRanges: this.dateRanges,
-            setDefaultDates: this.dateRanges,
+            setDefaultDates: () => {
+                warn("setDefaultDates", "this method has been deprecated,use [dateRanges()] instead ")
+            }
         };
     }
 }

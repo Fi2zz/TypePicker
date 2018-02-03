@@ -8,10 +8,8 @@ import {
     attrSelector,
 
 } from "./util"
-
 const date = new Date();
 const currDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-
 function getRange(collection: HTMLCollection, start: string, end: string) {
     let temp = [];
     for (let i = 0; i < collection.length; i++) {
@@ -48,9 +46,7 @@ function setStartAndEnd(collection: HTMLCollection,
         let item = collection[i];
         let nextItem = collection[i + 1];
         if (data.length > 0) {
-
             const date = attr(collection[i], "data-date");
-
             if (date === start) {
                 addClass(item, "start-date")
             }
@@ -84,7 +80,6 @@ function setStartAndEnd(collection: HTMLCollection,
 }
 
 export function setRange(data: Array<any>, collector: HTMLElement, remove: boolean, clearRange?: boolean) {
-
     if (remove) {
         let collection = collector.querySelectorAll(".in-range");
         for (let i = 0; i < collection.length; i++) {
@@ -96,7 +91,6 @@ export function setRange(data: Array<any>, collector: HTMLElement, remove: boole
             let element = collector.querySelector(selector);
             if (!hasClass(element, "active")) {
                 addClass(element, "in-range")
-
             }
         }
     }
@@ -104,7 +98,6 @@ export function setRange(data: Array<any>, collector: HTMLElement, remove: boole
         return <Array<any>>[]
     }
 }
-
 export function setInitRange(options: initRangeOptions) {
     let {
         collector,
@@ -147,25 +140,19 @@ export function setInitRange(options: initRangeOptions) {
             // 例如 选中的日期为 ["2017-12-01","2017-12-06"]
             // 2017-12-04 为有效日期，2017-12-05为无效日期,2017-12-16为无效日期
             // 那么此时无效日期有两个，故此时会被重置
-
             if (inValidDates.length >= 2) {
                 data = []
             }
         }
-
         if (data.length > 0 && isInit || !isInit) {
             dates = setStartAndEnd(collection, inDates, data, parse);
         }
-
         const start = dates[0];
         const end = dates[dates.length - 1];
-
-
         const range = getRange(collection, start, end);
         if (range.length > 0) {
             setRange(range, collector, false)
         }
-
     }
     //设置激活状态
     for (let i = 0; i < dates.length; i++) {

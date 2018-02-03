@@ -48,6 +48,18 @@ var Observer = (function () {
     };
 }());
 
+var attrSelector = function (attr, value) { return "[" + attr + "=\"" + value + "\"]"; };
+function attr(el, attr, attrvalue) {
+    if (attrvalue === void 0) { attrvalue = undefined; }
+    if (!el) {
+        return null;
+    }
+    var value = el.getAttribute(attr);
+    if (attrvalue === undefined) {
+        attrvalue = "";
+    }
+    return value ? value : el.setAttribute(attr, attrvalue);
+}
 function diff(start, end, type) {
     if (type === void 0) { type = "month"; }
     if (!start) {
@@ -65,34 +77,16 @@ function diff(start, end, type) {
         return Math.round((startTime - endTime)) / (1000 * 60 * 60 * 24);
     }
 }
-var attrSelector = function (attr, value) { return "[" + attr + "=\"" + value + "\"]"; };
+var getFirstDay = function (year, month) { return new Date(year, month, 1).getDay(); };
 var getDates = function (year, month) {
     var d = new Date(year, month, 1);
     var utc = Date.UTC(d.getFullYear(), d.getMonth() + 1, 0);
     return new Date(utc).getUTCDate();
 };
 var padding = function (n) { return "" + (n > 9 ? n : "0" + n); };
-var getFirstDay = function (year, month) {
-    return new Date(year, month, 1).getDay();
-};
-
-
-
-
-function attr(el, attr, attrvalue) {
-    if (attrvalue === void 0) { attrvalue = undefined; }
-    if (!el) {
-        return null;
-    }
-    var value = el.getAttribute(attr);
-    if (attrvalue === undefined) {
-        attrvalue = "";
-    }
-    return value ? value : el.setAttribute(attr, attrvalue);
+function _toString(object) {
+    return Object.prototype.toString.call(object);
 }
-
-var _toString = function (object) { return Object.prototype.toString.call(object); };
-
 function isArray(object) {
     return _toString(object) === '[object Array]';
 }
@@ -102,12 +96,9 @@ function isObject(object) {
 function isNumber(object) {
     return _toString(object) === '[object Number]';
 }
-
 function isDate(object) {
     return _toString(object) === '[object Date]';
 }
-
-
 function hasClass(ele, className) {
     if (!ele || !className || !ele.className || ele.className.search(new RegExp("\\b" + className + "\\b")) == -1) {
         return false;
@@ -124,60 +115,6 @@ function removeClass(ele, className) {
         return;
     ele.className = ele.className.replace(new RegExp("\\s*\\b" + className + "\\b", "g"), "");
 }
-function parseEl(el) {
-    if (!el) {
-        return null;
-    }
-    if (el.indexOf('#') >= 0) {
-        return document.querySelector(el);
-    }
-    else if (el.indexOf('.') >= 0) {
-        return document.querySelectorAll(el)[0];
-    }
-    else {
-        if (el.indexOf("#") <= -1 || el.indexOf(".") <= -1) {
-            warn("ParseEl ", "do not mount DatePicker to a pure html tag," + el);
-            return false;
-        }
-        return document.querySelector(el);
-    }
-}
-var defaultLanguage = {
-    locale: "zh-cn",
-    pack: {
-        days: ['日', '一', '二', '三', '四', '五', '六'],
-        months: ['01月', '02月', '03月', '04月', '05月', '06月', '07月', '08月', '09月', '10月', '11月', '12月'],
-        year: "年"
-    }
-};
-function setLanguage(option) {
-    var locale = option.locale.toLowerCase();
-    var curr = option.pack;
-    var monthName = curr.months;
-    var week = curr.days;
-    var title;
-    if (locale === "en" || locale === "en-us" || locale === "en-gb") {
-        title = function (year, month) { return monthName[month] + " " + year; };
-    }
-    else {
-        title = function (year, month) { return "" + year + curr["year"] + monthName[month]; };
-    }
-    return { week: week, title: title };
-}
-function getLanguage(language, key) {
-    var output = {};
-    if (!key || !language[key]) {
-        output = defaultLanguage;
-    }
-    else {
-        output = {
-            locale: key,
-            pack: language[key]
-        };
-    }
-    return output;
-}
-
 function nextTick(func) {
     window.setTimeout(func, 0);
 }
@@ -393,8 +330,8 @@ function setStartAndEnd(collection, inDates, data, parse) {
     }
     return temp;
 }
-function setRange(data, collector, remove$$1, clearRange) {
-    if (remove$$1) {
+function setRange(data, collector, remove, clearRange) {
+    if (remove) {
         var collection = collector.querySelectorAll(".in-range");
         for (var i = 0; i < collection.length; i++) {
             removeClass(collection[i], "in-range");
@@ -554,7 +491,60 @@ function parseFormatted(strDate, format) {
     return ret(strDate, format);
 }
 
-function monthSwitch(size) {
+function parseEl(el) {
+    if (!el) {
+        return null;
+    }
+    if (el.indexOf('#') >= 0) {
+        return document.querySelector(el);
+    }
+    else if (el.indexOf('.') >= 0) {
+        return document.querySelectorAll(el)[0];
+    }
+    else {
+        if (el.indexOf("#") <= -1 || el.indexOf(".") <= -1) {
+            warn("ParseEl ", "do not mount DatePicker to a pure html tag," + el);
+            return false;
+        }
+        return document.querySelector(el);
+    }
+}
+var defaultLanguage = {
+    locale: "zh-cn",
+    pack: {
+        days: ['日', '一', '二', '三', '四', '五', '六'],
+        months: ['01月', '02月', '03月', '04月', '05月', '06月', '07月', '08月', '09月', '10月', '11月', '12月'],
+        year: "年"
+    }
+};
+function setLanguage(option) {
+    var locale = option.locale.toLowerCase();
+    var curr = option.pack;
+    var monthName = curr.months;
+    var week = curr.days;
+    var title;
+    if (locale === "en" || locale === "en-us" || locale === "en-gb") {
+        title = function (year, month) { return monthName[month] + " " + year; };
+    }
+    else {
+        title = function (year, month) { return "" + year + curr["year"] + monthName[month]; };
+    }
+    return { week: week, title: title };
+}
+function getLanguage(language, key) {
+    var output = {};
+    if (!key || !language[key]) {
+        output = defaultLanguage;
+    }
+    else {
+        output = {
+            locale: key,
+            pack: language[key]
+        };
+    }
+    return output;
+}
+function doMonthSwitch(size) {
     var curr = {
         year: this.date.getFullYear(),
         month: this.date.getMonth(),
@@ -563,9 +553,6 @@ function monthSwitch(size) {
     var month = curr.month + size;
     if (this.multiViews) {
         month += size > 0 ? 1 : -1;
-    }
-    if (this.defaultDates.length > 0) {
-        this.selected = this.defaultDates;
     }
     this.date = new Date(curr.year, month, curr.date);
     this.createDatePicker(false);
@@ -584,15 +571,13 @@ function createDatePicker(isInit) {
         formatter: this.format,
         parse: this.parse
     });
-    this.bindMonthSwitch(this.language);
-    this.selected = this.currentRange(this.isInitRange);
+    this.bindMonthSwitch();
+    this.selected = this.currentRange(this.isFromSetRange);
     var updateEventData = {
-        type: 'init',
+        type: isInit ? 'init' : 'switch',
         value: this.selected
     };
-    if (isInit) {
-        this.update(updateEventData);
-    }
+    this.update(updateEventData);
 }
 function currentRange(isInit) {
     var initSelected = this.defaultDates.length > 0
@@ -619,10 +604,10 @@ function bindMonthSwitch() {
     if (prev && next) {
         if (this.infiniteMode) {
             next.addEventListener("click", function () {
-                _this.monthSwitch(1);
+                _this.doMonthSwitch(1);
             });
             prev.addEventListener("click", function () {
-                _this.monthSwitch(-1);
+                _this.doMonthSwitch(-1);
             });
         }
         else {
@@ -630,7 +615,7 @@ function bindMonthSwitch() {
             var startGap = diff(this.date, this.startDate);
             if (endGap >= 2) {
                 next.addEventListener("click", function () {
-                    _this.monthSwitch(1);
+                    _this.doMonthSwitch(1);
                     removeClass(prev, "disabled");
                     removeClass(prev, "calendar-action-disabled");
                 });
@@ -641,7 +626,7 @@ function bindMonthSwitch() {
             }
             if (startGap >= 2) {
                 prev.addEventListener("click", function () {
-                    _this.monthSwitch(-1);
+                    _this.doMonthSwitch(-1);
                     removeClass(next, "disabled");
                     removeClass(next, "calendar-action-disabled");
                 });
@@ -655,9 +640,6 @@ function bindMonthSwitch() {
 }
 function init(option, renderer) {
     var _this = this;
-    if (option.initWithSelected) {
-        this.initWithSelected = option.initWithSelected;
-    }
     if (option.doubleSelect) {
         this.double = option.doubleSelect;
     }
@@ -1009,13 +991,13 @@ function doubleSelectHandler(options) {
     };
 }
 
+function noData(result) {
+    return !isObject(result)
+        || (Object.keys(result.data).length <= 0
+            || result.dates.length <= 0);
+}
 function initWithDataBind(option, cb) {
     var _this = this;
-    function noData(data) {
-        return !isObject(data)
-            || (Object.keys(data.data).length <= 0
-                || data.dates.length <= 0);
-    }
     if (option.bindData) {
         var params = {
             dates: [],
@@ -1053,14 +1035,13 @@ var DatePicker = (function () {
         this.flatView = false;
         this.multiViews = false;
         this.singleView = false;
-        this.monthSwitch = monthSwitch;
+        this.doMonthSwitch = doMonthSwitch;
         this.createDatePicker = createDatePicker;
         this.zeroPadding = false;
-        this.initWithSelected = false;
         this.bindData = false;
         this.infiniteMode = false;
         this.currentRange = currentRange;
-        this.isInitRange = false;
+        this.isFromSetRange = false;
         this.language = {};
         this.pickDate = function () {
             handlePickDate({
@@ -1084,6 +1065,11 @@ var DatePicker = (function () {
             if (result.type === 'selected') {
                 _this.dateRanges(result.value, false);
             }
+            else if (result.type === 'switch') {
+                if (_this.defaultDates.length > 0) {
+                    _this.selected = _this.defaultDates;
+                }
+            }
             Observer.$emit("update", result);
         };
         this.dataRenderer = function (data) {
@@ -1100,13 +1086,13 @@ var DatePicker = (function () {
                 });
             }
         };
-        this.dateRanges = function (dates, isInit) {
+        this.dateRanges = function (dates, isFromSetRange) {
             if (!isArray(dates)) {
                 dates = [];
                 warn("dateRanges", "no dates provided," + dates);
                 return;
             }
-            _this.isInitRange = !(!isInit);
+            _this.isFromSetRange = !(!isFromSetRange);
             var handler = function () {
                 var datesList = [];
                 var start = '', end = '';
@@ -1180,7 +1166,9 @@ var DatePicker = (function () {
             parse: this.parse,
             format: this.format,
             dateRanges: this.dateRanges,
-            setDefaultDates: this.dateRanges
+            setDefaultDates: function () {
+                warn("setDefaultDates", "this method has been deprecated,use [dateRanges()] instead ");
+            }
         };
     }
     return DatePicker;

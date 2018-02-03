@@ -4,8 +4,7 @@ npm-debug.log*
 .idea
 
 src/**/*.js
-transform
 demo
-
 dev
 temp
+lib
