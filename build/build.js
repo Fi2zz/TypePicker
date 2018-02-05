@@ -131,8 +131,9 @@ function work(config) {
                             write(path.resolve(dest, "style.css"), css)
                                 .then(function () {
                                     log("> style compiled\n", "green");
-                                    rm("./temp", noop);
-                                    log("> build done !", "yellow")
+                                    rm("./temp", () => {
+                                        log("> build done !", "yellow")
+                                    });
                                 });
 
                         }).catch(err => loggerError(err));

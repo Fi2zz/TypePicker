@@ -702,7 +702,6 @@ function init(option, renderer) {
 
 var handlePickDate = function (options) {
     var element = options.element, selected = options.selected, isDouble = options.isDouble, parse = options.parse, format = options.format, limit = options.limit, inDates = options.inDates, update = options.update, infiniteMode = options.infiniteMode, bindData = options.bindData;
-    var init = selected;
     var collection = element.querySelectorAll(".calendar-date-cell");
     var _loop_1 = function (i) {
         var item = collection[i];
@@ -753,16 +752,10 @@ var handlePickDate = function (options) {
                 singlePick(selector, element, shouldChange);
             }
             var type = "selected";
-            if (isDouble) {
-                if (selected.length >= 2) {
-                    if (init.join("-") === selected.join("-")) {
-                    }
-                }
-                else {
-                    var front = selected[0];
-                    if (!inDates(front)) {
-                        type = 'disabled';
-                    }
+            if (isDouble && selected.length <= 1) {
+                var front = selected[0];
+                if (!inDates(front)) {
+                    type = 'disabled';
                 }
             }
             update({
@@ -1157,8 +1150,7 @@ var DatePicker = (function () {
             }
         };
     }
-    DatePicker.prototype.disable = function (config) {
-        console.log(config);
+    DatePicker.prototype.disable = function () {
     };
     return DatePicker;
 }());

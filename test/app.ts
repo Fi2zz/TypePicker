@@ -59,7 +59,7 @@ datepicker.on("data", (result: any) => {
 
 
 });
-datepicker.dateRanges(["2018-4-11", "2018-4-12"], true);
+datepicker.dateRanges(["2018-2-16", "2018-2-18"], true);
 
 datepicker.disable({
     dates: "2018-2-16", days: [123]

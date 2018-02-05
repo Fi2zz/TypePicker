@@ -25,100 +25,84 @@ export default function (options: pickerHandler) {
         infiniteMode,
         bindData
     } = options;
-    const init = selected;
     const collection = element.querySelectorAll(".calendar-date-cell");
     for (let i = 0; i < collection.length; i++) {
         const item = collection[i];
         item.addEventListener("click", () => {
-            //缓存已选的日期
-            const cache = selected;
-            const date = attr(item, "data-date");
-            const index = selected.indexOf(date);
-            //不可选的日期
-            //初始化时，selected的length为0，点击不可选日期
-            if (!date || (selected.length <= 0 && !inDates(date)) && bindData) {
-                return false;
-            }
-            //重复选择
-            //如选择了 2018-02-04 ~ 2018-02-06
-            //但是用户实际想选择的是 2018-02-04~2018-02-05，
-            //此时 用户再次选择 2018-02-04，其他日期将被删除
-            if (index >= 0) {
-                selected = [selected[selected.length - 1]]
-            }
-            //双选，但选择的日期数量大于2，或单选
-            if (isDouble && selected.length >= 2 || !isDouble) {
-                selected = []
-            }
-            selected.push(date);
-            //选择日期
-            if (isDouble) {
-                const handlerOptions = {
-                    date, selected, cache, limit, format, parse,
-                    inDates,
-                    infiniteMode,
-                    bindData
-                };
-                const handled = doubleSelectHandler(handlerOptions);
-                selected = handled.selected;
-                const range = handled.range;
-                const allValid = handled.allValid;
-                const start = selected[0];
-                const end = selected[selected.length - 1];
-                const diff = gap(parse(start), parse(end));
-                const isOutOfLimit = diff > limit;
-                const isValid = doublePick(
-                    element,
-                    start,
-                    end,
-                    diff,
-                    isOutOfLimit,
-                    allValid
-                );
-                if (isValid) {
-                    setRange([], element, true);
+                //缓存已选的日期
+                const cache = selected;
+                const date = attr(item, "data-date");
+                const index = selected.indexOf(date);
+                //不可选的日期
+                //初始化时，selected的length为0，点击不可选日期
+                if (!date || (selected.length <= 0 && !inDates(date)) && bindData) {
+                    return false;
                 }
-                if (allValid && isValid) {
-                    setRange(range, element, false)
+                //重复选择
+                //如选择了 2018-02-04 ~ 2018-02-06
+                //但是用户实际想选择的是 2018-02-04~2018-02-05，
+                //此时 用户再次选择 2018-02-04，其他日期将被删除
+                if (index >= 0) {
+                    selected = [selected[selected.length - 1]]
                 }
-            } else {
-                let selector = item;
-                let shouldChange = true;
-                if (!inDates(date)) {
-                    selected = cache;
-                    shouldChange = false;
+                //双选，但选择的日期数量大于2，或单选
+                if (isDouble && selected.length >= 2 || !isDouble) {
+                    selected = []
                 }
-                singlePick(selector, element, shouldChange);
-            }
-
-            let type = "selected";
-
-            // console.log(selected);
-
-
-            if (isDouble) {
-
-
-                if (selected.length >= 2) {
-                    if (init.join("-") === selected.join("-")) {
-                        // type = 'disabled'
+                selected.push(date);
+                //选择日期
+                if (isDouble) {
+                    const handlerOptions = {
+                        date, selected, cache, limit, format, parse,
+                        inDates,
+                        infiniteMode,
+                        bindData
+                    };
+                    const handled = doubleSelectHandler(handlerOptions);
+                    selected = handled.selected;
+                    const range = handled.range;
+                    const allValid = handled.allValid;
+                    const start = selected[0];
+                    const end = selected[selected.length - 1];
+                    const diff = gap(parse(start), parse(end));
+                    const isOutOfLimit = diff > limit;
+                    const isValid = doublePick(
+                        element,
+                        start,
+                        end,
+                        diff,
+                        isOutOfLimit,
+                        allValid
+                    );
+                    if (isValid) {
+                        setRange([], element, true);
+                    }
+                    if (allValid && isValid) {
+                        setRange(range, element, false)
                     }
                 } else {
+                    let selector = item;
+                    let shouldChange = true;
+                    if (!inDates(date)) {
+                        selected = cache;
+                        shouldChange = false;
+                    }
+                    singlePick(selector, element, shouldChange);
+                }
+                let type = "selected";
+                if (isDouble && selected.length <= 1) {
                     const front = selected[0];
                     if (!inDates(front)) {
                         type = 'disabled'
                     }
                 }
+                update({
+                    type: type,
+                    value: selected
+                })
 
             }
-
-
-            update({
-                type: type,
-                value: selected
-            })
-
-        });
+        );
     }
 }
 
