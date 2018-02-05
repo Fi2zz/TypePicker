@@ -98,11 +98,7 @@ export interface pickerHandler {
 
 }
 
-export interface disables {
-    dates?: Array<string> | Array<Date>,
-    days?: Array<number> | number,
-    options: {
-        dates?: Array<string> | Array<Date>,
-        days?: Array<number> | number
-    }
+export interface DisableDateRange {
+    dates: Array<any>,
+    days: Array<any> ,
 }

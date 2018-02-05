@@ -16,6 +16,11 @@ const from = new Date(dist.year, dist.month - 1, dist.date)
 const to = new Date(dist.year, dist.month + 9, 0);
 
 
+const popTrigger = document.getElementById("date-value");
+
+const pop: HTMLElement = document.querySelector(".popup")
+
+
 const options: any = {
     el: '#datepicker',
     from,
@@ -57,8 +62,8 @@ datepicker.on("data", (result: any) => {
 datepicker.dateRanges(["2018-4-11", "2018-4-12"], true);
 
 datepicker.disable({
-
-})
+    dates: "2018-2-16", days: [123]
+});
 
 
 datepicker.data((params: any) => {
@@ -80,7 +85,15 @@ datepicker.data((params: any) => {
 
 function layout(result: any = {value: <Array<string>>[], type: <string>''}) {
 
-    console.log(JSON.stringify(result, null, 2))
+
+    if (result.type === 'selected' && result.value.length === 2) {
+
+        pop.style.display = 'none'
+
+    }
+
+
+    console.log(JSON.stringify(result, null, 2));
     document.getElementById("layout").innerHTML = `选中的日期<br/>${result.type} / ${result.value}`;
 }
 
@@ -130,5 +143,12 @@ function merge(...args: Array<any>) {
 // const merged =
 
 merge(new Date(), options, [], 123, [123, {120: 0}, new Date()], {abc: 123}, "123456", null, "", true, 0)
+
+
+popTrigger.addEventListener("click", () => {
+    pop.style.display = 'block'
+});
+
+
 
 

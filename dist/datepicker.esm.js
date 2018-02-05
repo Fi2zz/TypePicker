@@ -752,7 +752,19 @@ var handlePickDate = function (options) {
                 }
                 singlePick(selector, element, shouldChange);
             }
-            var type = isDouble ? init.join("-") === selected.join("-") ? 'disabled' : 'selected' : 'selected';
+            var type = "selected";
+            if (isDouble) {
+                if (selected.length >= 2) {
+                    if (init.join("-") === selected.join("-")) {
+                    }
+                }
+                else {
+                    var front = selected[0];
+                    if (!inDates(front)) {
+                        type = 'disabled';
+                    }
+                }
+            }
             update({
                 type: type,
                 value: selected
@@ -874,36 +886,10 @@ function doubleSelectHandler(options) {
                 selected = [start_1];
             }
             else {
-                if (cache.length >= 2) {
-                    var validDates = [];
-                    for (var i = 0; i < cache.length; i++) {
-                        if (inDates(cache[i])) {
-                            validDates.push(cache[i]);
-                        }
-                    }
-                    if (validDates.length === cache.length) {
-                        var front = cache[0];
-                        var last = cache[cache.length - 1];
-                        if (front !== last) {
-                            selected = cache;
-                        }
-                        else {
-                            selected = [front];
-                        }
-                    }
-                    else {
-                        selected = [];
-                    }
-                }
-                else {
-                    selected = [cache[0]];
-                }
+                selected = [cache[0]];
             }
         }
         else {
-            selected = cache;
-        }
-        if (selected.length <= 0) {
             selected = cache;
         }
         allValid = range.length === inRange.length;
@@ -1171,8 +1157,8 @@ var DatePicker = (function () {
             }
         };
     }
-    DatePicker.prototype.disable = function (dates) {
-        console.log(dates);
+    DatePicker.prototype.disable = function (config) {
+        console.log(config);
     };
     return DatePicker;
 }());

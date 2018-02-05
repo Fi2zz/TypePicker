@@ -1,4 +1,4 @@
-import {datePickerOptions,disables} from "./datepicker.interfaces";
+import {datePickerOptions} from "./datepicker.interfaces";
 import Observer from './datepicker.observer';
 import {
     diff,
@@ -99,6 +99,8 @@ export default class DatePicker {
     parse = (string: string) => parseFormatted(string, this.dateFormat);
     inDates = (date: string | any) => this.dates.indexOf(date) >= 0;
     update = (result: any) => {
+
+
         const {type, value} = result;
         if (type === 'selected') {
             this.dateRanges(value, false)
@@ -108,6 +110,7 @@ export default class DatePicker {
             }
         }
         if (type !== 'disabled' && type !== 'switch') {
+
             Observer.$emit("update", result);
         }
     };
@@ -190,10 +193,10 @@ export default class DatePicker {
     bindMonthSwitch: Function = bindMonthSwitch;
     initWithDataBind: Function = initWithDataBind;
 
-    disable(dates?:disables) {
+    disable(config) {
 
 
-        console.log(dates)
+        console.log(config)
 
     }
 

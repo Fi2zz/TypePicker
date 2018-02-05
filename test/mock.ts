@@ -47,7 +47,7 @@ export const source: any = {
     "2018-2-4": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
     "2018-2-16": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
     "2018-2-17": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
-    "2018-2-18": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    // "2018-2-18": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
     "2018-2-19": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
     "2018-2-20": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
     "2018-2-21": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},

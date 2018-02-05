@@ -5,39 +5,52 @@ disabled = #ccc
 
 .calendar-action
 
-    &-prev, &-next
-        &:before
-            content ''
-            display: block
-            width 32px
-            height 32px
-            border 2px primary solid
-            transform rotate(45deg) scale(.5)
-        cursor pointer
-        &:hover
-            background-color #ddd
-    &-disabled
-        &:before
-            border-color disabled
-    &-prev
-        &:before
-            border-top: none
-            border-right: none
+  &-prev, &-next
+    &:before
+      content ''
+      display: block
+      width 32px
+      height 32px
+      border 2px primary solid
+      transform rotate(45deg) scale(.5)
+    cursor pointer
+    &:hover
+      background-color #ddd
+  &-disabled
+    &:before
+      border-color disabled
+  &-prev
+    &:before
+      border-top: none
+      border-right: none
 
-    &-next
-        &:before
-            border-left none
-            border-bottom none
+  &-next
+    &:before
+      border-left none
+      border-bottom none
 
-    span
-        display: none
+  span
+    display: none
 
 .highlight
-    color primary
+  color primary
 
 .start-date
 
-    background darkslategrey !important
+  background darkslategrey !important
 
 .end-date
-    background darkcyan !important
+  background darkcyan !important
+
+.popup
+  display: none
+
+.toolbar
+  height: 48px
+  margin auto
+  display: flex
+  justify-content center
+    
+  input
+    height: 100%
+    text-align: center

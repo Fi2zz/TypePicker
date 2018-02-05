@@ -91,7 +91,28 @@ export default function (options: pickerHandler) {
                 singlePick(selector, element, shouldChange);
             }
 
-            const type = isDouble ? init.join("-") === selected.join("-") ? 'disabled' : 'selected' : 'selected'
+            let type = "selected";
+
+            // console.log(selected);
+
+
+            if (isDouble) {
+
+
+                if (selected.length >= 2) {
+                    if (init.join("-") === selected.join("-")) {
+                        // type = 'disabled'
+                    }
+                } else {
+                    const front = selected[0];
+                    if (!inDates(front)) {
+                        type = 'disabled'
+                    }
+                }
+
+            }
+
+
             update({
                 type: type,
                 value: selected
@@ -232,28 +253,32 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
             if (inDates(start)) {
                 selected = [start];
             } else {
-                if (cache.length >= 2) {
-                    const validDates = [];
-                    for (let i = 0; i < cache.length; i++) {
-                        if (inDates(cache[i])) {
-                            validDates.push(cache[i]);
-                        }
-                    }
-                    if (validDates.length === cache.length) {
-                        //multiviews 切换后的selected两个值相同的bug
-                        const front = cache[0];
-                        const last = cache[cache.length - 1];
-                        if (front !== last) {
-                            selected = cache
-                        } else {
-                            selected = [front]
-                        }
-                    } else {
-                        selected = []
-                    }
-                } else {
-                    selected = [cache[0]];
-                }
+                // if (cache.length >= 2) {
+                //     const validDates = [];
+                //     for (let i = 0; i < cache.length; i++) {
+                //         if (inDates(cache[i])) {
+                //             validDates.push(cache[i]);
+                //         }
+                //     }
+                //     if (validDates.length === cache.length) {
+                //         //multiviews 切换后的selected两个值相同的bug
+                //         const front = cache[0];
+                //         const last = cache[cache.length - 1];
+                //         if (front !== last) {
+                //             selected = cache
+                //         } else {
+                //             selected = [front]
+                //         }
+                //     } else {
+                //         selected = []
+                //     }
+                // } else {
+                //     selected = [cache[0]];
+                // }
+
+                selected = [cache[0]];
+
+
             }
         }
         //既没有开始日期也没有结束日期
@@ -261,9 +286,9 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
         else {
             selected = cache;
         }
-        if (selected.length <= 0) {
-            selected = cache
-        }
+        // if (selected.length <= 0) {
+        //     selected = cache
+        // }
         //重合
         allValid = range.length === inRange.length;
         if (!allValid) {
