@@ -1,4 +1,4 @@
-import {datePickerOptions} from "./datepicker.interfaces";
+import {datePickerOptions,disables} from "./datepicker.interfaces";
 import Observer from './datepicker.observer';
 import {
     diff,
@@ -18,11 +18,13 @@ import {
 } from './datepicker.init'
 import handlePickDate from './datepicer.picker'
 import {parseFormatted, format as formatter} from "./datepicker.formatter"
+
 function noData(result: any) {
     return !isObject(result)
         || (Object.keys(result.data).length <= 0
-        || result.dates.length <= 0)
+            || result.dates.length <= 0)
 }
+
 function initWithDataBind(option: any, cb: Function) {
     if (option.bindData) {
         const params = {
@@ -45,6 +47,7 @@ function initWithDataBind(option: any, cb: Function) {
         }
     }
 }
+
 function instanceUtils() {
     return <Object> {
         format: (date: Date, format: string) => (date && format) ? formatter(date, format).value : null,
@@ -52,6 +55,7 @@ function instanceUtils() {
         diff: (d1: Date, d2: Date) => diff(d1, d2, "days")
     };
 }
+
 export default class DatePicker {
     init = init;
     date: Date = new Date();
@@ -74,6 +78,7 @@ export default class DatePicker {
     currentRange: Function = currentRange;
     isFromSetRange: boolean = false;
     language: any = {};
+    disableds: Array<string> = []
     pickDate = () => {
         handlePickDate({
             element: this.element,
@@ -185,6 +190,13 @@ export default class DatePicker {
     bindMonthSwitch: Function = bindMonthSwitch;
     initWithDataBind: Function = initWithDataBind;
 
+    disable(dates?:disables) {
+
+
+        console.log(dates)
+
+    }
+
     constructor(option?: datePickerOptions) {
         if (!option) {
             return <any>instanceUtils()
@@ -201,6 +213,7 @@ export default class DatePicker {
             parse: this.parse,
             format: this.format,
             dateRanges: this.dateRanges,
+            disable: this.disable,
             setDefaultDates: () => {
                 warn("setDefaultDates", "this method has been deprecated,use [dateRanges()] instead ")
             }

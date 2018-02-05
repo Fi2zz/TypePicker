@@ -101,6 +101,10 @@ function log(msg, color) {
     console.log(colorful[color](msg))
 }
 
+function noop() {
+
+}
+
 function work(config) {
     const {dest, build, style, filename} = config;
     const {output} = build;
@@ -127,8 +131,7 @@ function work(config) {
                             write(path.resolve(dest, "style.css"), css)
                                 .then(function () {
                                     log("> style compiled\n", "green");
-                                    rm("./temp", () => {
-                                    });
+                                    rm("./temp", noop);
                                     log("> build done !", "yellow")
                                 });
 
@@ -143,5 +146,6 @@ function build(config) {
     log("> building...\n", "green");
     fs.existsSync(config.dest) ? work(config) : mkdirp(config.dest, () => work(config))
 }
+
 build(config);
 

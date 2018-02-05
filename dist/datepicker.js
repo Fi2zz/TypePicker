@@ -720,7 +720,7 @@ var handlePickDate = function (options) {
                 return false;
             }
             if (index >= 0) {
-                selected = [selected[0]];
+                selected = [selected[selected.length - 1]];
             }
             if (isDouble && selected.length >= 2 || !isDouble) {
                 selected = [];
@@ -1050,6 +1050,7 @@ var DatePicker = (function () {
         this.currentRange = currentRange;
         this.isFromSetRange = false;
         this.language = {};
+        this.disableds = [];
         this.pickDate = function () {
             handlePickDate({
                 element: _this.element,
@@ -1170,11 +1171,15 @@ var DatePicker = (function () {
             parse: this.parse,
             format: this.format,
             dateRanges: this.dateRanges,
+            disable: this.disable,
             setDefaultDates: function () {
                 warn("setDefaultDates", "this method has been deprecated,use [dateRanges()] instead ");
             }
         };
     }
+    DatePicker.prototype.disable = function (dates) {
+        console.log(dates);
+    };
     return DatePicker;
 }());
 

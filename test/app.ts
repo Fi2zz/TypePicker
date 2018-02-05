@@ -55,6 +55,12 @@ datepicker.on("data", (result: any) => {
 
 });
 datepicker.dateRanges(["2018-4-11", "2018-4-12"], true);
+
+datepicker.disable({
+
+})
+
+
 datepicker.data((params: any) => {
     const currDate = new Date(dist.year, dist.month, dist.date);
     Object.keys(source).forEach(date => {
@@ -75,8 +81,6 @@ datepicker.data((params: any) => {
 function layout(result: any = {value: <Array<string>>[], type: <string>''}) {
 
     console.log(JSON.stringify(result, null, 2))
-
-
     document.getElementById("layout").innerHTML = `选中的日期<br/>${result.type} / ${result.value}`;
 }
 

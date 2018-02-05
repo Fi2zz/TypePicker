@@ -1,4 +1,3 @@
-
 export interface datePickerOptions {
     el: string,
     to: Date | null | undefined,
@@ -23,6 +22,7 @@ export interface templateFunctionOption {
     singleView: boolean,
     language: any,
 }
+
 export interface templateComposeOption {
     startDate: Date,
     endDate: Date,
@@ -34,6 +34,7 @@ export interface templateComposeOption {
     formatter: Function,
     parse: Function
 }
+
 export interface templateMapOption {
     startDate: Date,
     endDate: Date,
@@ -97,3 +98,11 @@ export interface pickerHandler {
 
 }
 
+export interface disables {
+    dates?: Array<string> | Array<Date>,
+    days?: Array<number> | number,
+    options: {
+        dates?: Array<string> | Array<Date>,
+        days?: Array<number> | number
+    }
+}
