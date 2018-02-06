@@ -11,6 +11,7 @@ import {
 import compose from "./datepicker.template";
 import {setInitRange} from "./datepicker.ranger";
 import {format} from './datepicker.formatter'
+
 export function parseEl(el: string) {
     if (!el) {
         return null
@@ -22,12 +23,13 @@ export function parseEl(el: string) {
     }
     else {
         if (el.indexOf("#") <= -1 || el.indexOf(".") <= -1) {
-            warn(`ParseEl `,`do not mount DatePicker to a pure html tag,${el}`)
+            warn(`ParseEl `, `do not mount DatePicker to a pure html tag,${el}`)
             return false;
         }
         return document.querySelector(el)
     }
 }
+
 const defaultLanguage: any = {
     locale: "zh-cn",
     pack: {
@@ -36,6 +38,7 @@ const defaultLanguage: any = {
         year: "年"
     }
 };
+
 function setLanguage(option: any) {
     const locale = option.locale.toLowerCase();
     const curr = option.pack;
@@ -50,6 +53,7 @@ function setLanguage(option: any) {
     }
     return {week, title}
 }
+
 function getLanguage(language: any, key: string) {
     let output = {};
     if (!key || !language[key]) {
@@ -62,6 +66,7 @@ function getLanguage(language: any, key: string) {
     }
     return output
 }
+
 /***
  * 月份切换
  * @param size 切换月份数量
@@ -82,6 +87,7 @@ export function doMonthSwitch(size: number) {
     this.pickDate();
     this.dataRenderer(this.data)
 }
+
 /**
  * 生成日历
  *
@@ -106,6 +112,7 @@ export function createDatePicker(isInit?: Boolean) {
     };
     this.update(updateEventData);
 }
+
 export function currentRange(isInit: boolean) {
     const initSelected =
         this.defaultDates.length > 0
@@ -141,7 +148,8 @@ export function bindMonthSwitch() {
             })
         } else {
             const endGap = diff(this.date, this.endDate);
-            const startGap = diff(this.date, this.startDate)
+            const startGap = diff(this.date, this.startDate);
+
             if (endGap >= 2) {
                 next.addEventListener("click", () => {
                     this.doMonthSwitch(1);
@@ -153,7 +161,9 @@ export function bindMonthSwitch() {
                 addClass(next, "disabled");
                 addClass(next, "calendar-action-disabled")
             }
-            if (startGap >= 2) {
+
+
+            if (startGap > 0) {
                 prev.addEventListener("click", () => {
                     this.doMonthSwitch(-1);
                     removeClass(next, "disabled");

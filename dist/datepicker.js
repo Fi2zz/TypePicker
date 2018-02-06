@@ -624,7 +624,7 @@ function bindMonthSwitch() {
                 addClass(next, "disabled");
                 addClass(next, "calendar-action-disabled");
             }
-            if (startGap >= 2) {
+            if (startGap > 0) {
                 prev.addEventListener("click", function () {
                     _this.doMonthSwitch(-1);
                     removeClass(next, "disabled");
@@ -758,10 +758,19 @@ var handlePickDate = function (options) {
                 singlePick(selector, element, shouldChange);
             }
             var type = "selected";
-            if (isDouble && selected.length <= 1) {
-                var front = selected[0];
-                if (!inDates(front)) {
-                    type = 'disabled';
+            if (isDouble) {
+                if (selected.length <= 1) {
+                    var front = selected[0];
+                    if (!inDates(front)) {
+                        type = 'disabled';
+                    }
+                }
+                else if (selected.length >= 2) {
+                    var prevEl = item.previousElementSibling;
+                    var prevDate = attr(prevEl, "data-date");
+                    if (!inDates(date) && !inDates(prevDate)) {
+                        type = 'disabled';
+                    }
                 }
             }
             update({
@@ -885,10 +894,36 @@ function doubleSelectHandler(options) {
                 selected = [start_1];
             }
             else {
-                selected = [cache[0]];
+                if (cache.length >= 2) {
+                    var validDates = [];
+                    for (var i = 0; i < cache.length; i++) {
+                        if (inDates(cache[i])) {
+                            validDates.push(cache[i]);
+                        }
+                    }
+                    if (validDates.length === cache.length) {
+                        var front = cache[0];
+                        var last = cache[cache.length - 1];
+                        if (front !== last) {
+                            selected = cache;
+                        }
+                        else {
+                            selected = [front];
+                        }
+                    }
+                    else {
+                        selected = [];
+                    }
+                }
+                else {
+                    selected = [cache[0]];
+                }
             }
         }
         else {
+            selected = cache;
+        }
+        if (selected.length <= 0) {
             selected = cache;
         }
         allValid = range.length === inRange.length;

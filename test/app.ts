@@ -21,133 +21,85 @@ const popTrigger = document.getElementById("date-value");
 const pop: HTMLElement = document.querySelector(".popup")
 
 
-const options: any = {
-    el: '#datepicker',
-    from,
-    to,
-    language: languages,
-    format: "YYYY-M-D",
-    doubleSelect: true,
-    limit: 7,
-    defaultLanguage: "jp",
-    multiViews: true,
-    flatView: false,
-    singleView: false,
-    bindData: true,
-    zeroPadding: false,
-    infiniteMode: false
-};
-const datepicker = <any>new DatePicker(options);
-datepicker.on("update", (output: any) => layout(output));
-datepicker.on("data", (result: any) => {
-    const data = result.data;
-    const nodeList = result.nodeList;
-    for (let i = 0; i < nodeList.length; i++) {
-        let node = nodeList[i];
-        let date = node.getAttribute("data-date");
-        if (date in data) {
-            let itemData = source[date];
-            if (itemData.highlight) {
-                addClass(node, "highlight")
+function createDatePicker() {
+
+
+    const options: any = {
+        el: '#datepicker',
+        from,
+        to,
+        language: languages,
+        format: "YYYY-M-D",
+        doubleSelect: true,
+        limit: 7,
+        defaultLanguage: "jp",
+        multiViews: true,
+        flatView: false,
+        singleView: false,
+        bindData: true,
+        zeroPadding: false,
+        infiniteMode: false
+    };
+    const datepicker = <any>new DatePicker(options);
+
+    if (datepicker) {
+        datepicker.on("update", (output: any) => layout(output));
+        datepicker.on("data", (result: any) => {
+            const data = result.data;
+            const nodeList = result.nodeList;
+            for (let i = 0; i < nodeList.length; i++) {
+                let node = nodeList[i];
+                let date = node.getAttribute("data-date");
+                if (date in data) {
+                    let itemData = source[date];
+                    if (itemData.highlight) {
+                        addClass(node, "highlight")
+                    }
+                    let placeholder: HTMLElement = node.querySelector(".placeholder");
+                    placeholder.innerHTML = itemData.value
+                } else {
+                    addClass(node, "disabled")
+                }
             }
-            let placeholder: HTMLElement = node.querySelector(".placeholder");
-            placeholder.innerHTML = itemData.value
-        } else {
-            addClass(node, "disabled")
-        }
+
+
+        });
+        datepicker.dateRanges(["2018-2-16", "2018-2-18"], true);
+        datepicker.disable({
+            dates: "2018-2-16", days: [123]
+        });
+        datepicker.data((params: any) => {
+            const currDate = new Date(dist.year, dist.month, dist.date);
+            Object.keys(source).forEach(date => {
+                let item = datepicker.parse(date);
+                if (datepicker.diff(item, currDate) >= 0) {
+                    params.dates.push(date)
+                } else {
+                    // delete source[date]
+                }
+            });
+
+
+            params.data = source;
+            return params
+        });
     }
-
-
-});
-datepicker.dateRanges(["2018-2-16", "2018-2-18"], true);
-
-datepicker.disable({
-    dates: "2018-2-16", days: [123]
-});
-
-
-datepicker.data((params: any) => {
-    const currDate = new Date(dist.year, dist.month, dist.date);
-    Object.keys(source).forEach(date => {
-        let item = datepicker.parse(date);
-        if (datepicker.diff(item, currDate) >= 0) {
-            params.dates.push(date)
-        } else {
-            // delete source[date]
-        }
-    });
-
-
-    params.data = source;
-    return params
-});
+}
 
 
 function layout(result: any = {value: <Array<string>>[], type: <string>''}) {
-
-
     if (result.type === 'selected' && result.value.length === 2) {
-
         pop.style.display = 'none'
-
     }
-
-
-    console.log(JSON.stringify(result, null, 2));
     document.getElementById("layout").innerHTML = `选中的日期<br/>${result.type} / ${result.value}`;
 }
-
-function merge(...args: Array<any>) {
-    let merged: any = {};
-
-    function toString(object: any) {
-        return Object.prototype.toString.call(object)
-    }
-
-    function whichType(object: any, type: string) {
-        return toString(object) === `[object ${type}]`
-    }
-
-    function generateObject(target: any = {}, object: any) {
-        for (let key in object) {
-            if (object.hasOwnProperty(key)) {
-                target[key] = object[key]
-            }
-        }
-        return target
-    }
-
-    for (let i = 0; i < args.length; i++) {
-        let arg = args[i];
-        if (arg) {
-            if (whichType(arg, "Array")) {
-                for (let i = 0; i < arg.length; i++) {
-                    let argItem = arg[i];
-                    if (whichType(argItem, "Object")) {
-                        merged = generateObject(merged, argItem)
-                    } else if (!whichType(argItem, "Date")) {
-                        merged[argItem] = argItem
-                    }
-                }
-            } else if (whichType(arg, "Object")) {
-                merged = generateObject(merged, arg)
-            } else if (whichType(arg, "String") || whichType(arg, "Number")) {
-                merged[arg] = arg
-            }
-        }
-    }
-    return merged
-}
-
-
-// const merged =
-
-merge(new Date(), options, [], 123, [123, {120: 0}, new Date()], {abc: 123}, "123456", null, "", true, 0)
 
 
 popTrigger.addEventListener("click", () => {
     pop.style.display = 'block'
 });
+
+createDatePicker();
 
 
 
