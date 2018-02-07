@@ -80,8 +80,9 @@ export function doMonthSwitch(size: number) {
     let month = curr.month + size;
     //每次切换两个月份
     if (this.multiViews) {
-        month += size > 0 ? 1 : -1
+        // month += size > 0 ? 1 : -1
     }
+
     this.date = new Date(curr.year, month, curr.date);
     this.createDatePicker(false);
     this.pickDate();
@@ -148,9 +149,7 @@ export function bindMonthSwitch() {
             })
         } else {
             const endGap = diff(this.date, this.endDate);
-            const startGap = diff(this.date, this.startDate);
-
-            if (endGap >= 2) {
+            if (endGap >= 1) {
                 next.addEventListener("click", () => {
                     this.doMonthSwitch(1);
                     removeClass(prev, "disabled");
@@ -162,8 +161,13 @@ export function bindMonthSwitch() {
                 addClass(next, "calendar-action-disabled")
             }
 
+            const startGap = diff(this.date, this.startDate);
 
-            if (startGap > 0) {
+
+            console.log(startGap)
+
+
+            if (startGap >=1) {
                 prev.addEventListener("click", () => {
                     this.doMonthSwitch(-1);
                     removeClass(next, "disabled");

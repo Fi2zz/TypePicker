@@ -7,7 +7,7 @@
     "target": "es3",
     "noEmitOnError": false,
     "allowSyntheticDefaultImports": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": false,
     "noUnusedParameters": true,
     "pretty": true,
     "allowJs": true,

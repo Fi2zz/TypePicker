@@ -551,9 +551,6 @@ function doMonthSwitch(size) {
         date: this.date.getDate()
     };
     var month = curr.month + size;
-    if (this.multiViews) {
-        month += size > 0 ? 1 : -1;
-    }
     this.date = new Date(curr.year, month, curr.date);
     this.createDatePicker(false);
     this.pickDate();
@@ -612,8 +609,7 @@ function bindMonthSwitch() {
         }
         else {
             var endGap = diff(this.date, this.endDate);
-            var startGap = diff(this.date, this.startDate);
-            if (endGap >= 2) {
+            if (endGap >= 1) {
                 next.addEventListener("click", function () {
                     _this.doMonthSwitch(1);
                     removeClass(prev, "disabled");
@@ -624,7 +620,9 @@ function bindMonthSwitch() {
                 addClass(next, "disabled");
                 addClass(next, "calendar-action-disabled");
             }
-            if (startGap > 0) {
+            var startGap = diff(this.date, this.startDate);
+            console.log(startGap);
+            if (startGap >= 1) {
                 prev.addEventListener("click", function () {
                     _this.doMonthSwitch(-1);
                     removeClass(next, "disabled");
