@@ -544,8 +544,7 @@ function doMonthSwitch(size) {
         month: this.date.getMonth(),
         date: this.date.getDate()
     };
-    var month = curr.month + size;
-    this.date = new Date(curr.year, month, curr.date);
+    this.date = new Date(curr.year, curr.month + size, curr.date);
     this.createDatePicker(false);
     this.pickDate();
     this.dataRenderer(this.data);
@@ -615,7 +614,6 @@ function bindMonthSwitch() {
                 addClass(next, "calendar-action-disabled");
             }
             var startGap = diff(this.date, this.startDate);
-            console.log(startGap);
             if (startGap >= 1) {
                 prev.addEventListener("click", function () {
                     _this.doMonthSwitch(-1);
@@ -635,9 +633,7 @@ function init(option, renderer) {
     if (option.doubleSelect) {
         this.double = option.doubleSelect;
     }
-    if (option.format) {
-        this.dateFormat = option.format || "YYYY-MM-DD";
-    }
+    this.dateFormat = option.format || "YYYY-MM-DD";
     if (option.multiViews && (!option.flatView && !option.singleView)) {
         this.multiViews = true;
     }

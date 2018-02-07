@@ -67,14 +67,9 @@ function setDatePicker(create: boolean = true, selected: Array<any>) {
 
 
             });
-
-
             if (selected.length >= 2) {
-
-
                 datepicker.dateRanges(selected, true);
             }
-
             datepicker.disable({
                 dates: "2018-2-16", days: [123]
             });
@@ -111,15 +106,12 @@ function layout(result: any = {value: <Array<string>>[], type: <string>''}) {
     }
 
     selected = result.value;
-    console.log(selected)
-
     document.getElementById("layout").innerHTML = `选中的日期<br/>${result.type} / ${result.value}`;
     setTimeout(() => {
         datepicker(false, [])
     }, 100)
 
 }
-
 
 popTrigger.addEventListener("click", () => {
     pop.style.display = 'block'

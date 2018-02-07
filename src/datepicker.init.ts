@@ -77,13 +77,7 @@ export function doMonthSwitch(size: number) {
         month: this.date.getMonth(),
         date: this.date.getDate()
     };
-    let month = curr.month + size;
-    //每次切换两个月份
-    if (this.multiViews) {
-        // month += size > 0 ? 1 : -1
-    }
-
-    this.date = new Date(curr.year, month, curr.date);
+    this.date = new Date(curr.year, curr.month + size, curr.date);
     this.createDatePicker(false);
     this.pickDate();
     this.dataRenderer(this.data)
@@ -162,12 +156,7 @@ export function bindMonthSwitch() {
             }
 
             const startGap = diff(this.date, this.startDate);
-
-
-            console.log(startGap)
-
-
-            if (startGap >=1) {
+            if (startGap >= 1) {
                 prev.addEventListener("click", () => {
                     this.doMonthSwitch(-1);
                     removeClass(next, "disabled");
@@ -185,9 +174,7 @@ export function init(option: any, renderer: any) {
     if (option.doubleSelect) {
         this.double = option.doubleSelect
     }
-    if (option.format) {
-        this.dateFormat = option.format || "YYYY-MM-DD"
-    }
+    this.dateFormat = option.format || "YYYY-MM-DD"
     if (option.multiViews && (!option.flatView && !option.singleView)) {
         this.multiViews = true
     }
