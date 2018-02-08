@@ -33,7 +33,7 @@ function setDatePicker(create: boolean = true, selected: Array<any>) {
             to,
             from,
             limit: 7,
-            views: 2,//"auto"
+            views:"auto",
             language,
             bindData: true,
             format: "YYYY-M-D",

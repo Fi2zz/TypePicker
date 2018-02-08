@@ -10,7 +10,7 @@
 |doubleSelect|Boolean|                      是否双选，对于酒店和车船票机票比较有用|
 |bindData<sup>***</sup>   |Boolean|                      绑定数据到日历，|
 |limit   |Number|                          双选情况下，限制最大跨度,如果`doubleSelect=false`,则自动限制为`1`|
-|view   |Number|String|                    日曆視圖數量，大於2或小於0都會設置為flatView,如果傳入的是auto也會被設置為flatView      |
+|view   |Number|String|                    日曆視圖數量，大於2或小於0或者其他字符串都會設置為singleView,如果傳入的是auto會被設置為flatView      |
 
     *    multiViews和flatView都为true的情况下，自动转换成multiviews
     *    multiViews和flatView都为false的情况下，垂直展示多个月份，移动端会比较有用

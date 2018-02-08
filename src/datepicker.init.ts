@@ -178,10 +178,10 @@ export function init(option: any, renderer: any) {
 
 
     const parseToInt = parseInt(option.views);
-    if ((option.views !== 'auto' && isNaN(parseToInt)) || (parseToInt <= 0 || parseToInt === 1)) {
+    if ((option.views !== 'auto' && isNaN(parseToInt)) || parseToInt === 1 || parseToInt > 2 || parseToInt <= 0) {
         this.singleView = true;
     }
-    else if (option.views === 'auto' || parseToInt > 2) {
+    else if (option.views === 'auto') {
         this.flatView = true;
         this.singleView = false;
     }
