@@ -30,17 +30,14 @@ function initWithDataBind(option: any, cb: Function) {
         const params = {
             dates: <Array<string>>[],
             data: <any>{},
-            from: Date,
-            to: Date
         };
         const cbData = cb && cb(params);
         const result = cbData ? cbData : params;
-        if (isDate(params.from)) option.from = params.from;
-        if (isDate(params.to)) option.to = params.to;
         const config = {
             data: result.data,
             dates: result.dates.sort((a: string, b: string) => this.parse(a) - this.parse(b))
         };
+
         this.init(option, config);
         if (!noData(result)) {
             this.dataRenderer(result.data);
@@ -69,7 +66,7 @@ export default class DatePicker {
     selected: Array<any> = [];
     flatView: boolean = false;
     multiViews: boolean = false;
-    singleView: boolean = false;
+    singleView: boolean = true;
     doMonthSwitch = doMonthSwitch;
     createDatePicker = createDatePicker;
     zeroPadding: boolean = false;
@@ -192,12 +189,14 @@ export default class DatePicker {
 
     disable() {
     }
+
     constructor(option?: datePickerOptions) {
         if (!option) {
             return <any>instanceUtils()
         }
         this.defaultDates = [];
         this.bindData = option.bindData;
+
         if (!option.bindData && option.el) {
             this.init(option, {});
         }

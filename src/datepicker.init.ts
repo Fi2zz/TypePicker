@@ -174,16 +174,23 @@ export function init(option: any, renderer: any) {
     if (option.doubleSelect) {
         this.double = option.doubleSelect
     }
-    this.dateFormat = option.format || "YYYY-MM-DD"
-    if (option.multiViews && (!option.flatView && !option.singleView)) {
-        this.multiViews = true
+    this.dateFormat = option.format || "YYYY-MM-DD";
+
+
+    const parseToInt = parseInt(option.views);
+    if ((option.views !== 'auto' && isNaN(parseToInt)) || (parseToInt <= 0 || parseToInt === 1)) {
+        this.singleView = true;
     }
-    else if (option.flatView && (!option.singleView && !option.multiViews)) {
-        this.flatView = true
+    else if (option.views === 'auto' || parseToInt > 2) {
+        this.flatView = true;
+        this.singleView = false;
     }
-    else if (option.singleView && (!option.multiViews && !option.flatView)) {
-        this.singleView = true
+    else if (parseToInt === 2) {
+        this.multiViews = true;
+        this.singleView = false
     }
+
+
     //开始日期
     this.startDate = isDate(option.from) ? option.from : new Date();
     this.date = this.startDate;
@@ -191,12 +198,9 @@ export function init(option: any, renderer: any) {
     this.endDate = isDate(option.to) ? option.to : new Date(this.date.getFullYear(), this.date.getMonth() + 6, 0);
     //選擇日期區間最大限制
     this.limit = this.double ? isNumber(option.limit) ? option.limit : 1 : 1;
-    if (option.zeroPadding) {
-        this.zeroPadding = option.zeroPadding
-    }
-    if (option.infiniteMode) {
-        this.infiniteMode = option.infiniteMode;
-    }
+    //通过判断日期格式来判断是否补0
+    this.zeroPadding = checkIfZeroPadding(this.dateFormat);
+
     if (!renderer.dates || renderer.dates && renderer.dates.length <= 0) {
         const currDate = new Date();
         const gap = diff(this.endDate, currDate, "days");
@@ -216,6 +220,14 @@ export function init(option: any, renderer: any) {
         this.data = renderer.data;
         this.infiniteMode = false;
     }
+
+    if (!isDate(option.from) || !isDate(option.to)) {
+        this.infiniteMode = true;
+        if (this.bindData) {
+            warn('init', "infiniteMode is on, please provide [from] and [to] while binding data to datepicker  ")
+        }
+    }
+
     this.format = (date: Date) => format(date, this.dateFormat, this.zeroPadding);
     this.language = setLanguage(getLanguage(option.language, option.defaultLanguage));
     this.element = parseEl(option.el);
@@ -236,3 +248,14 @@ export function init(option: any, renderer: any) {
         clearNextTick(next)
     })
 }
+
+function checkIfZeroPadding(dateFormat: string) {
+    if (!dateFormat) {
+        return true
+    }
+    dateFormat = dateFormat.toUpperCase();
+    const regExp = /[Y|YY|YYYY|YYY]([-|/])MM[-|/]DD/;
+    return regExp.test(dateFormat)
+}
+
+

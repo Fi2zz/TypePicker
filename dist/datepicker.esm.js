@@ -634,25 +634,23 @@ function init(option, renderer) {
         this.double = option.doubleSelect;
     }
     this.dateFormat = option.format || "YYYY-MM-DD";
-    if (option.multiViews && (!option.flatView && !option.singleView)) {
-        this.multiViews = true;
-    }
-    else if (option.flatView && (!option.singleView && !option.multiViews)) {
-        this.flatView = true;
-    }
-    else if (option.singleView && (!option.multiViews && !option.flatView)) {
+    var parseToInt = parseInt(option.views);
+    if ((option.views !== 'auto' && isNaN(parseToInt)) || (parseToInt <= 0 || parseToInt === 1)) {
         this.singleView = true;
+    }
+    else if (option.views === 'auto' || parseToInt > 2) {
+        this.flatView = true;
+        this.singleView = false;
+    }
+    else if (parseToInt === 2) {
+        this.multiViews = true;
+        this.singleView = false;
     }
     this.startDate = isDate(option.from) ? option.from : new Date();
     this.date = this.startDate;
     this.endDate = isDate(option.to) ? option.to : new Date(this.date.getFullYear(), this.date.getMonth() + 6, 0);
     this.limit = this.double ? isNumber(option.limit) ? option.limit : 1 : 1;
-    if (option.zeroPadding) {
-        this.zeroPadding = option.zeroPadding;
-    }
-    if (option.infiniteMode) {
-        this.infiniteMode = option.infiniteMode;
-    }
+    this.zeroPadding = checkIfZeroPadding(this.dateFormat);
     if (!renderer.dates || renderer.dates && renderer.dates.length <= 0) {
         var currDate = new Date();
         var gap = diff(this.endDate, currDate, "days");
@@ -673,6 +671,12 @@ function init(option, renderer) {
         this.data = renderer.data;
         this.infiniteMode = false;
     }
+    if (!isDate(option.from) || !isDate(option.to)) {
+        this.infiniteMode = true;
+        if (this.bindData) {
+            warn('init', "infiniteMode is on, please provide [from] and [to] while binding data to datepicker  ");
+        }
+    }
     this.format = function (date) { return format(date, _this.dateFormat, _this.zeroPadding); };
     this.language = setLanguage(getLanguage(option.language, option.defaultLanguage));
     this.element = parseEl(option.el);
@@ -692,6 +696,14 @@ function init(option, renderer) {
         _this.pickDate();
         clearNextTick(next);
     });
+}
+function checkIfZeroPadding(dateFormat) {
+    if (!dateFormat) {
+        return true;
+    }
+    dateFormat = dateFormat.toUpperCase();
+    var regExp = /[Y|YY|YYYY|YYY]([-|/])MM[-|/]DD/;
+    return regExp.test(dateFormat);
 }
 
 var handlePickDate = function (options) {
@@ -1003,16 +1015,10 @@ function initWithDataBind(option, cb) {
     if (option.bindData) {
         var params = {
             dates: [],
-            data: {},
-            from: Date,
-            to: Date
+            data: {}
         };
         var cbData = cb && cb(params);
         var result = cbData ? cbData : params;
-        if (isDate(params.from))
-            option.from = params.from;
-        if (isDate(params.to))
-            option.to = params.to;
         var config = {
             data: result.data,
             dates: result.dates.sort(function (a, b) { return _this.parse(a) - _this.parse(b); })
@@ -1043,7 +1049,7 @@ var DatePicker = (function () {
         this.selected = [];
         this.flatView = false;
         this.multiViews = false;
-        this.singleView = false;
+        this.singleView = true;
         this.doMonthSwitch = doMonthSwitch;
         this.createDatePicker = createDatePicker;
         this.zeroPadding = false;

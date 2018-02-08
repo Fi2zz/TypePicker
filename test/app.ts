@@ -3,7 +3,7 @@ import './test.styl'
 
 
 import DatePicker from '../src/index'
-import {source, languages} from './mock'
+import {source, languages as language} from './mock'
 import {addClass} from "../src/util";
 
 
@@ -28,23 +28,19 @@ function setDatePicker(create: boolean = true, selected: Array<any>) {
 
     let datepicker = null;
     if (create) {
-        const options: any = {
+        datepicker = <any>new DatePicker({
             el: '#datepicker',
-            from,
             to,
-            language: languages,
+            from,
+            limit: 7,
+            views: 2,//"auto"
+            language,
+            bindData: true,
             format: "YYYY-M-D",
             doubleSelect: true,
-            limit: 7,
             defaultLanguage: "jp",
-            multiViews: true,
-            flatView: false,
-            singleView: false,
-            bindData: true,
-            zeroPadding: false,
-            infiniteMode: false
-        };
-        datepicker = <any>new DatePicker(options);
+
+        });
         if (datepicker) {
             datepicker.on("update", (output: any) => layout(output));
             datepicker.on("data", (result: any) => {
@@ -115,9 +111,10 @@ function layout(result: any = {value: <Array<string>>[], type: <string>''}) {
 
 popTrigger.addEventListener("click", () => {
     pop.style.display = 'block'
-    datepicker(true, selected)
 });
+pop.style.display = 'block'
 
+datepicker(true, selected)
 
 
 

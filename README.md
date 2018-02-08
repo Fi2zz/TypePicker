@@ -2,8 +2,6 @@
 | api|    类型| 说明|
 |----|----    |----|
 |el|String|选择器,用于挂载日历|
-|multiViews<sup>*</sup>              |Boolean          |展示多个日历视图，目前支持两个日历横向展示|
-|flatView<sup>*</sup>              |Boolean          |单个日历视图|
 |from<sup>**<sup> 	|Date|                             开始日期|
 |to    |Date|                            结束日期|
 |language<sup>[0]</sup>|Map                         | 语言包，默认为简体中文语言包| 
@@ -12,18 +10,12 @@
 |doubleSelect|Boolean|                      是否双选，对于酒店和车船票机票比较有用|
 |bindData<sup>***</sup>   |Boolean|                      绑定数据到日历，|
 |limit   |Number|                          双选情况下，限制最大跨度,如果`doubleSelect=false`,则自动限制为`1`|
-|zeroPadding   |Boolean|                         小于10的数字是否补0，默认为true|
-|initWithSelected   |Boolean|                    初始化是否自动选择日期|
-|infiniteMode   |Boolean|                    无限切换，默认为false,bindData后，infiniteMode自动设置为false|
+|view   |Number|String|                    日曆視圖數量，大於2或小於0都會設置為flatView,如果傳入的是auto也會被設置為flatView      |
 
     *    multiViews和flatView都为true的情况下，自动转换成multiviews
     *    multiViews和flatView都为false的情况下，垂直展示多个月份，移动端会比较有用
     **   from默认是new Date(),to默认为new Date()往后推6个月
     ***  bindData,如果不想显示价格，开启此项即可，同时将移除data事件,此时再调用data相关的事件和方法无法生效
-    
-    
-    
-    
                 
 *使用方法
 ```typescript
@@ -48,7 +40,6 @@
            limit: 7,
            defaultLanguage: "en-us",
            multiViews: true,
-           flatView: false,
         }
     const datePicker = <any>new DatePicker(options);
     //更新选择的日期
@@ -57,24 +48,12 @@
         //type => 'init'或'selected'
         //valye => 选择的日期
         document.getElementById("layout").innerHTML = `选中的日期${value}`
-        //当 type ='selected'时，将自动执行 dateRanges方法，避免切换月份之后，日期发生变化
     });
     //设置默认日期，使用datePicker.dateRanges方法
     //如果不需要设置默认选中的日期，不执行此方法即可    
     //dateRanges =<Array<any>>[<Date>|<string>]
-    //[deprecated]datePicker.setDefaultDates(["2017-11-27","2017-12-05"]);
-    //example:  dateRanges =<Array<any>>[new Date(),"2017-12-20"];
-    //分两种情况
-    /*
-        1、 bindData =true,在data event callback里调用，方可生效
-            datePicker.on("data",()=>{
-                    datePicker.dateRanges(dateRanges);
-            })，
-        2、 bindData =false，在new 之后执行即可
-            datePicker.dateRanges(dateRanges);
-    */
-    
-    
+    const  dateRanges:Array<any> =[new Date(),"2017-12-20"];
+    datePicker.dateRanges(dateRanges);
     //通过data事件来控制每个日期格子展示的数据
     datePicker.on("data", (result: any) => {
         //返回传入的数据和nodeList
@@ -104,17 +83,7 @@
                     ...,
                      "2017-12-31":<any>,
                 }
-        */
-        /*
-            data的类型为map,由如下key-value的形式组成
-            {
-                "2017-11-18":<any>,
-                "2017-11-19":<any>,
-                "2017-11-20":<any>,
-                "2017-11-21":<any>,
-                "2017-11-22":<any>,
-                "2017-11-23":<any>,
-            }
+                data的类型为map,由如下key-value的形式组成
         */
         const currDate = new Date(dist.year, dist.month, dist.date);
         Object.keys(source).forEach(date=>{
@@ -124,13 +93,8 @@
               } else {
                   delete source[date]
               }      
-        })
-
+        });
         params.data = source;
-        //开始日期和结束日期
-        //此为避免重复 new DatePicker();
-        params.from =<Date>
-        params.to   = <Date>
     });
    ```
  
