@@ -3,7 +3,8 @@ import {
     pickerHandler
 } from './datepicker.interfaces'
 import {
-    diff, attr,
+    diff,
+    attr,
     removeClass,
     addClass,
     attrSelector,
@@ -26,6 +27,10 @@ export default function (options: pickerHandler) {
         bindData
     } = options;
     const collection = element.querySelectorAll(".calendar-date-cell");
+
+
+    const init = selected;
+
     for (let i = 0; i < collection.length; i++) {
         const item = collection[i];
         item.addEventListener("click", () => {
@@ -103,12 +108,15 @@ export default function (options: pickerHandler) {
                     }
                     else if (selected.length >= 2) {
                         const prevEl: HTMLElement = item.previousElementSibling;
-                        const prevDate = attr(prevEl, "data-date")
-                        if (!inDates(date) && !inDates(prevDate)) {
+                        const prevDate = attr(prevEl, "data-date");
+                        const startDate = parse(selected[0]);
+                        const diffed = diff(startDate, parse(date), "days") * -1;
+                        if (!inDates(date) && !inDates(prevDate) || diffed > limit || diffed < 0) {
                             type = 'disabled'
                         }
                     }
                 }
+
                 update({
                     type: type,
                     value: selected

@@ -23,8 +23,7 @@ const initDates = function () {
     return <Array<string>> dates.map(item => format(item, dateFormat).value)
 };
 const formControl = <HTMLInputElement> document.getElementById("date-value");
-formControl.value = initDates().join(" ");
-const pop = <HTMLElement> document.querySelector(".popup");
+
 function createDatePicker(onUpdate: Function, create: boolean = true, selected?: Array<any>) {
     let datepicker = null;
     if (create) {
@@ -37,11 +36,11 @@ function createDatePicker(onUpdate: Function, create: boolean = true, selected?:
             bindData: true,
             format: dateFormat,
             doubleSelect: true,
-            defaultLanguage: "jp",
-            views: 2
+            defaultLanguage: "zh",
+            views: 1
         });
         if (datepicker) {
-            datepicker.on("update", onUpdate);
+            datepicker.on("update", (result: any) => onUpdate(result));
             datepicker.on("data", (result: any) => {
                 const data = result.data;
                 const nodeList = result.nodeList;
@@ -85,35 +84,40 @@ function createDatePicker(onUpdate: Function, create: boolean = true, selected?:
     return datepicker
 }
 function onUpdate(result: any = {value: <Array<string>>[], type: <string>''}) {
+
+    console.log(result)
+
+
     if (result.type === 'selected' && result.value.length === 2) {
-        pop.style.display = 'none'
+        popupHandler(false)
     }
     formControl.value = result.value;
-    formControl.nextElementSibling.innerHTML = `type:${result.type}`
+    const inputGroupAddon =formControl.previousElementSibling;
+
+    inputGroupAddon.innerHTML = `选择日期 / type:${result.type}`
 }
 
+function popupHandler(visible: boolean) {
+    const pop = <HTMLElement> document.querySelector(".popup");
+    pop.style.display = visible ? 'block' : 'none';
+}
 
 function init(document: Document) {
+    formControl.value = initDates().join(" ");
     document.addEventListener("click", (e) => {
         const target = <HTMLElement> e.target;
-        const popupVisible = window.getComputedStyle(pop, null).getPropertyValue("display") === 'block';
         if (target) {
             const parent = <HTMLElement>target.parentNode;
             if (parent.nodeType === 1) {
-                if (parent.classList.contains("input-group")) {
-                    if (!popupVisible) {
-                        pop.style.display = 'block'
-                    }
-
+                if (target.tagName.toLowerCase() === 'input') {
+                    popupHandler(true);
                 }
                 else if (parent.tagName.toLowerCase() === 'body') {
-                    if (popupVisible) {
-                        pop.style.display = 'none'
-                    }
+                    popupHandler(false);
                 }
-
+            } else {
+                popupHandler(false);
             }
-
         }
     });
 }

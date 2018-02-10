@@ -579,6 +579,15 @@ function createDatePicker(isInit) {
     });
     this.bindMonthSwitch();
     this.selected = this.currentRange(this.isFromSetRange);
+    if (this.singleView) {
+        if (this.double && this.selected.length >= 2) {
+            var start = this.selected[0];
+            var end = this.selected[this.selected.length - 1];
+            if (start === end) {
+                this.selected.pop();
+            }
+        }
+    }
     var updateEventData = {
         type: isInit ? 'init' : 'switch',
         value: this.selected
@@ -775,7 +784,9 @@ var handlePickDate = function (options) {
                 else if (selected.length >= 2) {
                     var prevEl = item.previousElementSibling;
                     var prevDate = attr(prevEl, "data-date");
-                    if (!inDates(date) && !inDates(prevDate)) {
+                    var startDate = parse(selected[0]);
+                    var diffed = diff(startDate, parse(date), "days") * -1;
+                    if (!inDates(date) && !inDates(prevDate) || diffed > limit || diffed < 0) {
                         type = 'disabled';
                     }
                 }

@@ -9,19 +9,29 @@ disabled = #ccc
 .calendar-action
 
   &-prev, &-next
+    position: relative
+    cursor pointer
+    padding: 0
     &:before
       content ''
       display: block
       width 32px
       height 32px
       border 2px primary solid
-      transform rotate(45deg) scale(.5)
-    cursor pointer
+      transform translate(-50%,-50%) rotate(45deg) scale(.5)
+      position: absolute
+      top: 50%
+      left: 50%
     &:hover
-      background-color #ddd
+      &:before
+        border-color darken(primary,30%)
   &-disabled
     &:before
       border-color disabled
+    &:hover
+      &:before
+        border-color disabled
+
   &-prev
     &:before
       border-top: none
@@ -53,23 +63,24 @@ disabled = #ccc
   width 320px
   height: 34px
   position: relative
-  display: block
   .form-control
     padding-top: 0
     padding-bottom:0
     line-height 34px
-    border-radius 4px !important
-
   .input-group-addon
-    position: absolute
-    top: 1px
-    right: 1px
-    bottom: 1px
     z-index: 9
     width auto
     line-height 32px
-    padding: 0
-    padding-right: 12px
-    border: none
+    padding: 0 6px
 
+  .popup
+    position: absolute
+    left:50%
+    top: 36px
+    border 1px #ccc solid
+    border-radius 4px !important
+    overflow: hidden
+    padding: 6px
+    width: 480px
+    transform translateX(-50%)
 

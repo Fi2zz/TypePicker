@@ -106,6 +106,17 @@ export function createDatePicker(isInit?: Boolean) {
     });
     this.bindMonthSwitch();
     this.selected = this.currentRange(this.isFromSetRange);
+    if (this.singleView) {
+        if (this.double && this.selected.length >= 2) {
+            const start = this.selected[0];
+            const end = this.selected[this.selected.length - 1];
+            if (start === end) {
+                this.selected.pop()
+            }
+        }
+    }
+
+
     const updateEventData = {
         type: isInit ? 'init' : 'switch',
         value: this.selected
