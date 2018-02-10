@@ -1,12 +1,6 @@
 import '../src/style.styl'
 import './test.styl'
-// import Popper from './popper'
 
-
-import Popper from './popper.js'
-
-//
-// console.log(Popper)
 import {format} from '../src/datepicker.formatter'
 import DatePicker from '../src/index'
 import {source, languages as language} from './mock'

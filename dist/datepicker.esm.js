@@ -1134,6 +1134,7 @@ var DatePicker = (function () {
                         return false;
                     }
                 }
+                return true;
             };
             var datesHandler = function (cb) {
                 var datesList = [];
@@ -1148,7 +1149,10 @@ var DatePicker = (function () {
                     var endDate = isDate(end) ? end : _this.parse(end);
                     var diffed = diff(startDate, endDate, "days") * -1;
                     if (cb && typeof cb === 'function') {
-                        cb && cb(startDate, endDate, diffed);
+                        var cbValue = cb && cb(startDate, endDate, diffed);
+                        if (!cbValue) {
+                            return false;
+                        }
                     }
                     datesList = [_this.format(startDate).value, _this.format(endDate).value];
                 }
