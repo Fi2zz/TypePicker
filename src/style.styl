@@ -76,7 +76,8 @@ brand-disabled = #ccc
 
     &:not(:empty)
       cursor pointer
-
+    &~&.disabled
+      cursor pointer
     &.disabled
       color brand-disabled
       cursor default

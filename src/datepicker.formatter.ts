@@ -22,7 +22,7 @@ function isZeroLeading(format: string) {
 }
 
 
-export function format(date: Date, format: string) {
+export function format(date: Date, format?: string) {
     if (!format) {
         format = 'YYYY-MM-DD'
     }

@@ -16,100 +16,133 @@
     ***  bindData,如果不想显示价格，开启此项即可，同时将移除data事件,此时再调用data相关的事件和方法无法生效
                 
 *使用方法
-```typescript
 
-
-    const date = new Date();
-    const dist = {
-        year: date.getFullYear(),
-        month: date.getMonth(),
-        date: date.getDate()
-    };
-    
-    
-    
-    const options ={
-           el: '.datePicker-container',
-           from: new Date(dist.year, dist.month, dist.date),
-           to: new Date(dist.year, dist.month + 4, dist.date),
-           language: languages,
-           format: "YYYY-MM-DD",
-           doubleSelect: true,
-           limit: 7,
-           defaultLanguage: "en-us",
-           multiViews: true,
-        }
-    const datePicker = <any>new DatePicker(options);
-    //更新选择的日期
-    datePicker.on("update", (output: any) => {
-        const {type,value}=output;
-        //type => 'init'或'selected'
-        //valye => 选择的日期
-        document.getElementById("layout").innerHTML = `选中的日期${value}`
-    });
-    //设置默认日期，使用datePicker.dateRanges方法
-    //如果不需要设置默认选中的日期，不执行此方法即可    
-    //dateRanges =<Array<any>>[<Date>|<string>]
-    const  dateRanges:Array<any> =[new Date(),"2017-12-20"];
-    datePicker.setDates(dateRanges);
-    //通过data事件来控制每个日期格子展示的数据
-    datePicker.on("data", (result: any) => {
-        //返回传入的数据和nodeList
-        //返回传入的数据是因为需要和外部的数据做校验
-        const data = result.data;
-        const nodeList = result.nodeList;
-        for (let i = 0; i < nodeList.length; i++) {
-            let node = nodeList[i];
-            let date = node.getAttribute("data-date");
-            if (date in data) {
-                let itemData = data[date];
-                let placeholder: HTMLElement = node.querySelector(".placeholder");
-                placeholder.innerHTML = itemData.value
-            } else {
-                node.classList.add("disabled")
-            }
-        }
-    });
-    
-    //初始化后，需要手动调用一下data方法，把日历数据传入日历
-    datePicker.data((params: any) => {
-        //params为datePicker.data的callback 的参数
-        /* params={
-                dates:Array<string>["2017-11-18",...,"2017-12-31"],
-                data:<Map>{
-                    "2017-11-18":<any>,
-                    ...,
-                     "2017-12-31":<any>,
-                }
-                data的类型为map,由如下key-value的形式组成
-        */
-        const currDate = new Date(dist.year, dist.month, dist.date);
-        Object.keys(source).forEach(date=>{
-          let item = datePicker.parse(date);
-               if (datePicker.diff(item, currDate) >= 0) {
-                  params.dates.push(item)
-              } else {
-                  delete source[date]
-              }      
+       const date = new Date();
+       const dist = {
+           year: date.getFullYear(),
+           month: date.getMonth(),
+           date: date.getDate()
+       };
+       
+       const from = new Date(dist.year, dist.month, dist.date)
+       const to = new Date(dist.year, dist.month + 9, 0);
+       const currDate = new Date(dist.year, dist.month, dist.date);
+       const dateFormat = 'YYYY-M-D';
+       //不传参可以获取到parse format diff 三个方法
+       //分别是反格式日期化方法、格式化日期方法、对比日期方法
+       const datepickerUtil = new DatePicker;
+       const options ={
+              el: document.getElementById("datepicker"),
+              to,
+              from,
+              limit: 7,
+              language,
+              bindData: true,
+              format: dateFormat,
+              doubleSelect: true,
+              defaultLanguage: "zh",
+              views: 1
+            };
+        const datePicker = <any>new DatePicker(options);
+        //更新选择的日期
+        datePicker.on("update", (output: any) => {
+            const {type,value}=output;
+            //type => 'init'或'selected'
+            //valye => 选择的日期
+            document.getElementById("layout").innerHTML = `选中的日期${value}`
         });
-        params.data = source;
-    });
-   ```
- 
+        //设置默认日期，使用datePicker.dateRanges方法
+        //如果不需要设置默认选中的日期，不执行此方法即可    
+        //dateRanges =<Array<any>>[<Date>|<string>]
+        const  dateRanges:Array<any> =[new Date(),"2017-12-20"];
+        datePicker.setDates(dateRanges);
+        //通过data事件来控制每个日期格子展示的数据
+        datePicker.on("data", (result: any) => {
+            //返回传入的数据和nodeList
+            //返回传入的数据是因为需要和外部的数据做校验
+            const data = result.data;
+            const nodeList = result.nodeList;
+            for (let i = 0; i < nodeList.length; i++) {
+                let node = nodeList[i];
+                let date = node.getAttribute("data-date");
+                if (date in data) {
+                    let itemData = data[date];
+                    let placeholder: HTMLElement = node.querySelector(".placeholder");
+                    placeholder.innerHTML = itemData.value
+                } else {
+                    node.classList.add("disabled")
+                }
+            }
+        });
         
+        //初始化后，需要手动调用一下data方法，把日历数据传入日历
+        datePicker.data((params: any) => {
+            //params为datePicker.data的callback 的参数
+            /* params={
+                    dates:Array<string>["2017-11-18",...,"2017-12-31"],
+                    data:<Map>{
+                        "2017-11-18":<any>,
+                        ...,
+                         "2017-12-31":<any>,
+                    }
+                    data的类型为map,由如下key-value的形式组成
+            */
+            Object.keys(source).forEach(date=>{
+              let item = datePicker.parse(date);
+                   if (datepickerUtil.diff(item, currDate) >= 0) {
+                      params.dates.push(item)
+                  } else {
+                      delete source[date]
+                  }      
+            });
+            params.data = source;
+        });
+ 
+
+* utils方法（不传入option）
+```javascript
+    const {diff,parse,format} =new DatePicker
+   // diff   比較兩個日期相差幾天       const days= diff(new Date(2018,1,1),new Date(2018,1,5)) => 4
+   // parse  把格式化后的日期反格式化   const  parsed  = parse("2018-02-01","YYYY-MM-DD");   =>  Thu Feb 01 2018 00:00:00 GMT+0800 (CST)
+   // format 格式化日期                  const  formatted  = parse(new Date(),"YYYY-MM-DD");  =>    2018-02-01           
+```    
+            
 	
 * datePicker实例返回一个对象，对象包含以下
 
-|api|type |Desc|Example|
-|---|---|---|---|
-|diff[1]|Function|计算日期差，返回值为一个number类型|datePicker.diff(d1,d2) |
-|parse <sup>[2]</sup>|Function|把格式化后的日期反格式化,返回一个Date对象| datePicker.parse(dateString)  |
-|format <sup>[3]</sup>|Function| 把格式化的日期,返回一个对象| datePicker.format(DateObject) |
-|on <sup>[4]</sup>|Function|事件监听器|  datePicker.on("update",data=>{ }) |
-|update   |Event| 更新日历数据|datePicker,on("update",data=>{ <br/> /*your dates array */<br/>})|
-|data   |Event|  获取日历数据 | datePicker.on("data",data=>{ <br/> /* your code */ <br/> })|
-|data|Function|初始化日历数据，仅在初始化的时候需要调用   |datePicker.data(options=>{   <br/>  /* your code */ <br/>   } )
-|setDates|Function| 设置默认选中日期 |datePicker.setDates([Array<string>])|
+        diff
+            type     [Function]
+            desc     计算日期差，返回值为一个number类型
+        
+        parse
+            type     [Function]
+            desc     把格式化后的日期反格式化,返回一个Date对象
+            example  `datePicker.parse("2018-02-10","YYYY-MM-DD")`
+        
+        format [Function]
+            type     [Function]
+            desc     格式化日期
+            example  `datePicker.format(new Date,"YYYY-MM-DD") => 2018-02-10
+                
+        
+        on  
+            type     [Funtion]
+            desc     事件监听器，目前支持 update 和 data 事件
+            
+        
+        data  
+           type      [Function]
+           desc      设置日历数据，需要和bindData配合使用
+            
+        
+        setDates 
+           type      [Function]
+           desc      设置日期,接受一个数组，元素类型可以为Date或string
+           example   datePicker.setDates([new Date,"2018-02-14"]) 
+ 
+        disable [Function]
+
+
 
 [0] language语言包,由以下构成
 	
@@ -125,36 +158,11 @@
             year: "年"
         },
     }
-		
 
 [1] 目前仅支持计算两个日期差，不支持月份差，参数类型是`Date`类型；
-[2] 日期格式和`option.format`相同，不需要传入format,返回Date对象，如；
-
-		datePicker.parse("2017-11-11") // new Date(2017,10,11)
-
-[3] 日期格式和`option.format`相同，不需要传入format,返回如下对象
-
-	{
-		origin:<Date> //传入的Date对象
-		date:<String>	//日期
-		month:<String>//月份
-		year:<String>//年份
-		value:<String>//格式化后的日期,如 2017-11-11
-	}	
 [4] 事件监听,`update`事件，获取日期选择更新,`data`事件，渲染日历数据
 	
 	
-* utils方法
-```javascript
-    const {diff,parse,format} =new DatePicker()
-   // diff   比較兩個日期相差幾天       const days= diff(new Date(2018,1,1),new Date(2018,1,5)) => 4
-   // parse  把格式化后的日期反格式化   const  parsed  = parse("2018-02-01","YYYY-MM-DD");   =>  Thu Feb 01 2018 00:00:00 GMT+0800 (CST)
-   // format 格式化日期                  const  formatted  = parse(new Date(),"YYYY-MM-DD");  =>    2018-02-01           
-    
-
-```    
-    
-    
 	
 	
 	

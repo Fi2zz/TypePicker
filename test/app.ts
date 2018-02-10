@@ -13,10 +13,15 @@ const dist = {
     month: date.getMonth(),
     date: date.getDate()
 };
+
 const from = new Date(dist.year, dist.month, dist.date)
 const to = new Date(dist.year, dist.month + 9, 0);
+
 const currDate = new Date(dist.year, dist.month, dist.date);
 const dateFormat = 'YYYY-M-D';
+const datepickerUtil = new DatePicker;
+
+
 const initDates = function () {
     const nextDate = new Date(+currDate + (60 * 60 * 24 * 3 * 1000));
     const dates = [currDate, nextDate];
@@ -40,6 +45,9 @@ function createDatePicker(onUpdate: Function, create: boolean = true, selected?:
             views: 1
         });
         if (datepicker) {
+
+            console.log(datepickerUtil.format(new Date(), 'yyyy/m-d'))
+
             datepicker.on("update", (result: any) => onUpdate(result));
             datepicker.on("data", (result: any) => {
                 const data = result.data;
@@ -74,8 +82,6 @@ function createDatePicker(onUpdate: Function, create: boolean = true, selected?:
                         // delete source[date]
                     }
                 });
-
-
                 params.data = source;
                 return params
             });
@@ -84,17 +90,10 @@ function createDatePicker(onUpdate: Function, create: boolean = true, selected?:
     return datepicker
 }
 function onUpdate(result: any = {value: <Array<string>>[], type: <string>''}) {
-
-    console.log(result)
-
-
     if (result.type === 'selected' && result.value.length === 2) {
         popupHandler(false)
     }
     formControl.value = result.value;
-    const inputGroupAddon =formControl.previousElementSibling;
-
-    inputGroupAddon.innerHTML = `选择日期 / type:${result.type}`
 }
 
 function popupHandler(visible: boolean) {

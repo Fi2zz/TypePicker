@@ -47,13 +47,9 @@ export default function (options: pickerHandler) {
                 //如选择了 2018-02-04 ~ 2018-02-06
                 //但是用户实际想选择的是 2018-02-04~2018-02-05，
                 //此时 用户再次选择 2018-02-04，其他日期将被删除
-
-
                 if (index >= 0) {
                     selected = [selected[selected.length - 1]]
                 }
-
-
                 //双选，但选择的日期数量大于2，或单选
                 if (isDouble && selected.length >= 2 || !isDouble) {
                     selected = []
@@ -116,12 +112,10 @@ export default function (options: pickerHandler) {
                         }
                     }
                 }
-
                 update({
                     type: type,
                     value: selected
                 })
-
             }
         );
     }

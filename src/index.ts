@@ -1,5 +1,6 @@
 import {datePickerOptions} from "./datepicker.interfaces";
 import Observer from './datepicker.observer';
+import merge from './merge'
 import {
     diff,
     isObject,
@@ -91,8 +92,8 @@ export default class DatePicker {
         })
     };
     defaultDates: Array<string>[];
-    format = (date: Date) => formatter(date, this.dateFormat);
-    parse = (string: string) => parseFormatted(string, this.dateFormat);
+    format = (date: Date, format?: string) => formatter(date, format ? format : this.dateFormat);
+    parse = (string: string, format?: string) => parseFormatted(string, format ? format : this.dateFormat);
     inDates = (date: string | any) => this.dates.indexOf(date) >= 0;
     update = (result: any) => {
         const {type, value} = result;
@@ -195,30 +196,35 @@ export default class DatePicker {
     }
 
     constructor(option?: datePickerOptions) {
-        if (!option) {
-            return <any>instanceUtils()
-        }
-        this.defaultDates = [];
-        this.bindData = option.bindData;
 
-        if (!option.bindData && option.el) {
-            this.init(option, {});
-        }
-        return <any> {
-            on: Observer.$on,
-            data: (cb: Function) => this.initWithDataBind(option, cb),
+        let result = <any> {
             diff: (d1: Date, d2: Date) => diff(d1, d2, "days"),
-            parse: this.parse,
-            format: this.format,
-            dateRanges: (dates: any, fromInstance: boolean) => {
-                console.warn("dateRanges has been deprecated, use [setDates] instead");
-                this.setDates(dates, fromInstance)
-            },
-            disable: this.disable,
-            setDefaultDates: () => {
-                warn("setDefaultDates", "this method has been deprecated,use [setDates()] instead ")
-            },
-            setDates: this.setDates
+            parse: (string: string, format: string) => this.parse(string, format),
+            format: (date: Date, format: string) => this.format(date, format).value,
         };
+        let optionPassed: boolean = !!option
+        let instanceUtils = <any> {};
+        if (option) {
+            this.defaultDates = [];
+            this.bindData = option.bindData;
+            if (!option.bindData && option.el) {
+                this.init(option, {});
+            }
+            instanceUtils = {
+                on: Observer.$on,
+                data: (cb: Function) => this.initWithDataBind(option, cb),
+                dateRanges: (dates: any, fromInstance: boolean) => {
+                    console.warn("dateRanges has been deprecated, use [setDates] instead");
+                    this.setDates(dates, fromInstance)
+                },
+                disable: this.disable,
+                setDefaultDates: () => {
+                    warn("setDefaultDates", "this method has been deprecated,use [setDates()] instead ")
+                },
+                setDates: this.setDates
+            };
+        }
+        return merge(result, optionPassed ? instanceUtils : {});
+
     }
 }
