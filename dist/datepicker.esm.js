@@ -81,6 +81,9 @@ var padding = function (n) { return "" + (n > 9 ? n : "0" + n); };
 function _toString(object) {
     return Object.prototype.toString.call(object);
 }
+function isString(object) {
+    return _toString(object) === '[object String]';
+}
 function isArray(object) {
     return _toString(object) === '[object Array]';
 }
@@ -403,30 +406,38 @@ function parse(string) {
         return null;
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
-function format(date, format, zeroPadding) {
-    if (zeroPadding === void 0) { zeroPadding = true; }
-    var shouldPadStart = zeroPadding;
+function isZeroLeading(format) {
+    var splitFormat = format.split(/\W/, 3);
+    splitFormat.shift();
+    var temp = [];
+    for (var i = 0; i < splitFormat.length; i++) {
+        var item = splitFormat[i];
+        if (/\w\w/.test(item)) {
+            temp.push(item);
+        }
+    }
+    return splitFormat.length === temp.length;
+}
+function format(date, format) {
     if (!format) {
         format = 'YYYY-MM-DD';
     }
+    format = format.toUpperCase();
     var parts = {
-        DD: shouldPadStart ? padding(date.getDate()) : date.getDate(),
-        dd: shouldPadStart ? padding(date.getDate()) : date.getDate(),
-        MM: shouldPadStart ? padding(date.getMonth() + 1) : date.getMonth() + 1,
-        mm: shouldPadStart ? padding(date.getMonth() + 1) : date.getMonth() + 1,
         YYYY: date.getFullYear(),
+        DD: padding(date.getDate()),
+        MM: padding(date.getMonth() + 1),
         D: date.getDate(),
-        d: date.getDate(),
-        M: date.getMonth() + 1,
-        m: date.getMonth() + 1
+        M: date.getMonth() + 1
     };
+    var zeroLeading = isZeroLeading(format);
     return {
         origin: date,
-        date: shouldPadStart ? parts["DD"] : parts["D"],
-        month: shouldPadStart ? parts["MM"] : parts["M"],
+        date: zeroLeading ? parts["DD"] : parts["D"],
+        month: zeroLeading ? parts["MM"] : parts["M"],
         year: parts["YYYY"],
         day: date.getDay(),
-        value: format.replace(/(?:\b|%)([dDMyYHhaAmsz]+|ap|AP)(?:\b|%)/g, function (match, $1) {
+        value: format.replace(/(?:\b|%)([dDMyY]+)(?:\b|%)/g, function (match, $1) {
             return parts[$1] === undefined ? $1 : parts[$1];
         })
     };
@@ -489,18 +500,23 @@ function parseEl(el) {
     if (!el) {
         return null;
     }
-    if (el.indexOf('#') >= 0) {
-        return document.querySelector(el);
-    }
-    else if (el.indexOf('.') >= 0) {
-        return document.querySelectorAll(el)[0];
+    if (!isString(el)) {
+        return el;
     }
     else {
-        if (el.indexOf("#") <= -1 || el.indexOf(".") <= -1) {
-            warn("ParseEl ", "do not mount DatePicker to a pure html tag," + el);
-            return false;
+        if (el.indexOf('#') >= 0) {
+            return document.querySelector(el);
         }
-        return document.querySelector(el);
+        else if (el.indexOf('.') >= 0) {
+            return document.querySelectorAll(el)[0];
+        }
+        else {
+            if (el.indexOf("#") <= -1 || el.indexOf(".") <= -1) {
+                warn("ParseEl ", "do not mount DatePicker to a pure html tag," + el);
+                return false;
+            }
+            return document.querySelector(el);
+        }
     }
 }
 var defaultLanguage = {
@@ -633,7 +649,7 @@ function init(option, renderer) {
     if (option.doubleSelect) {
         this.double = option.doubleSelect;
     }
-    this.dateFormat = option.format || "YYYY-MM-DD";
+    this.dateFormat = option.format;
     var parseToInt = parseInt(option.views);
     if ((option.views !== 'auto' && isNaN(parseToInt)) || parseToInt === 1 || parseToInt > 2 || parseToInt <= 0) {
         this.singleView = true;
@@ -650,7 +666,6 @@ function init(option, renderer) {
     this.date = this.startDate;
     this.endDate = isDate(option.to) ? option.to : new Date(this.date.getFullYear(), this.date.getMonth() + 6, 0);
     this.limit = this.double ? isNumber(option.limit) ? option.limit : 1 : 1;
-    this.zeroPadding = checkIfZeroPadding(this.dateFormat);
     if (!renderer.dates || renderer.dates && renderer.dates.length <= 0) {
         var currDate = new Date();
         var gap = diff(this.endDate, currDate, "days");
@@ -677,7 +692,7 @@ function init(option, renderer) {
             warn('init', "infiniteMode is on, please provide [from] and [to] while binding data to datepicker  ");
         }
     }
-    this.format = function (date) { return format(date, _this.dateFormat, _this.zeroPadding); };
+    this.format = function (date) { return format(date, _this.dateFormat); };
     this.language = setLanguage(getLanguage(option.language, option.defaultLanguage));
     this.element = parseEl(option.el);
     if (!this.element) {
@@ -696,14 +711,6 @@ function init(option, renderer) {
         _this.pickDate();
         clearNextTick(next);
     });
-}
-function checkIfZeroPadding(dateFormat) {
-    if (!dateFormat) {
-        return true;
-    }
-    dateFormat = dateFormat.toUpperCase();
-    var regExp = /[Y|YY|YYYY|YYY]([-|/])MM[-|/]DD/;
-    return regExp.test(dateFormat);
 }
 
 var handlePickDate = function (options) {
@@ -758,7 +765,7 @@ var handlePickDate = function (options) {
                 singlePick(selector, element, shouldChange);
             }
             var type = "selected";
-            if (isDouble) {
+            if (isDouble && bindData) {
                 if (selected.length <= 1) {
                     var front = selected[0];
                     if (!inDates(front)) {
@@ -1052,7 +1059,6 @@ var DatePicker = (function () {
         this.singleView = true;
         this.doMonthSwitch = doMonthSwitch;
         this.createDatePicker = createDatePicker;
-        this.zeroPadding = false;
         this.bindData = false;
         this.infiniteMode = false;
         this.currentRange = currentRange;
@@ -1074,13 +1080,13 @@ var DatePicker = (function () {
                 bindData: _this.bindData
             });
         };
-        this.format = function (date) { return format(date, _this.dateFormat, _this.zeroPadding); };
+        this.format = function (date) { return format(date, _this.dateFormat); };
         this.parse = function (string) { return parseFormatted(string, _this.dateFormat); };
         this.inDates = function (date) { return _this.dates.indexOf(date) >= 0; };
         this.update = function (result) {
             var type = result.type, value = result.value;
             if (type === 'selected') {
-                _this.dateRanges(value, false);
+                _this.setDates(value, false);
             }
             else if (type === 'switch') {
                 if (_this.defaultDates.length > 0) {
@@ -1105,26 +1111,26 @@ var DatePicker = (function () {
                 });
             }
         };
-        this.dateRanges = function (dates, isFromInitedInstanceDateRangeFunction) {
+        this.setDates = function (dates, isFromInitedInstance) {
             if (!isArray(dates)) {
                 dates = [];
-                warn("dateRanges", "no dates provided," + dates);
+                warn("setDates", "no dates provided," + dates);
                 return;
             }
-            _this.isFromSetRange = !(!isFromInitedInstanceDateRangeFunction);
+            _this.isFromSetRange = !(!isFromInitedInstance);
             var bindDataHandler = function (startDate, endDate, diffed) {
                 if (diffed < 0
                     || diffed > _this.limit
                     || (!_this.inDates(_this.format(startDate).value) && !_this.inDates(_this.format(endDate).value))
                     || !_this.inDates(_this.format(startDate).value)) {
-                    warn("dateRanges", "Illegal dates,[" + dates + "]");
+                    warn("setDates", "Illegal dates,[" + dates + "]");
                     return false;
                 }
                 for (var i = 0; i <= diffed; i++) {
                     var date = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
                     var formatted = _this.format(date).value;
                     if (i < diffed && !_this.inDates(formatted)) {
-                        warn("dateRanges", "Illegal date,{dates:[" + formatted + "]}");
+                        warn("setDates", "Illegal date,{dates:[" + formatted + "]}");
                         return false;
                     }
                 }
@@ -1178,11 +1184,15 @@ var DatePicker = (function () {
             diff: function (d1, d2) { return diff(d1, d2, "days"); },
             parse: this.parse,
             format: this.format,
-            dateRanges: this.dateRanges,
+            dateRanges: function (dates, fromInstance) {
+                console.warn("dateRanges has been deprecated, use [setDates] instead");
+                _this.setDates(dates, fromInstance);
+            },
             disable: this.disable,
             setDefaultDates: function () {
-                warn("setDefaultDates", "this method has been deprecated,use [dateRanges()] instead ");
-            }
+                warn("setDefaultDates", "this method has been deprecated,use [setDates()] instead ");
+            },
+            setDates: this.setDates
         };
     }
     DatePicker.prototype.disable = function () {

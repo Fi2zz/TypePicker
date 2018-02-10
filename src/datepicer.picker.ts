@@ -94,7 +94,7 @@ export default function (options: pickerHandler) {
                     singlePick(selector, element, shouldChange);
                 }
                 let type = "selected";
-                if (isDouble) {
+                if (isDouble && bindData) {
                     if (selected.length <= 1) {
                         const front = selected[0];
                         if (!inDates(front)) {

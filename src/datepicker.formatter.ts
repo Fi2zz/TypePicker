@@ -7,36 +7,48 @@ function parse(string: string | Date): any {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
-export function format(date: Date, format: string , zeroPadding: boolean = true) {
-    const shouldPadStart = zeroPadding;
+function isZeroLeading(format: string) {
+    const splitFormat: Array<string> = format.split(/\W/, 3);
+    splitFormat.shift();
+
+    const temp = [];
+    for (let i = 0; i < splitFormat.length; i++) {
+        let item = splitFormat[i];
+        if (/\w\w/.test(item)) {
+            temp.push(item)
+        }
+    }
+    return splitFormat.length === temp.length
+}
+
+
+export function format(date: Date, format: string) {
     if (!format) {
         format = 'YYYY-MM-DD'
     }
+    format = format.toUpperCase();
     let parts = <any>{
-        DD: shouldPadStart ? padding(date.getDate()) : date.getDate(),
-        dd: shouldPadStart ? padding(date.getDate()) : date.getDate(),
-        MM: shouldPadStart ? padding(date.getMonth() + 1) : date.getMonth() + 1,
-        mm: shouldPadStart ? padding(date.getMonth() + 1) : date.getMonth() + 1,
         YYYY: date.getFullYear(),
+        DD: padding(date.getDate()),
+        MM: padding(date.getMonth() + 1),
         D: date.getDate(),
-        d: date.getDate(),
         M: date.getMonth() + 1,
-        m: date.getMonth() + 1,
     };
+    const zeroLeading = isZeroLeading(format);
     return {
         origin: date,
-        date: shouldPadStart ? parts["DD"] : parts["D"],
-        month: shouldPadStart ? parts["MM"] : parts["M"],
+        date: zeroLeading ? parts["DD"] : parts["D"],
+        month: zeroLeading ? parts["MM"] : parts["M"],
         year: parts["YYYY"],
         day: date.getDay(),
-        value: format.replace(/(?:\b|%)([dDMyYHhaAmsz]+|ap|AP)(?:\b|%)/g, function (match, $1) {
-            noop(match)
+        value: format.replace(/(?:\b|%)([dDMyY]+)(?:\b|%)/g, (match, $1) => {
+            noop(match);
             return parts[$1] === undefined ? $1 : parts[$1]
         })
     }
 
 }
-function noop(a:any){
+function noop(a: any) {
     return a
 }
 export function parseFormatted(strDate: string, format: string) {

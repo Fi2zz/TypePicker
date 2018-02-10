@@ -1,14 +1,15 @@
 export interface datePickerOptions {
-    el: string;
-    to: Date | null | undefined;
-    from?: Date | null | undefined;
+    el: string | HTMLElement;
+    to?: Date ;
+    from?: Date;
     limit: number;
-    format: string;
+    format?: string;
     language?: any;
-    doubleSelect: boolean;
-    defaultLanguage: string;
+    doubleSelect?: boolean;
+    defaultLanguage?: string;
     bindData?: boolean;
     views?: number | string
+
 }
 
 export interface templateFunctionOption {

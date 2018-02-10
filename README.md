@@ -12,8 +12,6 @@
 |limit   |Number|                          双选情况下，限制最大跨度,如果`doubleSelect=false`,则自动限制为`1`|
 |view   |Number|String|                    日曆視圖數量，大於2或小於0或者其他字符串都會設置為singleView,如果傳入的是auto會被設置為flatView      |
 
-    *    multiViews和flatView都为true的情况下，自动转换成multiviews
-    *    multiViews和flatView都为false的情况下，垂直展示多个月份，移动端会比较有用
     **   from默认是new Date(),to默认为new Date()往后推6个月
     ***  bindData,如果不想显示价格，开启此项即可，同时将移除data事件,此时再调用data相关的事件和方法无法生效
                 
@@ -53,7 +51,7 @@
     //如果不需要设置默认选中的日期，不执行此方法即可    
     //dateRanges =<Array<any>>[<Date>|<string>]
     const  dateRanges:Array<any> =[new Date(),"2017-12-20"];
-    datePicker.dateRanges(dateRanges);
+    datePicker.setDates(dateRanges);
     //通过data事件来控制每个日期格子展示的数据
     datePicker.on("data", (result: any) => {
         //返回传入的数据和nodeList
@@ -111,7 +109,7 @@
 |update   |Event| 更新日历数据|datePicker,on("update",data=>{ <br/> /*your dates array */<br/>})|
 |data   |Event|  获取日历数据 | datePicker.on("data",data=>{ <br/> /* your code */ <br/> })|
 |data|Function|初始化日历数据，仅在初始化的时候需要调用   |datePicker.data(options=>{   <br/>  /* your code */ <br/>   } )
-|dateRanges|Function| 设置默认选中日期 |datePicker.dateRanges([Array<string>])|
+|setDates|Function| 设置默认选中日期 |datePicker.setDates([Array<string>])|
 
 [0] language语言包,由以下构成
 	

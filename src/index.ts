@@ -22,7 +22,7 @@ import {parseFormatted, format as formatter} from "./datepicker.formatter"
 function noData(result: any) {
     return !isObject(result)
         || (Object.keys(result.data).length <= 0
-            || result.dates.length <= 0)
+        || result.dates.length <= 0)
 }
 
 function initWithDataBind(option: any, cb: Function) {
@@ -69,13 +69,12 @@ export default class DatePicker {
     singleView: boolean = true;
     doMonthSwitch = doMonthSwitch;
     createDatePicker = createDatePicker;
-    zeroPadding: boolean = false;
     bindData: boolean = false;
     infiniteMode: boolean = false;
     currentRange: Function = currentRange;
     isFromSetRange: boolean = false;
     language: any = {};
-    disableds: Array<string> = []
+    disableds: Array<string> = [];
     pickDate = () => {
         handlePickDate({
             element: this.element,
@@ -92,13 +91,13 @@ export default class DatePicker {
         })
     };
     defaultDates: Array<string>[];
-    format = (date: Date) => formatter(date, this.dateFormat, this.zeroPadding);
+    format = (date: Date) => formatter(date, this.dateFormat);
     parse = (string: string) => parseFormatted(string, this.dateFormat);
     inDates = (date: string | any) => this.dates.indexOf(date) >= 0;
     update = (result: any) => {
         const {type, value} = result;
         if (type === 'selected') {
-            this.dateRanges(value, false)
+            this.setDates(value, false)
         } else if (type === 'switch') {
             if (this.defaultDates.length > 0) {
                 this.selected = this.defaultDates;
@@ -122,14 +121,14 @@ export default class DatePicker {
 
         }
     };
-    dateRanges = (dates: Array<any>, isFromInitedInstanceDateRangeFunction?: boolean) => {
+    setDates = (dates: Array<any>, isFromInitedInstance?: boolean) => {
         if (!isArray(dates)) {
             dates = [];
-            warn("dateRanges", `no dates provided,${dates}`);
+            warn("setDates", `no dates provided,${dates}`);
             return
         }
 
-        this.isFromSetRange = !(!isFromInitedInstanceDateRangeFunction);
+        this.isFromSetRange = !(!isFromInitedInstance);
 
         const bindDataHandler = (startDate: Date, endDate: Date, diffed: number) => {
             if (diffed < 0
@@ -137,21 +136,21 @@ export default class DatePicker {
                 || (!this.inDates(this.format(startDate).value) && !this.inDates(this.format(endDate).value) )//开始日期和结束日期均为无效日期
                 || !this.inDates(this.format(startDate).value)
             ) {
-                warn(`dateRanges`, `Illegal dates,[${dates}]`);
+                warn(`setDates`, `Illegal dates,[${dates}]`);
                 return false;
             }
             for (let i = 0; i <= diffed; i++) {
                 const date = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
                 const formatted = this.format(date).value;
                 if (i < diffed && !this.inDates(formatted)) {
-                    warn("dateRanges", `Illegal date,{dates:[${formatted}]}`)
+                    warn("setDates", `Illegal date,{dates:[${formatted}]}`)
                     return false
                 }
             }
         };
 
         const datesHandler = (cb?: Function) => {
-            let datesList: Array<any> = []
+            let datesList: Array<any> = [];
             let start: string = '', end: string = ''
             if (this.double) {
                 if (dates.length > 2) {
@@ -206,11 +205,15 @@ export default class DatePicker {
             diff: (d1: Date, d2: Date) => diff(d1, d2, "days"),
             parse: this.parse,
             format: this.format,
-            dateRanges: this.dateRanges,
+            dateRanges: (dates: any, fromInstance: boolean) => {
+                console.warn("dateRanges has been deprecated, use [setDates] instead");
+                this.setDates(dates, fromInstance)
+            },
             disable: this.disable,
             setDefaultDates: () => {
-                warn("setDefaultDates", "this method has been deprecated,use [dateRanges()] instead ")
-            }
+                warn("setDefaultDates", "this method has been deprecated,use [setDates()] instead ")
+            },
+            setDates: this.setDates
         };
     }
 }

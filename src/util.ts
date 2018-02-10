@@ -37,9 +37,13 @@ export const padding = (n: Number) => `${n > 9 ? n : "0" + n}`;
 function _toString(object: any) {
     return Object.prototype.toString.call(object);
 }
+export function isString(object: any) {
+    return _toString(object) === '[object String]';
+}
 export function isArray(object: any) {
     return _toString(object) === '[object Array]';
 }
+
 export function isObject(object: any) {
     return _toString(object) === '[object Object]';
 }

@@ -6,6 +6,7 @@ import {
     removeClass,
     clearNextTick,
     nextTick,
+    isString,
     warn
 } from "./util";
 import compose from "./datepicker.template";
@@ -16,17 +17,21 @@ export function parseEl(el: string) {
     if (!el) {
         return null
     }
-    if (el.indexOf('#') >= 0) {
-        return document.querySelector(el)
-    } else if (el.indexOf('.') >= 0) {
-        return document.querySelectorAll(el)[0]
+    if (!isString(el)) {
+        return el
     }
     else {
-        if (el.indexOf("#") <= -1 || el.indexOf(".") <= -1) {
-            warn(`ParseEl `, `do not mount DatePicker to a pure html tag,${el}`)
-            return false;
+        if (el.indexOf('#') >= 0) {
+            return document.querySelector(el)
+        } else if (el.indexOf('.') >= 0) {
+            return document.querySelectorAll(el)[0]
+        } else {
+            if (el.indexOf("#") <= -1 || el.indexOf(".") <= -1) {
+                warn(`ParseEl `, `do not mount DatePicker to a pure html tag,${el}`)
+                return false;
+            }
+            return document.querySelector(el)
         }
-        return document.querySelector(el)
     }
 }
 
@@ -174,9 +179,7 @@ export function init(option: any, renderer: any) {
     if (option.doubleSelect) {
         this.double = option.doubleSelect
     }
-    this.dateFormat = option.format || "YYYY-MM-DD";
-
-
+    this.dateFormat = option.format //|| "YYYY-MM-DD";
     const parseToInt = parseInt(option.views);
     if ((option.views !== 'auto' && isNaN(parseToInt)) || parseToInt === 1 || parseToInt > 2 || parseToInt <= 0) {
         this.singleView = true;
@@ -189,8 +192,6 @@ export function init(option: any, renderer: any) {
         this.multiViews = true;
         this.singleView = false
     }
-
-
     //开始日期
     this.startDate = isDate(option.from) ? option.from : new Date();
     this.date = this.startDate;
@@ -198,9 +199,6 @@ export function init(option: any, renderer: any) {
     this.endDate = isDate(option.to) ? option.to : new Date(this.date.getFullYear(), this.date.getMonth() + 6, 0);
     //選擇日期區間最大限制
     this.limit = this.double ? isNumber(option.limit) ? option.limit : 1 : 1;
-    //通过判断日期格式来判断是否补0
-    this.zeroPadding = checkIfZeroPadding(this.dateFormat);
-
     if (!renderer.dates || renderer.dates && renderer.dates.length <= 0) {
         const currDate = new Date();
         const gap = diff(this.endDate, currDate, "days");
@@ -228,7 +226,7 @@ export function init(option: any, renderer: any) {
         }
     }
 
-    this.format = (date: Date) => format(date, this.dateFormat, this.zeroPadding);
+    this.format = (date: Date) => format(date, this.dateFormat);
     this.language = setLanguage(getLanguage(option.language, option.defaultLanguage));
     this.element = parseEl(option.el);
     if (!this.element) {
@@ -249,13 +247,6 @@ export function init(option: any, renderer: any) {
     })
 }
 
-function checkIfZeroPadding(dateFormat: string) {
-    if (!dateFormat) {
-        return true
-    }
-    dateFormat = dateFormat.toUpperCase();
-    const regExp = /[Y|YY|YYYY|YYY]([-|/])MM[-|/]DD/;
-    return regExp.test(dateFormat)
-}
+
 
 

@@ -16,30 +16,25 @@ const dist = {
 const from = new Date(dist.year, dist.month, dist.date)
 const to = new Date(dist.year, dist.month + 9, 0);
 
-
 const popTrigger = document.getElementById("date-value");
-
-const pop: HTMLElement = document.querySelector(".popup")
-
+const pop = <HTMLElement> document.querySelector(".popup");
 let selected: Array<string> = [];
-
 function setDatePicker(create: boolean = true, selected: Array<any>) {
 
 
     let datepicker = null;
     if (create) {
         datepicker = <any>new DatePicker({
-            el: '#datepicker',
+            el: document.getElementById("datepicker"),
             to,
             from,
             limit: 7,
-            views:"auto",
             language,
             bindData: true,
             format: "YYYY-M-D",
             doubleSelect: true,
             defaultLanguage: "jp",
-
+            views: 2
         });
         if (datepicker) {
             datepicker.on("update", (output: any) => layout(output));
@@ -86,7 +81,6 @@ function setDatePicker(create: boolean = true, selected: Array<any>) {
             });
         }
     }
-
     return datepicker
 
 }
@@ -112,7 +106,7 @@ function layout(result: any = {value: <Array<string>>[], type: <string>''}) {
 popTrigger.addEventListener("click", () => {
     pop.style.display = 'block'
 });
-pop.style.display = 'block'
+// pop.style.display = 'block';
 
 datepicker(true, selected)
 

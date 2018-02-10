@@ -93,7 +93,6 @@ function calendarTemplateList(option: templateMapOption) {
         startDate,
         endDate,
         gap,
-        // zeroPadding,
         infiniteMode,
         formatter,
         parse
@@ -121,7 +120,6 @@ function calendarViewTemplate(options: templateFunctionOption) {
         flatView,
         singleView,
         language,
-        // zeroPadding
     } = options;
     const weekDays = language.week.map((day: any, index: number) => {
         const className = ["calendar-cell", "calendar-day-cell",
