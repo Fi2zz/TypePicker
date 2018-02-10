@@ -42,6 +42,52 @@ var Observer = (function () {
     };
 }());
 
+function merge() {
+    var args = [];
+    for (var _i = 0; _i < arguments.length; _i++) {
+        args[_i] = arguments[_i];
+    }
+    var merged = {};
+    function toString(object) {
+        return Object.prototype.toString.call(object);
+    }
+    function whichType(object, type) {
+        return toString(object) === "[object " + type + "]";
+    }
+    function generateObject(target, object) {
+        if (target === void 0) { target = {}; }
+        for (var key in object) {
+            if (object.hasOwnProperty(key)) {
+                target[key] = object[key];
+            }
+        }
+        return target;
+    }
+    for (var i = 0; i < args.length; i++) {
+        var arg = args[i];
+        if (arg) {
+            if (whichType(arg, "Array")) {
+                for (var i_1 = 0; i_1 < arg.length; i_1++) {
+                    var argItem = arg[i_1];
+                    if (whichType(argItem, "Object")) {
+                        merged = generateObject(merged, argItem);
+                    }
+                    else if (!whichType(argItem, "Date")) {
+                        merged[argItem] = argItem;
+                    }
+                }
+            }
+            else if (whichType(arg, "Object")) {
+                merged = generateObject(merged, arg);
+            }
+            else if (whichType(arg, "String") || whichType(arg, "Number")) {
+                merged[arg] = arg;
+            }
+        }
+    }
+    return merged;
+}
+
 var attrSelector = function (attr, value) { return "[" + attr + "=\"" + value + "\"]"; };
 function attr(el, attr, attrvalue) {
     if (attrvalue === void 0) { attrvalue = undefined; }
@@ -1047,13 +1093,6 @@ function initWithDataBind(option, cb) {
         }
     }
 }
-function instanceUtils() {
-    return {
-        format: function (date, format$$1) { return (date && format$$1) ? format(date, format$$1).value : null; },
-        parse: function (string, format$$1) { return (string && format$$1) ? parseFormatted(string, format$$1) : new Date(); },
-        diff: function (d1, d2) { return diff(d1, d2, "days"); }
-    };
-}
 var DatePicker = (function () {
     function DatePicker(option) {
         var _this = this;
@@ -1091,8 +1130,8 @@ var DatePicker = (function () {
                 bindData: _this.bindData
             });
         };
-        this.format = function (date) { return format(date, _this.dateFormat); };
-        this.parse = function (string) { return parseFormatted(string, _this.dateFormat); };
+        this.format = function (date, format$$1) { return format(date, format$$1 ? format$$1 : _this.dateFormat); };
+        this.parse = function (string, format$$1) { return parseFormatted(string, format$$1 ? format$$1 : _this.dateFormat); };
         this.inDates = function (date) { return _this.dates.indexOf(date) >= 0; };
         this.update = function (result) {
             var type = result.type, value = result.value;
@@ -1185,30 +1224,33 @@ var DatePicker = (function () {
         };
         this.bindMonthSwitch = bindMonthSwitch;
         this.initWithDataBind = initWithDataBind;
-        if (!option) {
-            return instanceUtils();
-        }
-        this.defaultDates = [];
-        this.bindData = option.bindData;
-        if (!option.bindData && option.el) {
-            this.init(option, {});
-        }
-        return {
-            on: Observer.$on,
-            data: function (cb) { return _this.initWithDataBind(option, cb); },
+        var util = {
             diff: function (d1, d2) { return diff(d1, d2, "days"); },
-            parse: this.parse,
-            format: this.format,
-            dateRanges: function (dates, fromInstance) {
-                console.warn("dateRanges has been deprecated, use [setDates] instead");
-                _this.setDates(dates, fromInstance);
-            },
-            disable: this.disable,
-            setDefaultDates: function () {
-                warn("setDefaultDates", "this method has been deprecated,use [setDates()] instead ");
-            },
-            setDates: this.setDates
+            parse: function (string, format$$1) { return _this.parse(string, format$$1); },
+            format: function (date, format$$1) { return _this.format(date, format$$1).value; }
         };
+        var instanceUtils = {};
+        if (option) {
+            this.defaultDates = [];
+            this.bindData = option.bindData;
+            if (!option.bindData && option.el) {
+                this.init(option, {});
+            }
+            instanceUtils = {
+                on: Observer.$on,
+                data: function (cb) { return _this.initWithDataBind(option, cb); },
+                dateRanges: function (dates, fromInstance) {
+                    console.warn("dateRanges has been deprecated, use [setDates] instead");
+                    _this.setDates(dates, fromInstance);
+                },
+                disable: this.disable,
+                setDefaultDates: function () {
+                    warn("setDefaultDates", "this method has been deprecated,use [setDates()] instead ");
+                },
+                setDates: this.setDates
+            };
+        }
+        return merge(util, instanceUtils);
     }
     DatePicker.prototype.disable = function () {
     };

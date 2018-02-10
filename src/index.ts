@@ -46,13 +46,6 @@ function initWithDataBind(option: any, cb: Function) {
     }
 }
 
-function instanceUtils() {
-    return <Object> {
-        format: (date: Date, format: string) => (date && format) ? formatter(date, format).value : null,
-        parse: (string: string, format: string) => (string && format) ? parseFormatted(string, format) : new Date(),
-        diff: (d1: Date, d2: Date) => diff(d1, d2, "days")
-    };
-}
 
 export default class DatePicker {
     init = init;
@@ -197,12 +190,11 @@ export default class DatePicker {
 
     constructor(option?: datePickerOptions) {
 
-        let result = <any> {
+        const util = <any> {
             diff: (d1: Date, d2: Date) => diff(d1, d2, "days"),
             parse: (string: string, format: string) => this.parse(string, format),
             format: (date: Date, format: string) => this.format(date, format).value,
         };
-        let optionPassed: boolean = !!option
         let instanceUtils = <any> {};
         if (option) {
             this.defaultDates = [];
@@ -224,7 +216,7 @@ export default class DatePicker {
                 setDates: this.setDates
             };
         }
-        return merge(result, optionPassed ? instanceUtils : {});
-
+        return merge(util, instanceUtils);
     }
 }
+
