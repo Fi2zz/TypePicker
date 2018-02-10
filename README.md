@@ -13,7 +13,7 @@
 |view   |Number|String|                    日曆視圖數量，大於2或小於0或者其他字符串都會設置為singleView,如果傳入的是auto會被設置為flatView      |
 
     **   from默认是new Date(),to默认为new Date()往后推6个月
-    ***  bindData,如果不想显示价格，开启此项即可，同时将移除data事件,此时再调用data相关的事件和方法无法生效
+    ***  bindData,如果不想显示价格，不开启此项即可，同时将移除data事件,此时再调用data相关的事件和方法无法生效
                 
 *使用方法
 ```typescript
