@@ -38,7 +38,8 @@ function base() {
             extensions: ['.js', '.json', ".ts", ".tsx"],
         },
         devtool: '#eval-source-map'
-    }}
+    }
+}
 function devServer() {
     return {
         devServer: {
@@ -63,5 +64,6 @@ function devServer() {
             })
         ]
 
-    }}
+    }
+}
 module.exports = new Promise((resolve, reject) => resolve(merge(base(), devServer())));

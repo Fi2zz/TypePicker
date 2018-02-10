@@ -1,3 +1,6 @@
+//@import “node_modules/-styl//index.styl”
+
+@import "./bootstrap-styl/index.styl"
 primary = #06a2d0;
 default = #fff
 gray = #ddd
@@ -46,11 +49,27 @@ disabled = #ccc
   display: none
 
 .toolbar
-  height: 48px
   margin auto
-  display: flex
-  justify-content center
-    
-  input
-    height: 100%
-    text-align: center
+  width 320px
+  height: 34px
+  position: relative
+  display: block
+  .form-control
+    padding-top: 0
+    padding-bottom:0
+    line-height 34px
+    border-radius 4px !important
+
+  .input-group-addon
+    position: absolute
+    top: 1px
+    right: 1px
+    bottom: 1px
+    z-index: 9
+    width auto
+    line-height 32px
+    padding: 0
+    padding-right: 12px
+    border: none
+
+

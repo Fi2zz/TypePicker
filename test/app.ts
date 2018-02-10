@@ -1,7 +1,13 @@
 import '../src/style.styl'
 import './test.styl'
+// import Popper from './popper'
 
 
+import Popper from './popper.js'
+
+//
+// console.log(Popper)
+import {format} from '../src/datepicker.formatter'
 import DatePicker from '../src/index'
 import {source, languages as language} from './mock'
 import {addClass} from "../src/util";
@@ -15,13 +21,17 @@ const dist = {
 };
 const from = new Date(dist.year, dist.month, dist.date)
 const to = new Date(dist.year, dist.month + 9, 0);
-
-const popTrigger = document.getElementById("date-value");
+const currDate = new Date(dist.year, dist.month, dist.date);
+const dateFormat = 'YYYY-M-D';
+const initDates = function () {
+    const nextDate = new Date(+currDate + (60 * 60 * 24 * 3 * 1000));
+    const dates = [currDate, nextDate];
+    return <Array<string>> dates.map(item => format(item, dateFormat).value)
+};
+const formControl = <HTMLInputElement> document.getElementById("date-value");
+formControl.value = initDates().join(" ");
 const pop = <HTMLElement> document.querySelector(".popup");
-let selected: Array<string> = [];
-function setDatePicker(create: boolean = true, selected: Array<any>) {
-
-
+function createDatePicker(onUpdate: Function, create: boolean = true, selected?: Array<any>) {
     let datepicker = null;
     if (create) {
         datepicker = <any>new DatePicker({
@@ -31,13 +41,13 @@ function setDatePicker(create: boolean = true, selected: Array<any>) {
             limit: 7,
             language,
             bindData: true,
-            format: "YYYY-M-D",
+            format: dateFormat,
             doubleSelect: true,
             defaultLanguage: "jp",
             views: 2
         });
         if (datepicker) {
-            datepicker.on("update", (output: any) => layout(output));
+            datepicker.on("update", onUpdate);
             datepicker.on("data", (result: any) => {
                 const data = result.data;
                 const nodeList = result.nodeList;
@@ -55,17 +65,14 @@ function setDatePicker(create: boolean = true, selected: Array<any>) {
                         addClass(node, "disabled")
                     }
                 }
-
-
             });
             if (selected.length >= 2) {
-                datepicker.dateRanges(selected, true);
+                datepicker.setDates(selected, true);
             }
             datepicker.disable({
                 dates: "2018-2-16", days: [123]
             });
             datepicker.data((params: any) => {
-                const currDate = new Date(dist.year, dist.month, dist.date);
                 Object.keys(source).forEach(date => {
                     let item = datepicker.parse(date);
                     if (datepicker.diff(item, currDate) >= 0) {
@@ -82,34 +89,39 @@ function setDatePicker(create: boolean = true, selected: Array<any>) {
         }
     }
     return datepicker
-
 }
-
-function datepicker(create: boolean, selected: Array<any>) {
-    return setDatePicker(create, selected);
-}
-
-
-function layout(result: any = {value: <Array<string>>[], type: <string>''}) {
+function onUpdate(result: any = {value: <Array<string>>[], type: <string>''}) {
     if (result.type === 'selected' && result.value.length === 2) {
         pop.style.display = 'none'
     }
-
-    selected = result.value;
-    document.getElementById("layout").innerHTML = `选中的日期<br/>${result.type} / ${result.value}`;
-    setTimeout(() => {
-        datepicker(false, [])
-    }, 100)
-
+    formControl.value = result.value;
+    formControl.nextElementSibling.innerHTML = `type:${result.type}`
 }
 
-popTrigger.addEventListener("click", () => {
-    pop.style.display = 'block'
-});
-// pop.style.display = 'block';
 
-datepicker(true, selected)
+function init(document: Document) {
+    document.addEventListener("click", (e) => {
+        const target = <HTMLElement> e.target;
+        const popupVisible = window.getComputedStyle(pop, null).getPropertyValue("display") === 'block';
+        if (target) {
+            const parent = <HTMLElement>target.parentNode;
+            if (parent.nodeType === 1) {
+                if (parent.classList.contains("input-group")) {
+                    if (!popupVisible) {
+                        pop.style.display = 'block'
+                    }
 
+                }
+                else if (parent.tagName.toLowerCase() === 'body') {
+                    if (popupVisible) {
+                        pop.style.display = 'none'
+                    }
+                }
 
+            }
 
-
+        }
+    });
+}
+createDatePicker(onUpdate, true, formControl.value.split(" "));
+init(document);

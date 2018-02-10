@@ -147,6 +147,8 @@ export default class DatePicker {
                     return false
                 }
             }
+
+            return true
         };
 
         const datesHandler = (cb?: Function) => {
@@ -162,7 +164,10 @@ export default class DatePicker {
                 const endDate = isDate(end) ? end : this.parse(end);
                 const diffed = diff(startDate, endDate, "days") * -1;
                 if (cb && typeof cb === 'function') {
-                    cb && cb(startDate, endDate, diffed)
+                    const cbValue = cb && cb(startDate, endDate, diffed);
+                    if (!cbValue) {
+                        return false
+                    }
                 }
                 datesList = [this.format(startDate).value, this.format(endDate).value]
             }
