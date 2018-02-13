@@ -2,7 +2,6 @@ const rollup = require('rollup').rollup;
 const fs = require("fs");
 const path = require("path");
 const stylus = require("stylus");
-const rm = require("rimraf");
 const colorful = require("colors/safe");
 const mkdirp = require("mkdirp");
 const uglify = require('uglify-js');
