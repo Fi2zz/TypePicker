@@ -442,106 +442,6 @@ function setInitRange(options) {
     return dates;
 }
 
-function parse(string) {
-    if (!string)
-        return new Date();
-    if (string instanceof Date)
-        return string;
-    var date = new Date(string);
-    if (!date.getTime())
-        return null;
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-function isZeroLeading(format) {
-    var splitFormat = format.split(/\W/, 3);
-    splitFormat.shift();
-    var temp = [];
-    for (var i = 0; i < splitFormat.length; i++) {
-        var item = splitFormat[i];
-        if (/\w\w/.test(item)) {
-            temp.push(item);
-        }
-    }
-    return splitFormat.length === temp.length;
-}
-function format(date, format) {
-    if (!format) {
-        format = 'YYYY-MM-DD';
-    }
-    format = format.toUpperCase();
-    var parts = {
-        YYYY: date.getFullYear(),
-        DD: padding(date.getDate()),
-        MM: padding(date.getMonth() + 1),
-        D: date.getDate(),
-        M: date.getMonth() + 1
-    };
-    var zeroLeading = isZeroLeading(format);
-    return {
-        origin: date,
-        date: zeroLeading ? parts["DD"] : parts["D"],
-        month: zeroLeading ? parts["MM"] : parts["M"],
-        year: parts["YYYY"],
-        day: date.getDay(),
-        value: format.replace(/(?:\b|%)([dDMyY]+)(?:\b|%)/g, function (match, $1) {
-            return parts[$1] === undefined ? $1 : parts[$1];
-        })
-    };
-}
-function parseFormatted(strDate, format) {
-    if (!format) {
-        format = 'YYYY-MM-DD';
-    }
-    var ret = parse(strDate);
-    if (ret)
-        return ret;
-    var token = /d{1,4}|M{1,4}|YY(?:YY)?|S{1,3}|Do|ZZ|([HhMsDm])\1?|[aA]|"[^"]*"|'[^']*'/g;
-    var parseFlags = {
-        D: [/\d{1,2}/, function (d, v) { return d.day = parseInt(v); }],
-        M: [/\d{1,2}/, function (d, v) { return (d.month = parseInt(v) - 1); }],
-        DD: [/\d{2}/, function (d, v) { return d.day = parseInt(v); }],
-        MM: [/\d{2}/, function (d, v) { return d.month = parseInt(v) - 1; }],
-        YY: [/\d{2,4}/, function (d, v) { return d.year = parseInt(v); }],
-        YYYY: [/\d{2,4}/, function (d, v) { return d.year = parseInt(v); }]
-    };
-    ret = function (dateStr, format) {
-        if (dateStr.length > 1000) {
-            return null;
-        }
-        var isValid = true;
-        var dateInfo = {
-            year: 0,
-            month: 0,
-            day: 0
-        };
-        format.replace(token, function ($0) {
-            if (parseFlags[$0]) {
-                var info = parseFlags[$0];
-                var regExp = info[0];
-                var handler_1 = info[info.length - 1];
-                var index_1 = dateStr.search(regExp);
-                if (!~index_1) {
-                    isValid = false;
-                }
-                else {
-                    dateStr.replace(info[0], function (result) {
-                        handler_1(dateInfo, result);
-                        dateStr = dateStr.substr(index_1 + result.length);
-                        return result;
-                    });
-                }
-            }
-            return parseFlags[$0] ? '' : $0.slice(1, $0.length - 1);
-        });
-        if (!isValid) {
-            return null;
-        }
-        var parsed = new Date(dateInfo.year, dateInfo.month, dateInfo.day);
-        return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
-    };
-    return ret(strDate, format);
-}
-
 function parseEl(el) {
     if (!el) {
         return null;
@@ -747,7 +647,6 @@ function init(option, renderer) {
             warn('init', "infiniteMode is on, please provide [from] and [to] while binding data to datepicker  ");
         }
     }
-    this.format = function (date) { return format(date, _this.dateFormat); };
     this.language = setLanguage(getLanguage(option.language, option.defaultLanguage));
     this.element = parseEl(option.el);
     if (!this.element) {
@@ -1067,6 +966,106 @@ function doubleSelectHandler(options) {
         allValid: allValid,
         range: range
     };
+}
+
+function parse(string) {
+    if (!string)
+        return new Date();
+    if (string instanceof Date)
+        return string;
+    var date = new Date(string);
+    if (!date.getTime())
+        return null;
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+function isZeroLeading(format) {
+    var splitFormat = format.split(/\W/, 3);
+    splitFormat.shift();
+    var temp = [];
+    for (var i = 0; i < splitFormat.length; i++) {
+        var item = splitFormat[i];
+        if (/\w\w/.test(item)) {
+            temp.push(item);
+        }
+    }
+    return splitFormat.length === temp.length;
+}
+function format(date, format) {
+    if (!format) {
+        format = 'YYYY-MM-DD';
+    }
+    format = format.toUpperCase();
+    var parts = {
+        YYYY: date.getFullYear(),
+        DD: padding(date.getDate()),
+        MM: padding(date.getMonth() + 1),
+        D: date.getDate(),
+        M: date.getMonth() + 1
+    };
+    var zeroLeading = isZeroLeading(format);
+    return {
+        origin: date,
+        date: zeroLeading ? parts["DD"] : parts["D"],
+        month: zeroLeading ? parts["MM"] : parts["M"],
+        year: parts["YYYY"],
+        day: date.getDay(),
+        value: format.replace(/(?:\b|%)([dDMyY]+)(?:\b|%)/g, function (match, $1) {
+            return parts[$1] === undefined ? $1 : parts[$1];
+        })
+    };
+}
+function parseFormatted(strDate, format) {
+    if (!format) {
+        format = 'YYYY-MM-DD';
+    }
+    var ret = parse(strDate);
+    if (ret)
+        return ret;
+    var token = /d{1,4}|M{1,4}|YY(?:YY)?|S{1,3}|Do|ZZ|([HhMsDm])\1?|[aA]|"[^"]*"|'[^']*'/g;
+    var parseFlags = {
+        D: [/\d{1,2}/, function (d, v) { return d.day = parseInt(v); }],
+        M: [/\d{1,2}/, function (d, v) { return (d.month = parseInt(v) - 1); }],
+        DD: [/\d{2}/, function (d, v) { return d.day = parseInt(v); }],
+        MM: [/\d{2}/, function (d, v) { return d.month = parseInt(v) - 1; }],
+        YY: [/\d{2,4}/, function (d, v) { return d.year = parseInt(v); }],
+        YYYY: [/\d{2,4}/, function (d, v) { return d.year = parseInt(v); }]
+    };
+    ret = function (dateStr, format) {
+        if (dateStr.length > 1000) {
+            return null;
+        }
+        var isValid = true;
+        var dateInfo = {
+            year: 0,
+            month: 0,
+            day: 0
+        };
+        format.replace(token, function ($0) {
+            if (parseFlags[$0]) {
+                var info = parseFlags[$0];
+                var regExp = info[0];
+                var handler_1 = info[info.length - 1];
+                var index_1 = dateStr.search(regExp);
+                if (!~index_1) {
+                    isValid = false;
+                }
+                else {
+                    dateStr.replace(info[0], function (result) {
+                        handler_1(dateInfo, result);
+                        dateStr = dateStr.substr(index_1 + result.length);
+                        return result;
+                    });
+                }
+            }
+            return parseFlags[$0] ? '' : $0.slice(1, $0.length - 1);
+        });
+        if (!isValid) {
+            return null;
+        }
+        var parsed = new Date(dateInfo.year, dateInfo.month, dateInfo.day);
+        return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+    };
+    return ret(strDate, format);
 }
 
 function noData(result) {

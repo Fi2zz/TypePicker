@@ -237,7 +237,7 @@ export function init(option: any, renderer: any) {
         }
     }
 
-    this.format = (date: Date) => format(date, this.dateFormat);
+    // this.format = (date: Date) => format(date, this.dateFormat);
     this.language = setLanguage(getLanguage(option.language, option.defaultLanguage));
     this.element = parseEl(option.el);
     if (!this.element) {

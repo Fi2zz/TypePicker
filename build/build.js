@@ -126,26 +126,22 @@ function work(config) {
                 }
 
                 write(filepath, codes).then(res => {
-                    if (index === length - 1) {
-                        stylusCompiler(style, dest).then(css => {
-                            write(path.resolve(dest, "style.css"), css)
-                                .then(function () {
-                                    log("> style compiled\n", "green");
-                                    rm("./temp", () => {
-                                        log("> build done !", "yellow")
-                                    });
-                                });
 
-                        }).catch(err => loggerError(err));
-                    }
                 });
+                if (index === length - 1) {
+                    stylusCompiler(style, dest).then(css => {
+                        write(path.resolve(dest, "style.css"), css)
+                            .then(() => log("> style compiled\n> build done !", "green"));
+
+                    }).catch(err => loggerError(err));
+                }
             })
     });
 }
 
 function build(config) {
     log("> building...\n", "green");
-    fs.existsSync(config.dest) ? work(config) : mkdirp(config.dest, () => work(config))
+    mkdirp(config.dest, () => work(config))
 }
 
 build(config);

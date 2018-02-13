@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "dev": "webpack-dev-server --inline  --config build/dev.js",
-    "dist": "tsc && node build/build"
+    "dist": "node build/build"
   },
   "devDependencies": {
     "awesome-typescript-loader": "^3.1.3",
