@@ -66,7 +66,14 @@ export const source: any = {
     "2018-4-11": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
     "2018-5-12": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
     "2018-6-13": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-8-25": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-8-26": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-8-27": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-8-28": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-8-29": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    "2018-8-30": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
     "2018-8-31": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
+    // "2018-9-1": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
     "2018-9-30": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
 };
 export const languages: any = {

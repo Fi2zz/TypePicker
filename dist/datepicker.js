@@ -95,6 +95,9 @@ function merge() {
 }
 
 var attrSelector = function (attr, value) { return "[" + attr + "=\"" + value + "\"]"; };
+function parseToInt(string) {
+    return parseInt(string, 10);
+}
 function attr(el, attr, attrvalue) {
     if (attrvalue === void 0) { attrvalue = undefined; }
     if (!el) {
@@ -179,141 +182,8 @@ function warn(where, msg) {
     console.error("[" + where + "] " + message + " ");
 }
 
-var currDate = new Date();
-function calendarDateCellClassName(options) {
-    var date = options.date, infiniteMode = options.infiniteMode, endDate = options.endDate;
-    var classStack = ["calendar-cell", "calendar-date-cell"];
-    if (!date) {
-        classStack.push("disabled", "empty");
-    }
-    else {
-        if (!infiniteMode) {
-            if (diff(date, currDate, "days") < 0) {
-                classStack.push("disabled");
-            }
-            if (endDate && diff(date, endDate, "days") > 0) {
-                classStack.push("disabled");
-            }
-        }
-        if (date.getDay() === 0) {
-            classStack.push("calendar-cell-weekend");
-        }
-        if (date.getDay() === 6) {
-            classStack.push("calendar-cell-weekday");
-        }
-    }
-    return classStack.join(" ");
-}
-function calendarDateCellTemplate(options) {
-    var year = options.year, month = options.month, infiniteMode = options.infiniteMode, formatter = options.formatter, endDate = options.endDate;
-    var template = [];
-    var d = new Date(year, month, 1);
-    var curr = {
-        year: d.getFullYear(),
-        month: d.getMonth(),
-        date: d.getDate(),
-        index: d.getMonth()
-    };
-    var firstDay = getFirstDay(curr.year, curr.month);
-    for (var i = 0; i < firstDay; i++) {
-        template.push({
-            date: "",
-            className: calendarDateCellClassName({}),
-            text: calendarSingleDateCellTemplate(),
-            key: ""
-        });
-    }
-    for (var i = 1; i <= getDates(curr.year, curr.month); i++) {
-        var date = new Date(curr.year, curr.month, i);
-        var formatted = formatter(date);
-        var key = formatted.value;
-        var text = calendarSingleDateCellTemplate(formatted.date);
-        var className = calendarDateCellClassName({ date: date, infiniteMode: infiniteMode, endDate: endDate });
-        template.push({ className: className, text: text, key: key });
-    }
-    var tpl = template.map(function (item) { return calendarCellGenerate(item.className, item.key, item.text); }).join(" ");
-    return {
-        template: tpl,
-        year: curr.year,
-        month: curr.index
-    };
-}
-function calendarSingleDateCellTemplate(date) {
-    return "<div class=\"date\">" + (date ? date : '') + "</div><div class=\"placeholder\"></div>";
-}
-function calendarCellGenerate(className, key, text) {
-    return "<div class=\"" + className + "\"" + (key ? "data-date=" + key : "") + ">" + text + "</div>";
-}
-function calendarTemplateList(option) {
-    var startDate = option.startDate, endDate = option.endDate, gap = option.gap, infiniteMode = option.infiniteMode, formatter = option.formatter, parse = option.parse;
-    var template = [];
-    for (var i = 0; i <= gap; i++) {
-        var date = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
-        var paint = calendarDateCellTemplate({
-            year: date.getFullYear(),
-            month: date.getMonth(),
-            formatter: formatter,
-            parse: parse,
-            infiniteMode: infiniteMode,
-            endDate: endDate
-        });
-        template.push({ template: paint.template, year: paint.year, month: paint.month });
-    }
-    return template;
-}
-function calendarViewTemplate(options) {
-    var template = options.template, multiViews = options.multiViews, flatView = options.flatView, singleView = options.singleView, language = options.language;
-    var weekDays = language.week.map(function (day, index) {
-        var className = ["calendar-cell", "calendar-day-cell",
-            index === 0 ? "calendar-cell-weekday" : index === 6 ? "calendar-cell-weekend" : ""];
-        return "<div class=\"" + className.join(" ") + "\">" + day + "</div>";
-    }).join("");
-    var tpl = template.map(function (item) {
-        var year = item.year, month = item.month;
-        var title = "<div class=\"calendar-title\">" + language.title(year, month) + "</div>", body = item.template;
-        var tpl = "";
-        if (multiViews || singleView) {
-            tpl += "<div class='calendar-main'>\n                    <div class=\"calendar-head\">" + title + "</div>\n                   <div class=\"calendar-day\"> " + weekDays + "</div>\n                    <div class=\"calendar-body\">" + body + "</div>\n              </div>";
-        }
-        else {
-            tpl = "<div class=\"calendar-main\">\n                   <div class=\"calendar-head\">" + title + "</div>  \n                    <div class=\"calendar-body\">" + body + "</div>\n            </div>";
-        }
-        return tpl;
-    });
-    if (flatView) {
-        tpl.unshift("<div class=\"calendar-day\">" + weekDays + "</div>");
-    }
-    return tpl.join("");
-}
-function calendarActionBar(actionbar) {
-    if (!actionbar) {
-        return '';
-    }
-    return "<div class=\"calendar-action-bar\">\n            <button class='calendar-action calendar-action-prev'><span>prev</span></button>\n            <button class='calendar-action calendar-action-next'><span>next</span></button>\n         </div>\n    ";
-}
-function compose(option) {
-    var startDate = option.startDate, endDate = option.endDate, multiViews = option.multiViews, flatView = option.flatView, singleView = option.singleView, language = option.language, infiniteMode = option.infiniteMode, parse = option.parse, formatter = option.formatter;
-    var gap = multiViews ? 1 : flatView ? diff(startDate, endDate) : 0;
-    var mapConf = {
-        startDate: startDate,
-        endDate: endDate,
-        gap: gap,
-        infiniteMode: infiniteMode,
-        formatter: formatter,
-        parse: parse
-    };
-    var templateConf = {
-        template: calendarTemplateList(mapConf),
-        multiViews: multiViews,
-        flatView: flatView,
-        language: language,
-        singleView: singleView
-    };
-    return "" + calendarActionBar(multiViews || singleView) + calendarViewTemplate(templateConf);
-}
-
 var date = new Date();
-var currDate$1 = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+var currDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 function getRange(collection, start, end) {
     var temp = [];
     for (var i = 0; i < collection.length; i++) {
@@ -360,7 +230,7 @@ function setStartAndEnd(collection, inDates, data, parse) {
                 var next = attr(nextItem, "data-date");
                 if (curr && next) {
                     var start_1 = parse(curr);
-                    if (diff(start_1, currDate$1, "days") >= 0) {
+                    if (diff(start_1, currDate, "days") >= 0) {
                         var hasItem = inDates(next) && inDates(curr) || inDates(curr) && !inDates(next);
                         if (hasItem) {
                             if (temp.length < 2) {
@@ -448,6 +318,145 @@ function setInitRange(options) {
     return dates;
 }
 
+var currDate$1 = new Date();
+var HTML = (function () {
+    function HTML(options) {
+        var startDate = options.startDate, endDate = options.endDate, multiViews = options.multiViews, flatView = options.flatView, singleView = options.singleView, language = options.language, infiniteMode = options.infiniteMode, dateParser = options.dateParser, dateFormatter = options.dateFormatter;
+        var parse = dateParser;
+        var formatter = dateFormatter;
+        var gap = multiViews ? 1 : flatView ? diff(startDate, endDate) : 0;
+        var bodyOption = {
+            startDate: startDate,
+            endDate: endDate,
+            gap: gap,
+            infiniteMode: infiniteMode,
+            formatter: formatter,
+            parse: parse
+        };
+        var viewOption = {
+            template: this.createBody(bodyOption),
+            multiViews: multiViews,
+            flatView: flatView,
+            language: language,
+            singleView: singleView
+        };
+        this.template = "" + this.createActionBar(multiViews || singleView) + this.createView(viewOption);
+    }
+    HTML.prototype.createActionBar = function (create) {
+        if (!create) {
+            return '';
+        }
+        return "<div class=\"calendar-action-bar\">\n            <button class='calendar-action calendar-action-prev'><span>prev</span></button>\n            <button class='calendar-action calendar-action-next'><span>next</span></button>\n         </div>\n    ";
+    };
+    HTML.prototype.createBody = function (option) {
+        var startDate = option.startDate, endDate = option.endDate, gap = option.gap, infiniteMode = option.infiniteMode, formatter = option.formatter, parse = option.parse;
+        var template = [];
+        for (var i = 0; i <= gap; i++) {
+            var date = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
+            var paint = this.createNodeList({
+                year: date.getFullYear(),
+                month: date.getMonth(),
+                formatter: formatter,
+                parse: parse,
+                infiniteMode: infiniteMode,
+                endDate: endDate
+            });
+            template.push({ template: paint.template, year: paint.year, month: paint.month });
+        }
+        return template;
+    };
+    HTML.prototype.createNodeList = function (options) {
+        var _this = this;
+        var year = options.year, month = options.month, infiniteMode = options.infiniteMode, formatter = options.formatter, endDate = options.endDate;
+        var template = [];
+        var d = new Date(year, month, 1);
+        var curr = {
+            year: d.getFullYear(),
+            month: d.getMonth(),
+            date: d.getDate(),
+            index: d.getMonth()
+        };
+        var firstDay = getFirstDay(curr.year, curr.month);
+        for (var i = 0; i < firstDay; i++) {
+            template.push({
+                date: "",
+                className: this.setCellClassList({}),
+                text: this.createPlaceholder(),
+                key: ""
+            });
+        }
+        for (var i = 1; i <= getDates(curr.year, curr.month); i++) {
+            var date = new Date(curr.year, curr.month, i);
+            var formatted = formatter(date);
+            var key = formatted.value;
+            var text = this.createPlaceholder(formatted.date);
+            var className = this.setCellClassList({ date: date, infiniteMode: infiniteMode, endDate: endDate });
+            template.push({ className: className, text: text, key: key });
+        }
+        var tpl = template.map(function (item) { return _this.createNode(item.className, item.key, item.text); }).join(" ");
+        return {
+            template: tpl,
+            year: curr.year,
+            month: curr.index
+        };
+    };
+    HTML.prototype.createView = function (options) {
+        var template = options.template, multiViews = options.multiViews, flatView = options.flatView, singleView = options.singleView, language = options.language;
+        var weekDays = language.week.map(function (day, index) {
+            var className = ["calendar-cell", "calendar-day-cell",
+                index === 0 ? "calendar-cell-weekday" : index === 6 ? "calendar-cell-weekend" : ""];
+            return "<div class=\"" + className.join(" ") + "\">" + day + "</div>";
+        }).join("");
+        var tpl = template.map(function (item) {
+            var year = item.year, month = item.month;
+            var title = "<div class=\"calendar-title\">" + language.title(year, month) + "</div>", body = item.template;
+            var tpl = "";
+            if (multiViews || singleView) {
+                tpl += "<div class='calendar-main'>\n                    <div class=\"calendar-head\">" + title + "</div>\n                   <div class=\"calendar-day\"> " + weekDays + "</div>\n                    <div class=\"calendar-body\">" + body + "</div>\n              </div>";
+            }
+            else {
+                tpl = "<div class=\"calendar-main\">\n                   <div class=\"calendar-head\">" + title + "</div>  \n                    <div class=\"calendar-body\">" + body + "</div>\n            </div>";
+            }
+            return tpl;
+        });
+        if (flatView) {
+            tpl.unshift("<div class=\"calendar-day\">" + weekDays + "</div>");
+        }
+        return tpl.join("");
+    };
+    HTML.prototype.createNode = function (className, key, text) {
+        return "<div class=\"" + className + "\"" + (key ? "data-date=" + key : "") + ">" + text + "</div>";
+    };
+    HTML.prototype.createPlaceholder = function (date) {
+        return "<div class=\"date\">" + (date ? date : '') + "</div><div class=\"placeholder\"></div>";
+    };
+    HTML.prototype.setCellClassList = function (options) {
+        var date = options.date, infiniteMode = options.infiniteMode, endDate = options.endDate;
+        var classStack = ["calendar-cell", "calendar-date-cell"];
+        if (!date) {
+            classStack.push("disabled", "empty");
+        }
+        else {
+            if (!infiniteMode) {
+                if (diff(date, currDate$1, "days") < 0) {
+                    classStack.push("disabled");
+                }
+                if (endDate && diff(date, endDate, "days") > 0) {
+                    classStack.push("disabled");
+                }
+            }
+            if (date.getDay() === 0) {
+                classStack.push("calendar-cell-weekend");
+            }
+            if (date.getDay() === 6) {
+                classStack.push("calendar-cell-weekday");
+            }
+        }
+        return classStack.join(" ");
+    };
+    return HTML;
+}());
+
 function parseEl(el) {
     if (!el) {
         return null;
@@ -464,7 +473,7 @@ function parseEl(el) {
         }
         else {
             if (el.indexOf("#") <= -1 || el.indexOf(".") <= -1) {
-                warn("ParseEl ", "do not mount DatePicker to a pure html tag," + el);
+                warn("ParseEl", "Do not mount DatePicker to a pure html tag," + el);
                 return false;
             }
             return document.querySelector(el);
@@ -518,7 +527,7 @@ function doMonthSwitch(size) {
     this.dataRenderer(this.data);
 }
 function createDatePicker(isInit) {
-    this.element.innerHTML = compose({
+    this.element.innerHTML = new HTML({
         startDate: this.date,
         endDate: this.endDate,
         multiViews: this.multiViews,
@@ -526,9 +535,9 @@ function createDatePicker(isInit) {
         singleView: this.singleView,
         language: this.language,
         infiniteMode: this.infiniteMode,
-        formatter: this.format,
-        parse: this.parse
-    });
+        dateFormatter: this.format,
+        dateParser: this.parse
+    }).template;
     this.bindMonthSwitch();
     this.selected = this.currentRange(this.isFromSetRange);
     if (this.singleView) {
@@ -547,8 +556,8 @@ function createDatePicker(isInit) {
     this.update(updateEventData);
 }
 function currentRange(isInit) {
-    var initSelected = this.defaultDates.length > 0
-        ? this.defaultDates
+    var initSelected = this.currentSelection.length > 0
+        ? this.currentSelection
         : this.double
             ? this.selected
             : [this.format(this.date).value];
@@ -607,28 +616,28 @@ function bindMonthSwitch() {
 }
 function init(option, renderer) {
     var _this = this;
+    var currDate = new Date();
     if (option.doubleSelect) {
         this.double = option.doubleSelect;
     }
     this.dateFormat = option.format;
-    var parseToInt = parseInt(option.views);
-    if ((option.views !== 'auto' && isNaN(parseToInt)) || parseToInt === 1 || parseToInt > 2 || parseToInt <= 0) {
+    var views = parseToInt(option.views);
+    if ((option.views !== 'auto' && isNaN(views)) || views === 1 || views > 2 || views <= 0) {
         this.singleView = true;
     }
     else if (option.views === 'auto') {
         this.flatView = true;
         this.singleView = false;
     }
-    else if (parseToInt === 2) {
+    else if (views === 2) {
         this.multiViews = true;
         this.singleView = false;
     }
     this.startDate = isDate(option.from) ? option.from : new Date();
+    this.endDate = isDate(option.to) ? option.to : new Date(this.startDate.getFullYear(), this.startDate.getMonth() + 6, 0);
     this.date = this.startDate;
-    this.endDate = isDate(option.to) ? option.to : new Date(this.date.getFullYear(), this.date.getMonth() + 6, 0);
-    this.limit = this.double ? isNumber(option.limit) ? option.limit : 1 : 1;
+    this.limit = this.double ? (isNumber(option.limit) ? option.limit : 2) : 1;
     if (!renderer.dates || renderer.dates && renderer.dates.length <= 0) {
-        var currDate = new Date();
         var gap = diff(this.endDate, currDate, "days");
         var year = currDate.getFullYear();
         var month = currDate.getMonth();
@@ -661,8 +670,8 @@ function init(option, renderer) {
     }
     this.element.className = this.element.className + " calendar calendar-" + (this.multiViews ? "double-views" : this.singleView ? "single-view" : "flat-view");
     var next = nextTick(function () {
-        if (_this.defaultDates.length > 0) {
-            var date = _this.defaultDates[0];
+        if (_this.currentSelection.length > 0) {
+            var date = _this.currentSelection[0];
             if (!_this.flatView) {
                 _this.date = _this.parse(date);
             }
@@ -734,8 +743,9 @@ var handlePickDate = function (options) {
                 }
                 else if (selected.length >= 2) {
                     var prevEl = item.previousElementSibling;
-                    var prevDate = attr(prevEl, "data-date");
-                    var startDate = parse(selected[0]);
+                    var front = selected[0];
+                    var startDate = parse(front);
+                    var prevDate = attr(prevEl, "data-date") || front;
                     var diffed = diff(startDate, parse(date), "days") * -1;
                     if (!inDates(date) && !inDates(prevDate) || diffed > limit || diffed < 0) {
                         type = 'disabled';
@@ -1101,25 +1111,28 @@ function initWithDataBind(option, cb) {
 var DatePicker = (function () {
     function DatePicker(option) {
         var _this = this;
-        this.init = init;
         this.date = new Date();
-        this.limit = 1;
-        this.double = false;
-        this.element = null;
         this.startDate = new Date();
         this.endDate = null;
+        this.dates = [];
         this.selected = [];
+        this.currentSelection = [];
+        this.limit = 1;
+        this.language = {};
+        this.element = null;
+        this.double = false;
         this.flatView = false;
         this.multiViews = false;
         this.singleView = true;
-        this.doMonthSwitch = doMonthSwitch;
-        this.createDatePicker = createDatePicker;
         this.bindData = false;
         this.infiniteMode = false;
-        this.currentRange = currentRange;
         this.isFromSetRange = false;
-        this.language = {};
-        this.disableds = [];
+        this.init = init;
+        this.currentRange = currentRange;
+        this.doMonthSwitch = doMonthSwitch;
+        this.createDatePicker = createDatePicker;
+        this.bindMonthSwitch = bindMonthSwitch;
+        this.initWithDataBind = initWithDataBind;
         this.pickDate = function () {
             handlePickDate({
                 element: _this.element,
@@ -1144,8 +1157,8 @@ var DatePicker = (function () {
                 _this.setDates(value, false);
             }
             else if (type === 'switch') {
-                if (_this.defaultDates.length > 0) {
-                    _this.selected = _this.defaultDates;
+                if (_this.currentSelection.length > 0) {
+                    _this.selected = _this.currentSelection;
                 }
             }
             if (type !== 'disabled' && type !== 'switch') {
@@ -1215,7 +1228,7 @@ var DatePicker = (function () {
                     var d = dates[dates.length - 1];
                     datesList = [isDate(d) ? _this.format(d).value : d];
                 }
-                _this.defaultDates = datesList;
+                _this.currentSelection = datesList;
             };
             if (!_this.bindData) {
                 datesHandler();
@@ -1227,38 +1240,31 @@ var DatePicker = (function () {
                 });
             }
         };
-        this.bindMonthSwitch = bindMonthSwitch;
-        this.initWithDataBind = initWithDataBind;
         var util = {
             diff: function (d1, d2) { return diff(d1, d2, "days"); },
             parse: function (string, format$$1) { return _this.parse(string, format$$1); },
             format: function (date, format$$1) { return _this.format(date, format$$1).value; }
         };
-        var instanceUtils = {};
         if (option) {
-            this.defaultDates = [];
             this.bindData = option.bindData;
             if (!option.bindData && option.el) {
                 this.init(option, {});
             }
-            instanceUtils = {
+            util = merge(util, {
                 on: Observer.$on,
                 data: function (cb) { return _this.initWithDataBind(option, cb); },
                 dateRanges: function (dates, fromInstance) {
-                    console.warn("dateRanges has been deprecated, use [setDates] instead");
+                    warn("dateRanges", "this function has been deprecated, use [setDates] instead");
                     _this.setDates(dates, fromInstance);
                 },
-                disable: this.disable,
                 setDefaultDates: function () {
                     warn("setDefaultDates", "this method has been deprecated,use [setDates()] instead ");
                 },
                 setDates: this.setDates
-            };
+            });
         }
-        return merge(util, instanceUtils);
+        return util;
     }
-    DatePicker.prototype.disable = function () {
-    };
     return DatePicker;
 }());
 

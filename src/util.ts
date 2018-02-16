@@ -1,5 +1,9 @@
 export const attrSelector = (attr: string, value: string) => `[${attr}="${value}"]`;
 
+
+export function parseToInt(string: any) {
+    return parseInt(string, 10)
+}
 export function attr(el: any, attr: any, attrvalue: any | undefined = undefined) {
     if (!el) {
         return null
@@ -53,6 +57,8 @@ export function isNumber(object: any) {
 export function isDate(object: any) {
     return _toString(object) === '[object Date]';
 }
+
+
 export function hasClass(ele: any, className: string) {
     if (!ele || !className || !ele.className || ele.className.search(new RegExp("\\b" + className + "\\b")) == -1) {
         return false;

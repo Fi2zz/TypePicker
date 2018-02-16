@@ -48,6 +48,8 @@ function createDatePicker(onUpdate: Function, create: boolean = true, selected?:
 
             console.log(datepickerUtil.format(new Date(), 'yyyy/m-d'))
 
+
+            console.log(datepicker)
             datepicker.on("update", (result: any) => onUpdate(result));
             datepicker.on("data", (result: any) => {
                 const data = result.data;
@@ -70,9 +72,9 @@ function createDatePicker(onUpdate: Function, create: boolean = true, selected?:
             if (selected.length >= 2) {
                 datepicker.setDates(selected, true);
             }
-            datepicker.disable({
-                dates: "2018-2-16", days: [123]
-            });
+            // datepicker.disable({
+            //     dates: "2018-2-16", days: [123]
+            // });
             datepicker.data((params: any) => {
                 Object.keys(source).forEach(date => {
                     let item = datepicker.parse(date);

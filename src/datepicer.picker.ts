@@ -104,8 +104,10 @@ export default function (options: pickerHandler) {
                     }
                     else if (selected.length >= 2) {
                         const prevEl: HTMLElement = item.previousElementSibling;
-                        const prevDate = attr(prevEl, "data-date");
-                        const startDate = parse(selected[0]);
+                        const front = selected[0];
+                        const startDate = parse(front);
+                        const prevDate = attr(prevEl, "data-date") || front;
+
                         const diffed = diff(startDate, parse(date), "days") * -1;
                         if (!inDates(date) && !inDates(prevDate) || diffed > limit || diffed < 0) {
                             type = 'disabled'

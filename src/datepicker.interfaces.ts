@@ -20,17 +20,6 @@ export interface templateFunctionOption {
     language: any;
 }
 
-export interface templateComposeOption {
-    startDate: Date;
-    endDate: Date;
-    multiViews: boolean;
-    flatView: boolean;
-    singleView: boolean;
-    language: any;
-    infiniteMode: boolean;
-    formatter: Function;
-    parse: Function
-}
 
 export interface templateMapOption {
     startDate: Date;

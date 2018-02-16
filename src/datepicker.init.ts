@@ -7,11 +7,12 @@ import {
     clearNextTick,
     nextTick,
     isString,
+    parseToInt,
     warn
 } from "./util";
-import compose from "./datepicker.template";
 import {setInitRange} from "./datepicker.ranger";
-import {format} from './datepicker.formatter'
+
+import HTML from './datepicker.template'
 
 export function parseEl(el: string) {
     if (!el) {
@@ -27,7 +28,7 @@ export function parseEl(el: string) {
             return document.querySelectorAll(el)[0]
         } else {
             if (el.indexOf("#") <= -1 || el.indexOf(".") <= -1) {
-                warn(`ParseEl `, `do not mount DatePicker to a pure html tag,${el}`)
+                warn(`ParseEl`, `Do not mount DatePicker to a pure html tag,${el}`)
                 return false;
             }
             return document.querySelector(el)
@@ -93,7 +94,9 @@ export function doMonthSwitch(size: number) {
  *
  * **/
 export function createDatePicker(isInit?: Boolean) {
-    this.element.innerHTML = compose({
+
+
+    this.element.innerHTML = new HTML({
         startDate: this.date,
         endDate: this.endDate,
         multiViews: this.multiViews,
@@ -101,9 +104,10 @@ export function createDatePicker(isInit?: Boolean) {
         singleView: this.singleView,
         language: this.language,
         infiniteMode: this.infiniteMode,
-        formatter: this.format,
-        parse: this.parse
-    });
+        dateFormatter: this.format,
+        dateParser: this.parse
+    }).template;
+
     this.bindMonthSwitch();
     this.selected = this.currentRange(this.isFromSetRange);
     if (this.singleView) {
@@ -126,8 +130,8 @@ export function createDatePicker(isInit?: Boolean) {
 
 export function currentRange(isInit: boolean) {
     const initSelected =
-        this.defaultDates.length > 0
-            ? this.defaultDates
+        this.currentSelection.length > 0
+            ? this.currentSelection
             : this.double
             ? this.selected
             : [this.format(this.date).value];
@@ -187,31 +191,33 @@ export function bindMonthSwitch() {
 }
 
 export function init(option: any, renderer: any) {
+    const currDate = new Date();
+
     if (option.doubleSelect) {
         this.double = option.doubleSelect
     }
-    this.dateFormat = option.format //|| "YYYY-MM-DD";
-    const parseToInt = parseInt(option.views);
-    if ((option.views !== 'auto' && isNaN(parseToInt)) || parseToInt === 1 || parseToInt > 2 || parseToInt <= 0) {
+    this.dateFormat = option.format;
+    const views = parseToInt(option.views);
+    if ((option.views !== 'auto' && isNaN(views)) || views === 1 || views > 2 || views <= 0) {
         this.singleView = true;
     }
     else if (option.views === 'auto') {
         this.flatView = true;
         this.singleView = false;
     }
-    else if (parseToInt === 2) {
+    else if (views === 2) {
         this.multiViews = true;
         this.singleView = false
     }
     //开始日期
     this.startDate = isDate(option.from) ? option.from : new Date();
-    this.date = this.startDate;
     //结束日期
-    this.endDate = isDate(option.to) ? option.to : new Date(this.date.getFullYear(), this.date.getMonth() + 6, 0);
+    this.endDate = isDate(option.to) ? option.to : new Date(this.startDate.getFullYear(), this.startDate.getMonth() + 6, 0);
+    //初始视图所在日期
+    this.date = this.startDate;
     //選擇日期區間最大限制
-    this.limit = this.double ? isNumber(option.limit) ? option.limit : 1 : 1;
+    this.limit = this.double ? (isNumber(option.limit) ? option.limit : 2) : 1;
     if (!renderer.dates || renderer.dates && renderer.dates.length <= 0) {
-        const currDate = new Date();
         const gap = diff(this.endDate, currDate, "days");
         const year = currDate.getFullYear();
         const month = currDate.getMonth();
@@ -237,7 +243,6 @@ export function init(option: any, renderer: any) {
         }
     }
 
-    // this.format = (date: Date) => format(date, this.dateFormat);
     this.language = setLanguage(getLanguage(option.language, option.defaultLanguage));
     this.element = parseEl(option.el);
     if (!this.element) {
@@ -246,8 +251,8 @@ export function init(option: any, renderer: any) {
     }
     this.element.className = `${this.element.className} calendar calendar-${this.multiViews ? "double-views" : this.singleView ? "single-view" : "flat-view"}`
     const next = nextTick(() => {
-        if (this.defaultDates.length > 0) {
-            let date = this.defaultDates[0];
+        if (this.currentSelection.length > 0) {
+            let date = this.currentSelection[0];
             if (!this.flatView) {
                 this.date = this.parse(date)
             }

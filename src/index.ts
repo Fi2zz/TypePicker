@@ -48,28 +48,30 @@ function initWithDataBind(option: any, cb: Function) {
 
 
 export default class DatePicker {
-    init = init;
     date: Date = new Date();
-    dates: Array<any>;
-    limit: number = 1;
-    double: boolean = false;
-    dateFormat: string;
-    element: any = null;
     startDate: Date = new Date();
     endDate: Date | any = null;
-    selected: Array<any> = [];
+    dates: string[] = [];
+    selected: any[] = [];
+    currentSelection: string[] = [];
+    limit: number = 1;
+    dateFormat: string;
+    language: any = {};
+    element: any = null;
+    double: boolean = false;
     flatView: boolean = false;
     multiViews: boolean = false;
     singleView: boolean = true;
-    doMonthSwitch = doMonthSwitch;
-    createDatePicker = createDatePicker;
     bindData: boolean = false;
     infiniteMode: boolean = false;
-    currentRange: Function = currentRange;
     isFromSetRange: boolean = false;
-    language: any = {};
-    disableds: Array<string> = [];
-    pickDate = () => {
+    init: Function = init;
+    currentRange: Function = currentRange;
+    doMonthSwitch: Function = doMonthSwitch;
+    createDatePicker: Function = createDatePicker;
+    bindMonthSwitch: Function = bindMonthSwitch;
+    initWithDataBind: Function = initWithDataBind;
+    pickDate: Function = () => {
         handlePickDate({
             element: this.element,
             selected: this.selected,
@@ -84,24 +86,24 @@ export default class DatePicker {
             bindData: this.bindData
         })
     };
-    defaultDates: Array<string>[];
-    format = (date: Date, format?: string) => formatter(date, format ? format : this.dateFormat);
-    parse = (string: string, format?: string) => parseFormatted(string, format ? format : this.dateFormat);
-    inDates = (date: string | any) => this.dates.indexOf(date) >= 0;
-    update = (result: any) => {
+    format: Function = (date: Date, format?: string) => formatter(date, format ? format : this.dateFormat);
+    parse: Function = (string: string, format?: string) => parseFormatted(string, format ? format : this.dateFormat);
+    inDates: Function = (date: string) => this.dates.indexOf(date) >= 0;
+    update: Function = (result: any) => {
         const {type, value} = result;
         if (type === 'selected') {
             this.setDates(value, false)
         } else if (type === 'switch') {
-            if (this.defaultDates.length > 0) {
-                this.selected = this.defaultDates;
+            if (this.currentSelection.length > 0) {
+                this.selected = this.currentSelection;
             }
         }
+
         if (type !== 'disabled' && type !== 'switch') {
             Observer.$emit("update", result);
         }
     };
-    dataRenderer = (data: any) => {
+    dataRenderer: Function = (data: any) => {
         if (Object.keys(data).length <= 0) {
             Observer.$remove("data")
         } else {
@@ -115,7 +117,7 @@ export default class DatePicker {
 
         }
     };
-    setDates = (dates: Array<any>, isFromInitedInstance?: boolean) => {
+    setDates: Function = (dates: Array<any>, isFromInitedInstance?: boolean) => {
         if (!isArray(dates)) {
             dates = [];
             warn("setDates", `no dates provided,${dates}`);
@@ -169,7 +171,7 @@ export default class DatePicker {
                 const d = dates[dates.length - 1];
                 datesList = [isDate(d) ? this.format(d).value : d]
             }
-            this.defaultDates = datesList;
+            this.currentSelection = datesList;
         };
         if (!this.bindData) {
             datesHandler()
@@ -182,41 +184,32 @@ export default class DatePicker {
 
 
     };
-    bindMonthSwitch: Function = bindMonthSwitch;
-    initWithDataBind: Function = initWithDataBind;
-
-    disable() {
-    }
 
     constructor(option?: datePickerOptions) {
-
-        const util = <any> {
-            diff: (d1: Date, d2: Date) => diff(d1, d2, "days"),
-            parse: (string: string, format: string) => this.parse(string, format),
-            format: (date: Date, format: string) => this.format(date, format).value,
+        let util = <any> {
+            diff: <Function>(d1: Date, d2: Date) => diff(d1, d2, "days"),
+            parse: <Function>(string: string, format: string) => this.parse(string, format),
+            format: <Function>(date: Date, format: string) => this.format(date, format).value,
         };
-        let instanceUtils = <any> {};
         if (option) {
-            this.defaultDates = [];
             this.bindData = option.bindData;
             if (!option.bindData && option.el) {
                 this.init(option, {});
             }
-            instanceUtils = {
+            util = merge(util, {
                 on: Observer.$on,
-                data: (cb: Function) => this.initWithDataBind(option, cb),
-                dateRanges: (dates: any, fromInstance: boolean) => {
-                    console.warn("dateRanges has been deprecated, use [setDates] instead");
+                data: <Function>(cb: Function) => this.initWithDataBind(option, cb),
+                dateRanges: <Function>(dates: any, fromInstance: boolean) => {
+                    warn("dateRanges", "this function has been deprecated, use [setDates] instead");
                     this.setDates(dates, fromInstance)
                 },
-                disable: this.disable,
-                setDefaultDates: () => {
+                setDefaultDates: <Function>() => {
                     warn("setDefaultDates", "this method has been deprecated,use [setDates()] instead ")
                 },
-                setDates: this.setDates
-            };
+                setDates: <Function> this.setDates
+            });
         }
-        return merge(util, instanceUtils);
+        return util;
     }
 }
 
