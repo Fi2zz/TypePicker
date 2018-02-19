@@ -14,6 +14,7 @@ body
   top:50px
   left: 50%
   transform translate(-50%,0)
+  width: 100%
 .calendar-action
 
   &-prev, &-next
@@ -68,27 +69,36 @@ body
 
 .toolbar
   margin auto
-  width 320px
+  width 100%
+  max-width 480px
   height: 34px
   position: relative
+  padding-left: 16px
+  padding-right: 16px
+  
   .form-control
     padding-top: 0
     padding-bottom:0
     line-height 34px
+
   .input-group-addon
     z-index: 9
     width auto
     line-height 32px
     padding: 0 6px
+    font-size: 12px
+    height: 32px
 
   .popup
     position: absolute
     left:50%
     top: 36px
-    border 1px #ccc solid
+    //border 1px #ccc solid
     border-radius 4px !important
     overflow: hidden
-    padding: 6px
-    width: 480px
+    width: 100%
+    max-width 480px
     transform translateX(-50%)
+    box-shadow rgba(128,128,128,0.09) 0px 2px 10px
+    border-top 1px rgba(128,128,128,.09) solid
 

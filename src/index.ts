@@ -1,6 +1,5 @@
-import {datePickerOptions} from "./datepicker.interfaces";
+import {datePickerOptions, disable} from "./datepicker.interfaces";
 import Observer from './datepicker.observer';
-import merge from './merge'
 import {
     diff,
     isObject,
@@ -8,70 +7,125 @@ import {
     isArray,
     nextTick,
     clearNextTick,
-    warn
+    warn,
+    addClass,
+    isNumber,
+    removeClass,
+    parseToInt,
+    parseEl,
+    noData,
+    removeDisableDates,
+    isFunction
 } from "./util"
-import {
-    init,
-    currentRange,
-    doMonthSwitch,
-    bindMonthSwitch,
-    createDatePicker
-} from './datepicker.init'
+
+import HTML from './datepicker.template'
 import handlePickDate from './datepicer.picker'
 import {parseFormatted, format as formatter} from "./datepicker.formatter"
-
-function noData(result: any) {
-    return !isObject(result)
-        || (Object.keys(result.data).length <= 0
-        || result.dates.length <= 0)
-}
-
-function initWithDataBind(option: any, cb: Function) {
-    if (option.bindData) {
-        const params = {
-            dates: <Array<string>>[],
-            data: <any>{},
-        };
-        const cbData = cb && cb(params);
-        const result = cbData ? cbData : params;
-        const config = {
-            data: result.data,
-            dates: result.dates.sort((a: string, b: string) => this.parse(a) - this.parse(b))
-        };
-
-        this.init(option, config);
-        if (!noData(result)) {
-            this.dataRenderer(result.data);
-        }
-    }
-}
+import {setInitRange} from "./datepicker.ranger";
 
 
 export default class DatePicker {
-    date: Date = new Date();
-    startDate: Date = new Date();
-    endDate: Date | any = null;
-    dates: string[] = [];
-    selected: any[] = [];
-    currentSelection: string[] = [];
-    limit: number = 1;
-    dateFormat: string;
-    language: any = {};
-    element: any = null;
-    double: boolean = false;
-    flatView: boolean = false;
-    multiViews: boolean = false;
-    singleView: boolean = true;
-    bindData: boolean = false;
-    infiniteMode: boolean = false;
-    isFromSetRange: boolean = false;
-    init: Function = init;
-    currentRange: Function = currentRange;
-    doMonthSwitch: Function = doMonthSwitch;
-    createDatePicker: Function = createDatePicker;
-    bindMonthSwitch: Function = bindMonthSwitch;
-    initWithDataBind: Function = initWithDataBind;
-    pickDate: Function = () => {
+    private date: Date = new Date();
+    private startDate: Date = new Date();
+    private endDate: Date | any = null;
+    private dates: string[] = [];
+    private selected: any[] = [];
+    private currentSelection: string[] = [];
+    private data: any = {};
+    private disables: any = {};
+    private limit: number = 1;
+    private dateFormat: string;
+    private language: any = {};
+    private element: any = null;
+    private double: boolean = false;
+    private flatView: boolean = false;
+    private multiViews: boolean = false;
+    private singleView: boolean = true;
+    private bindData: boolean = false;
+    private infiniteMode: boolean = false;
+    private isInit: boolean = false;
+    public on: Function = Observer.$on;
+    public format: Function = (date: Date, format?: string) => formatter(date, format ? format : this.dateFormat);
+    public parse: Function = (string: string, format?: string) => parseFormatted(string, format ? format : this.dateFormat);
+    private inDates = (date: string) => {
+        return this.dates.indexOf(date) >= 0
+    };
+
+    private emit(evt: string, data: any) {
+        return Observer.$emit(evt, data)
+    };
+
+    private currentRange(isInit: boolean) {
+        const initSelected =
+            this.currentSelection.length > 0
+                ? this.currentSelection
+                : this.double
+                ? this.selected
+                : [this.format(this.date).value];
+        const rangeOption = {
+            collector: this.element,
+            collection: this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
+            data: initSelected,
+            isDouble: this.double,
+            parse: this.parse,
+            format: this.format,
+            inDates: this.inDates,
+            disables: this.disables,
+            isInit,
+        };
+        return setInitRange(rangeOption)
+    };
+
+    private doMonthSwitch(size: number) {
+        const curr = {
+            year: this.date.getFullYear(),
+            month: this.date.getMonth(),
+            date: this.date.getDate()
+        };
+        this.date = new Date(curr.year, curr.month + size, curr.date);
+        this.isInit = false;
+        this.createDatePicker(false);
+
+    }
+
+    private bindMonthSwitch() {
+        //日期切换
+        const prev = this.element.querySelector(".calendar-action-prev");
+        const next = this.element.querySelector(".calendar-action-next");
+        if (prev && next) {
+            if (this.infiniteMode) {
+                next.addEventListener("click", () => this.doMonthSwitch(1));
+                prev.addEventListener("click", () => this.doMonthSwitch(-1))
+            } else {
+                const endGap = diff(this.date, this.endDate);
+                if (endGap >= 1) {
+                    next.addEventListener("click", () => {
+                        this.doMonthSwitch(1);
+                        removeClass(prev, "disabled");
+                        removeClass(prev, "calendar-action-disabled")
+                    });
+                }
+                else {
+                    addClass(next, "disabled");
+                    addClass(next, "calendar-action-disabled")
+                }
+
+                const startGap = diff(this.date, this.startDate);
+                if (startGap >= 1) {
+                    prev.addEventListener("click", () => {
+                        this.doMonthSwitch(-1);
+                        removeClass(next, "disabled");
+                        removeClass(next, "calendar-action-disabled")
+                    });
+                } else {
+                    addClass(prev, "disabled");
+                    addClass(prev, "calendar-action-disabled")
+                }
+            }
+        }
+    };
+
+    private pickDate() {
         handlePickDate({
             element: this.element,
             selected: this.selected,
@@ -86,10 +140,8 @@ export default class DatePicker {
             bindData: this.bindData
         })
     };
-    format: Function = (date: Date, format?: string) => formatter(date, format ? format : this.dateFormat);
-    parse: Function = (string: string, format?: string) => parseFormatted(string, format ? format : this.dateFormat);
-    inDates: Function = (date: string) => this.dates.indexOf(date) >= 0;
-    update: Function = (result: any) => {
+
+    private update = (result: any) => {
         const {type, value} = result;
         if (type === 'selected') {
             this.setDates(value, false)
@@ -98,34 +150,29 @@ export default class DatePicker {
                 this.selected = this.currentSelection;
             }
         }
-
         if (type !== 'disabled' && type !== 'switch') {
-            Observer.$emit("update", result);
+            this.emit("update", result);
         }
     };
-    dataRenderer: Function = (data: any) => {
-        if (Object.keys(data).length <= 0) {
-            Observer.$remove("data")
-        } else {
+
+    private dataRenderer() {
+        if (Object.keys(this.data).length > 0) {
             const next = nextTick(() => {
-                Observer.$emit("data", {
-                    data: data,
+                this.emit("data", {
+                    data: this.data,
                     nodeList: this.element.querySelectorAll(".calendar-cell")
                 });
                 clearNextTick(next)
             })
-
         }
     };
-    setDates: Function = (dates: Array<any>, isFromInitedInstance?: boolean) => {
+
+    public setDates: Function = (dates: Array<any>) => {
         if (!isArray(dates)) {
             dates = [];
             warn("setDates", `no dates provided,${dates}`);
             return
         }
-
-        this.isFromSetRange = !(!isFromInitedInstance);
-
         const bindDataHandler = (startDate: Date, endDate: Date, diffed: number) => {
             if (diffed < 0
                 || diffed > this.limit
@@ -147,69 +194,271 @@ export default class DatePicker {
             return true
         };
 
-        const datesHandler = (cb?: Function) => {
-            let datesList: Array<any> = [];
-            let start: string = '', end: string = ''
-            if (this.double) {
-                if (dates.length > 2) {
-                    dates = dates.slice(0, 2)
+        let datesList: Array<any> = [];
+        let start: string = '', end: string = ''
+        if (this.double) {
+            if (dates.length > 2) {
+                dates = dates.slice(0, 2)
+            }
+            start = <any>dates[0];
+            end = <any>dates[dates.length - 1];
+            const startDate = isDate(start) ? start : this.parse(start);
+            const endDate = isDate(end) ? end : this.parse(end);
+            const diffed = diff(startDate, endDate, "days") * -1;
+            if (this.bindData) {
+                const cbValue = bindDataHandler(startDate, endDate, diffed);
+                if (!cbValue) {
+                    return false
                 }
-                start = <any>dates[0];
-                end = <any>dates[dates.length - 1];
-                const startDate = isDate(start) ? start : this.parse(start);
-                const endDate = isDate(end) ? end : this.parse(end);
-                const diffed = diff(startDate, endDate, "days") * -1;
-                if (cb && typeof cb === 'function') {
-                    const cbValue = cb && cb(startDate, endDate, diffed);
-                    if (!cbValue) {
-                        return false
+            }
+            datesList = [this.format(startDate).value, this.format(endDate).value]
+        }
+        else {
+            const d = dates[dates.length - 1];
+            datesList = [isDate(d) ? this.format(d).value : d]
+        }
+        this.currentSelection = datesList;
+    };
+
+    public setLanguage(pack?: any) {
+        if (isArray(pack.days) && isArray(pack.months)) {
+            this.language = {
+                week: pack.days,
+                title: (year: any, month: any) => {
+                    if (pack.year) {
+                        return `${year}${pack.year}${pack.months[month]}`
+                    } else {
+                        return `${pack.months[month]} ${year}`
                     }
                 }
-                datesList = [this.format(startDate).value, this.format(endDate).value]
-            }
-            else {
-                const d = dates[dates.length - 1];
-                datesList = [isDate(d) ? this.format(d).value : d]
-            }
-            this.currentSelection = datesList;
-        };
-        if (!this.bindData) {
-            datesHandler()
-        } else {
-            const next = nextTick(() => {
-                datesHandler(bindDataHandler);
-                clearNextTick(next);
-            });
+            };
         }
+        return false;
+    };
 
+    private disable() {
+        if (Object.keys(this.disables).length > 0) {
+            const next = nextTick(() => {
+                this.emit("disabled", {
+                    nodeList: this.element.querySelectorAll(".calendar-cell"),
+                    dateList: this.disables
+                });
+                clearNextTick(next)
+            })
+        }
+    }
+
+    public setDisabled = (param: disable) => {
+        if (!param || isObject(param) && Object.keys(param).length <= 0) {
+            warn("setDisabled",
+                `invalid params, \nparams should be {dates:<Array<any>>[], days:<Array<number>>[] }`)
+            return false;
+        }
+        if (!isArray(param.dates) && !isArray(param.days)) {
+            warn("setDisabled", `invalid params  { dates:<Array<any>>${param.dates}, days:<Array<number>>${param.days} }`);
+            return false;
+        }
+        const dateMap = {};
+        const dateList = [];
+        if (isArray(param.dates)) {
+            for (let date of param.dates) {
+                if (isDate(date)) {
+                    dateList.push(this.format(date).value)
+                } else {
+                    dateList.push(date);
+                }
+            }
+        }
+        if (isArray(param.days)) {
+            for (let day of param.days) {
+                let dey = this.element.querySelectorAll(`[data-day="${day}"`);
+                if (dey) {
+                    for (let d of dey) {
+                        let date = d.getAttribute("data-date");
+                        if (date) {
+                            dateList.push(date);
+                        }
+                    }
+                }
+            }
+        }
+        for (let date of dateList) {
+            dateMap[date] = date;
+        }
+        this.disables = dateMap;
+    };
+
+    public setData(cb: Function) {
+        const param = {
+            data: {},
+            dates: []
+        };
+        if (isFunction(cb)) {
+            const result = cb(param);
+            if (!noData(result)) {
+                this.data = result.data;
+                this.dates = result.dates.sort((a: string, b: string) => this.parse(a) - this.parse(b));
+            }
+        }
 
     };
 
-    constructor(option?: datePickerOptions) {
-        let util = <any> {
-            diff: <Function>(d1: Date, d2: Date) => diff(d1, d2, "days"),
-            parse: <Function>(string: string, format: string) => this.parse(string, format),
-            format: <Function>(date: Date, format: string) => this.format(date, format).value,
-        };
-        if (option) {
-            this.bindData = option.bindData;
-            if (!option.bindData && option.el) {
-                this.init(option, {});
+    public diff(d1: Date, d2: Date) {
+        return diff(d1, d2, "days")
+    }
+
+    private  createDatePicker(isInit?: Boolean) {
+        this.element.innerHTML = new HTML({
+            startDate: this.date,
+            endDate: this.endDate,
+            multiViews: this.multiViews,
+            flatView: this.flatView,
+            singleView: this.singleView,
+            language: this.language,
+            infiniteMode: this.infiniteMode,
+            dateFormatter: this.format,
+            dateParser: this.parse
+        }).template;
+
+        this.selected = this.currentRange(this.isInit);
+        if (this.singleView) {
+            if (this.double && this.selected.length >= 2) {
+                const start = this.selected[0];
+                const end = this.selected[this.selected.length - 1];
+                if (start === end) {
+                    this.selected.pop()
+                }
             }
-            util = merge(util, {
-                on: Observer.$on,
-                data: <Function>(cb: Function) => this.initWithDataBind(option, cb),
-                dateRanges: <Function>(dates: any, fromInstance: boolean) => {
-                    warn("dateRanges", "this function has been deprecated, use [setDates] instead");
-                    this.setDates(dates, fromInstance)
-                },
-                setDefaultDates: <Function>() => {
-                    warn("setDefaultDates", "this method has been deprecated,use [setDates()] instead ")
-                },
-                setDates: <Function> this.setDates
-            });
         }
-        return util;
+        const updateEventData = {
+            type: isInit ? 'init' : 'switch',
+            value: this.selected
+        };
+        this.bindMonthSwitch();
+        this.disable();
+        this.pickDate();
+        this.dataRenderer();
+        this.update(updateEventData);
+    };
+
+
+    private init(option: any) {
+        const currDate = new Date();
+
+        if (option.doubleSelect) {
+            this.double = option.doubleSelect
+        }
+        this.dateFormat = option.format;
+        const views = parseToInt(option.views);
+        if ((option.views !== 'auto' && isNaN(views)) || views === 1 || views > 2 || views <= 0) {
+            this.singleView = true;
+        }
+        else if (option.views === 'auto') {
+            this.flatView = true;
+            this.singleView = false;
+        }
+        else if (views === 2) {
+            this.multiViews = true;
+            this.singleView = false
+        }
+        //开始日期
+        this.startDate = isDate(option.from) ? option.from : new Date();
+        //结束日期
+        this.endDate = isDate(option.to) ? option.to : new Date(this.startDate.getFullYear(), this.startDate.getMonth() + 6, 0);
+        //初始视图所在日期
+        this.date = this.startDate;
+        //選擇日期區間最大限制
+        this.limit = this.double ? (isNumber(option.limit) ? option.limit : 2) : 1;
+        if (Object.keys(this.language).length <= 0) {
+            const defaultLanguage: any = {
+                days: ['日', '一', '二', '三', '四', '五', '六'],
+                months: ['01月', '02月', '03月', '04月', '05月', '06月', '07月', '08月', '09月', '10月', '11月', '12月'],
+                year: "年"
+            };
+            this.language = {
+                week: defaultLanguage.days,
+                title: (year: any, month: any) => {
+                    if (defaultLanguage.year) {
+                        return `${year}${defaultLanguage.year}${defaultLanguage.months[month]}`
+                    } else {
+                        return `${defaultLanguage.months[month]} ${year}`
+                    }
+                }
+            }
+        }
+        this.element = parseEl(option.el);
+        if (!this.element) {
+            warn('init', `invalid selector,current selector ${this.element}`);
+            return false
+        }
+        this.element.className = `${this.element.className} calendar calendar-${this.multiViews ? "double-views" : this.singleView ? "single-view" : "flat-view"}`
+        const next = nextTick(() => {
+            this.isInit = this.currentSelection.length > 0;
+            this.bindData = Object.keys(this.data).length > 0;
+            if (!isDate(option.from) || !isDate(option.to)) {
+                this.infiniteMode = true;
+                this.flatView = false;
+                if (this.bindData) {
+                    warn('init', "infiniteMode is on, please provide [from] and [to] while binding data to datepicker  ")
+                }
+            }
+            if (!this.bindData) {
+                const gap = diff(this.endDate, currDate, "days");
+                const year = currDate.getFullYear();
+                const month = currDate.getMonth();
+                const date = currDate.getDate();
+                let dates = [];
+                for (let i = 0; i < gap; i++) {
+                    let item = <Date>new Date(year, month, date + i);
+                    let formatted = this.format(item).value;
+                    dates.push(formatted)
+                }
+                this.dates = dates;
+            }
+
+            const disableList = Object.keys(this.disables);
+            if (disableList.length > 0) {
+                const datesList = this.dates;
+                const newDateList = [];
+                const removed = removeDisableDates(Object.keys(this.disables), this.data);
+                for (let key in removed) {
+                    delete this.data[key]
+                }
+                for (let date of datesList) {
+                    if (!removed[date]) {
+                        newDateList.push(date)
+                    }
+                }
+                this.dates = newDateList
+            }
+
+
+            if (!this.flatView) {
+                if (this.currentSelection.length > 0) {
+                    this.date = this.parse(this.currentSelection[0])
+                } else {
+                    if (this.dates.length > 0) {
+                        this.date = this.parse(this.dates[0])
+                    }
+                }
+            }
+            this.createDatePicker(true);
+            clearNextTick(next)
+        })
+    };
+
+
+    constructor(option?: datePickerOptions) {
+        if (option) {
+            this.init(option);
+        }
+        else {
+            return <any> {
+                diff: this.diff,
+                parse: this.parse,
+                format: <Function>(date: Date, format: string) => this.format(date, format).value,
+            }
+        }
     }
 }
 

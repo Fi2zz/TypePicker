@@ -4,14 +4,9 @@ export interface datePickerOptions {
     from?: Date;
     limit: number;
     format?: string;
-    language?: any;
     doubleSelect?: boolean;
-    defaultLanguage?: string;
-    bindData?: boolean;
-    views?: number | string
-
+    views?: number | string,
 }
-
 export interface templateFunctionOption {
     template: any;
     multiViews: boolean;
@@ -54,6 +49,8 @@ export interface initRangeOptions {
     format: Function;
     inDates: Function;
     isInit: boolean;
+    active?: boolean,
+    disables: any
 
 }
 
@@ -83,8 +80,7 @@ export interface pickerHandler {
     bindData: boolean
 
 }
-
-export interface DisableDateRange {
-    dates: Array<any>;
-    days: Array<any> ;
+export interface disable {
+    dates?: Array<any>;
+    days?: Array<number> ;
 }

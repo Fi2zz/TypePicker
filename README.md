@@ -1,21 +1,45 @@
 
-| api|    类型| 说明|
-|----|----    |----|
-|el|String|选择器,用于挂载日历|
-|from<sup>**<sup> 	|Date|                             开始日期|
-|to    |Date|                            结束日期|
-|language<sup>[0]</sup>|Map                         | 语言包，默认为简体中文语言包| 
-|defaultLanguage |String                |  当前选择日历语言，需要和language选项配合使用，没有默认值|
-|format |String|                           日期格式|
-|doubleSelect|Boolean|                      是否双选，对于酒店和车船票机票比较有用|
-|bindData<sup>***</sup>   |Boolean|                      绑定数据到日历，|
-|limit   |Number|                          双选情况下，限制最大跨度,如果`doubleSelect=false`,则自动限制为`1`|
-|view   |Number|String|                    日曆視圖數量，大於2或小於0或者其他字符串都會設置為singleView,如果傳入的是auto會被設置為flatView      |
+### Options
 
-    **   from默认是new Date(),to默认为new Date()往后推6个月
-    ***  bindData,如果不想显示价格，不开启此项即可，同时将移除data事件,此时再调用data相关的事件和方法无法生效
+| OPTION       | TYPE               | DESC                       | 默认值,可选值          |
+|--------------|--------------------|----------------------------|------------------|
+| el           | string,HTMLElement | element to mount DatePcker         |   
+| from         | Date               | 开始日期                       | new Date         |
+| to           | Date               | 结束日期                       | new Date() + 6个月 |
+| doubleSelect | boolean            | 双选                         | false            |
+| limit        | number             | 双选情况下，日期跨度限制，单选自动设置为1      |                  |
+| views        | number,string      | 日期展示数量，“auto”为竖向展示多个月份<br> | auto,1,2         |
+	
+	
+###  Apis
+
+##### Pass option to DatePicker
+
+
+| API         | DESC                                     |
+|-------------|------------------------------------------|
+| setDates    | Set init dates to DatePicker,more detail see below |
+| setLanguage | Set Datapicker's language,more detail see below |
+| setData     | Set data to DatePicker,more detail see below |
+| setDisabled | Set disable dates to DataPicker,more detail see below |
+| parse       | Transform date string into date object   |
+| format      | Trranform date object inito string       |
+| on          | Event listener                           |
+| diff        | Diff between two dates                   |
+
+
+
+##### Not pass option to DatePicker
+| API    | DESC                                     | EXAMPLE                                  |
+|--------|------------------------------------------|------------------------------------------|
+| diff   | Compare two dates                        | diff(new Date(2018,1,18),new Date(2018,1,19)) => 1 |
+| format | Transform date object into formatted string | format(new Date(),'YYYY-MM-DD') =>2018-02-18 |
+| parse  | Transfor formatted string into date object | parse("2018-02-18","YYYY-MM-DD") =>Sun Feb 18 2018 00:00:00 GMT+0800 (中国标准时间) |
+
+    
+
                 
-*使用方法
+### USAGE
 ```typescript
 
        const date = new Date();
@@ -29,147 +53,119 @@
        const to = new Date(dist.year, dist.month + 9, 0);
        const currDate = new Date(dist.year, dist.month, dist.date);
        const dateFormat = 'YYYY-M-D';
-       //不传参可以获取到parse format diff 三个方法
-       //分别是反格式日期化方法、格式化日期方法、对比日期方法
-       const datepickerUtil = new DatePicker;
-       const options ={
-              el: document.getElementById("datepicker"),
-              to,
-              from,
-              limit: 7,
-              language,
-              bindData: true,
-              format: dateFormat,
-              doubleSelect: true,
-              defaultLanguage: "zh",
-              views: 1
-            };
-        const datePicker = <any>new DatePicker(options);
-        //更新选择的日期
-        datePicker.on("update", (output: any) => {
-            const {type,value}=output;
-            //type => 'init'或'selected'
-            //valye => 选择的日期
-            document.getElementById("layout").innerHTML = `选中的日期${value}`
+       
+         datepicker = <any>new DatePicker({
+            el: document.getElementById("datepicker"),
+            to,
+            from,
+            limit: 7,
+            format: dateFormat,
+            doubleSelect: true,
+            views: 1
         });
-        //设置默认日期，使用datePicker.dateRanges方法
-        //如果不需要设置默认选中的日期，不执行此方法即可    
-        //dateRanges =<Array<any>>[<Date>|<string>]
-        const  dateRanges:Array<any> =[new Date(),"2017-12-20"];
-        datePicker.setDates(dateRanges);
-        //通过data事件来控制每个日期格子展示的数据
-        datePicker.on("data", (result: any) => {
-            //返回传入的数据和nodeList
-            //返回传入的数据是因为需要和外部的数据做校验
-            const data = result.data;
-            const nodeList = result.nodeList;
-            for (let i = 0; i < nodeList.length; i++) {
-                let node = nodeList[i];
-                let date = node.getAttribute("data-date");
-                if (date in data) {
-                    let itemData = data[date];
-                    let placeholder: HTMLElement = node.querySelector(".placeholder");
-                    placeholder.innerHTML = itemData.value
-                } else {
-                    node.classList.add("disabled")
-                }
-            }
-        });
-        
-        //初始化后，需要手动调用一下data方法，把日历数据传入日历
-        datePicker.data((params: any) => {
-            //params为datePicker.data的callback 的参数
-            /* params={
-                    dates:Array<string>["2017-11-18",...,"2017-12-31"],
-                    data:<Map>{
-                        "2017-11-18":<any>,
-                        ...,
-                         "2017-12-31":<any>,
-                    }
-                    data的类型为map,由如下key-value的形式组成
-            */
-            Object.keys(source).forEach(date=>{
-              let item = datePicker.parse(date);
-                   if (datepickerUtil.diff(item, currDate) >= 0) {
-                      params.dates.push(item)
-                  } else {
-                      delete source[date]
-                  }      
+        if (datepicker) {
+            datepicker.on("update", (result: any) => {
+                //`update`  fired by select dates
+                //result contains two keys
+                // value =>  selected dates
+                // type  =>  two types => init,selected
+                // your code goes here
+                
             });
-            params.data = source;
-        });
+            datepicker.on("disabled", (result: any) => {
+                
+                // `disabled`event fired by `setDisabled`
+                //set disabled state to HTML nodes
+                
+                const {dateList, nodeList} = result;
+                
+                for (let n = 0; n < nodeList.length; n++) {
+                    let node = nodeList[n];
+                    if (dateList[node.getAttribute("data-date")]) {
+                        node.classList.add('disabled')
+                    }
+                }
+                
+            });
+            datepicker.on("data", (result: any) => {
+                // 'data' event fired by `setData` 
+                //set HTML nodes 
+            
+                const data = result.data;
+                const nodeList = result.nodeList;
+                for (let i = 0; i < nodeList.length; i++) {
+                    let node = nodeList[i];
+                    let date = node.getAttribute("data-date");
+                    if (date in data) {
+                        if (!node.classList.contains("disabled")) {
+                            let itemData = source[date];
+                            if (itemData.highlight) {
+                                addClass(node, "highlight")
+                            }
+                            let placeholder: HTMLElement = node.querySelector(".placeholder");
+                            placeholder.innerHTML = itemData.value
+
+                        }
+
+                    } else {
+                        addClass(node, "disabled")
+                    }
+                }
+            });
+            
+            
+            
+            //tuple type,accept <string> and <Date>
+            const selected=["2018-2-21",new Date()];
+            datepicker.setDates(selected);
+            //disabled dates, 
+            // dates<tuple>,accept <Date> and  <string>
+            // days<Array<number>> accept 0,1,2,3,4,5,6
+            datepicker.setDisabled({
+                dates: [
+                    "2018-2-18",
+                    "2018-2-19",
+                    "2018-2-22",
+                ],
+                days: [1, 5, 2, 6]
+            });
+            //set data to DatePicker
+            
+            datepicker.setData((params: any) => {
+            
+                //params.data accept Oject like {
+                //  
+                //  "2018-1-31":123,
+                //  "2018-2-21":123,
+                //  
+                //}
+                
+                // params.dates accept  Array like ["2018-1-31","2018-2-21"]
+            
+                Object.keys(source).forEach(date => {
+                    let item = datepicker.parse(date);
+                    if (datepicker.diff(item, currDate) >= 0) {
+                        params.dates.push(date)
+                    } else {
+                        // delete source[date]
+                    }
+                });
+                params.data = source;
+                return params
+            });
+            datepicker.setLanguage(language[activeLanguageCode])
+        }
+       
+       
+       
+
 ```
 
-* utils方法（不传入option）
-```typescript
-    const {diff,parse,format} =new DatePicker
-   // diff   比較兩個日期相差幾天       const days= diff(new Date(2018,1,1),new Date(2018,1,5)) => 4
-   // parse  把格式化后的日期反格式化   const  parsed  = parse("2018-02-01","YYYY-MM-DD");   =>  Thu Feb 01 2018 00:00:00 GMT+0800 (CST)
-   // format 格式化日期                  const  formatted  = parse(new Date(),"YYYY-MM-DD");  =>    2018-02-01           
-```    
-            
-	
-* datePicker实例返回一个对象，对象包含以下
-
-        diff
-            type     [Function]
-            desc     计算日期差，返回值为一个number类型
-        
-        parse
-            type     [Function]
-            desc     把格式化后的日期反格式化,返回一个Date对象
-            example  `datePicker.parse("2018-02-10","YYYY-MM-DD")`
-        
-        format [Function]
-            type     [Function]
-            desc     格式化日期
-            example  `datePicker.format(new Date,"YYYY-MM-DD") => 2018-02-10
-                
-        
-        on  
-            type     [Funtion]
-            desc     事件监听器，目前支持 update[4] 和 data 事件
-            
-        
-        data  
-           type      [Function]
-           desc      设置日历数据，需要和bindData配合使用
-            
-        
-        setDates 
-           type      [Function]
-           desc      设置日期,接受一个数组，元素类型可以为Date或string
-           example   datePicker.setDates([new Date,"2018-02-14"]) 
- 
-        disable [Function]
 
 
 
-[0] language语言包,由以下构成
-```json
-	{
-         "zh-cn": {
-            "days": ["日", "一", "二", "三", "四", "五", "六"],
-            "months": [
-                "01月",
-                "02月", 
-                "03月", 
-                "04月",
-                "05月", 
-                "06月", 
-                "07月", 
-                "08月", 
-                "09月", 
-                "10月", 
-                "11月", 
-                "12月"],
-            "year":"年"    
-            }
-    }
-```	
 
-[4] 事件监听,`update`事件，获取日期选择更新,`data`事件，渲染日历数据
-	
+
 	
 	
 	

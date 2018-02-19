@@ -57,6 +57,9 @@ export function isNumber(object: any) {
 export function isDate(object: any) {
     return _toString(object) === '[object Date]';
 }
+export function isFunction(object: any) {
+    return _toString(object) === '[object Function]';
+}
 
 
 export function hasClass(ele: any, className: string) {
@@ -96,3 +99,49 @@ export function warn(where: string, msg: any) {
     console.error(`[${where}] ${message} `)
 }
 
+
+export function log( msg: any){
+    let message = msg;
+    if (isObject(msg) || isArray(msg)) {
+        message = JSON.stringify(msg,null,2)
+    }
+
+    console.log(message)
+}
+
+export function parseEl(el: string) {
+    if (!el) {
+        return null
+    }
+    if (!isString(el)) {
+        return el
+    }
+    else {
+        if (el.indexOf('#') >= 0) {
+            return document.querySelector(el)
+        } else if (el.indexOf('.') >= 0) {
+            return document.querySelectorAll(el)[0]
+        } else {
+            if (el.indexOf("#") <= -1 || el.indexOf(".") <= -1) {
+                warn(`ParseEl`, `Do not mount DatePicker to a pure html tag,${el}`)
+                return false;
+            }
+            return document.querySelector(el)
+        }
+    }
+}
+export  function noData(result: any) {
+    return !isObject(result)
+        || (Object.keys(result.data).length <= 0
+        || result.dates.length <= 0)
+}
+
+export function removeDisableDates(disableList: Array<string>, dataList: any) {
+    const temp = {};
+    for (let key in dataList) {
+        if (disableList.indexOf(key) >= 0) {
+            temp[key] = key
+        }
+    }
+    return temp;
+}

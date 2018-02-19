@@ -60,7 +60,9 @@ export default class HTML {
 
 
     }
+
     public template: string;
+
     private  createActionBar(create?: boolean) {
         if (!create) {
             return ''
@@ -128,9 +130,10 @@ export default class HTML {
             const key = formatted.value;
             const text = this.createPlaceholder(formatted.date);
             const className = this.setCellClassList({date, infiniteMode, endDate});
-            template.push({className, text, key});
+            const day = formatted.day;
+            template.push({className, text, key, day});
         }
-        const tpl = template.map((item: any) => this.createNode(item.className, item.key, item.text)).join(" ");
+        const tpl = template.map((item: any) => this.createNode(item.className, item.key, item.text, item.day)).join(" ");
         return {
             template: tpl,
             year: curr.year,
@@ -178,13 +181,12 @@ export default class HTML {
         return tpl.join("")
     }
 
-    private  createNode(className: string, key: string, text: string) {
-        return `<div class="${className}"${key ? "data-date=" + key : ""}>${text}</div>`
+    private  createNode(className: string, key: string, text: string, day: number) {
+        return `<div class="${className}" ${day ? "data-day=" + day : ""} ${key ? "data-date=" + key : ""}>${text}</div>`
     }
 
     private  createPlaceholder(date?: string) {
         return `<div class="date">${date ? date : ''}</div><div class="placeholder"></div>`
-
     }
 
     private  setCellClassList(options: templateDateCellClassNameOption) {
