@@ -4,7 +4,7 @@
     "sourceMap": false,
     "noImplicitAny": false,
     "module": "ES6",
-    "target": "es3",
+    "target": "es5",
     "noEmitOnError": false,
     "allowSyntheticDefaultImports": true,
     "noUnusedLocals": false,

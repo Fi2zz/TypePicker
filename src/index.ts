@@ -18,27 +18,52 @@ import {
     isFunction,
     getDates
 } from "./util"
-
 import HTML from './datepicker.template'
 import handlePickDate from './datepicer.picker'
 import {parseFormatted, format as formatter} from "./datepicker.formatter"
 import {setInitRange} from "./datepicker.ranger";
 
 
-export default class DatePicker {
+const getDisableDates = (startDate: Date, endDate: Date, dateFormat: string) => {
+    const startMonthDates = startDate.getDate();
+    const temp: any = {};
+    //处理开始日期前的日期
+    for (let i = 1; i < startMonthDates - 1; i++) {
+        let date = new Date(startDate.getFullYear(), startDate.getMonth(), startMonthDates - i);
+        let formatted = formatter(date, dateFormat).value;
+        temp[formatted] = formatted
+    }
+    //处理结束日期后的日期
+    const endMonthDates = getDates(endDate.getFullYear(), endDate.getMonth());
+    const diffs = endMonthDates - endDate.getDate();
+    for (let i = 1; i <= diffs; i++) {
+        let date = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate() + i);
+        let formatted = formatter(date, dateFormat).value;
+        temp[formatted] = formatted
+    }
+    return temp
 
+};
+
+
+
+export default class DatePicker {
+    private dateFormat: string;
+    private limit: number = 1;
     private views: number | string = 1;
     private date: Date = new Date();
-    private startDate: Date = new Date();
-    private endDate: Date | any = null;
+    private startDate: Date = null;
+    private endDate: Date = null;
     private dates: string[] = [];
-    private selected: any[] = [];
+    private selected: string[] = [];
     private currentSelection: string[] = [];
     private data: any = {};
     private disables: any = {};
-    private limit: number = 1;
-    private dateFormat: string;
-    private language: any = {};
+    private language: any = {
+        days: ['日', '一', '二', '三', '四', '五', '六'],
+        months: ['01月', '02月', '03月', '04月', '05月', '06月', '07月', '08月', '09月', '10月', '11月', '12月'],
+        year: "年"
+    };
     private element: any = null;
     private double: boolean = false;
     private bindData: boolean = false;
@@ -144,7 +169,7 @@ export default class DatePicker {
     private update = (result: any) => {
         const {type, value} = result;
         if (type === 'selected') {
-            this.setDates(value, false)
+            this.setDates(value)
         } else if (type === 'switch') {
             if (this.currentSelection.length > 0) {
                 this.selected = this.currentSelection;
@@ -167,7 +192,7 @@ export default class DatePicker {
         }
     };
 
-    public setDates: Function = (dates: Array<any>) => {
+    public setDates(dates: Array<any>) {
         if (!isArray(dates)) {
             dates = [];
             warn("setDates", `no dates provided,${dates}`);
@@ -190,7 +215,6 @@ export default class DatePicker {
                     return false
                 }
             }
-
             return true
         };
 
@@ -222,16 +246,7 @@ export default class DatePicker {
 
     public setLanguage(pack?: any) {
         if (isArray(pack.days) && isArray(pack.months)) {
-            this.language = {
-                week: pack.days,
-                title: (year: any, month: any) => {
-                    if (pack.year) {
-                        return `${year}${pack.year}${pack.months[month]}`
-                    } else {
-                        return `${pack.months[month]} ${year}`
-                    }
-                }
-            };
+            this.language = pack
         }
         return false;
     };
@@ -248,7 +263,7 @@ export default class DatePicker {
         }
     }
 
-    public setDisabled = (param: disable) => {
+    public setDisabled(param: disable) {
         if (!param || isObject(param) && Object.keys(param).length <= 0) {
             warn("setDisabled",
                 `invalid params, \nparams should be {dates:<Array<any>>[], days:<Array<number>>[] }`)
@@ -300,7 +315,6 @@ export default class DatePicker {
                 this.dates = result.dates.sort((a: string, b: string) => this.parse(a) - this.parse(b));
             }
         }
-
     };
 
     public diff(d1: Date, d2: Date) {
@@ -337,21 +351,35 @@ export default class DatePicker {
         this.update(updateEventData);
     };
 
-
     private init(option: any) {
         const currDate = new Date();
+        const getViews = (view: number | string) => {
+            if (!view) {
+                return 1
+            }
+            const views = parseToInt(view);
+            if (isNaN(views)) {
+                if (view !== 'auto') {
+                    return 1
+                } else {
+                    return 'auto'
+                }
+            }
+            else {
+                if (views > 2 || views <= 0) {
+                    return 1
+                }
+                else {
+                    return views
+                }
+            }
+        };
 
         if (option.doubleSelect) {
             this.double = option.doubleSelect
         }
         this.dateFormat = option.format;
-        const views = parseToInt(option.views);
-        this.views = isNaN(views) ?
-            option.views === 'auto'
-                ? 'auto' : 1
-            : views > 2 || views < 0
-                ? 1
-                : views;
+        this.views = getViews(option.views);
         //开始日期
         this.startDate = isDate(option.from) ? option.from : new Date();
         //结束日期
@@ -360,23 +388,6 @@ export default class DatePicker {
         this.date = this.startDate;
         //選擇日期區間最大限制
         this.limit = this.double ? (isNumber(option.limit) ? option.limit : 2) : 1;
-        if (Object.keys(this.language).length <= 0) {
-            const defaultLanguage: any = {
-                days: ['日', '一', '二', '三', '四', '五', '六'],
-                months: ['01月', '02月', '03月', '04月', '05月', '06月', '07月', '08月', '09月', '10月', '11月', '12月'],
-                year: "年"
-            };
-            this.language = {
-                week: defaultLanguage.days,
-                title: (year: any, month: any) => {
-                    if (defaultLanguage.year) {
-                        return `${year}${defaultLanguage.year}${defaultLanguage.months[month]}`
-                    } else {
-                        return `${defaultLanguage.months[month]} ${year}`
-                    }
-                }
-            }
-        }
         this.element = parseEl(option.el);
         if (!this.element) {
             warn('init', `invalid selector,current selector ${this.element}`);
@@ -393,40 +404,40 @@ export default class DatePicker {
                 }
             }
             if (!this.bindData) {
-                const gap = diff(this.endDate, currDate, "days");
-                const year = currDate.getFullYear();
-                const month = currDate.getMonth();
-                const date = currDate.getDate();
-                let dates = [];
-                for (let i = 0; i < gap; i++) {
-                    let item = <Date>new Date(year, month, date + i);
-                    let formatted = this.format(item).value;
-                    dates.push(formatted)
+                if (isDate(option.from) && isDate(option.to)) {
+                    const gap = diff(this.endDate, currDate, "days");
+                    const year = currDate.getFullYear();
+                    const month = currDate.getMonth();
+                    const date = currDate.getDate();
+                    let dates = [];
+                    for (let i = 0; i < gap; i++) {
+                        let item = <Date>new Date(year, month, date + i);
+                        let formatted = this.format(item).value;
+                        dates.push(formatted)
+                    }
+                    this.dates = dates;
+                } else {
+                    this.views = 1;
                 }
-                this.dates = dates;
             }
-            //处理结束日期后的日期
-            const endMonthDates = getDates(this.endDate.getFullYear(), this.endDate.getMonth());
-            const endDate = this.endDate.getDate();
-            const diffs = endMonthDates - endDate;
-            for (let i = 0; i < diffs; i++) {
-                let date = new Date(this.endDate.getFullYear(), this.endDate.getMonth(), endDate + i);
-                let formatted = this.format(date).value;
-                this.disables[formatted] = formatted
-            }
+
+
+            //处理开始日期之前的日期
+
+
+
+            this.disables = getDisableDates(this.startDate, this.endDate, this.dateFormat)
             const disableList = Object.keys(this.disables);
             if (disableList.length > 0) {
                 const datesList = this.dates;
                 const newDateList = [];
                 const removed = removeDisableDates(Object.keys(this.disables), this.data);
                 if (Object.keys(removed).length > 0) {
-
                     for (let key in removed) {
                         delete this.data[key]
 
                     }
                 }
-
                 for (let date of datesList) {
                     if (!removed[date]) {
                         newDateList.push(date)

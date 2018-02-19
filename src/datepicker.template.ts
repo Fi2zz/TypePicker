@@ -1,64 +1,37 @@
+import {classTemplate} from './datepicker.interfaces'
 import {
-    templateMapOption,
-    templateSetDatesOption,
-    templateDateCellClassNameOption,
-    templateFunctionOption
-} from './datepicker.interfaces'
-interface template {
-
-    startDate: Date,
-    endDate: Date,
-    multiViews: boolean,
-    flatView: boolean,
-    singleView: boolean,
-    language: any,
-    infiniteMode: boolean,
-    dateParser: Function,
-    dateFormatter: Function
-}
-
-import {
-    getFirstDay,
     getDates,
     diff,
 } from "./util"
 const currDate = new Date();
 export default class HTML {
-    constructor(options: template) {
+    constructor(options: classTemplate) {
         const {
             startDate,
             endDate,
-            multiViews,
-            flatView,
-            singleView,
+            views,
             language,
             infiniteMode,
-            dateParser,
             dateFormatter,
         } = options;
-
-        const parse = dateParser;
-        const formatter = dateFormatter;
-        const gap = multiViews ? 1 : flatView ? diff(startDate, endDate) : 0;
-        const bodyOption = {
-            startDate,
-            endDate,
-            gap,
-            infiniteMode,
-            formatter,
-            parse
-        };
-        const viewOption = {
-            template: this.createBody(bodyOption),
-            multiViews,
-            flatView,
-            language,
-            singleView
-        };
-        this.template = `${this.createActionBar(multiViews || singleView)}${this.createView(viewOption)}`
+        const gap = views === 2 ? 1 : views === 'auto' ? diff(startDate, endDate) : 0;
+        this.language = language;
+        this.formatter = dateFormatter;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.views = views;
+        this.infiniteMode = infiniteMode;
+        this.template = `${this.createActionBar(this.views !== 'auto')}${this.createView(this.createBody(gap))}`
     }
 
+    private startDate: Date = null;
+    private endDate: Date = null;
+    private formatter: Function = null;
+    private infiniteMode: boolean = false;
+    private language: any = {};
     public template: string;
+    private views: number | string = 1;
+
     private  createActionBar(create?: boolean) {
         if (!create) {
             return ''
@@ -69,39 +42,18 @@ export default class HTML {
          </div>
     `
     }
-    private  createBody(option: templateMapOption) {
-        const {
-            startDate,
-            endDate,
-            gap,
-            infiniteMode,
-            formatter,
-            parse
-        } = option;
+
+    private  createBody(gap: number) {
         const template = [];
         for (let i = 0; i <= gap; i++) {
-            const date = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
-            const paint = this.createNodeList({
-                year: date.getFullYear(),
-                month: date.getMonth(),
-                formatter: formatter,
-                parse: parse,
-                infiniteMode,
-                endDate,
-            });
+            const date = new Date(this.startDate.getFullYear(), this.startDate.getMonth() + i, 1);
+            const paint = this.createMonthDateTemplate(date.getFullYear(), date.getMonth());
             template.push({template: paint.template, year: paint.year, month: paint.month})
         }
         return template
     }
-    private  createNodeList(options: templateSetDatesOption) {
-        const {
-            year,
-            month,
-            infiniteMode,
-            formatter,
-            endDate
-        } = options;
-        let template = <Array<any>>[];
+
+    private  createMonthDateTemplate(year: number, month: number) {
         const d = new Date(year, month, 1);
         const curr = {
             year: d.getFullYear(),
@@ -109,87 +61,106 @@ export default class HTML {
             date: d.getDate(),
             index: d.getMonth()
         };
-        const firstDay = getFirstDay(curr.year, curr.month);
+        const firstDay = new Date(curr.year, curr.month, 1).getDay();
+        const template = <Array<any>>[];
         for (let i = 0; i < firstDay; i++) {
             template.push({
                 date: "",
-                className: this.setCellClassList({}),
+                className: this.setNodeClassName(),
                 text: this.createPlaceholder(),
                 key: ""
             })
         }
         for (let i = 1; i <= getDates(curr.year, curr.month); i++) {
             const date = new Date(curr.year, curr.month, i);
-            const formatted = formatter(date);
+            const formatted = this.formatter(date);
             const key = formatted.value;
             const text = this.createPlaceholder(formatted.date);
-            const className = this.setCellClassList({date, infiniteMode, endDate});
+            const className = this.setNodeClassName(date);
             const day = formatted.day;
             template.push({className, text, key, day});
         }
-        const tpl = template.map((item: any) => this.createNode(item.className, item.key, item.text, item.day)).join(" ");
+        const tpl = template.map((item: any) => {
+            return this.createNode(item.className, item.key, item.text, item.day)
+        }).join(" ");
         return {
             template: tpl,
             year: curr.year,
             month: curr.index
         }
-
-
     }
 
-    private  createView(options: templateFunctionOption) {
-        const {
-            template,
-            multiViews,
-            flatView,
-            singleView,
-            language,
-        } = options;
-        const weekDays = language.week.map((day: any, index: number) => {
-            const className = ["calendar-cell", "calendar-day-cell",
-                index === 0 ? "calendar-cell-weekday" : index === 6 ? "calendar-cell-weekend" : ""];
-            return `<div class="${className.join(" ")}">${day}</div>`
-        }).join("");
+    private  createView(template: Array<any>) {
+        const week = this.createMonthWeek();
         const tpl = template.map((item: any) => {
             const year = item.year, month = item.month;
-            const title = `<div class="calendar-title">${language.title(year, month)}</div>`,
-                body = item.template;
+            const head = this.createMonthHeader(year, month);
+            const body = this.createMonthBody(item.template);
             let tpl = "";
-            if (multiViews || singleView) {
-                tpl += `<div class='calendar-main'>
-                    <div class="calendar-head">${title}</div>
-                   <div class="calendar-day"> ${weekDays}</div>
-                    <div class="calendar-body">${body}</div>
-              </div>`
+            if (this.views !== 'auto') {
+                tpl += this.createMonthWrap(head, body, week);
             } else {
-                tpl = `<div class="calendar-main">
-                   <div class="calendar-head">${title}</div>  
-                    <div class="calendar-body">${body}</div>
-            </div>`
+                tpl = this.createMonthWrap(head, body)
             }
             return tpl
         });
-        if (flatView) {
-            tpl.unshift(`<div class="calendar-day">${weekDays}</div>`)
+        if (this.views === 'auto') {
+            tpl.unshift(week)
         }
         return tpl.join("")
     }
 
+    private createMonthWrap(head: string, body: string, week?: string) {
+        return `<div class="calendar-main">${head} ${week ? week : ''} ${body}</div>`
+    }
+
+    private createMonthWeek() {
+        const template = this.language.days.map((day: any, index: number) => {
+            const className = [
+                "calendar-cell",
+                "calendar-day-cell",
+                index === 0 ?
+                    "calendar-cell-weekday"
+                    : index === 6 ?
+                    "calendar-cell-weekend" : ""
+            ];
+            return `<div class="${className.join(" ")}">${day}</div>`
+        }).join("");
+
+
+        return `  <div class="calendar-day">${template}</div>`
+    }
+
+    private createMonthBody(content: any) {
+        return `<div class="calendar-body">${content}</div>`
+    }
+
+    private createMonthHeader(year: number, month: number) {
+        const heading = function (pack, year, month) {
+            if (pack.year) {
+                return `${year}${pack.year}${pack.months[month]}`
+            } else {
+                return `${pack.months[month]} ${year}`
+            }
+        };
+        return `<div class="calendar-head"><div class="calendar-title">${heading(this.language, year, month)}</div></div>`
+    };
+
     private  createNode(className: string, key: string, text: string, day: number) {
-        return `<div class="${className}" ${day ? "data-day=" + day : ""} ${key ? "data-date=" + key : ""}>${text}</div>`
+        return `<div class="${className}" ${day >= 0 ? "data-day=" + day : ""} ${key ? "data-date=" + key : ""}>${text}</div>`
     }
 
     private  createPlaceholder(date?: string) {
         return `<div class="date">${date ? date : ''}</div><div class="placeholder"></div>`
     }
 
-    private  setCellClassList(options: templateDateCellClassNameOption) {
-        const {date, infiniteMode, endDate} = options;
+    private  setNodeClassName(date?: Date) {
+        const endDate = this.endDate;
         const classStack = ["calendar-cell", "calendar-date-cell"];
         if (!date) {
             classStack.push("disabled", "empty")
         } else {
-            if (!infiniteMode) {
+            if (!this.infiniteMode) {
                 if (diff(date, currDate, "days") < 0) {
                     classStack.push("disabled")
                 }
@@ -205,9 +176,5 @@ export default class HTML {
             }
         }
         return classStack.join(" ")
-
     }
-
 }
-
-

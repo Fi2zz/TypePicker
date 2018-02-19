@@ -21,7 +21,7 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
         };
         const currDate = new Date(dist.year, dist.month, dist.date);
         const from = new Date(dist.year, dist.month, dist.date);
-        const to = new Date(dist.year, dist.month + 6, dist.date);
+        const to = new Date(dist.year, dist.month + 7, dist.date);
         datepicker = <any>new DatePicker({
             el: document.getElementById("datepicker"),
             to,
@@ -29,8 +29,9 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
             limit: 7,
             format: dateFormat,
             doubleSelect: true,
-            views: 1
+            // views: 2//'auto'
         });
+        console.log(datepicker)
         if (datepicker) {
             datepicker.on("update", (result: any) => {
                 if (result.type === 'selected' && result.value.length === 2) {
@@ -75,8 +76,8 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
 
             datepicker.setDisabled({
                 dates: [
-                    "2018-2-18",
-                    "2018-2-19",
+                    // "2018-2-18",
+                    // "2018-2-19",
                     "2018-2-22",
                 ],
                 days: [1, 5, 2, 6]

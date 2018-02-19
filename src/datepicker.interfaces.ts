@@ -2,43 +2,22 @@ export interface datePickerOptions {
     el: string | HTMLElement;
     to?: Date ;
     from?: Date;
-    limit: number;
+    limit?: number;
     format?: string;
     doubleSelect?: boolean;
     views?: number | string,
 }
-export interface templateFunctionOption {
-    template: any;
-    multiViews: boolean;
-    flatView: boolean;
-    singleView: boolean;
-    language: any;
-}
 
 
-export interface templateMapOption {
-    startDate: Date;
-    endDate: Date;
-    gap: number;
-    infiniteMode: boolean;
-    formatter: Function;
-    parse: Function
+export  interface classTemplate {
+    startDate: Date,
+    endDate: Date,
+    language: any,
+    infiniteMode: boolean,
+    dateFormatter: Function,
+    views: number | string
 }
 
-export interface templateSetDatesOption {
-    year: any;
-    month: any;
-    infiniteMode: boolean;
-    formatter: Function;
-    parse: Function;
-    endDate: Date;
-}
-
-export interface templateDateCellClassNameOption {
-    date?: Date;
-    endDate?: Date;
-    infiniteMode?: boolean
-}
 
 export interface initRangeOptions {
     collector: HTMLElement;
