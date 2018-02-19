@@ -26,6 +26,8 @@ import {setInitRange} from "./datepicker.ranger";
 
 
 export default class DatePicker {
+
+    private views: number | string = 1;
     private date: Date = new Date();
     private startDate: Date = new Date();
     private endDate: Date | any = null;
@@ -39,9 +41,6 @@ export default class DatePicker {
     private language: any = {};
     private element: any = null;
     private double: boolean = false;
-    private flatView: boolean = false;
-    private multiViews: boolean = false;
-    private singleView: boolean = true;
     private bindData: boolean = false;
     private infiniteMode: boolean = false;
     private isInit: boolean = false;
@@ -312,17 +311,13 @@ export default class DatePicker {
         this.element.innerHTML = new HTML({
             startDate: this.date,
             endDate: this.endDate,
-            multiViews: this.multiViews,
-            flatView: this.flatView,
-            singleView: this.singleView,
             language: this.language,
             infiniteMode: this.infiniteMode,
             dateFormatter: this.format,
-            dateParser: this.parse
+            views: this.views
         }).template;
-
         this.selected = this.currentRange(this.isInit);
-        if (this.singleView) {
+        if (this.views === 1) {
             if (this.double && this.selected.length >= 2) {
                 const start = this.selected[0];
                 const end = this.selected[this.selected.length - 1];
@@ -351,17 +346,12 @@ export default class DatePicker {
         }
         this.dateFormat = option.format;
         const views = parseToInt(option.views);
-        if ((option.views !== 'auto' && isNaN(views)) || views === 1 || views > 2 || views <= 0) {
-            this.singleView = true;
-        }
-        else if (option.views === 'auto') {
-            this.flatView = true;
-            this.singleView = false;
-        }
-        else if (views === 2) {
-            this.multiViews = true;
-            this.singleView = false
-        }
+        this.views = isNaN(views) ?
+            option.views === 'auto'
+                ? 'auto' : 1
+            : views > 2 || views < 0
+                ? 1
+                : views;
         //开始日期
         this.startDate = isDate(option.from) ? option.from : new Date();
         //结束日期
@@ -392,13 +382,12 @@ export default class DatePicker {
             warn('init', `invalid selector,current selector ${this.element}`);
             return false
         }
-        this.element.className = `${this.element.className} calendar calendar-${this.multiViews ? "double-views" : this.singleView ? "single-view" : "flat-view"}`
+        this.element.className = `${this.element.className} calendar calendar-${this.views === 2 ? "double-views" : this.views === 1 ? "single-view" : "flat-view"}`
         const next = nextTick(() => {
             this.isInit = this.currentSelection.length > 0;
             this.bindData = Object.keys(this.data).length > 0;
             if (!isDate(option.from) || !isDate(option.to)) {
                 this.infiniteMode = true;
-                this.flatView = false;
                 if (this.bindData) {
                     warn('init', "infiniteMode is on, please provide [from] and [to] while binding data to datepicker  ")
                 }
@@ -430,9 +419,14 @@ export default class DatePicker {
                 const datesList = this.dates;
                 const newDateList = [];
                 const removed = removeDisableDates(Object.keys(this.disables), this.data);
-                for (let key in removed) {
-                    delete this.data[key]
+                if (Object.keys(removed).length > 0) {
+
+                    for (let key in removed) {
+                        delete this.data[key]
+
+                    }
                 }
+
                 for (let date of datesList) {
                     if (!removed[date]) {
                         newDateList.push(date)
@@ -440,8 +434,7 @@ export default class DatePicker {
                 }
                 this.dates = newDateList
             }
-
-            if (!this.flatView) {
+            if (this.views === 'auto') {
                 if (this.currentSelection.length > 0) {
                     this.date = this.parse(this.currentSelection[0])
                 } else {
@@ -454,6 +447,7 @@ export default class DatePicker {
             clearNextTick(next)
         })
     };
+
     constructor(option?: datePickerOptions) {
         if (option) {
             this.init(option);
