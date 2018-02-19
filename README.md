@@ -1,17 +1,17 @@
 
-### Options
+### OPTIONS
 
-| OPTION       | TYPE               | DESC                       | 默认值,可选值          |
-|--------------|--------------------|----------------------------|------------------|
-| el           | string,HTMLElement | element to mount DatePcker         |   
-| from         | Date               | 开始日期                       | new Date         |
-| to           | Date               | 结束日期                       | new Date() + 6个月 |
-| doubleSelect | boolean            | 双选                         | false            |
-| limit        | number             | 双选情况下，日期跨度限制，单选自动设置为1      |                  |
-| views        | number,string      | 日期展示数量，“auto”为竖向展示多个月份<br> | auto,1,2         |
+| OPTION       | TYPE               | DESC                                     | DEFAULT VALUE  |
+|--------------|--------------------|------------------------------------------|-----------------------|
+| el           | string,HTMLElement | element to mount DatePcker               |                       |
+| from         | Date               | Start date of DatePicker                 | new Date              |
+| to           | Date               | End date of DatePicker                   | new Date() + 6 months |
+| doubleSelect | boolean            | Enable pick two dates                    | false                 |
+| limit        | number             | Limitation between two dates while `doubleSelect` is on |                       |
+| views        | number,string      | Display views of DatePicker              | auto,1,2              |
 	
 	
-###  Apis
+###  API
 
 ##### Pass option to DatePicker
 
@@ -41,6 +41,17 @@
                 
 ### USAGE
 ```typescript
+
+
+        
+      //es module
+      import DatePicker from '/dist/datepicker.esm.js'
+      
+      //common js
+      const DatePicker =require("/dist/datepicker.js");
+      
+      //umd
+      //<script src="/dist/datepicker.min.js"></script>
 
        const date = new Date();
        const dist = {
@@ -113,8 +124,6 @@
                 }
             });
             
-            
-            
             //tuple type,accept <string> and <Date>
             const selected=["2018-2-21",new Date()];
             datepicker.setDates(selected);
@@ -153,7 +162,16 @@
                 params.data = source;
                 return params
             });
-            datepicker.setLanguage(language[activeLanguageCode])
+            //set DatePicker's language
+            //language options 
+           const language={
+            
+            days: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+            months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+            year: "" 
+                
+            }
+            datepicker.setLanguage(language)
         }
        
        

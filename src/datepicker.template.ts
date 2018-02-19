@@ -55,14 +55,10 @@ export default class HTML {
             language,
             singleView
         };
-
         this.template = `${this.createActionBar(multiViews || singleView)}${this.createView(viewOption)}`
-
-
     }
 
     public template: string;
-
     private  createActionBar(create?: boolean) {
         if (!create) {
             return ''
@@ -73,7 +69,6 @@ export default class HTML {
          </div>
     `
     }
-
     private  createBody(option: templateMapOption) {
         const {
             startDate,
@@ -98,7 +93,6 @@ export default class HTML {
         }
         return template
     }
-
     private  createNodeList(options: templateSetDatesOption) {
         const {
             year,

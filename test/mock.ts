@@ -1,6 +1,4 @@
 export const source: any = {
-
-
     "2018-1-8": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
     "2018-1-9": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},
     "2018-1-3": {enable: true, "highlight": true, "value": 1198, "label": "unlimited"},

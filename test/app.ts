@@ -1,32 +1,27 @@
 import '../src/style.styl'
 import './test.styl'
-import {format} from '../src/datepicker.formatter'
+
+
 import DatePicker from '../src/index'
 import {source, languages as language} from './mock'
-import {addClass} from "../src/util";
+import {addClass, diff} from "../src/util";
 const date = new Date();
-// console.log(typeof DatePicker, DatePicker)
 
-
-const dist = {
-    year: date.getFullYear(),
-    month: date.getMonth(),
-    date: date.getDate()
-};
-const from = new Date(dist.year, dist.month, dist.date)
-const to = new Date(dist.year, dist.month + 9, 0);
-const currDate = new Date(dist.year, dist.month, dist.date);
 const dateFormat = 'YYYY-M-D';
 const activeLanguageCode: string = "en-us";
 const formControl = <HTMLInputElement> document.getElementById("date-value");
-const initDates = function () {
-    const nextDate = new Date(+currDate + (60 * 60 * 24 * 3 * 1000));
-    const dates = [currDate, nextDate];
-    return <Array<string>> dates.map(item => format(item, dateFormat).value)
-};
-function createDatePicker(onUpdate: Function, create: boolean = true, selected?: Array<any>) {
+function createDatePicker(create: boolean = true, selected?: Array<any>) {
+
     let datepicker = null;
     if (create) {
+        const dist = {
+            year: date.getFullYear(),
+            month: date.getMonth(),
+            date: date.getDate()
+        };
+        const currDate = new Date(dist.year, dist.month, dist.date);
+        const from = new Date(dist.year, dist.month, dist.date);
+        const to = new Date(dist.year, dist.month + 6, dist.date);
         datepicker = <any>new DatePicker({
             el: document.getElementById("datepicker"),
             to,
@@ -37,7 +32,12 @@ function createDatePicker(onUpdate: Function, create: boolean = true, selected?:
             views: 1
         });
         if (datepicker) {
-            datepicker.on("update", (result: any) => onUpdate(result));
+            datepicker.on("update", (result: any) => {
+                if (result.type === 'selected' && result.value.length === 2) {
+                    popupHandler(false)
+                }
+                formControl.value = result.value;
+            });
             datepicker.on("disabled", (result: any) => {
                 const {dateList, nodeList} = result;
                 for (let n = 0; n < nodeList.length; n++) {
@@ -98,22 +98,12 @@ function createDatePicker(onUpdate: Function, create: boolean = true, selected?:
     }
     return datepicker
 }
-function onUpdate(result: any = {value: <Array<string>>[], type: <string>''}) {
-
-
-    console.log(result, "update")
-
-    if (result.type === 'selected' && result.value.length === 2) {
-        popupHandler(false)
-    }
-    formControl.value = result.value;
-}
 function popupHandler(visible: boolean) {
     const pop = <HTMLElement> document.querySelector(".popup");
     pop.style.display = visible ? 'block' : 'none';
 }
 function init(document: Document) {
-    formControl.value = initDates().join(" ");
+    createDatePicker(true, formControl.value.split(" "));
     document.addEventListener("click", (e) => {
         const target = <HTMLElement> e.target;
         if (target) {
@@ -131,5 +121,4 @@ function init(document: Document) {
         }
     });
 }
-createDatePicker(onUpdate, true, formControl.value.split(" "));
 init(document);

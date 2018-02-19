@@ -15,7 +15,8 @@ import {
     parseEl,
     noData,
     removeDisableDates,
-    isFunction
+    isFunction,
+    getDates
 } from "./util"
 
 import HTML from './datepicker.template'
@@ -415,7 +416,15 @@ export default class DatePicker {
                 }
                 this.dates = dates;
             }
-
+            //处理结束日期后的日期
+            const endMonthDates = getDates(this.endDate.getFullYear(), this.endDate.getMonth());
+            const endDate = this.endDate.getDate();
+            const diffs = endMonthDates - endDate;
+            for (let i = 0; i < diffs; i++) {
+                let date = new Date(this.endDate.getFullYear(), this.endDate.getMonth(), endDate + i);
+                let formatted = this.format(date).value;
+                this.disables[formatted] = formatted
+            }
             const disableList = Object.keys(this.disables);
             if (disableList.length > 0) {
                 const datesList = this.dates;
@@ -432,7 +441,6 @@ export default class DatePicker {
                 this.dates = newDateList
             }
 
-
             if (!this.flatView) {
                 if (this.currentSelection.length > 0) {
                     this.date = this.parse(this.currentSelection[0])
@@ -446,8 +454,6 @@ export default class DatePicker {
             clearNextTick(next)
         })
     };
-
-
     constructor(option?: datePickerOptions) {
         if (option) {
             this.init(option);

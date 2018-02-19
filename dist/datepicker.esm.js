@@ -511,8 +511,14 @@ var handlePickDate = function (options) {
                     var front = selected[0];
                     var startDate = parse(front);
                     var prevDate = attr(prevEl, "data-date") || front;
+                    var inSelected = function (s) {
+                        return selected.indexOf(s) >= 0;
+                    };
                     var diffed = diff(startDate, parse(date), "days") * -1;
-                    if (!inDates(date) && !inDates(prevDate) || diffed > limit || diffed < 0) {
+                    if (!inDates(date) && !inDates(prevDate)
+                        || !inDates(date) && !inSelected(date)
+                        || diffed > limit
+                        || diffed < 0) {
                         type = 'disabled';
                     }
                 }
@@ -1243,6 +1249,14 @@ var DatePicker = (function () {
                     dates.push(formatted);
                 }
                 _this.dates = dates;
+            }
+            var endMonthDates = getDates(_this.endDate.getFullYear(), _this.endDate.getMonth());
+            var endDate = _this.endDate.getDate();
+            var diffs = endMonthDates - endDate;
+            for (var i = 0; i < diffs; i++) {
+                var date = new Date(_this.endDate.getFullYear(), _this.endDate.getMonth(), endDate + i);
+                var formatted = _this.format(date).value;
+                _this.disables[formatted] = formatted;
             }
             var disableList = Object.keys(_this.disables);
             if (disableList.length > 0) {
