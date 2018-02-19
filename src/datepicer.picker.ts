@@ -29,8 +29,6 @@ export default function (options: pickerHandler) {
     const collection = element.querySelectorAll(".calendar-date-cell");
 
 
-    const init = selected;
-
     for (let i = 0; i < collection.length; i++) {
         const item = collection[i];
         item.addEventListener("click", () => {
@@ -107,9 +105,15 @@ export default function (options: pickerHandler) {
                         const front = selected[0];
                         const startDate = parse(front);
                         const prevDate = attr(prevEl, "data-date") || front;
-
+                        const inSelected = function (s: string) {
+                            return selected.indexOf(s) >= 0
+                        };
                         const diffed = diff(startDate, parse(date), "days") * -1;
-                        if (!inDates(date) && !inDates(prevDate) || diffed > limit || diffed < 0) {
+                        if (!inDates(date) && !inDates(prevDate)
+                            || !inDates(date) && !inSelected(date)
+                            || diffed > limit
+                            || diffed < 0
+                        ) {
                             type = 'disabled'
                         }
                     }
@@ -122,6 +126,7 @@ export default function (options: pickerHandler) {
         );
     }
 }
+
 
 function singlePick(selector: string, collector: HTMLElement, shouldChange: boolean) {
     if (shouldChange) {
@@ -276,10 +281,6 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
                 } else {
                     selected = [cache[0]];
                 }
-
-                // selected = [cache[0]];
-
-
             }
         }
         //既没有开始日期也没有结束日期
