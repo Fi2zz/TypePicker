@@ -153,7 +153,6 @@ export default class HTML {
     private  createPlaceholder(date?: string) {
         return `<div class="date">${date ? date : ''}</div><div class="placeholder"></div>`
     }
-
     private  setNodeClassName(date?: Date) {
         const endDate = this.endDate;
         const classStack = ["calendar-cell", "calendar-date-cell"];
