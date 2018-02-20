@@ -473,7 +473,10 @@ var handlePickDate = function (options) {
             var cache = selected;
             var date = attr(item, "data-date");
             var index = selected.indexOf(date);
-            if (!date || (selected.length <= 0 && !inDates(date)) && bindData) {
+            var activeDate = parse(date);
+            var prevDate = new Date(activeDate.getFullYear(), activeDate.getMonth(), activeDate.getDate() - 1);
+            var prevDateString = format(prevDate).value;
+            if (!date || (selected.length <= 0 && !inDates(date)) && bindData || isDouble && !inDates(prevDateString)) {
                 return false;
             }
             if (index >= 0) {
@@ -527,12 +530,12 @@ var handlePickDate = function (options) {
                     var prevEl = item.previousElementSibling;
                     var front = selected[0];
                     var startDate = parse(front);
-                    var prevDate = attr(prevEl, "data-date") || front;
+                    var prevDate_1 = attr(prevEl, "data-date") || front;
                     var inSelected = function (s) {
                         return selected.indexOf(s) >= 0;
                     };
                     var diffed = diff(startDate, parse(date), "days") * -1;
-                    if (!inDates(date) && !inDates(prevDate)
+                    if (!inDates(date) && !inDates(prevDate_1)
                         || !inDates(date) && !inSelected(date)
                         || diffed > limit
                         || diffed < 0) {

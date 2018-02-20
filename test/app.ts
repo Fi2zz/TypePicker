@@ -29,11 +29,13 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
             limit: 7,
             format: dateFormat,
             doubleSelect: true,
-            // views: 2//'auto'
+            views: 2//'auto'
         });
-        console.log(datepicker)
+        console.log(datepicker);
         if (datepicker) {
             datepicker.on("update", (result: any) => {
+
+                console.log(JSON.stringify(result,null,2));
                 if (result.type === 'selected' && result.value.length === 2) {
                     popupHandler(false)
                 }

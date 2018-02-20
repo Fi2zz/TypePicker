@@ -38,7 +38,12 @@ export default function (options: pickerHandler) {
                 const index = selected.indexOf(date);
                 //不可选的日期
                 //初始化时，selected的length为0，点击不可选日期
-                if (!date || (selected.length <= 0 && !inDates(date)) && bindData) {
+
+                const activeDate = parse(date);
+
+                const prevDate = new Date(activeDate.getFullYear(), activeDate.getMonth(), activeDate.getDate() - 1);
+                const prevDateString = format(prevDate).value;
+                if (!date || (selected.length <= 0 && !inDates(date)) && bindData || isDouble && !inDates(prevDateString)) {
                     return false;
                 }
                 //重复选择
@@ -94,6 +99,7 @@ export default function (options: pickerHandler) {
                 }
                 let type = "selected";
                 if (isDouble && bindData) {
+
                     if (selected.length <= 1) {
                         const front = selected[0];
                         if (!inDates(front)) {
@@ -116,6 +122,7 @@ export default function (options: pickerHandler) {
                         ) {
                             type = 'disabled'
                         }
+
                     }
                 }
                 update({
@@ -315,10 +322,10 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
                 //判断最后一个有效日期与最后一天的区间
                 //如果区间大于1或小于-1，则为无效区间，
                 for (let i = 0; i < diff; i++) {
-                    let d = new Date(year, month, date + i)
+                    let d = new Date(year, month, date + i);
                     const string = format(d).value;
                     if (inDates(string)) {
-                        lastValidDate = d
+                        lastValidDate = d;
                         inRange.push(string)
                     }
                     if (!~range.indexOf(string)) {
