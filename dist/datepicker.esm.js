@@ -328,6 +328,106 @@ var HTML = (function () {
     return HTML;
 }());
 
+function parse(string) {
+    if (!string)
+        return new Date();
+    if (string instanceof Date)
+        return string;
+    var date = new Date(string);
+    if (!date.getTime())
+        return null;
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+function isZeroLeading(format) {
+    var splitFormat = format.split(/\W/, 3);
+    splitFormat.shift();
+    var temp = [];
+    for (var i = 0; i < splitFormat.length; i++) {
+        var item = splitFormat[i];
+        if (/\w\w/.test(item)) {
+            temp.push(item);
+        }
+    }
+    return splitFormat.length === temp.length;
+}
+function format(date, format) {
+    if (!format) {
+        format = 'YYYY-MM-DD';
+    }
+    format = format.toUpperCase();
+    var parts = {
+        YYYY: date.getFullYear(),
+        DD: padding(date.getDate()),
+        MM: padding(date.getMonth() + 1),
+        D: date.getDate(),
+        M: date.getMonth() + 1,
+    };
+    var zeroLeading = isZeroLeading(format);
+    return {
+        origin: date,
+        date: zeroLeading ? parts["DD"] : parts["D"],
+        month: zeroLeading ? parts["MM"] : parts["M"],
+        year: parts["YYYY"],
+        day: date.getDay(),
+        value: format.replace(/(?:\b|%)([dDMyY]+)(?:\b|%)/g, function (match, $1) {
+            return parts[$1] === undefined ? $1 : parts[$1];
+        })
+    };
+}
+function parseFormatted(strDate, format) {
+    if (!format) {
+        format = 'YYYY-MM-DD';
+    }
+    var ret = parse(strDate);
+    if (ret)
+        return ret;
+    var token = /d{1,4}|M{1,4}|YY(?:YY)?|S{1,3}|Do|ZZ|([HhMsDm])\1?|[aA]|"[^"]*"|'[^']*'/g;
+    var parseFlags = {
+        D: [/\d{1,2}/, function (d, v) { return d.day = parseInt(v); }],
+        M: [/\d{1,2}/, function (d, v) { return (d.month = parseInt(v) - 1); }],
+        DD: [/\d{2}/, function (d, v) { return d.day = parseInt(v); }],
+        MM: [/\d{2}/, function (d, v) { return d.month = parseInt(v) - 1; }],
+        YY: [/\d{2,4}/, function (d, v) { return d.year = parseInt(v); }],
+        YYYY: [/\d{2,4}/, function (d, v) { return d.year = parseInt(v); }],
+    };
+    ret = function (dateStr, format) {
+        if (dateStr.length > 1000) {
+            return null;
+        }
+        var isValid = true;
+        var dateInfo = {
+            year: 0,
+            month: 0,
+            day: 0
+        };
+        format.replace(token, function ($0) {
+            if (parseFlags[$0]) {
+                var info = parseFlags[$0];
+                var regExp = info[0];
+                var handler_1 = info[info.length - 1];
+                var index_1 = dateStr.search(regExp);
+                if (!~index_1) {
+                    isValid = false;
+                }
+                else {
+                    dateStr.replace(info[0], function (result) {
+                        handler_1(dateInfo, result);
+                        dateStr = dateStr.substr(index_1 + result.length);
+                        return result;
+                    });
+                }
+            }
+            return parseFlags[$0] ? '' : $0.slice(1, $0.length - 1);
+        });
+        if (!isValid) {
+            return null;
+        }
+        var parsed = new Date(dateInfo.year, dateInfo.month, dateInfo.day);
+        return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+    };
+    return ret(strDate, format);
+}
+
 var date = new Date();
 var currDate$1 = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 function getRange(collection, start, end) {
@@ -465,7 +565,7 @@ function setInitRange(options) {
 }
 
 var handlePickDate = function (options) {
-    var element = options.element, selected = options.selected, isDouble = options.isDouble, parse = options.parse, format = options.format, limit = options.limit, inDates = options.inDates, update = options.update, infiniteMode = options.infiniteMode, bindData = options.bindData;
+    var element = options.element, selected = options.selected, isDouble = options.isDouble, parse = options.parse, limit = options.limit, inDates = options.inDates, update = options.update, infiniteMode = options.infiniteMode, bindData = options.bindData, dateFormat = options.dateFormat;
     var collection = element.querySelectorAll(".calendar-date-cell");
     var _loop_1 = function (i) {
         var item = collection[i];
@@ -473,10 +573,12 @@ var handlePickDate = function (options) {
             var cache = selected;
             var date = attr(item, "data-date");
             var index = selected.indexOf(date);
-            var activeDate = parse(date);
-            var prevDate = new Date(activeDate.getFullYear(), activeDate.getMonth(), activeDate.getDate() - 1);
-            var prevDateString = format(prevDate).value;
-            if (!date || (selected.length <= 0 && !inDates(date)) && bindData || isDouble && !inDates(prevDateString)) {
+            var now = parse(date);
+            var prevDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+            var prevDateString = format(prevDate, dateFormat).value;
+            if (!date
+                || (selected.length <= 0 && !inDates(date) && bindData)
+                || (isDouble && !inDates(prevDateString) && !inDates(date))) {
                 return false;
             }
             if (index >= 0) {
@@ -486,12 +588,24 @@ var handlePickDate = function (options) {
                 selected = [];
             }
             selected.push(date);
-            if (isDouble) {
+            if (!isDouble) {
+                var shouldChange = true;
+                if (!inDates(date)) {
+                    selected = cache;
+                    shouldChange = false;
+                }
+                singlePick(item, element, shouldChange);
+            }
+            else {
                 var handlerOptions = {
-                    date: date, selected: selected, cache: cache, limit: limit, format: format, parse: parse,
+                    date: date,
+                    selected: selected,
+                    cache: cache,
+                    limit: limit,
                     inDates: inDates,
                     infiniteMode: infiniteMode,
-                    bindData: bindData
+                    bindData: bindData,
+                    dateFormat: dateFormat
                 };
                 var handled = doubleSelectHandler(handlerOptions);
                 selected = handled.selected;
@@ -509,42 +623,8 @@ var handlePickDate = function (options) {
                     setRange(range, element, false);
                 }
             }
-            else {
-                var selector = item;
-                var shouldChange = true;
-                if (!inDates(date)) {
-                    selected = cache;
-                    shouldChange = false;
-                }
-                singlePick(selector, element, shouldChange);
-            }
-            var type = "selected";
-            if (isDouble && bindData) {
-                if (selected.length <= 1) {
-                    var front = selected[0];
-                    if (!inDates(front)) {
-                        type = 'disabled';
-                    }
-                }
-                else if (selected.length >= 2) {
-                    var prevEl = item.previousElementSibling;
-                    var front = selected[0];
-                    var startDate = parse(front);
-                    var prevDate_1 = attr(prevEl, "data-date") || front;
-                    var inSelected = function (s) {
-                        return selected.indexOf(s) >= 0;
-                    };
-                    var diffed = diff(startDate, parse(date), "days") * -1;
-                    if (!inDates(date) && !inDates(prevDate_1)
-                        || !inDates(date) && !inSelected(date)
-                        || diffed > limit
-                        || diffed < 0) {
-                        type = 'disabled';
-                    }
-                }
-            }
             update({
-                type: type,
+                type: 'selected',
                 value: selected
             });
         });
@@ -619,13 +699,13 @@ function gap(d1, d2) {
     return value === 0 ? 0 : value * -1;
 }
 function doubleSelectHandler(options) {
-    var selected = options.selected, date = options.date, cache = options.cache, limit = options.limit, format = options.format, parse = options.parse, inDates = options.inDates, bindData = options.bindData;
+    var selected = options.selected, date = options.date, cache = options.cache, limit = options.limit, inDates = options.inDates, bindData = options.bindData, dateFormat = options.dateFormat;
     var range = [];
     var inRange = [];
     var allValid = false;
     var start = selected[0];
     var end = selected[selected.length - 1];
-    var startDate = parse(start), endDate = parse(end);
+    var startDate = parseFormatted(start, dateFormat), endDate = parseFormatted(end, dateFormat);
     if (bindData) {
         var diff_2 = gap(startDate, endDate);
         var length = selected.length;
@@ -643,7 +723,7 @@ function doubleSelectHandler(options) {
                     var year = startDate.getFullYear(), month = startDate.getMonth(), date_1 = startDate.getDate();
                     for (var i = 1; i < diff_2; i++) {
                         var d = new Date(year, month, date_1 + i);
-                        var formatted = format(d).value;
+                        var formatted = format(d, dateFormat).value;
                         if (inDates(formatted)) {
                             inRange.push(formatted);
                         }
@@ -703,8 +783,8 @@ function doubleSelectHandler(options) {
         if (selected.length === 2) {
             var lastValidDate = null;
             var end_1 = selected[selected.length - 1];
-            var endDate_1 = parse(end_1);
-            var startDate_1 = parse(selected[0]);
+            var endDate_1 = parseFormatted(end_1, dateFormat);
+            var startDate_1 = parseFormatted(selected[0], dateFormat);
             var diff_3 = gap(endDate_1, startDate_1) * -1;
             if (diff_3 > 0) {
                 var year = startDate_1.getFullYear(), month = startDate_1.getMonth(), date_2 = startDate_1.getDate();
@@ -712,7 +792,7 @@ function doubleSelectHandler(options) {
                 inRange = [];
                 for (var i = 0; i < diff_3; i++) {
                     var d = new Date(year, month, date_2 + i);
-                    var string = format(d).value;
+                    var string = format(d, dateFormat).value;
                     if (inDates(string)) {
                         lastValidDate = d;
                         inRange.push(string);
@@ -760,7 +840,7 @@ function doubleSelectHandler(options) {
         if (diff_4 > 0 && diff_4 <= limit) {
             for (var i = 1; i < diff_4; i++) {
                 var date_3 = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
-                range.push(format(date_3).value);
+                range.push(format(date_3, dateFormat).value);
             }
             allValid = true;
         }
@@ -773,106 +853,6 @@ function doubleSelectHandler(options) {
         allValid: allValid,
         range: range
     };
-}
-
-function parse(string) {
-    if (!string)
-        return new Date();
-    if (string instanceof Date)
-        return string;
-    var date = new Date(string);
-    if (!date.getTime())
-        return null;
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-function isZeroLeading(format) {
-    var splitFormat = format.split(/\W/, 3);
-    splitFormat.shift();
-    var temp = [];
-    for (var i = 0; i < splitFormat.length; i++) {
-        var item = splitFormat[i];
-        if (/\w\w/.test(item)) {
-            temp.push(item);
-        }
-    }
-    return splitFormat.length === temp.length;
-}
-function format(date, format) {
-    if (!format) {
-        format = 'YYYY-MM-DD';
-    }
-    format = format.toUpperCase();
-    var parts = {
-        YYYY: date.getFullYear(),
-        DD: padding(date.getDate()),
-        MM: padding(date.getMonth() + 1),
-        D: date.getDate(),
-        M: date.getMonth() + 1,
-    };
-    var zeroLeading = isZeroLeading(format);
-    return {
-        origin: date,
-        date: zeroLeading ? parts["DD"] : parts["D"],
-        month: zeroLeading ? parts["MM"] : parts["M"],
-        year: parts["YYYY"],
-        day: date.getDay(),
-        value: format.replace(/(?:\b|%)([dDMyY]+)(?:\b|%)/g, function (match, $1) {
-            return parts[$1] === undefined ? $1 : parts[$1];
-        })
-    };
-}
-function parseFormatted(strDate, format) {
-    if (!format) {
-        format = 'YYYY-MM-DD';
-    }
-    var ret = parse(strDate);
-    if (ret)
-        return ret;
-    var token = /d{1,4}|M{1,4}|YY(?:YY)?|S{1,3}|Do|ZZ|([HhMsDm])\1?|[aA]|"[^"]*"|'[^']*'/g;
-    var parseFlags = {
-        D: [/\d{1,2}/, function (d, v) { return d.day = parseInt(v); }],
-        M: [/\d{1,2}/, function (d, v) { return (d.month = parseInt(v) - 1); }],
-        DD: [/\d{2}/, function (d, v) { return d.day = parseInt(v); }],
-        MM: [/\d{2}/, function (d, v) { return d.month = parseInt(v) - 1; }],
-        YY: [/\d{2,4}/, function (d, v) { return d.year = parseInt(v); }],
-        YYYY: [/\d{2,4}/, function (d, v) { return d.year = parseInt(v); }],
-    };
-    ret = function (dateStr, format) {
-        if (dateStr.length > 1000) {
-            return null;
-        }
-        var isValid = true;
-        var dateInfo = {
-            year: 0,
-            month: 0,
-            day: 0
-        };
-        format.replace(token, function ($0) {
-            if (parseFlags[$0]) {
-                var info = parseFlags[$0];
-                var regExp = info[0];
-                var handler_1 = info[info.length - 1];
-                var index_1 = dateStr.search(regExp);
-                if (!~index_1) {
-                    isValid = false;
-                }
-                else {
-                    dateStr.replace(info[0], function (result) {
-                        handler_1(dateInfo, result);
-                        dateStr = dateStr.substr(index_1 + result.length);
-                        return result;
-                    });
-                }
-            }
-            return parseFlags[$0] ? '' : $0.slice(1, $0.length - 1);
-        });
-        if (!isValid) {
-            return null;
-        }
-        var parsed = new Date(dateInfo.year, dateInfo.month, dateInfo.day);
-        return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
-    };
-    return ret(strDate, format);
 }
 
 var getDisableDates = function (startDate, endDate, dateFormat) {
@@ -1030,7 +1010,8 @@ var DatePicker = (function () {
             inDates: this.inDates,
             update: this.update,
             infiniteMode: this.infiniteMode,
-            bindData: this.bindData
+            bindData: this.bindData,
+            dateFormat: this.dateFormat
         });
     };
     

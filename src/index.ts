@@ -46,7 +46,6 @@ const getDisableDates = (startDate: Date, endDate: Date, dateFormat: string) => 
 };
 
 
-
 export default class DatePicker {
     private dateFormat: string;
     private limit: number = 1;
@@ -162,7 +161,8 @@ export default class DatePicker {
             inDates: this.inDates,
             update: this.update,
             infiniteMode: this.infiniteMode,
-            bindData: this.bindData
+            bindData: this.bindData,
+            dateFormat: this.dateFormat
         })
     };
 
@@ -321,7 +321,7 @@ export default class DatePicker {
         return diff(d1, d2, "days")
     }
 
-    private  createDatePicker(isInit?: Boolean) {
+    private createDatePicker(isInit?: Boolean) {
         this.element.innerHTML = new HTML({
             startDate: this.date,
             endDate: this.endDate,
@@ -423,7 +423,6 @@ export default class DatePicker {
 
 
             //处理开始日期之前的日期
-
 
 
             this.disables = getDisableDates(this.startDate, this.endDate, this.dateFormat)

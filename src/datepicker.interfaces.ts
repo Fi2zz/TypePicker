@@ -38,11 +38,12 @@ export interface pickerDoubleSelectHandler {
     selected: Array<any>;
     cache: Array<any>;
     limit: number;
-    format: Function;
-    parse: Function;
+    // format: Function;
+    // parse: Function;
     inDates: Function;
     infiniteMode: boolean;
-    bindData: boolean
+    bindData: boolean,
+    dateFormat:string
 }
 
 export interface pickerHandler {
@@ -56,7 +57,8 @@ export interface pickerHandler {
     inDates: Function;
     update: Function;
     infiniteMode: boolean;
-    bindData: boolean
+    bindData: boolean,
+    dateFormat:string
 
 }
 export interface disable {

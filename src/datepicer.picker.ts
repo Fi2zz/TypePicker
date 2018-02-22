@@ -11,6 +11,8 @@ import {
     hasClass,
 } from "./util"
 
+import {parseFormatted, format} from "./datepicker.formatter";
+
 import {setRange} from './datepicker.ranger'
 
 export default function (options: pickerHandler) {
@@ -19,13 +21,15 @@ export default function (options: pickerHandler) {
         selected,
         isDouble,
         parse,
-        format,
+        // format,
         limit,
         inDates,
         update,
         infiniteMode,
-        bindData
+        bindData,
+        dateFormat,
     } = options;
+
     const collection = element.querySelectorAll(".calendar-date-cell");
 
 
@@ -37,13 +41,17 @@ export default function (options: pickerHandler) {
                 const date = attr(item, "data-date");
                 const index = selected.indexOf(date);
                 //不可选的日期
+                //点击无效日期时，返回false
                 //初始化时，selected的length为0，点击不可选日期
-
-                const activeDate = parse(date);
-
-                const prevDate = new Date(activeDate.getFullYear(), activeDate.getMonth(), activeDate.getDate() - 1);
-                const prevDateString = format(prevDate).value;
-                if (!date || (selected.length <= 0 && !inDates(date)) && bindData || isDouble && !inDates(prevDateString)) {
+                //当前点击的日期的前一天是无效日期，则返回false
+                // 如  2018-02-23，2018-02-24 为无效日期，则点击2018-02-24返回无效日期
+                const now = parse(date);
+                const prevDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+                const prevDateString = format(prevDate, dateFormat).value;
+                if (!date
+                    || (selected.length <= 0 && !inDates(date) && bindData)
+                    || (isDouble && !inDates(prevDateString) && !inDates(date))
+                ) {
                     return false;
                 }
                 //重复选择
@@ -59,12 +67,24 @@ export default function (options: pickerHandler) {
                 }
                 selected.push(date);
                 //选择日期
-                if (isDouble) {
+
+                if (!isDouble) {
+                    let shouldChange = true;
+                    if (!inDates(date)) {
+                        selected = cache;
+                        shouldChange = false;
+                    }
+                    singlePick(item, element, shouldChange);
+                } else {
                     const handlerOptions = {
-                        date, selected, cache, limit, format, parse,
+                        date,
+                        selected,
+                        cache,
+                        limit,
                         inDates,
                         infiniteMode,
-                        bindData
+                        bindData,
+                        dateFormat
                     };
                     const handled = doubleSelectHandler(handlerOptions);
                     selected = handled.selected;
@@ -88,45 +108,10 @@ export default function (options: pickerHandler) {
                     if (allValid && isValid) {
                         setRange(range, element, false)
                     }
-                } else {
-                    let selector = item;
-                    let shouldChange = true;
-                    if (!inDates(date)) {
-                        selected = cache;
-                        shouldChange = false;
-                    }
-                    singlePick(selector, element, shouldChange);
                 }
-                let type = "selected";
-                if (isDouble && bindData) {
 
-                    if (selected.length <= 1) {
-                        const front = selected[0];
-                        if (!inDates(front)) {
-                            type = 'disabled'
-                        }
-                    }
-                    else if (selected.length >= 2) {
-                        const prevEl: HTMLElement = item.previousElementSibling;
-                        const front = selected[0];
-                        const startDate = parse(front);
-                        const prevDate = attr(prevEl, "data-date") || front;
-                        const inSelected = function (s: string) {
-                            return selected.indexOf(s) >= 0
-                        };
-                        const diffed = diff(startDate, parse(date), "days") * -1;
-                        if (!inDates(date) && !inDates(prevDate)
-                            || !inDates(date) && !inSelected(date)
-                            || diffed > limit
-                            || diffed < 0
-                        ) {
-                            type = 'disabled'
-                        }
-
-                    }
-                }
                 update({
-                    type: type,
+                    type: 'selected',
                     value: selected
                 })
             }
@@ -207,7 +192,15 @@ function gap(d1: Date, d2: Date) {
 }
 
 function doubleSelectHandler(options: pickerDoubleSelectHandler) {
-    let {selected, date, cache, limit, format, parse, inDates, bindData} = options;
+    let {
+        selected,
+        date,
+        cache,
+        limit,
+        inDates,
+        bindData,
+        dateFormat
+    } = options;
     let range = <Array<any>>[];
     let inRange = <Array<any>>[];
     let allValid = false;
@@ -218,14 +211,13 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
     //此时为只选了开始日期，尚未选择结束日期
     const end = selected[selected.length - 1];
     //转换成日期对象
-    const startDate = parse(start), endDate = parse(end);
+    const startDate = parseFormatted(start, dateFormat), endDate = parseFormatted(end, dateFormat);
     if (bindData) {
         //对比开始日期和结束日期
         const diff = gap(startDate, endDate);
         const length = selected.length;
         //已有开始日期和结束日期
         //重新选择开始日期
-        // debugger
         if (length >= 2) {
             //同一日
             if (diff <= 0) {
@@ -243,7 +235,7 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
                         date = startDate.getDate();
                     for (let i = 1; i < diff; i++) {
                         const d = new Date(year, month, date + i);
-                        const formatted = format(d).value;
+                        const formatted = format(d, dateFormat).value;
                         if (inDates(formatted)) {
                             inRange.push(formatted)
                         }
@@ -307,8 +299,8 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
         if (selected.length === 2) {
             let lastValidDate = null;
             const end = selected[selected.length - 1];
-            const endDate = parse(end);
-            const startDate = parse(selected[0]);
+            const endDate = parseFormatted(end, dateFormat);
+            const startDate = parseFormatted(selected[0], dateFormat);
             //计算开始日期和结束日期之间的间隔，
             // 得到日期范围
             const diff = gap(endDate, startDate) * -1;
@@ -323,7 +315,7 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
                 //如果区间大于1或小于-1，则为无效区间，
                 for (let i = 0; i < diff; i++) {
                     let d = new Date(year, month, date + i);
-                    const string = format(d).value;
+                    const string = format(d, dateFormat).value;
                     if (inDates(string)) {
                         lastValidDate = d;
                         inRange.push(string)
@@ -369,7 +361,7 @@ function doubleSelectHandler(options: pickerDoubleSelectHandler) {
         if (diff > 0 && diff <= limit) {
             for (let i = 1; i < diff; i++) {
                 let date = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
-                range.push(format(date).value)
+                range.push(format(date, dateFormat).value)
             }
             allValid = true
         } else if (diff > limit || diff < 0) {
