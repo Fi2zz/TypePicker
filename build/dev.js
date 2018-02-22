@@ -3,7 +3,7 @@ const webpack = require("webpack");
 const merge = require("webpack-merge");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
-function base() {
+function config() {
     return {
         entry: {
             app: './test/app.ts'
@@ -37,11 +37,7 @@ function base() {
         resolve: {
             extensions: ['.js', '.json', ".ts", ".tsx"],
         },
-        devtool: '#eval-source-map'
-    }
-}
-function devServer() {
-    return {
+        devtool: '#eval-source-map',
         devServer: {
             clientLogLevel: 'error',
             hot: true,
@@ -54,7 +50,7 @@ function devServer() {
         },
         plugins: [
             new webpack.DefinePlugin({
-                'process.env': {NODE_ENV: '"development"'}
+                'process.env': { NODE_ENV: '"development"' }
             }),
             new webpack.HotModuleReplacementPlugin(),
             new HtmlWebpackPlugin({
@@ -66,4 +62,4 @@ function devServer() {
 
     }
 }
-module.exports = new Promise((resolve, reject) => resolve(merge(base(), devServer())));
+module.exports = new Promise((resolve, reject) => resolve(config()))

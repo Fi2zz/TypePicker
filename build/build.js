@@ -3,7 +3,6 @@ const fs = require("fs");
 const path = require("path");
 const stylus = require("stylus");
 const colorful = require("colors/safe");
-const mkdirp = require("mkdirp");
 const uglify = require('uglify-js');
 
 const commonJs = require('rollup-plugin-commonjs');
@@ -125,38 +124,24 @@ function work(config) {
                 }
 
                 write(filepath, codes).then(res => {
-
+                    if (index === length - 1) {
+                        stylusCompiler(style, dest).then(css => {
+                            write(path.resolve(dest, "style.css"), css)
+                                .then(() => log("> style compiled\n> build done !", "green"));
+                        }).catch(err => loggerError(err));
+                    }
                 });
-                if (index === length - 1) {
-                    stylusCompiler(style, dest).then(css => {
-                        write(path.resolve(dest, "style.css"), css)
-                            .then(() => log("> style compiled\n> build done !", "green"));
 
-                    }).catch(err => loggerError(err));
-                }
             })
     });
 }
 
 function build(config) {
     log("> building...\n", "green");
-
-    if (fs.existsSync(config.dest)) { 
-
-        work(config)
-    }
-    else {
-
+    if (!fs.existsSync(config.dest)) {
         fs.mkdirSync(config.dest);
-
-        work(config)
-
-
-
-
     }
-
-    // mkdirp(config.dest, () => work(config))
+    work(config)
 
 }
 
