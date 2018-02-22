@@ -20,7 +20,7 @@ const config = {
         plugins: [
             commonJs(),
             node(),
-            typescript({typescript: require("typescript")})
+            typescript({ typescript: require("typescript") })
         ],
     },
     style: './src/style.styl',
@@ -41,7 +41,7 @@ function bundleTypes(name) {
             compress: true
         }
     ];
-    return types.map(item => ({name, format: item.format, compress: item.compress}));
+    return types.map(item => ({ name, format: item.format, compress: item.compress }));
 }
 
 
@@ -105,12 +105,12 @@ function noop() {
 }
 
 function work(config) {
-    const {dest, build, style, filename} = config;
-    const {output} = build;
-    output(dest).forEach((item, index, {length}) => {
+    const { dest, build, style, filename } = config;
+    const { output } = build;
+    output(dest).forEach((item, index, { length }) => {
         rollup(build)
             .then(bundle => bundle.generate(item))
-            .then(({code}) => {
+            .then(({ code }) => {
                 let filepath = '',
                     codes = code;
                 if (item.compress) {
@@ -140,7 +140,24 @@ function work(config) {
 
 function build(config) {
     log("> building...\n", "green");
-    mkdirp(config.dest, () => work(config))
+
+    if (fs.existsSync(config.dest)) { 
+
+        work(config)
+    }
+    else {
+
+        fs.mkdirSync(config.dest);
+
+        work(config)
+
+
+
+
+    }
+
+    // mkdirp(config.dest, () => work(config))
+
 }
 
 build(config);
