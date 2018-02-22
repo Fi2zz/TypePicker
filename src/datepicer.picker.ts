@@ -3,7 +3,6 @@ import {
     handleDoubleSelect
 } from './datepicker.interfaces'
 import {
-    diff,
     attr,
     removeClass,
     addClass,
@@ -16,7 +15,6 @@ import {
 
 import {parseFormatted, format} from "./datepicker.formatter";
 import {setRange} from './datepicker.ranger'
-
 export default function (options: pickerHandler) {
     let {
         element,

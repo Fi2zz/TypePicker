@@ -86,7 +86,7 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
                     // "2018-2-19",
                     // "2018-2-22",
                     // "2018-2-23",
-                    "2018-3-24",
+                    // "2018-3-24",
                     "2018-2-27",
                 ],
                 // days: [1, 5, 2, 6]
