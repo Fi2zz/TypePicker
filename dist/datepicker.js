@@ -176,6 +176,62 @@ function removeDisableDates(disableList, dataList) {
     }
     return temp;
 }
+function getFront(list) {
+    return list[0];
+}
+function getPeek(list) {
+    return list[list.length - 1];
+}
+function gap(d1, d2) {
+    var value = diff(d1, d2, "days");
+    return value === 0 ? 0 : value * -1;
+}
+
+function merge() {
+    var args = [];
+    for (var _i = 0; _i < arguments.length; _i++) {
+        args[_i] = arguments[_i];
+    }
+    var merged = {};
+    function toString(object) {
+        return Object.prototype.toString.call(object);
+    }
+    function whichType(object, type) {
+        return toString(object) === "[object " + type + "]";
+    }
+    function generateObject(target, object) {
+        if (target === void 0) { target = {}; }
+        for (var key in object) {
+            if (object.hasOwnProperty(key)) {
+                target[key] = object[key];
+            }
+        }
+        return target;
+    }
+    for (var i = 0; i < args.length; i++) {
+        var arg = args[i];
+        if (arg) {
+            if (whichType(arg, "Array")) {
+                for (var i_1 = 0; i_1 < arg.length; i_1++) {
+                    var argItem = arg[i_1];
+                    if (whichType(argItem, "Object")) {
+                        merged = generateObject(merged, argItem);
+                    }
+                    else if (!whichType(argItem, "Date")) {
+                        merged[argItem] = argItem;
+                    }
+                }
+            }
+            else if (whichType(arg, "Object")) {
+                merged = generateObject(merged, arg);
+            }
+            else if (whichType(arg, "String") || whichType(arg, "Number")) {
+                merged[arg] = arg;
+            }
+        }
+    }
+    return merged;
+}
 
 var currDate = new Date();
 var HTML = (function () {
@@ -187,14 +243,14 @@ var HTML = (function () {
         this.language = {};
         this.views = 1;
         var startDate = options.startDate, endDate = options.endDate, views = options.views, language = options.language, infiniteMode = options.infiniteMode, dateFormatter = options.dateFormatter;
-        var gap = views === 2 ? 1 : views === 'auto' ? diff(startDate, endDate) : 0;
+        var gap$$1 = views === 2 ? 1 : views === 'auto' ? diff(startDate, endDate) : 0;
         this.language = language;
         this.formatter = dateFormatter;
         this.startDate = startDate;
         this.endDate = endDate;
         this.views = views;
         this.infiniteMode = infiniteMode;
-        this.template = "" + this.createActionBar(this.views !== 'auto') + this.createView(this.createBody(gap));
+        this.template = "" + this.createActionBar(this.views !== 'auto') + this.createView(this.createBody(gap$$1));
     }
     HTML.prototype.createActionBar = function (create) {
         if (!create) {
@@ -202,9 +258,9 @@ var HTML = (function () {
         }
         return "<div class=\"calendar-action-bar\">\n            <button class='calendar-action calendar-action-prev'><span>prev</span></button>\n            <button class='calendar-action calendar-action-next'><span>next</span></button>\n         </div>\n    ";
     };
-    HTML.prototype.createBody = function (gap) {
+    HTML.prototype.createBody = function (gap$$1) {
         var template = [];
-        for (var i = 0; i <= gap; i++) {
+        for (var i = 0; i <= gap$$1; i++) {
             var date = new Date(this.startDate.getFullYear(), this.startDate.getMonth() + i, 1);
             var paint = this.createMonthDateTemplate(date.getFullYear(), date.getMonth());
             template.push({ template: paint.template, year: paint.year, month: paint.month });
@@ -501,7 +557,7 @@ function setStartAndEnd(collection, inDates, data, parse) {
     }
     return temp;
 }
-function setRange(data, collector, remove, clearRange) {
+function setRange(data, collector, remove) {
     if (remove) {
         var collection = collector.querySelectorAll(".in-range");
         for (var i = 0; i < collection.length; i++) {
@@ -516,9 +572,6 @@ function setRange(data, collector, remove, clearRange) {
                 addClass(element, "in-range");
             }
         }
-    }
-    if (clearRange) {
-        return [];
     }
 }
 function setInitRange(options) {
@@ -540,8 +593,8 @@ function setInitRange(options) {
             var month = startDate.getMonth();
             var date_3 = startDate.getDate();
             var inValidDates = [];
-            var gap = diff(endDate, startDate, "days") + 1;
-            for (var i = 0; i < gap; i++) {
+            var gap$$1 = diff(endDate, startDate, "days") + 1;
+            for (var i = 0; i < gap$$1; i++) {
                 var d = new Date(year, month, date_3 + i);
                 var formatted = format(d).value;
                 if (!inDates(formatted)) {
@@ -571,7 +624,7 @@ function setInitRange(options) {
 }
 
 var handlePickDate = function (options) {
-    var element = options.element, selected = options.selected, isDouble = options.isDouble, parse = options.parse, limit = options.limit, inDates = options.inDates, update = options.update, infiniteMode = options.infiniteMode, bindData = options.bindData, dateFormat = options.dateFormat;
+    var element = options.element, selected = options.selected, isDouble = options.isDouble, limit = options.limit, inDates = options.inDates, bindData = options.bindData, dateFormat = options.dateFormat, emitter = options.emitter;
     var collection = element.querySelectorAll(".calendar-date-cell");
     var _loop_1 = function (i) {
         var item = collection[i];
@@ -579,58 +632,89 @@ var handlePickDate = function (options) {
             var cache = selected;
             var date = attr(item, "data-date");
             var index = selected.indexOf(date);
-            var now = parse(date);
+            var now = parseFormatted(date, dateFormat);
             var prevDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
             var prevDateString = format(prevDate, dateFormat).value;
+            var prevDateIsValid = inDates(prevDateString);
             if (!date
                 || (selected.length <= 0 && !inDates(date) && bindData)
-                || (isDouble && !inDates(prevDateString) && !inDates(date))) {
+                || (isDouble && !prevDateIsValid && !inDates(date))
+                || index >= 0 && !inDates(date)) {
                 return false;
             }
             if (index >= 0) {
-                selected = [selected[selected.length - 1]];
+                selected = inDates(getPeek(selected)) ? [getPeek(selected)] : [getFront(selected)];
             }
             if (isDouble && selected.length >= 2 || !isDouble) {
                 selected = [];
             }
             selected.push(date);
             if (!isDouble) {
-                var shouldChange = true;
-                if (!inDates(date)) {
-                    selected = cache;
-                    shouldChange = false;
-                }
-                singlePick(item, element, shouldChange);
+                var handled = singlePick(item, element, inDates(date), selected);
+                selected = handled.length > 0 ? handled : cache;
             }
             else {
-                var handlerOptions = {
-                    date: date,
-                    selected: selected,
-                    cache: cache,
-                    limit: limit,
-                    inDates: inDates,
-                    infiniteMode: infiniteMode,
-                    bindData: bindData,
-                    dateFormat: dateFormat
+                var beforeHandled = {
+                    start: getFront(selected),
+                    end: getPeek(selected)
                 };
-                var handled = doubleSelectHandler(handlerOptions);
+                var diffBeforeHandled = gap(parseFormatted(beforeHandled.start, dateFormat), parseFormatted(beforeHandled.end, dateFormat));
+                if (diffBeforeHandled < 0) {
+                    if (!inDates(beforeHandled.end)) {
+                        selected.pop();
+                    }
+                    else {
+                        selected = [date];
+                    }
+                }
+                else {
+                    if (!inDates(beforeHandled.end) && !prevDateIsValid) {
+                        selected = [beforeHandled.start];
+                    }
+                }
+                var handled = handleDoubleSelect({
+                    date: date,
+                    dateFormat: dateFormat,
+                    selected: selected,
+                    limit: limit,
+                }, inDates);
+                var afterHandled = {
+                    start: getFront(handled.selected),
+                    end: getPeek(handled.selected)
+                };
+                var diffAfterHandled = gap(parseFormatted(afterHandled.start, dateFormat), parseFormatted(afterHandled.end, dateFormat));
+                var dates = handled.dates;
+                var datesList = [];
+                var notInDatesList = [];
+                for (var _i = 0, dates_1 = dates; _i < dates_1.length; _i++) {
+                    var date_1 = dates_1[_i];
+                    if (date_1 !== afterHandled.start && date_1 !== afterHandled.end) {
+                        if (inDates(date_1)) {
+                            datesList.push(date_1);
+                        }
+                        else {
+                            notInDatesList.push(date_1);
+                        }
+                    }
+                }
+                if (notInDatesList.length > 0) {
+                    handled.selected.shift();
+                    afterHandled.start = afterHandled.end;
+                    afterHandled.end = null;
+                }
+                doublePick(element, afterHandled.start, afterHandled.end, diffAfterHandled, diffAfterHandled > limit || diffAfterHandled < 0);
+                if (bindData) {
+                    if (notInDatesList.length <= 0) {
+                        setRange(datesList, element, dates.length <= 0);
+                    }
+                }
+                else {
+                    setRange(datesList, element, dates.length <= 0);
+                }
                 selected = handled.selected;
-                var range = handled.range;
-                var allValid = handled.allValid;
-                var start = selected[0];
-                var end = selected[selected.length - 1];
-                var diff_1 = gap(parse(start), parse(end));
-                var isOutOfLimit = diff_1 > limit;
-                var isValid = doublePick(element, start, end, diff_1, isOutOfLimit, allValid);
-                if (isValid) {
-                    setRange([], element, true);
-                }
-                if (allValid && isValid) {
-                    setRange(range, element, false);
-                }
             }
-            update({
-                type: 'selected',
+            emitter('select', {
+                type: "selected",
                 value: selected
             });
         });
@@ -639,7 +723,44 @@ var handlePickDate = function (options) {
         _loop_1(i);
     }
 };
-function singlePick(selector, collector, shouldChange) {
+function handleDoubleSelect(options, inDates) {
+    var selected = options.selected;
+    var start = getFront(selected);
+    var end = getPeek(selected);
+    var startDate = parseFormatted(start, options.dateFormat);
+    var endDate = parseFormatted(end, options.dateFormat);
+    var dates = [];
+    if (start === end && selected.length >= 2) {
+        selected.pop();
+    }
+    var diffs = gap(startDate, endDate);
+    if (diffs > 0) {
+        if (diffs <= options.limit) {
+            for (var i = 1; i < diffs; i++) {
+                var date = format(new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i), options.dateFormat).value;
+                dates.push(date);
+            }
+        }
+        else {
+            if (!inDates(end)) {
+                selected.pop();
+            }
+            else {
+                selected.shift();
+            }
+        }
+    }
+    else if (diffs <= 0) {
+        if (selected.length >= 2) {
+            selected.pop();
+        }
+    }
+    return {
+        dates: dates,
+        selected: selected
+    };
+}
+function singlePick(selector, collector, shouldChange, selected) {
     if (shouldChange) {
         var actives = collector.querySelectorAll(".active");
         for (var i = 0; i < actives.length; i++) {
@@ -648,9 +769,11 @@ function singlePick(selector, collector, shouldChange) {
         if (!hasClass(selector, "disabled")) {
             addClass(selector, "active");
         }
+        return selected;
     }
+    return [];
 }
-function doublePick(collector, start, end, diff$$1, outOfLimit, valid) {
+function doublePick(collector, start, end, diff$$1, outOfLimit) {
     var cache = {
         start: collector.querySelector(".start-date"),
         end: collector.querySelector(".end-date")
@@ -667,10 +790,6 @@ function doublePick(collector, start, end, diff$$1, outOfLimit, valid) {
             removeClass(cache.end, "active");
             addClass(current.start, "active");
             addClass(current.start, "start-date");
-            return true;
-        }
-        else {
-            return false;
         }
     }
     else {
@@ -682,13 +801,15 @@ function doublePick(collector, start, end, diff$$1, outOfLimit, valid) {
                 removeClass(cache.start, "active");
             }
             else {
-                if (valid) {
-                    addClass(current.end, "end-date");
+                if (start && !end) {
+                    removeClass(cache.start, "active");
+                    removeClass(cache.start, "start-date");
+                    addClass(current.start, 'active');
+                    addClass(current.start, 'start-date');
                 }
-                else {
-                    removeClass(current.start, "active");
-                    removeClass(current.start, "start-date");
-                    addClass(current.end, "start-date");
+                else if (end && start !== end) {
+                    addClass(current.end, 'active');
+                    addClass(current.end, 'end-date');
                 }
             }
         }
@@ -698,173 +819,12 @@ function doublePick(collector, start, end, diff$$1, outOfLimit, valid) {
             addClass(current.end, "start-date");
         }
     }
-    return true;
-}
-function gap(d1, d2) {
-    var value = diff(d1, d2, "days");
-    return value === 0 ? 0 : value * -1;
-}
-function doubleSelectHandler(options) {
-    var selected = options.selected, date = options.date, cache = options.cache, limit = options.limit, inDates = options.inDates, bindData = options.bindData, dateFormat = options.dateFormat;
-    var range = [];
-    var inRange = [];
-    var allValid = false;
-    var start = selected[0];
-    var end = selected[selected.length - 1];
-    var startDate = parseFormatted(start, dateFormat), endDate = parseFormatted(end, dateFormat);
-    if (bindData) {
-        var diff_2 = gap(startDate, endDate);
-        var length = selected.length;
-        if (length >= 2) {
-            if (diff_2 <= 0) {
-                if (inDates(date)) {
-                    selected.shift();
-                }
-                else {
-                    selected = [selected[0]];
-                }
-            }
-            else {
-                if (inDates(end)) {
-                    var year = startDate.getFullYear(), month = startDate.getMonth(), date_1 = startDate.getDate();
-                    for (var i = 1; i < diff_2; i++) {
-                        var d = new Date(year, month, date_1 + i);
-                        var formatted = format(d, dateFormat).value;
-                        if (inDates(formatted)) {
-                            inRange.push(formatted);
-                        }
-                        range.push(formatted);
-                    }
-                }
-                else {
-                    if (inDates() && end) {
-                        selected.shift();
-                        range.push(end);
-                    }
-                }
-            }
-        }
-        else if (length === 1) {
-            var start_1 = selected[selected.length - 1];
-            if (inDates(start_1)) {
-                selected = [start_1];
-            }
-            else {
-                if (cache.length >= 2) {
-                    var validDates = [];
-                    for (var i = 0; i < cache.length; i++) {
-                        if (inDates(cache[i])) {
-                            validDates.push(cache[i]);
-                        }
-                    }
-                    if (validDates.length === cache.length) {
-                        var front = cache[0];
-                        var last = cache[cache.length - 1];
-                        if (front !== last) {
-                            selected = cache;
-                        }
-                        else {
-                            selected = [front];
-                        }
-                    }
-                    else {
-                        selected = [];
-                    }
-                }
-                else {
-                    selected = [cache[0]];
-                }
-            }
-        }
-        else {
-            selected = cache;
-        }
-        if (selected.length <= 0) {
-            selected = cache;
-        }
-        allValid = range.length === inRange.length;
-        if (!allValid) {
-            selected = [selected[selected.length - 1]];
-        }
-        if (selected.length === 2) {
-            var lastValidDate = null;
-            var end_1 = selected[selected.length - 1];
-            var endDate_1 = parseFormatted(end_1, dateFormat);
-            var startDate_1 = parseFormatted(selected[0], dateFormat);
-            var diff_3 = gap(endDate_1, startDate_1) * -1;
-            if (diff_3 > 0) {
-                var year = startDate_1.getFullYear(), month = startDate_1.getMonth(), date_2 = startDate_1.getDate();
-                range = [];
-                inRange = [];
-                for (var i = 0; i < diff_3; i++) {
-                    var d = new Date(year, month, date_2 + i);
-                    var string = format(d, dateFormat).value;
-                    if (inDates(string)) {
-                        lastValidDate = d;
-                        inRange.push(string);
-                    }
-                    if (!~range.indexOf(string)) {
-                        range.push(string);
-                    }
-                }
-                var newDiff = gap(lastValidDate, endDate_1);
-                if (newDiff === 1 || newDiff === -1) {
-                    allValid = true;
-                }
-                else {
-                    range = [];
-                    selected = [selected[0]];
-                    allValid = false;
-                }
-            }
-            if (inRange.length === range.length) {
-                allValid = true;
-            }
-            else {
-                allValid = false;
-                selected = [selected[0]];
-            }
-            if (range.length > limit) {
-                allValid = false;
-                var peek = selected[selected.length - 1];
-                if (inDates(peek)) {
-                    selected = [peek];
-                }
-                else {
-                    selected = [cache[0]];
-                }
-            }
-        }
-    }
-    else {
-        if (selected.length >= 2) {
-            if (start === end) {
-                selected.pop();
-            }
-        }
-        var diff_4 = gap(startDate, endDate);
-        if (diff_4 > 0 && diff_4 <= limit) {
-            for (var i = 1; i < diff_4; i++) {
-                var date_3 = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
-                range.push(format(date_3, dateFormat).value);
-            }
-            allValid = true;
-        }
-        else if (diff_4 > limit || diff_4 < 0) {
-            selected.shift();
-        }
-    }
-    return {
-        selected: selected,
-        allValid: allValid,
-        range: range
-    };
 }
 
 var getDisableDates = function (startDate, endDate, dateFormat) {
     var startMonthDates = startDate.getDate();
     var temp = {};
-    for (var i = 1; i < startMonthDates - 1; i++) {
+    for (var i = 1; i <= startMonthDates - 1; i++) {
         var date = new Date(startDate.getFullYear(), startDate.getMonth(), startMonthDates - i);
         var formatted = format(date, dateFormat).value;
         temp[formatted] = formatted;
@@ -1006,18 +966,14 @@ var DatePicker = (function () {
     
     DatePicker.prototype.pickDate = function () {
         handlePickDate({
+            dateFormat: this.dateFormat,
             element: this.element,
             selected: this.selected,
             isDouble: this.double,
-            source: this.dates,
-            parse: this.parse,
-            format: this.format,
             limit: this.limit,
-            inDates: this.inDates,
-            update: this.update,
-            infiniteMode: this.infiniteMode,
             bindData: this.bindData,
-            dateFormat: this.dateFormat
+            emitter: this.emit,
+            inDates: this.inDates,
         });
     };
     
@@ -1247,12 +1203,12 @@ var DatePicker = (function () {
             }
             if (!_this.bindData) {
                 if (isDate(option.from) && isDate(option.to)) {
-                    var gap = diff(_this.endDate, currDate, "days");
+                    var gap$$1 = diff(_this.endDate, currDate, "days");
                     var year = currDate.getFullYear();
                     var month = currDate.getMonth();
                     var date = currDate.getDate();
                     var dates = [];
-                    for (var i = 0; i < gap; i++) {
+                    for (var i = 0; i < gap$$1; i++) {
                         var item = new Date(year, month, date + i);
                         var formatted = _this.format(item).value;
                         dates.push(formatted);
@@ -1263,12 +1219,13 @@ var DatePicker = (function () {
                     _this.views = 1;
                 }
             }
-            _this.disables = getDisableDates(_this.startDate, _this.endDate, _this.dateFormat);
+            var disableBeforeStartDateAndAfterEndDate = getDisableDates(_this.startDate, _this.endDate, _this.dateFormat);
+            _this.disables = merge(disableBeforeStartDateAndAfterEndDate, _this.disables);
             var disableList = Object.keys(_this.disables);
             if (disableList.length > 0) {
                 var datesList = _this.dates;
                 var newDateList = [];
-                var removed = removeDisableDates(Object.keys(_this.disables), _this.data);
+                var removed = removeDisableDates(disableList, _this.data);
                 if (Object.keys(removed).length > 0) {
                     for (var key in removed) {
                         delete _this.data[key];
@@ -1293,6 +1250,7 @@ var DatePicker = (function () {
                 }
             }
             _this.createDatePicker(true);
+            _this.on("select", _this.update);
             clearNextTick(next);
         });
     };

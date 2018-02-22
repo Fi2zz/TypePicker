@@ -9,7 +9,7 @@ export interface datePickerOptions {
 }
 
 
-export  interface classTemplate {
+export interface classTemplate {
     startDate: Date,
     endDate: Date,
     language: any,
@@ -17,7 +17,6 @@ export  interface classTemplate {
     dateFormatter: Function,
     views: number | string
 }
-
 
 export interface initRangeOptions {
     collector: HTMLElement;
@@ -33,35 +32,30 @@ export interface initRangeOptions {
 
 }
 
-export interface pickerDoubleSelectHandler {
-    date: any;
-    selected: Array<any>;
-    cache: Array<any>;
-    limit: number;
-    // format: Function;
-    // parse: Function;
-    inDates: Function;
-    infiniteMode: boolean;
-    bindData: boolean,
-    dateFormat:string
-}
 
 export interface pickerHandler {
     element: any;
     selected: Array<any>;
     isDouble: boolean;
-    source: any;
-    parse: Function;
-    format: Function;
     limit: number;
     inDates: Function;
-    update: Function;
-    infiniteMode: boolean;
     bindData: boolean,
-    dateFormat:string
+    dateFormat: string,
+    emitter: Function
 
 }
+
 export interface disable {
     dates?: Array<any>;
     days?: Array<number> ;
+}
+
+export interface handleDoubleSelect {
+
+    dateFormat: string,
+    selected: Array<string>,
+    limit: number,
+    date: string,
+
+
 }

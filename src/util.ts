@@ -4,6 +4,7 @@ export const attrSelector = (attr: string, value: string) => `[${attr}="${value}
 export function parseToInt(string: any) {
     return parseInt(string, 10)
 }
+
 export function attr(el: any, attr: any, attrvalue: any | undefined = undefined) {
     if (!el) {
         return null
@@ -14,6 +15,7 @@ export function attr(el: any, attr: any, attrvalue: any | undefined = undefined)
     }
     return value ? value : el.setAttribute(attr, attrvalue)
 }
+
 export function diff(start: Date, end: Date, type: string = "month") {
     if (!start) {
         start = new Date()
@@ -29,6 +31,7 @@ export function diff(start: Date, end: Date, type: string = "month") {
         return Math.round((startTime - endTime)) / (1000 * 60 * 60 * 24);
     }
 }
+
 export const getFirstDay = (year: number, month: number): number => new Date(year, month, 1).getDay();
 
 export const getDates = (year: number, month: number): number => {
@@ -41,9 +44,11 @@ export const padding = (n: Number) => `${n > 9 ? n : "0" + n}`;
 function _toString(object: any) {
     return Object.prototype.toString.call(object);
 }
+
 export function isString(object: any) {
     return _toString(object) === '[object String]';
 }
+
 export function isArray(object: any) {
     return _toString(object) === '[object Array]';
 }
@@ -51,12 +56,15 @@ export function isArray(object: any) {
 export function isObject(object: any) {
     return _toString(object) === '[object Object]';
 }
+
 export function isNumber(object: any) {
     return _toString(object) === '[object Number]';
 }
+
 export function isDate(object: any) {
     return _toString(object) === '[object Date]';
 }
+
 export function isFunction(object: any) {
     return _toString(object) === '[object Function]';
 }
@@ -89,8 +97,10 @@ export function nextTick(func: Function) {
 export function clearNextTick(id: any) {
     window.clearTimeout(id)
 }
+
 export function noop() {
 }
+
 export function warn(where: string, msg: any) {
     let message = msg;
     if (isObject(msg) || isArray(msg)) {
@@ -100,10 +110,10 @@ export function warn(where: string, msg: any) {
 }
 
 
-export function log( msg: any){
+export function log(msg: any) {
     let message = msg;
     if (isObject(msg) || isArray(msg)) {
-        message = JSON.stringify(msg,null,2)
+        message = JSON.stringify(msg, null, 2)
     }
 
     console.log(message)
@@ -130,10 +140,11 @@ export function parseEl(el: string) {
         }
     }
 }
-export  function noData(result: any) {
+
+export function noData(result: any) {
     return !isObject(result)
         || (Object.keys(result.data).length <= 0
-        || result.dates.length <= 0)
+            || result.dates.length <= 0)
 }
 
 export function removeDisableDates(disableList: Array<string>, dataList: any) {
@@ -145,3 +156,19 @@ export function removeDisableDates(disableList: Array<string>, dataList: any) {
     }
     return temp;
 }
+
+export function getFront(list: Array<any>) {
+    return list[0]
+}
+
+export function getPeek(list: Array<any>) {
+
+    return list[list.length - 1];
+
+}
+
+export  function gap(d1: Date, d2: Date) {
+    const value = diff(d1, d2, "days");
+    return value === 0 ? 0 : value * -1
+}
+

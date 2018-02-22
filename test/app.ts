@@ -5,11 +5,13 @@ import './test.styl'
 import DatePicker from '../src/index'
 import {source, languages as language} from './mock'
 import {addClass, diff} from "../src/util";
+
 const date = new Date();
 
 const dateFormat = 'YYYY-M-D';
 const activeLanguageCode: string = "en-us";
 const formControl = <HTMLInputElement> document.getElementById("date-value");
+
 function createDatePicker(create: boolean = true, selected?: Array<any>) {
 
     let datepicker = null;
@@ -32,7 +34,6 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
             views: 2//'auto'
         });
         console.log(datepicker);
-
 
 
         if (datepicker) {
@@ -83,31 +84,43 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
                 dates: [
                     // "2018-2-18",
                     // "2018-2-19",
-                    "2018-2-22",
+                    // "2018-2-22",
+                    // "2018-2-23",
+                    "2018-3-24",
+                    "2018-2-27",
                 ],
-                days: [1, 5, 2, 6]
+                // days: [1, 5, 2, 6]
             });
-            datepicker.setData((params: any) => {
-                Object.keys(source).forEach(date => {
-                    let item = datepicker.parse(date);
-                    if (datepicker.diff(item, currDate) >= 0) {
-                        params.dates.push(date)
-                    } else {
-                        // delete source[date]
-                    }
+
+            const bindData = true;
+
+
+            if (bindData) {
+
+                datepicker.setData((params: any) => {
+                    Object.keys(source).forEach(date => {
+                        let item = datepicker.parse(date);
+                        if (datepicker.diff(item, currDate) >= 0) {
+                            params.dates.push(date)
+                        } else {
+                            // delete source[date]
+                        }
+                    });
+                    params.data = source;
+                    return params
                 });
-                params.data = source;
-                return params
-            });
+            }
             datepicker.setLanguage(language[activeLanguageCode])
         }
     }
     return datepicker
 }
+
 function popupHandler(visible: boolean) {
     const pop = <HTMLElement> document.querySelector(".popup");
     pop.style.display = visible ? 'block' : 'none';
 }
+
 function init(document: Document) {
     createDatePicker(true, formControl.value.split(" "));
     document.addEventListener("click", (e) => {
@@ -127,4 +140,5 @@ function init(document: Document) {
         }
     });
 }
+
 init(document);

@@ -18,6 +18,7 @@ import {
     isFunction,
     getDates
 } from "./util"
+import merge from './merge'
 import HTML from './datepicker.template'
 import handlePickDate from './datepicer.picker'
 import {parseFormatted, format as formatter} from "./datepicker.formatter"
@@ -28,7 +29,7 @@ const getDisableDates = (startDate: Date, endDate: Date, dateFormat: string) => 
     const startMonthDates = startDate.getDate();
     const temp: any = {};
     //处理开始日期前的日期
-    for (let i = 1; i < startMonthDates - 1; i++) {
+    for (let i = 1; i <= startMonthDates - 1; i++) {
         let date = new Date(startDate.getFullYear(), startDate.getMonth(), startMonthDates - i);
         let formatted = formatter(date, dateFormat).value;
         temp[formatted] = formatted
@@ -151,18 +152,14 @@ export default class DatePicker {
 
     private pickDate() {
         handlePickDate({
+            dateFormat: this.dateFormat,
             element: this.element,
             selected: this.selected,
             isDouble: this.double,
-            source: this.dates,
-            parse: this.parse,
-            format: this.format,
             limit: this.limit,
-            inDates: this.inDates,
-            update: this.update,
-            infiniteMode: this.infiniteMode,
             bindData: this.bindData,
-            dateFormat: this.dateFormat
+            emitter: this.emit,
+            inDates: this.inDates,
         })
     };
 
@@ -273,6 +270,8 @@ export default class DatePicker {
             warn("setDisabled", `invalid params  { dates:<Array<any>>${param.dates}, days:<Array<number>>${param.days} }`);
             return false;
         }
+
+
         const dateMap = {};
         const dateList = [];
         if (isArray(param.dates)) {
@@ -422,15 +421,15 @@ export default class DatePicker {
             }
 
 
-            //处理开始日期之前的日期
+            const disableBeforeStartDateAndAfterEndDate = getDisableDates(this.startDate, this.endDate, this.dateFormat);
+            //合并外部传入的disabled dates & start date & end date
+            this.disables = merge(disableBeforeStartDateAndAfterEndDate, this.disables);
 
-
-            this.disables = getDisableDates(this.startDate, this.endDate, this.dateFormat)
             const disableList = Object.keys(this.disables);
             if (disableList.length > 0) {
                 const datesList = this.dates;
                 const newDateList = [];
-                const removed = removeDisableDates(Object.keys(this.disables), this.data);
+                const removed = removeDisableDates(disableList, this.data);
                 if (Object.keys(removed).length > 0) {
                     for (let key in removed) {
                         delete this.data[key]
@@ -454,7 +453,10 @@ export default class DatePicker {
                 }
             }
             this.createDatePicker(true);
+            this.on("select", this.update);
             clearNextTick(next)
+
+
         })
     };
 

@@ -8,8 +8,10 @@ import {
     attrSelector,
 
 } from "./util"
+
 const date = new Date();
 const currDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
 function getRange(collection: HTMLCollection, start: string, end: string) {
     let temp = [];
     for (let i = 0; i < collection.length; i++) {
@@ -79,7 +81,7 @@ function setStartAndEnd(collection: HTMLCollection,
     return temp
 }
 
-export function setRange(data: Array<any>, collector: HTMLElement, remove: boolean, clearRange?: boolean) {
+export function setRange(data: Array<any>, collector: HTMLElement, remove: boolean) {
     if (remove) {
         let collection = collector.querySelectorAll(".in-range");
         for (let i = 0; i < collection.length; i++) {
@@ -94,10 +96,9 @@ export function setRange(data: Array<any>, collector: HTMLElement, remove: boole
             }
         }
     }
-    if (clearRange) {
-        return <Array<any>>[]
-    }
+
 }
+
 export function setInitRange(options: initRangeOptions) {
     let {
         collector,
