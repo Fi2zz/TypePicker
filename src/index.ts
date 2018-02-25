@@ -13,7 +13,6 @@ import {
     removeClass,
     parseToInt,
     parseEl,
-    noData,
     removeDisableDates,
     isFunction,
     getDates
@@ -305,9 +304,14 @@ export default class DatePicker {
     public setData(cb: Function) {
         if (isFunction(cb)) {
             const result = cb();
-            if (!noData(result)) {
+            if (isObject(result) && Object.keys(result).length > 0) {
                 this.data = result;
                 this.dates = Object.keys(result).sort((a: string, b: string) => this.parse(a) - this.parse(b));
+            }else {
+                warn("setData", `you are passing wrong type of data to DatePicker,data should be like :
+                    {
+                        ${formatter(new Date, this.dateFormat).value}:"your value" ,
+                     }`)
             }
         }
     };

@@ -162,9 +162,6 @@ function parseEl(el) {
         }
     }
 }
-function noData(result) {
-    return !isObject(result) || Object.keys(result).length <= 0;
-}
 function removeDisableDates(disableList, dataList) {
     var temp = {};
     for (var key in dataList) {
@@ -1103,9 +1100,12 @@ var DatePicker = (function () {
         var _this = this;
         if (isFunction(cb)) {
             var result = cb();
-            if (!noData(result)) {
+            if (isObject(result) && Object.keys(result).length > 0) {
                 this.data = result;
                 this.dates = Object.keys(result).sort(function (a, b) { return _this.parse(a) - _this.parse(b); });
+            }
+            else {
+                warn("setData", "you are passing wrong type of data to DatePicker,data should be like :\n                    {\n                        " + format(new Date, this.dateFormat).value + ":\"your value\" ,\n                     }");
             }
         }
     };

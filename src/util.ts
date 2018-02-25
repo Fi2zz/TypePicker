@@ -141,11 +141,6 @@ export function parseEl(el: string) {
     }
 }
 
-export function noData(result: any) {
-    return !isObject(result) || Object.keys(result).length<=0
-        // || (Object.keys(result.data).length <= 0
-            // || result.dates.length <= 0)
-}
 
 export function removeDisableDates(disableList: Array<string>, dataList: any) {
     const temp = {};
