@@ -15,6 +15,7 @@ import {
 
 import {parseFormatted, format} from "./datepicker.formatter";
 import {setRange} from './datepicker.ranger'
+
 export default function (options: pickerHandler) {
     let {
         element,
@@ -27,11 +28,12 @@ export default function (options: pickerHandler) {
         emitter
     } = options;
     const collection = element.querySelectorAll(".calendar-date-cell");
+    const cache = selected;
+
     for (let i = 0; i < collection.length; i++) {
         const item = collection[i];
         item.addEventListener("click", () => {
                 //缓存已选的日期
-                const cache = selected;
                 const date = attr(item, "data-date");
                 const index = selected.indexOf(date);
                 //不可选的日期
@@ -42,7 +44,7 @@ export default function (options: pickerHandler) {
                 const now = parseFormatted(date, dateFormat);
                 const prevDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
                 const prevDateString = format(prevDate, dateFormat).value;
-                const prevDateIsValid = inDates(prevDateString)
+                const prevDateIsValid = inDates(prevDateString);
                 if (!date
                     || (selected.length <= 0 && !inDates(date) && bindData)
                     || (isDouble && !prevDateIsValid && !inDates(date))
@@ -64,7 +66,7 @@ export default function (options: pickerHandler) {
                 }
                 selected.push(date);
                 if (!isDouble) {
-                    const handled = singlePick(item, element, inDates(date), selected)
+                    const handled = singlePick(item, element, inDates(date), selected);
                     selected = handled.length > 0 ? handled : cache;
                 } else {
                     const beforeHandled = {
@@ -103,20 +105,23 @@ export default function (options: pickerHandler) {
                     const datesList = [];
                     const notInDatesList = [];
                     for (let date of dates) {
-                        if (date !== afterHandled.start && date !== afterHandled.end) {
-                            if (inDates(date)) {
-                                datesList.push(date)
-                            } else {
-                                notInDatesList.push(date)
-                            }
+                        // if (date !== afterHandled.start && date !== afterHandled.end) {
+                        if (inDates(date)) {
+                            datesList.push(date)
+                        } else {
+                            notInDatesList.push(date)
                         }
+                        // }
+
+
                     }
 
                     if (notInDatesList.length > 0) {
-                        handled.selected.shift();
-                        afterHandled.start = afterHandled.end;
+                        handled.selected.pop();
+                        // afterHandled.start = afterHandled.end;
                         afterHandled.end = null;
                     }
+
                     doublePick(
                         element,
                         afterHandled.start,
@@ -132,8 +137,16 @@ export default function (options: pickerHandler) {
                     else {
                         setRange(datesList, element, dates.length <= 0)
                     }
+
+
+
                     selected = handled.selected;
+
+
                 }
+
+                // console.log(selected)
+
                 emitter('select', {
                     type: "selected",
                     value: selected
@@ -142,6 +155,7 @@ export default function (options: pickerHandler) {
         );
     }
 }
+
 function handleDoubleSelect(options: handleDoubleSelect, inDates: Function) {
     let selected = options.selected;
     const start = getFront(selected);
@@ -181,6 +195,7 @@ function handleDoubleSelect(options: handleDoubleSelect, inDates: Function) {
         selected
     }
 }
+
 function singlePick(selector: string, collector: HTMLElement, shouldChange: boolean, selected) {
     if (shouldChange) {
         const actives = collector.querySelectorAll(".active");
@@ -194,6 +209,7 @@ function singlePick(selector: string, collector: HTMLElement, shouldChange: bool
     }
     return []
 }
+
 function doublePick(collector: HTMLElement, start: string, end: string, diff: number, outOfLimit: boolean) {
     //缓存已选的开始日期和结束日期
     const cache = {

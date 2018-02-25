@@ -26,7 +26,7 @@ export function diff(start: Date, end: Date, type: string = "month") {
     if (type === "month") {
         return Math.abs((start.getFullYear() * 12 + start.getMonth()) - ( end.getFullYear() * 12 + end.getMonth()))
     } else if (type === "days") {
-        const startTime = <any>new Date(start.getFullYear(), start.getMonth(), start.getDate())
+        const startTime = <any>new Date(start.getFullYear(), start.getMonth(), start.getDate());
         const endTime = <any>new Date(end.getFullYear(), end.getMonth(), end.getDate());
         return Math.round((startTime - endTime)) / (1000 * 60 * 60 * 24);
     }
@@ -133,7 +133,7 @@ export function parseEl(el: string) {
             return document.querySelectorAll(el)[0]
         } else {
             if (el.indexOf("#") <= -1 || el.indexOf(".") <= -1) {
-                warn(`ParseEl`, `Do not mount DatePicker to a pure html tag,${el}`)
+                warn(`ParseEl`, `Do not mount DatePicker to a pure html tag,${el}`);
                 return false;
             }
             return document.querySelector(el)
@@ -142,9 +142,9 @@ export function parseEl(el: string) {
 }
 
 export function noData(result: any) {
-    return !isObject(result)
-        || (Object.keys(result.data).length <= 0
-            || result.dates.length <= 0)
+    return !isObject(result) || Object.keys(result).length<=0
+        // || (Object.keys(result.data).length <= 0
+            // || result.dates.length <= 0)
 }
 
 export function removeDisableDates(disableList: Array<string>, dataList: any) {

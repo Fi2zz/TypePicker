@@ -208,7 +208,7 @@ export default class DatePicker {
                 const date = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
                 const formatted = this.format(date).value;
                 if (i < diffed && !this.inDates(formatted)) {
-                    warn("setDates", `Illegal date,{dates:[${formatted}]}`)
+                    warn("setDates", `Illegal date,{dates:[${formatted}]}`);
                     return false
                 }
             }
@@ -216,7 +216,7 @@ export default class DatePicker {
         };
 
         let datesList: Array<any> = [];
-        let start: string = '', end: string = ''
+        let start: string = '', end: string = '';
         if (this.double) {
             if (dates.length > 2) {
                 dates = dates.slice(0, 2)
@@ -263,7 +263,7 @@ export default class DatePicker {
     public setDisabled(param: disable) {
         if (!param || isObject(param) && Object.keys(param).length <= 0) {
             warn("setDisabled",
-                `invalid params, \nparams should be {dates:<Array<any>>[], days:<Array<number>>[] }`)
+                `invalid params, \nparams should be {dates:<Array<any>>[], days:<Array<number>>[] }`);
             return false;
         }
         if (!isArray(param.dates) && !isArray(param.days)) {
@@ -303,15 +303,11 @@ export default class DatePicker {
     };
 
     public setData(cb: Function) {
-        const param = {
-            data: {},
-            dates: []
-        };
         if (isFunction(cb)) {
-            const result = cb(param);
+            const result = cb();
             if (!noData(result)) {
-                this.data = result.data;
-                this.dates = result.dates.sort((a: string, b: string) => this.parse(a) - this.parse(b));
+                this.data = result;
+                this.dates = Object.keys(result).sort((a: string, b: string) => this.parse(a) - this.parse(b));
             }
         }
     };
@@ -392,7 +388,7 @@ export default class DatePicker {
             warn('init', `invalid selector,current selector ${this.element}`);
             return false
         }
-        this.element.className = `${this.element.className} calendar calendar-${this.views === 2 ? "double-views" : this.views === 1 ? "single-view" : "flat-view"}`
+        this.element.className = `${this.element.className} calendar calendar-${this.views === 2 ? "double-views" : this.views === 1 ? "single-view" : "flat-view"}`;
         const next = nextTick(() => {
             this.isInit = this.currentSelection.length > 0;
             this.bindData = Object.keys(this.data).length > 0;

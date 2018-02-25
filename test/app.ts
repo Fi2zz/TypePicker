@@ -93,21 +93,15 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
             });
 
             const bindData = true;
-
-
             if (bindData) {
-
-                datepicker.setData((params: any) => {
+                datepicker.setData(() => {
                     Object.keys(source).forEach(date => {
                         let item = datepicker.parse(date);
-                        if (datepicker.diff(item, currDate) >= 0) {
-                            params.dates.push(date)
-                        } else {
-                            // delete source[date]
+                        if (datepicker.diff(item, currDate) < 0) {
+                            delete source[date]
                         }
                     });
-                    params.data = source;
-                    return params
+                    return source
                 });
             }
             datepicker.setLanguage(language[activeLanguageCode])

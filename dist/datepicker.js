@@ -163,9 +163,7 @@ function parseEl(el) {
     }
 }
 function noData(result) {
-    return !isObject(result)
-        || (Object.keys(result.data).length <= 0
-            || result.dates.length <= 0);
+    return !isObject(result) || Object.keys(result).length <= 0;
 }
 function removeDisableDates(disableList, dataList) {
     var temp = {};
@@ -626,10 +624,10 @@ function setInitRange(options) {
 var handlePickDate = function (options) {
     var element = options.element, selected = options.selected, isDouble = options.isDouble, limit = options.limit, inDates = options.inDates, bindData = options.bindData, dateFormat = options.dateFormat, emitter = options.emitter;
     var collection = element.querySelectorAll(".calendar-date-cell");
+    var cache = selected;
     var _loop_1 = function (i) {
         var item = collection[i];
         item.addEventListener("click", function () {
-            var cache = selected;
             var date = attr(item, "data-date");
             var index = selected.indexOf(date);
             var now = parseFormatted(date, dateFormat);
@@ -688,18 +686,15 @@ var handlePickDate = function (options) {
                 var notInDatesList = [];
                 for (var _i = 0, dates_1 = dates; _i < dates_1.length; _i++) {
                     var date_1 = dates_1[_i];
-                    if (date_1 !== afterHandled.start && date_1 !== afterHandled.end) {
-                        if (inDates(date_1)) {
-                            datesList.push(date_1);
-                        }
-                        else {
-                            notInDatesList.push(date_1);
-                        }
+                    if (inDates(date_1)) {
+                        datesList.push(date_1);
+                    }
+                    else {
+                        notInDatesList.push(date_1);
                     }
                 }
                 if (notInDatesList.length > 0) {
-                    handled.selected.shift();
-                    afterHandled.start = afterHandled.end;
+                    handled.selected.pop();
                     afterHandled.end = null;
                 }
                 doublePick(element, afterHandled.start, afterHandled.end, diffAfterHandled, diffAfterHandled > limit || diffAfterHandled < 0);
@@ -1106,15 +1101,11 @@ var DatePicker = (function () {
     
     DatePicker.prototype.setData = function (cb) {
         var _this = this;
-        var param = {
-            data: {},
-            dates: []
-        };
         if (isFunction(cb)) {
-            var result = cb(param);
+            var result = cb();
             if (!noData(result)) {
-                this.data = result.data;
-                this.dates = result.dates.sort(function (a, b) { return _this.parse(a) - _this.parse(b); });
+                this.data = result;
+                this.dates = Object.keys(result).sort(function (a, b) { return _this.parse(a) - _this.parse(b); });
             }
         }
     };
