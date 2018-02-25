@@ -23,7 +23,7 @@
 | setData     | Set data to DatePicker,more detail see below |
 | setDisabled | Set disable dates to DataPicker,more detail see below |
 | parse       | Transform date string into date object   |
-| format      | Trranform date object inito string       |
+| format      | Transform date object into string       |
 | on          | Event listener                           |
 | diff        | Diff between two dates                   |
 
@@ -135,41 +135,34 @@
                     "2018-2-18",
                     "2018-2-19",
                     "2018-2-22",
+                    new Date
                 ],
                 days: [1, 5, 2, 6]
             });
             //set data to DatePicker
-            
-            datepicker.setData((params: any) => {
-            
-                //params.data accept Oject like {
-                //  
-                //  "2018-1-31":123,
-                //  "2018-2-21":123,
-                //  
-                //}
-                
-                // params.dates accept  Array like ["2018-1-31","2018-2-21"]
-            
-                Object.keys(source).forEach(date => {
-                    let item = datepicker.parse(date);
-                    if (datepicker.diff(item, currDate) >= 0) {
-                        params.dates.push(date)
-                    } else {
-                        // delete source[date]
-                    }
-                });
-                params.data = source;
-                return params
-            });
+            datepicker.setData(() => {
+                    
+                    
+                    /*data accept Object like
+                     {
+                       "2018-1-31":123,
+                       "2018-2-21":123,
+                        }
+                    */
+                    Object.keys(source).forEach(date => {
+                        let item = datepicker.parse(date);
+                        if (datepicker.diff(item, currDate) < 0) {
+                            delete source[date]
+                        }
+                    });
+                    return source
+              });
             //set DatePicker's language
             //language options 
            const language={
-            
-            days: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
-            months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-            year: "" 
-                
+                 days: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+                 months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+                 year: "" 
             }
             datepicker.setLanguage(language)
         }
