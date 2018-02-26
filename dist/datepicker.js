@@ -691,7 +691,8 @@ var handlePickDate = function (options) {
                     }
                 }
                 if (notInDatesList.length > 0) {
-                    handled.selected.pop();
+                    handled.selected.shift();
+                    afterHandled.start = afterHandled.end;
                     afterHandled.end = null;
                 }
                 doublePick(element, afterHandled.start, afterHandled.end, diffAfterHandled, diffAfterHandled > limit || diffAfterHandled < 0);

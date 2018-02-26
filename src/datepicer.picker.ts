@@ -115,9 +115,11 @@ export default function (options: pickerHandler) {
 
 
                     }
+
+
                     if (notInDatesList.length > 0) {
-                        handled.selected.pop();
-                        // afterHandled.start = afterHandled.end;
+                        handled.selected.shift();
+                        afterHandled.start = afterHandled.end;
                         afterHandled.end = null;
                     }
 
