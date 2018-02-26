@@ -231,7 +231,10 @@ export default class DatePicker {
                     return false
                 }
             }
-            datesList = [this.format(startDate).value, this.format(endDate).value]
+            datesList = [this.format(startDate).value];
+            if (start !== end) {
+                datesList.push(this.format(endDate).value)
+            }
         }
         else {
             const d = dates[dates.length - 1];
@@ -307,7 +310,7 @@ export default class DatePicker {
             if (isObject(result) && Object.keys(result).length > 0) {
                 this.data = result;
                 this.dates = Object.keys(result).sort((a: string, b: string) => this.parse(a) - this.parse(b));
-            }else {
+            } else {
                 warn("setData", `you are passing wrong type of data to DatePicker,data should be like :
                     {
                         ${formatter(new Date, this.dateFormat).value}:"your value" ,

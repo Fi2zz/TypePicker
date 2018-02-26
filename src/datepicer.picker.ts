@@ -115,7 +115,6 @@ export default function (options: pickerHandler) {
 
 
                     }
-
                     if (notInDatesList.length > 0) {
                         handled.selected.pop();
                         // afterHandled.start = afterHandled.end;
@@ -137,7 +136,6 @@ export default function (options: pickerHandler) {
                     else {
                         setRange(datesList, element, dates.length <= 0)
                     }
-
 
 
                     selected = handled.selected;

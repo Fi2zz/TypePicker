@@ -1024,7 +1024,10 @@ var DatePicker = (function () {
                     return false;
                 }
             }
-            datesList = [this.format(startDate).value, this.format(endDate).value];
+            datesList = [this.format(startDate).value];
+            if (start !== end) {
+                datesList.push(this.format(endDate).value);
+            }
         }
         else {
             var d = dates[dates.length - 1];
