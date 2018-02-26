@@ -105,24 +105,18 @@ export default function (options: pickerHandler) {
                     const datesList = [];
                     const notInDatesList = [];
                     for (let date of dates) {
-                        // if (date !== afterHandled.start && date !== afterHandled.end) {
                         if (inDates(date)) {
                             datesList.push(date)
                         } else {
                             notInDatesList.push(date)
                         }
-                        // }
-
-
                     }
-
-
+                    //判断无效日期的长度来决定selected
                     if (notInDatesList.length > 0) {
                         handled.selected.shift();
                         afterHandled.start = afterHandled.end;
                         afterHandled.end = null;
                     }
-
                     doublePick(
                         element,
                         afterHandled.start,
@@ -138,15 +132,8 @@ export default function (options: pickerHandler) {
                     else {
                         setRange(datesList, element, dates.length <= 0)
                     }
-
-
                     selected = handled.selected;
-
-
                 }
-
-                // console.log(selected)
-
                 emitter('select', {
                     type: "selected",
                     value: selected

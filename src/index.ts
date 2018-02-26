@@ -389,7 +389,9 @@ export default class DatePicker {
             return false
         }
         this.element.className = `${this.element.className} calendar calendar-${this.views === 2 ? "double-views" : this.views === 1 ? "single-view" : "flat-view"}`;
+
         const next = nextTick(() => {
+
             this.isInit = this.currentSelection.length > 0;
             this.bindData = Object.keys(this.data).length > 0;
             if (!isDate(option.from) || !isDate(option.to)) {

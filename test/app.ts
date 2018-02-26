@@ -88,6 +88,7 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
                     // "2018-2-23",
                     // "2018-3-24",
                     "2018-2-27",
+                    "2018-2-25",
                 ],
                 // days: [1, 5, 2, 6]
             });
@@ -104,6 +105,7 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
                     return source
                 });
             }
+
             datepicker.setLanguage(language[activeLanguageCode])
         }
     }

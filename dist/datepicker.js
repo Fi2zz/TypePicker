@@ -814,20 +814,22 @@ function doublePick(collector, start, end, diff$$1, outOfLimit) {
     }
 }
 
-var getDisableDates = function (startDate, endDate, dateFormat) {
+var getDisableDates = function (startDate, endDate, dateFormat, should) {
     var startMonthDates = startDate.getDate();
     var temp = {};
-    for (var i = 1; i <= startMonthDates - 1; i++) {
-        var date = new Date(startDate.getFullYear(), startDate.getMonth(), startMonthDates - i);
-        var formatted = format(date, dateFormat).value;
-        temp[formatted] = formatted;
-    }
-    var endMonthDates = getDates(endDate.getFullYear(), endDate.getMonth());
-    var diffs = endMonthDates - endDate.getDate();
-    for (var i = 1; i <= diffs; i++) {
-        var date = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate() + i);
-        var formatted = format(date, dateFormat).value;
-        temp[formatted] = formatted;
+    if (should) {
+        for (var i = 1; i <= startMonthDates - 1; i++) {
+            var date = new Date(startDate.getFullYear(), startDate.getMonth(), startMonthDates - i);
+            var formatted = format(date, dateFormat).value;
+            temp[formatted] = formatted;
+        }
+        var endMonthDates = getDates(endDate.getFullYear(), endDate.getMonth());
+        var diffs = endMonthDates - endDate.getDate();
+        for (var i = 1; i <= diffs; i++) {
+            var date = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate() + i);
+            var formatted = format(date, dateFormat).value;
+            temp[formatted] = formatted;
+        }
     }
     return temp;
 };
@@ -859,20 +861,6 @@ var DatePicker = (function () {
         this.parse = function (string, format$$1) { return parseFormatted(string, format$$1 ? format$$1 : _this.dateFormat); };
         this.inDates = function (date) {
             return _this.dates.indexOf(date) >= 0;
-        };
-        this.update = function (result) {
-            var type = result.type, value = result.value;
-            if (type === 'selected') {
-                _this.setDates(value);
-            }
-            else if (type === 'switch') {
-                if (_this.currentSelection.length > 0) {
-                    _this.selected = _this.currentSelection;
-                }
-            }
-            if (type !== 'disabled' && type !== 'switch') {
-                _this.emit("update", result);
-            }
         };
         if (option) {
             this.init(option);
@@ -909,54 +897,6 @@ var DatePicker = (function () {
         return setInitRange(rangeOption);
     };
     
-    DatePicker.prototype.doMonthSwitch = function (size) {
-        var curr = {
-            year: this.date.getFullYear(),
-            month: this.date.getMonth(),
-            date: this.date.getDate()
-        };
-        this.date = new Date(curr.year, curr.month + size, curr.date);
-        this.isInit = false;
-        this.createDatePicker(false);
-    };
-    DatePicker.prototype.bindMonthSwitch = function () {
-        var _this = this;
-        var prev = this.element.querySelector(".calendar-action-prev");
-        var next = this.element.querySelector(".calendar-action-next");
-        if (prev && next) {
-            if (this.infiniteMode) {
-                next.addEventListener("click", function () { return _this.doMonthSwitch(1); });
-                prev.addEventListener("click", function () { return _this.doMonthSwitch(-1); });
-            }
-            else {
-                var endGap = diff(this.date, this.endDate);
-                if (endGap >= 1) {
-                    next.addEventListener("click", function () {
-                        _this.doMonthSwitch(1);
-                        removeClass(prev, "disabled");
-                        removeClass(prev, "calendar-action-disabled");
-                    });
-                }
-                else {
-                    addClass(next, "disabled");
-                    addClass(next, "calendar-action-disabled");
-                }
-                var startGap = diff(this.date, this.startDate);
-                if (startGap >= 1) {
-                    prev.addEventListener("click", function () {
-                        _this.doMonthSwitch(-1);
-                        removeClass(next, "disabled");
-                        removeClass(next, "calendar-action-disabled");
-                    });
-                }
-                else {
-                    addClass(prev, "disabled");
-                    addClass(prev, "calendar-action-disabled");
-                }
-            }
-        }
-    };
-    
     DatePicker.prototype.pickDate = function () {
         handlePickDate({
             dateFormat: this.dateFormat,
@@ -968,6 +908,21 @@ var DatePicker = (function () {
             emitter: this.emit,
             inDates: this.inDates,
         });
+    };
+    
+    DatePicker.prototype.update = function (result) {
+        var type = result.type, value = result.value;
+        if (type === 'selected') {
+            this.setDates(value);
+        }
+        else if (type === 'switch') {
+            if (this.currentSelection.length > 0) {
+                this.selected = this.currentSelection;
+            }
+        }
+        if (type !== 'disabled' && type !== 'switch') {
+            this.emit("update", result);
+        }
     };
     
     DatePicker.prototype.dataRenderer = function () {
@@ -1117,7 +1072,8 @@ var DatePicker = (function () {
     DatePicker.prototype.diff = function (d1, d2) {
         return diff(d1, d2, "days");
     };
-    DatePicker.prototype.createDatePicker = function (isInit) {
+    DatePicker.prototype.createDatePicker = function (type) {
+        var _this = this;
         this.element.innerHTML = new HTML({
             startDate: this.date,
             endDate: this.endDate,
@@ -1137,14 +1093,47 @@ var DatePicker = (function () {
             }
         }
         var updateEventData = {
-            type: isInit ? 'init' : 'switch',
+            type: type,
             value: this.selected
         };
-        this.bindMonthSwitch();
+        var prev = this.element.querySelector(".calendar-action-prev");
+        var next = this.element.querySelector(".calendar-action-next");
+        if (prev && next) {
+            if (this.infiniteMode) {
+                next.addEventListener("click", function () { return _this.emit('switch', 1); });
+                prev.addEventListener("click", function () { return _this.emit('switch', -1); });
+            }
+            else {
+                var endGap = diff(this.date, this.endDate);
+                if (endGap >= 1) {
+                    next.addEventListener("click", function () {
+                        _this.emit('switch', 1);
+                        removeClass(prev, "disabled");
+                        removeClass(prev, "calendar-action-disabled");
+                    });
+                }
+                else {
+                    addClass(next, "disabled");
+                    addClass(next, "calendar-action-disabled");
+                }
+                var startGap = diff(this.date, this.startDate);
+                if (startGap >= 1) {
+                    prev.addEventListener("click", function () {
+                        _this.emit('switch', -1);
+                        removeClass(next, "disabled");
+                        removeClass(next, "calendar-action-disabled");
+                    });
+                }
+                else {
+                    addClass(prev, "disabled");
+                    addClass(prev, "calendar-action-disabled");
+                }
+            }
+        }
         this.disable();
         this.pickDate();
         this.dataRenderer();
-        this.update(updateEventData);
+        return updateEventData;
     };
     
     DatePicker.prototype.init = function (option) {
@@ -1210,11 +1199,8 @@ var DatePicker = (function () {
                     }
                     _this.dates = dates;
                 }
-                else {
-                    _this.views = 1;
-                }
             }
-            var disableBeforeStartDateAndAfterEndDate = getDisableDates(_this.startDate, _this.endDate, _this.dateFormat);
+            var disableBeforeStartDateAndAfterEndDate = getDisableDates(_this.startDate, _this.endDate, _this.dateFormat, !_this.infiniteMode);
             _this.disables = merge(disableBeforeStartDateAndAfterEndDate, _this.disables);
             var disableList = Object.keys(_this.disables);
             if (disableList.length > 0) {
@@ -1244,8 +1230,19 @@ var DatePicker = (function () {
                     }
                 }
             }
-            _this.createDatePicker(true);
-            _this.on("select", _this.update);
+            _this.on("select", function (result) { return _this.update(result); });
+            _this.on('init', function (type) { return _this.update(_this.createDatePicker(type)); });
+            _this.on('switch', function (size) {
+                var curr = {
+                    year: _this.date.getFullYear(),
+                    month: _this.date.getMonth(),
+                    date: _this.date.getDate()
+                };
+                _this.date = new Date(curr.year, curr.month + size, curr.date);
+                _this.isInit = false;
+                _this.update(_this.createDatePicker('switch'));
+            });
+            _this.emit('init', 'init');
             clearNextTick(next);
         });
     };
