@@ -24,23 +24,29 @@ import {parseFormatted, format as formatter} from "./datepicker.formatter"
 import {setInitRange} from "./datepicker.ranger";
 
 
-const getDisableDates = (startDate: Date, endDate: Date, dateFormat: string) => {
+const getDisableDates = (startDate: Date, endDate: Date, dateFormat: string, should: boolean) => {
     const startMonthDates = startDate.getDate();
     const temp: any = {};
-    //处理开始日期前的日期
-    for (let i = 1; i <= startMonthDates - 1; i++) {
-        let date = new Date(startDate.getFullYear(), startDate.getMonth(), startMonthDates - i);
-        let formatted = formatter(date, dateFormat).value;
-        temp[formatted] = formatted
+    if (should) {
+
+        //处理开始日期前的日期
+        for (let i = 1; i <= startMonthDates - 1; i++) {
+            let date = new Date(startDate.getFullYear(), startDate.getMonth(), startMonthDates - i);
+            let formatted = formatter(date, dateFormat).value;
+            temp[formatted] = formatted
+        }
+        //处理结束日期后的日期
+        const endMonthDates = getDates(endDate.getFullYear(), endDate.getMonth());
+        const diffs = endMonthDates - endDate.getDate();
+        for (let i = 1; i <= diffs; i++) {
+            let date = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate() + i);
+            let formatted = formatter(date, dateFormat).value;
+            temp[formatted] = formatted
+        }
+
     }
-    //处理结束日期后的日期
-    const endMonthDates = getDates(endDate.getFullYear(), endDate.getMonth());
-    const diffs = endMonthDates - endDate.getDate();
-    for (let i = 1; i <= diffs; i++) {
-        let date = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate() + i);
-        let formatted = formatter(date, dateFormat).value;
-        temp[formatted] = formatted
-    }
+
+
     return temp
 
 };
@@ -100,55 +106,6 @@ export default class DatePicker {
         return setInitRange(rangeOption)
     };
 
-    private doMonthSwitch(size: number) {
-        const curr = {
-            year: this.date.getFullYear(),
-            month: this.date.getMonth(),
-            date: this.date.getDate()
-        };
-        this.date = new Date(curr.year, curr.month + size, curr.date);
-        this.isInit = false;
-        this.createDatePicker(false);
-
-    }
-
-    private bindMonthSwitch() {
-        //日期切换
-        const prev = this.element.querySelector(".calendar-action-prev");
-        const next = this.element.querySelector(".calendar-action-next");
-        if (prev && next) {
-            if (this.infiniteMode) {
-                next.addEventListener("click", () => this.doMonthSwitch(1));
-                prev.addEventListener("click", () => this.doMonthSwitch(-1))
-            } else {
-                const endGap = diff(this.date, this.endDate);
-                if (endGap >= 1) {
-                    next.addEventListener("click", () => {
-                        this.doMonthSwitch(1);
-                        removeClass(prev, "disabled");
-                        removeClass(prev, "calendar-action-disabled")
-                    });
-                }
-                else {
-                    addClass(next, "disabled");
-                    addClass(next, "calendar-action-disabled")
-                }
-
-                const startGap = diff(this.date, this.startDate);
-                if (startGap >= 1) {
-                    prev.addEventListener("click", () => {
-                        this.doMonthSwitch(-1);
-                        removeClass(next, "disabled");
-                        removeClass(next, "calendar-action-disabled")
-                    });
-                } else {
-                    addClass(prev, "disabled");
-                    addClass(prev, "calendar-action-disabled")
-                }
-            }
-        }
-    };
-
     private pickDate() {
         handlePickDate({
             dateFormat: this.dateFormat,
@@ -162,7 +119,7 @@ export default class DatePicker {
         })
     };
 
-    private update = (result: any) => {
+    private update(result: any) {
         const {type, value} = result;
         if (type === 'selected') {
             this.setDates(value)
@@ -301,6 +258,7 @@ export default class DatePicker {
         for (let date of dateList) {
             dateMap[date] = date;
         }
+
         this.disables = dateMap;
     };
 
@@ -323,7 +281,7 @@ export default class DatePicker {
         return diff(d1, d2, "days")
     }
 
-    private createDatePicker(isInit?: Boolean) {
+    private createDatePicker(type: string) {
         this.element.innerHTML = new HTML({
             startDate: this.date,
             endDate: this.endDate,
@@ -343,14 +301,49 @@ export default class DatePicker {
             }
         }
         const updateEventData = {
-            type: isInit ? 'init' : 'switch',
+            type,
             value: this.selected
         };
-        this.bindMonthSwitch();
+
+        //日期切换
+        const prev = this.element.querySelector(".calendar-action-prev");
+        const next = this.element.querySelector(".calendar-action-next");
+        if (prev && next) {
+            if (this.infiniteMode) {
+                next.addEventListener("click", () => this.emit('switch', 1));
+                prev.addEventListener("click", () => this.emit('switch', -1))
+            } else {
+                const endGap = diff(this.date, this.endDate);
+                if (endGap >= 1) {
+                    next.addEventListener("click", () => {
+                        this.emit('switch', 1);
+                        removeClass(prev, "disabled");
+                        removeClass(prev, "calendar-action-disabled")
+                    });
+                }
+                else {
+                    addClass(next, "disabled");
+                    addClass(next, "calendar-action-disabled")
+                }
+
+                const startGap = diff(this.date, this.startDate);
+                if (startGap >= 1) {
+                    prev.addEventListener("click", () => {
+                        this.emit('switch', -1);
+
+                        removeClass(next, "disabled");
+                        removeClass(next, "calendar-action-disabled")
+                    });
+                } else {
+                    addClass(prev, "disabled");
+                    addClass(prev, "calendar-action-disabled")
+                }
+            }
+        }
         this.disable();
         this.pickDate();
         this.dataRenderer();
-        this.update(updateEventData);
+        return updateEventData;
     };
 
     private init(option: any) {
@@ -418,16 +411,13 @@ export default class DatePicker {
                         dates.push(formatted)
                     }
                     this.dates = dates;
-                } else {
-                    this.views = 1;
                 }
             }
 
-
-            const disableBeforeStartDateAndAfterEndDate = getDisableDates(this.startDate, this.endDate, this.dateFormat);
+            //如果是infiniteMode,则不自动把过期日期设置为disabled
+            const disableBeforeStartDateAndAfterEndDate = getDisableDates(this.startDate, this.endDate, this.dateFormat,!this.infiniteMode);
             //合并外部传入的disabled dates & start date & end date
             this.disables = merge(disableBeforeStartDateAndAfterEndDate, this.disables);
-
             const disableList = Object.keys(this.disables);
             if (disableList.length > 0) {
                 const datesList = this.dates;
@@ -455,11 +445,21 @@ export default class DatePicker {
                     }
                 }
             }
-            this.createDatePicker(true);
-            this.on("select", this.update);
+
+            this.on("select", (result: any) => this.update(result));
+            this.on('init', (type) => this.update(this.createDatePicker(type)));
+            this.on('switch', (size: number) => {
+                const curr = {
+                    year: this.date.getFullYear(),
+                    month: this.date.getMonth(),
+                    date: this.date.getDate()
+                };
+                this.date = new Date(curr.year, curr.month + size, curr.date);
+                this.isInit = false;
+                this.update(this.createDatePicker('switch'));
+            });
+            this.emit('init', 'init');
             clearNextTick(next)
-
-
         })
     };
 
