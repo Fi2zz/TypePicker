@@ -856,12 +856,10 @@ var DatePicker = (function () {
         this.bindData = false;
         this.infiniteMode = false;
         this.isInit = false;
+        this.inDates = function (date) { return _this.dates.indexOf(date) >= 0; };
         this.on = Observer.$on;
         this.format = function (date, format$$1) { return format(date, format$$1 ? format$$1 : _this.dateFormat); };
         this.parse = function (string, format$$1) { return parseFormatted(string, format$$1 ? format$$1 : _this.dateFormat); };
-        this.inDates = function (date) {
-            return _this.dates.indexOf(date) >= 0;
-        };
         if (option) {
             this.init(option);
         }
@@ -873,10 +871,6 @@ var DatePicker = (function () {
             };
         }
     }
-    DatePicker.prototype.emit = function (evt, data) {
-        return Observer.$emit(evt, data);
-    };
-    
     DatePicker.prototype.currentRange = function (isInit) {
         var initSelected = this.currentSelection.length > 0
             ? this.currentSelection
@@ -897,19 +891,6 @@ var DatePicker = (function () {
         return setInitRange(rangeOption);
     };
     
-    DatePicker.prototype.pickDate = function () {
-        handlePickDate({
-            dateFormat: this.dateFormat,
-            element: this.element,
-            selected: this.selected,
-            isDouble: this.double,
-            limit: this.limit,
-            bindData: this.bindData,
-            emitter: this.emit,
-            inDates: this.inDates,
-        });
-    };
-    
     DatePicker.prototype.update = function (result) {
         var type = result.type, value = result.value;
         if (type === 'selected') {
@@ -925,17 +906,8 @@ var DatePicker = (function () {
         }
     };
     
-    DatePicker.prototype.dataRenderer = function () {
-        var _this = this;
-        if (Object.keys(this.data).length > 0) {
-            var next_1 = nextTick(function () {
-                _this.emit("data", {
-                    data: _this.data,
-                    nodeList: _this.element.querySelectorAll(".calendar-cell")
-                });
-                clearNextTick(next_1);
-            });
-        }
+    DatePicker.prototype.emit = function (event, data) {
+        return Observer.$emit(event, data);
     };
     
     DatePicker.prototype.setDates = function (dates) {
@@ -999,18 +971,6 @@ var DatePicker = (function () {
         return false;
     };
     
-    DatePicker.prototype.disable = function () {
-        var _this = this;
-        if (Object.keys(this.disables).length > 0) {
-            var next_2 = nextTick(function () {
-                _this.emit("disabled", {
-                    nodeList: _this.element.querySelectorAll(".calendar-cell"),
-                    dateList: _this.disables
-                });
-                clearNextTick(next_2);
-            });
-        }
-    };
     DatePicker.prototype.setDisabled = function (param) {
         if (!param || isObject(param) && Object.keys(param).length <= 0) {
             warn("setDisabled", "invalid params, \nparams should be {dates:<Array<any>>[], days:<Array<number>>[] }");
@@ -1130,9 +1090,19 @@ var DatePicker = (function () {
                 }
             }
         }
-        this.disable();
-        this.pickDate();
-        this.dataRenderer();
+        if (Object.keys(this.data).length > 0) {
+            this.emit("data", {
+                data: this.data,
+                nodeList: this.element.querySelectorAll(".calendar-cell")
+            });
+        }
+        if (Object.keys(this.disables).length > 0) {
+            this.emit("disabled", {
+                nodeList: this.element.querySelectorAll(".calendar-cell"),
+                dateList: this.disables
+            });
+        }
+        this.emit('picker-handler', true);
         return updateEventData;
     };
     
@@ -1241,6 +1211,18 @@ var DatePicker = (function () {
                 _this.date = new Date(curr.year, curr.month + size, curr.date);
                 _this.isInit = false;
                 _this.update(_this.createDatePicker('switch'));
+            });
+            _this.on('picker-handler', function () {
+                handlePickDate({
+                    dateFormat: _this.dateFormat,
+                    element: _this.element,
+                    selected: _this.selected,
+                    isDouble: _this.double,
+                    limit: _this.limit,
+                    bindData: _this.bindData,
+                    emitter: _this.emit,
+                    inDates: _this.inDates,
+                });
             });
             _this.emit('init', 'init');
             clearNextTick(next);

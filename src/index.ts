@@ -74,16 +74,7 @@ export default class DatePicker {
     private bindData: boolean = false;
     private infiniteMode: boolean = false;
     private isInit: boolean = false;
-    public on: Function = Observer.$on;
-    public format: Function = (date: Date, format?: string) => formatter(date, format ? format : this.dateFormat);
-    public parse: Function = (string: string, format?: string) => parseFormatted(string, format ? format : this.dateFormat);
-    private inDates = (date: string) => {
-        return this.dates.indexOf(date) >= 0
-    };
-
-    private emit(evt: string, data: any) {
-        return Observer.$emit(evt, data)
-    };
+    private inDates = (date: string) => this.dates.indexOf(date) >= 0;
 
     private currentRange(isInit: boolean) {
         const initSelected =
@@ -106,19 +97,6 @@ export default class DatePicker {
         return setInitRange(rangeOption)
     };
 
-    private pickDate() {
-        handlePickDate({
-            dateFormat: this.dateFormat,
-            element: this.element,
-            selected: this.selected,
-            isDouble: this.double,
-            limit: this.limit,
-            bindData: this.bindData,
-            emitter: this.emit,
-            inDates: this.inDates,
-        })
-    };
-
     private update(result: any) {
         const {type, value} = result;
         if (type === 'selected') {
@@ -133,17 +111,13 @@ export default class DatePicker {
         }
     };
 
-    private dataRenderer() {
-        if (Object.keys(this.data).length > 0) {
-            const next = nextTick(() => {
-                this.emit("data", {
-                    data: this.data,
-                    nodeList: this.element.querySelectorAll(".calendar-cell")
-                });
-                clearNextTick(next)
-            })
-        }
+    private emit(event: string, data: any) {
+        return Observer.$emit(event, data)
     };
+
+    public on: Function = Observer.$on;
+    public format: Function = (date: Date, format?: string) => formatter(date, format ? format : this.dateFormat);
+    public parse: Function = (string: string, format?: string) => parseFormatted(string, format ? format : this.dateFormat);
 
     public setDates(dates: Array<any>) {
         if (!isArray(dates)) {
@@ -207,18 +181,6 @@ export default class DatePicker {
         return false;
     };
 
-    private disable() {
-        if (Object.keys(this.disables).length > 0) {
-            const next = nextTick(() => {
-                this.emit("disabled", {
-                    nodeList: this.element.querySelectorAll(".calendar-cell"),
-                    dateList: this.disables
-                });
-                clearNextTick(next)
-            })
-        }
-    }
-
     public setDisabled(param: disable) {
         if (!param || isObject(param) && Object.keys(param).length <= 0) {
             warn("setDisabled",
@@ -229,8 +191,6 @@ export default class DatePicker {
             warn("setDisabled", `invalid params  { dates:<Array<any>>${param.dates}, days:<Array<number>>${param.days} }`);
             return false;
         }
-
-
         const dateMap = {};
         const dateList = [];
         if (isArray(param.dates)) {
@@ -258,7 +218,6 @@ export default class DatePicker {
         for (let date of dateList) {
             dateMap[date] = date;
         }
-
         this.disables = dateMap;
     };
 
@@ -304,7 +263,6 @@ export default class DatePicker {
             type,
             value: this.selected
         };
-
         //日期切换
         const prev = this.element.querySelector(".calendar-action-prev");
         const next = this.element.querySelector(".calendar-action-next");
@@ -340,9 +298,19 @@ export default class DatePicker {
                 }
             }
         }
-        this.disable();
-        this.pickDate();
-        this.dataRenderer();
+        if (Object.keys(this.data).length > 0) {
+            this.emit("data", {
+                data: this.data,
+                nodeList: this.element.querySelectorAll(".calendar-cell")
+            });
+        }
+        if (Object.keys(this.disables).length > 0) {
+            this.emit("disabled", {
+                nodeList: this.element.querySelectorAll(".calendar-cell"),
+                dateList: this.disables
+            });
+        }
+        this.emit('picker-handler', true);
         return updateEventData;
     };
 
@@ -415,9 +383,8 @@ export default class DatePicker {
                     this.dates = dates;
                 }
             }
-
             //如果是infiniteMode,则不自动把过期日期设置为disabled
-            const disableBeforeStartDateAndAfterEndDate = getDisableDates(this.startDate, this.endDate, this.dateFormat,!this.infiniteMode);
+            const disableBeforeStartDateAndAfterEndDate = getDisableDates(this.startDate, this.endDate, this.dateFormat, !this.infiniteMode);
             //合并外部传入的disabled dates & start date & end date
             this.disables = merge(disableBeforeStartDateAndAfterEndDate, this.disables);
             const disableList = Object.keys(this.disables);
@@ -428,7 +395,6 @@ export default class DatePicker {
                 if (Object.keys(removed).length > 0) {
                     for (let key in removed) {
                         delete this.data[key]
-
                     }
                 }
                 for (let date of datesList) {
@@ -459,6 +425,18 @@ export default class DatePicker {
                 this.date = new Date(curr.year, curr.month + size, curr.date);
                 this.isInit = false;
                 this.update(this.createDatePicker('switch'));
+            });
+            this.on('picker-handler', () => {
+                handlePickDate({
+                    dateFormat: this.dateFormat,
+                    element: this.element,
+                    selected: this.selected,
+                    isDouble: this.double,
+                    limit: this.limit,
+                    bindData: this.bindData,
+                    emitter: this.emit,
+                    inDates: this.inDates,
+                });
             });
             this.emit('init', 'init');
             clearNextTick(next)

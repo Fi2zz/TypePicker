@@ -27,7 +27,7 @@ export default (function () {
         }
         clientList[key].push(fn);
     };
-    const $emit = function (...args:Array<any>) {
+    const $emit = function (...args: Array<any>) {
         let key = [].shift.call(args);
         let fns = clientList[key];
         if (!fns || fns.length === 0) {
