@@ -14,22 +14,38 @@
 ###  API
 
 
+```typescript
 
-| API                  | PARAMS                                   | DESC                                     |
-|----------------------|------------------------------------------|------------------------------------------|
-| setDates(param)      | <tupe>param= [string,Date]               | Set init dates to DatePicker,more detail see below |
-| setLanguage(param)   | <any>param={<br>  days:Array<string>,<br> months:Array<string>,<br> year?:string<br>} | Set Datapicker's language,more detail see below |
-| setData(param)       | <any>param={<br>    dateString:value,<br><br>} | Set data to DatePicker,more detail see below |
-| setDisabled(param)   | <any>param={<br> days?:Array<number>,<br>dates?:tuple[string,Date]<br><br>} | Set disable dates to DataPicker,more detail see below |
-| parse(string,format) | <string>string=2018-1-31,<br><string>format='YYYY-M-D' | Transform date string into date object   |
-| format(date,format)  | <Date>date,<br><string>format='YYYY-M-D' | Transform date object into string        |
-| on(event,fn)         | <string>event,<br><Function>fn           | Event listener                           |
-| diff                 |                                          | Diff between two dates                   |
+   setDates([dates]:tuple);
+   //Set  dates to DatePicker
+   //dates accept <string> and <Date>
+   
+   setLanguage(language:any);
+   //set DatePicker's language
+   
+   setData(data:any)
+   //set data to DatePicker
+   
+   setDisabled({
+        days?:Array<number>,
+        dates?:tuple<string,Date>
+    })
+   //Set disabled dates to DataPicker
+   
+   parse(formattedDate:string,dateFormat:string)
+   //Transform date string into date object,return Date object
+   
+   format(date:Date,format:string)
+   //Transform date object into string,return string  
+   
+   on(event:string,fn:Function)
+   //Event listener
+   
+   diff(date1:Date,date2:Date) 
+   // Diff between two dates,return  number type 
+    
+```
 
-
-
-
-                
 ### USAGE
 ```typescript
 
@@ -43,6 +59,7 @@
       //umd
       //<script src="/dist/datepicker.min.js"></script>
 
+
        const date = new Date();
        const dist = {
            year: date.getFullYear(),
@@ -53,44 +70,40 @@
        const from = new Date(dist.year, dist.month, dist.date)
        const to = new Date(dist.year, dist.month + 9, 0);
        const currDate = new Date(dist.year, dist.month, dist.date);
-       const dateFormat = 'YYYY-M-D';
        
-       datepicker = <any>new DatePicker({
+       //setup DatePicker instance
+       const datepicker = <any>new DatePicker({
             el: document.getElementById("datepicker"),
             endDate:to,
             startDate:from,
             limit: 7,
-            format: dateFormat,
+            format: 'YYYY-M-D',
             doubleSelect: true,
             views: 1
         });
+       //`update`  fired by click on date cell or DatePicker init function 
        datepicker.on("update", (result: any) => {
-                //`update`  fired by select dates
-                //result contains two keys
-                // value =>  selected dates
-                // type  =>  two types => init,selected
-                // your code goes here
-                
-            });
+        // result contains two keys, `value` and `type`
+        // value =>  selected dates
+        // type  =>  two types => `init` and `selected`
+        // your code goes here
+       });
+       
+       // `disabled`event fired by `setDisabled` and DatePicker init function
        datepicker.on("disabled", (result: any) => {
-                
-                // `disabled`event fired by `setDisabled`
-                //set disabled state to HTML nodes
-                
-                const {dateList, nodeList} = result;
-                
-                for (let n = 0; n < nodeList.length; n++) {
-                    let node = nodeList[n];
-                    if (dateList[node.getAttribute("data-date")]) {
-                        node.classList.add('disabled')
-                    }
+       //set disabled state to HTML nodes
+            const {dateList, nodeList} = result;
+            for (let n = 0; n < nodeList.length; n++) {
+                let node = nodeList[n];
+                if (dateList[node.getAttribute("data-date")]) {
+                    node.classList.add('disabled')
                 }
-                
-            });
+            }
+       });
+       
+       // 'data' event fired by `setData` 
        datepicker.on("data", (result: any) => {
-                // 'data' event fired by `setData` 
-                //set HTML nodes 
-            
+        //set HTML nodes states
                 const data = result.data;
                 const nodeList = result.nodeList;
                 for (let i = 0; i < nodeList.length; i++) {
@@ -111,13 +124,11 @@
                         addClass(node, "disabled")
                     }
                 }
-            });
+        });
        //tuple type,accept <string> and <Date>
        const selected=["2018-2-21",new Date()];
        datepicker.setDates(selected);
-       //set disabled dates, 
-       // if you want to set specified date or day to disabled,
-       // use `setDisabled`,
+       // use `setDisabled` to set specified date or day to disabled,
        // `setDisabled` accept an object => {dates,days},
        // <tuple>dates,accept <Date> and  <string>
        // <Array<number>>days accept 0,1,2,3,4,5,6
@@ -130,12 +141,10 @@
                 ],
                 days: [1, 5, 2, 6]
             });
-        //set data to DatePicker
-        // if you want to display your data,like price info on
-        // date cell, you need to use `setData` to passing your 
-        // data to `DatePicker` instance,then listen to `data` event
-        // to do what you want to do
-         
+        // To display your data,like price info on date cell, 
+        // use `setData` to pass data to `DatePicker` instance
+        // `setData` function will dispatch `data` event
+        // setup a listener to handle it
        datepicker.setData(() => {
                     
                     
@@ -153,13 +162,13 @@
                     });
                     return source
               });
-            //set DatePicker's language
-            //language options 
+       //set DatePicker's language
+       //language options 
        const language={
                  days: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
                  months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
                  year: "" 
-            }
+       }
        datepicker.setLanguage(language)
        
        
