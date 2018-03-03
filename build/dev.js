@@ -41,7 +41,7 @@ function config() {
         devServer: {
             clientLogLevel: 'error',
             hot: true,
-            contentBase: "/test",
+            contentBase: false,//'../test',
             port: 8300,
             publicPath: "/",
             historyApiFallback: true,
@@ -49,9 +49,9 @@ function config() {
             overlay: true
         },
         plugins: [
-            new webpack.DefinePlugin({
-                'process.env': { NODE_ENV: '"development"' }
-            }),
+            // new webpack.DefinePlugin({
+            //     'process.env': { NODE_ENV: '"development"' }
+            // }),
             new webpack.HotModuleReplacementPlugin(),
             new HtmlWebpackPlugin({
                 filename: 'index.html',
@@ -62,4 +62,4 @@ function config() {
 
     }
 }
-module.exports = new Promise((resolve, reject) => resolve(config()))
+module.exports = new Promise((resolve, reject) => resolve(config()));

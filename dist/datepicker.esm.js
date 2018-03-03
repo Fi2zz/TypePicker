@@ -827,6 +827,28 @@ var getDisableDates = function (startDate, endDate, dateFormat, should) {
     }
     return temp;
 };
+function getViews(view) {
+    if (!view) {
+        return 1;
+    }
+    var views = parseToInt(view);
+    if (isNaN(views)) {
+        if (view !== 'auto') {
+            return 1;
+        }
+        else {
+            return 'auto';
+        }
+    }
+    else {
+        if (views > 2 || views <= 0) {
+            return 1;
+        }
+        else {
+            return views;
+        }
+    }
+}
 var DatePicker = (function () {
     function DatePicker(option) {
         var _this = this;
@@ -837,7 +859,6 @@ var DatePicker = (function () {
         this.endDate = null;
         this.dates = [];
         this.selected = [];
-        this.currentSelection = [];
         this.data = {};
         this.disables = {};
         this.language = {
@@ -851,49 +872,14 @@ var DatePicker = (function () {
         this.infiniteMode = false;
         this.isInit = false;
         this.inDates = function (date) { return _this.dates.indexOf(date) >= 0; };
-        this.on = Observer.$on;
         this.format = function (date, format$$1) { return format(date, format$$1 ? format$$1 : _this.dateFormat); };
         this.parse = function (string, format$$1) { return parseFormatted(string, format$$1 ? format$$1 : _this.dateFormat); };
-        if (option) {
-            this.init(option);
-        }
-        else {
-            return {
-                diff: this.diff,
-                parse: this.parse,
-                format: function (date, format$$1) { return _this.format(date, format$$1).value; },
-            };
-        }
+        this.init(option);
     }
-    DatePicker.prototype.currentRange = function (isInit) {
-        var initSelected = this.currentSelection.length > 0
-            ? this.currentSelection
-            : this.double
-                ? this.selected
-                : [this.format(this.date).value];
-        var rangeOption = {
-            collector: this.element,
-            collection: this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
-            data: initSelected,
-            isDouble: this.double,
-            parse: this.parse,
-            format: this.format,
-            inDates: this.inDates,
-            disables: this.disables,
-            isInit: isInit,
-        };
-        return setInitRange(rangeOption);
-    };
-    
     DatePicker.prototype.update = function (result) {
         var type = result.type, value = result.value;
         if (type === 'selected') {
             this.setDates(value);
-        }
-        else if (type === 'switch') {
-            if (this.currentSelection.length > 0) {
-                this.selected = this.currentSelection;
-            }
         }
         if (type !== 'disabled' && type !== 'switch') {
             this.emit("update", result);
@@ -902,6 +888,10 @@ var DatePicker = (function () {
     
     DatePicker.prototype.emit = function (event, data) {
         return Observer.$emit(event, data);
+    };
+    
+    DatePicker.prototype.on = function (ev, cb) {
+        return Observer.$on(ev, cb);
     };
     
     DatePicker.prototype.setDates = function (dates) {
@@ -955,14 +945,17 @@ var DatePicker = (function () {
             var d = dates[dates.length - 1];
             datesList = [isDate(d) ? this.format(d).value : d];
         }
-        this.currentSelection = datesList;
+        this.selected = datesList;
     };
     
     DatePicker.prototype.setLanguage = function (pack) {
         if (isArray(pack.days) && isArray(pack.months)) {
-            this.language = pack;
+            this.language = {
+                days: pack.days,
+                months: pack.months,
+                year: pack.year
+            };
         }
-        return false;
     };
     
     DatePicker.prototype.setDisabled = function (param) {
@@ -1036,7 +1029,18 @@ var DatePicker = (function () {
             dateFormatter: this.format,
             views: this.views
         }).template;
-        this.selected = this.currentRange(this.isInit);
+        var rangeOption = {
+            collector: this.element,
+            collection: this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
+            data: this.double ? this.selected : [this.format(this.date).value],
+            isDouble: this.double,
+            parse: this.parse,
+            format: this.format,
+            inDates: this.inDates,
+            disables: this.disables,
+            isInit: this.isInit,
+        };
+        this.selected = setInitRange(rangeOption);
         if (this.views === 1) {
             if (this.double && this.selected.length >= 2) {
                 var start = this.selected[0];
@@ -1103,28 +1107,6 @@ var DatePicker = (function () {
     DatePicker.prototype.init = function (option) {
         var _this = this;
         var currDate = new Date();
-        var getViews = function (view) {
-            if (!view) {
-                return 1;
-            }
-            var views = parseToInt(view);
-            if (isNaN(views)) {
-                if (view !== 'auto') {
-                    return 1;
-                }
-                else {
-                    return 'auto';
-                }
-            }
-            else {
-                if (views > 2 || views <= 0) {
-                    return 1;
-                }
-                else {
-                    return views;
-                }
-            }
-        };
         if (option.doubleSelect) {
             this.double = option.doubleSelect;
         }
@@ -1141,7 +1123,7 @@ var DatePicker = (function () {
         }
         this.element.className = this.element.className + " calendar calendar-" + (this.views === 2 ? "double-views" : this.views === 1 ? "single-view" : "flat-view");
         var next = nextTick(function () {
-            _this.isInit = _this.currentSelection.length > 0;
+            _this.isInit = _this.selected.length > 0;
             _this.bindData = Object.keys(_this.data).length > 0;
             if (!isDate(option.from) || !isDate(option.to)) {
                 _this.infiniteMode = true;
@@ -1165,8 +1147,8 @@ var DatePicker = (function () {
                 }
             }
             var disableBeforeStartDateAndAfterEndDate = getDisableDates(_this.startDate, _this.endDate, _this.dateFormat, !_this.infiniteMode);
-            _this.disables = merge(disableBeforeStartDateAndAfterEndDate, _this.disables);
-            var disableList = Object.keys(_this.disables);
+            var disables = merge(disableBeforeStartDateAndAfterEndDate, _this.disables);
+            var disableList = Object.keys(disables);
             if (disableList.length > 0) {
                 var datesList = _this.dates;
                 var newDateList = [];
@@ -1185,8 +1167,8 @@ var DatePicker = (function () {
                 _this.dates = newDateList;
             }
             if (_this.views === 'auto') {
-                if (_this.currentSelection.length > 0) {
-                    _this.date = _this.parse(_this.currentSelection[0]);
+                if (_this.selected.length > 0) {
+                    _this.date = _this.parse(_this.selected[0]);
                 }
                 else {
                     if (_this.dates.length > 0) {

@@ -90,6 +90,9 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
                     "2018-2-27",
                     "2018-2-25",
                     "2018-3-28",
+                    "2018-3-22",
+                    "2018-3-20",
+                    "2018-3-19",
                 ],
                 // days: [1, 5, 2, 6]
             });
@@ -119,7 +122,7 @@ function popupHandler(visible: boolean) {
 }
 
 function init(document: Document) {
-    createDatePicker(true, formControl.value.split(" "));
+    createDatePicker(true, ['2018-3-7','2018-3-14',]);
     document.addEventListener("click", (e) => {
         const target = <HTMLElement> e.target;
         if (target) {

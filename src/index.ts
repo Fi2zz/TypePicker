@@ -45,11 +45,33 @@ const getDisableDates = (startDate: Date, endDate: Date, dateFormat: string, sho
         }
 
     }
-
-
     return temp
 
 };
+
+function getViews(view: number | string) {
+    if (!view) {
+        return 1
+    }
+    const views = parseToInt(view);
+    if (isNaN(views)) {
+        if (view !== 'auto') {
+            return 1
+        } else {
+            return 'auto'
+        }
+    }
+    else {
+        if (views > 2 || views <= 0) {
+            return 1
+        }
+        else {
+            return views
+        }
+    }
+}
+
+// function validate
 
 
 export default class DatePicker {
@@ -61,7 +83,6 @@ export default class DatePicker {
     private endDate: Date = null;
     private dates: string[] = [];
     private selected: string[] = [];
-    private currentSelection: string[] = [];
     private data: any = {};
     private disables: any = {};
     private language: any = {
@@ -76,36 +97,12 @@ export default class DatePicker {
     private isInit: boolean = false;
     private inDates = (date: string) => this.dates.indexOf(date) >= 0;
 
-    private currentRange(isInit: boolean) {
-        const initSelected =
-            this.currentSelection.length > 0
-                ? this.currentSelection
-                : this.double
-                ? this.selected
-                : [this.format(this.date).value];
-        const rangeOption = {
-            collector: this.element,
-            collection: this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
-            data: initSelected,
-            isDouble: this.double,
-            parse: this.parse,
-            format: this.format,
-            inDates: this.inDates,
-            disables: this.disables,
-            isInit,
-        };
-        return setInitRange(rangeOption)
-    };
-
     private update(result: any) {
         const {type, value} = result;
         if (type === 'selected') {
             this.setDates(value)
-        } else if (type === 'switch') {
-            if (this.currentSelection.length > 0) {
-                this.selected = this.currentSelection;
-            }
         }
+
         if (type !== 'disabled' && type !== 'switch') {
             this.emit("update", result);
         }
@@ -115,7 +112,10 @@ export default class DatePicker {
         return Observer.$emit(event, data)
     };
 
-    public on: Function = Observer.$on;
+    public on(ev: string, cb: Function) {
+        return Observer.$on(ev, cb)
+    };
+
     public format: Function = (date: Date, format?: string) => formatter(date, format ? format : this.dateFormat);
     public parse: Function = (string: string, format?: string) => parseFormatted(string, format ? format : this.dateFormat);
 
@@ -171,14 +171,18 @@ export default class DatePicker {
             const d = dates[dates.length - 1];
             datesList = [isDate(d) ? this.format(d).value : d]
         }
-        this.currentSelection = datesList;
+        this.selected = datesList;
+        //  this.currentSelection = datesList;
     };
 
     public setLanguage(pack?: any) {
         if (isArray(pack.days) && isArray(pack.months)) {
-            this.language = pack
+            this.language = {
+                days: pack.days,
+                months: pack.months,
+                year: pack.year
+            }
         }
-        return false;
     };
 
     public setDisabled(param: disable) {
@@ -241,6 +245,8 @@ export default class DatePicker {
     }
 
     private createDatePicker(type: string) {
+
+
         this.element.innerHTML = new HTML({
             startDate: this.date,
             endDate: this.endDate,
@@ -249,7 +255,22 @@ export default class DatePicker {
             dateFormatter: this.format,
             views: this.views
         }).template;
-        this.selected = this.currentRange(this.isInit);
+
+
+        const rangeOption = {
+            collector: this.element,
+            collection: this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
+            data: this.double ? this.selected : [this.format(this.date).value],
+            isDouble: this.double,
+            parse: this.parse,
+            format: this.format,
+            inDates: this.inDates,
+            disables: this.disables,
+            isInit: this.isInit,
+        };
+
+
+        this.selected = setInitRange(rangeOption);
         if (this.views === 1) {
             if (this.double && this.selected.length >= 2) {
                 const start = this.selected[0];
@@ -315,28 +336,9 @@ export default class DatePicker {
     };
 
     private init(option: any) {
+
+        // this.temp ={};
         const currDate = new Date();
-        const getViews = (view: number | string) => {
-            if (!view) {
-                return 1
-            }
-            const views = parseToInt(view);
-            if (isNaN(views)) {
-                if (view !== 'auto') {
-                    return 1
-                } else {
-                    return 'auto'
-                }
-            }
-            else {
-                if (views > 2 || views <= 0) {
-                    return 1
-                }
-                else {
-                    return views
-                }
-            }
-        };
 
         if (option.doubleSelect) {
             this.double = option.doubleSelect
@@ -360,7 +362,7 @@ export default class DatePicker {
 
         const next = nextTick(() => {
 
-            this.isInit = this.currentSelection.length > 0;
+            this.isInit = this.selected.length > 0;
             this.bindData = Object.keys(this.data).length > 0;
             if (!isDate(option.from) || !isDate(option.to)) {
                 this.infiniteMode = true;
@@ -386,11 +388,14 @@ export default class DatePicker {
             //如果是infiniteMode,则不自动把过期日期设置为disabled
             const disableBeforeStartDateAndAfterEndDate = getDisableDates(this.startDate, this.endDate, this.dateFormat, !this.infiniteMode);
             //合并外部传入的disabled dates & start date & end date
-            this.disables = merge(disableBeforeStartDateAndAfterEndDate, this.disables);
-            const disableList = Object.keys(this.disables);
+            const disables = merge(disableBeforeStartDateAndAfterEndDate, this.disables);
+            const disableList = Object.keys(disables);
+
             if (disableList.length > 0) {
                 const datesList = this.dates;
                 const newDateList = [];
+
+
                 const removed = removeDisableDates(disableList, this.data);
                 if (Object.keys(removed).length > 0) {
                     for (let key in removed) {
@@ -405,15 +410,14 @@ export default class DatePicker {
                 this.dates = newDateList
             }
             if (this.views === 'auto') {
-                if (this.currentSelection.length > 0) {
-                    this.date = this.parse(this.currentSelection[0])
+                if (this.selected.length > 0) {
+                    this.date = this.parse(this.selected[0])
                 } else {
                     if (this.dates.length > 0) {
                         this.date = this.parse(this.dates[0])
                     }
                 }
             }
-
             this.on("select", (result: any) => this.update(result));
             this.on('init', (type) => this.update(this.createDatePicker(type)));
             this.on('switch', (size: number) => {
@@ -444,16 +448,7 @@ export default class DatePicker {
     };
 
     constructor(option?: datePickerOptions) {
-        if (option) {
-            this.init(option);
-        }
-        else {
-            return <any> {
-                diff: this.diff,
-                parse: this.parse,
-                format: <Function>(date: Date, format: string) => this.format(date, format).value,
-            }
-        }
+        this.init(option);
     }
 }
 

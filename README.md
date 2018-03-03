@@ -13,7 +13,6 @@
 	
 ###  API
 
-##### Pass option to DatePicker
 
 
 | API         | DESC                                     |
@@ -29,25 +28,16 @@
 
 
 
-##### Not pass option to DatePicker
-| API    | DESC                                     | EXAMPLE                                  |
-|--------|------------------------------------------|------------------------------------------|
-| diff   | Compare two dates                        | diff(new Date(2018,1,18),new Date(2018,1,19)) => 1 |
-| format | Transform date object into formatted string | format(new Date(),'YYYY-MM-DD') =>2018-02-18 |
-| parse  | Transfor formatted string into date object | parse("2018-02-18","YYYY-MM-DD") =>Sun Feb 18 2018 00:00:00 GMT+0800 (中国标准时间) |
-
-    
 
                 
 ### USAGE
 ```typescript
 
-
         
       //es module
       import DatePicker from '/dist/datepicker.esm.js'
       
-      //common js
+      //cjs
       const DatePicker =require("/dist/datepicker.js");
       
       //umd
