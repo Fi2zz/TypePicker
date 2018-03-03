@@ -59,7 +59,6 @@
       //umd
       //<script src="/dist/datepicker.min.js"></script>
 
-
        const date = new Date();
        const dist = {
            year: date.getFullYear(),
@@ -81,17 +80,20 @@
             doubleSelect: true,
             views: 1
         });
+       
        //`update`  fired by click on date cell or DatePicker init function 
        datepicker.on("update", (result: any) => {
         // result contains two keys, `value` and `type`
         // value =>  selected dates
         // type  =>  two types => `init` and `selected`
-        // your code goes here
+        // place your logic  here
        });
        
        // `disabled`event fired by `setDisabled` and DatePicker init function
        datepicker.on("disabled", (result: any) => {
-       //set disabled state to HTML nodes
+            //set disabled state to HTML nodes
+            // result contains two keys, `dateList` and `nodeList`
+            
             const {dateList, nodeList} = result;
             for (let n = 0; n < nodeList.length; n++) {
                 let node = nodeList[n];
@@ -104,6 +106,7 @@
        // 'data' event fired by `setData` 
        datepicker.on("data", (result: any) => {
         //set HTML nodes states
+        // result contains two keys, `data:any` and `nodeList:Array<string>`
                 const data = result.data;
                 const nodeList = result.nodeList;
                 for (let i = 0; i < nodeList.length; i++) {
@@ -125,9 +128,12 @@
                     }
                 }
         });
+
        //tuple type,accept <string> and <Date>
        const selected=["2018-2-21",new Date()];
+       //use `setDates` to set init dates to DatePicker instance 
        datepicker.setDates(selected);
+
        // use `setDisabled` to set specified date or day to disabled,
        // `setDisabled` accept an object => {dates,days},
        // <tuple>dates,accept <Date> and  <string>
@@ -141,6 +147,7 @@
                 ],
                 days: [1, 5, 2, 6]
             });
+       
         // To display your data,like price info on date cell, 
         // use `setData` to pass data to `DatePicker` instance
         // `setData` function will dispatch `data` event
@@ -162,13 +169,14 @@
                     });
                     return source
               });
+       
        //set DatePicker's language
        //language options 
        const language={
                  days: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
                  months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
                  year: "" 
-       }
+       };
        datepicker.setLanguage(language)
        
        

@@ -887,16 +887,6 @@ var DatePicker = (function () {
         }
         this.init(option);
     }
-    DatePicker.prototype.update = function (result) {
-        var type = result.type, value = result.value;
-        if (type === 'selected') {
-            this.setDates(value);
-        }
-        if (type !== 'disabled' && type !== 'switch') {
-            this.emit("update", result);
-        }
-    };
-    
     DatePicker.prototype.emit = function (event, data) {
         return Observer.$emit(event, data);
     };
@@ -1188,8 +1178,18 @@ var DatePicker = (function () {
                     }
                 }
             }
-            _this.on("select", function (result) { return _this.update(result); });
-            _this.on('init', function (type) { return _this.update(_this.createDatePicker(type)); });
+            _this.on("select", function (result) {
+                var type = result.type, value = result.value;
+                if (type === 'selected') {
+                    _this.setDates(value);
+                }
+                if (type !== 'disabled') {
+                    _this.emit("update", result);
+                }
+            });
+            _this.on('init', function (type) {
+                _this.emit('select', _this.createDatePicker(type));
+            });
             _this.on('switch', function (size) {
                 var curr = {
                     year: _this.date.getFullYear(),
@@ -1198,7 +1198,7 @@ var DatePicker = (function () {
                 };
                 _this.date = new Date(curr.year, curr.month + size, curr.date);
                 _this.isInit = false;
-                _this.update(_this.createDatePicker('switch'));
+                _this.createDatePicker('switch');
             });
             _this.on('picker-handler', function () {
                 handlePickDate({

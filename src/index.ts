@@ -95,16 +95,6 @@ export default class DatePicker {
     private isInit: boolean = false;
     private inDates = (date: string) => this.dates.indexOf(date) >= 0;
 
-    private update(result: any) {
-        const {type, value} = result;
-        if (type === 'selected') {
-            this.setDates(value)
-        }
-
-        if (type !== 'disabled' && type !== 'switch') {
-            this.emit("update", result);
-        }
-    };
 
     private emit(event: string, data: any) {
         return Observer.$emit(event, data)
@@ -243,8 +233,6 @@ export default class DatePicker {
     }
 
     private createDatePicker(type: string) {
-
-
         this.element.innerHTML = new HTML({
             startDate: this.date,
             endDate: this.endDate,
@@ -411,8 +399,19 @@ export default class DatePicker {
                     }
                 }
             }
-            this.on("select", (result: any) => this.update(result));
-            this.on('init', (type) => this.update(this.createDatePicker(type)));
+            this.on("select", (result: any) => {
+                const {type, value} = result;
+                if (type === 'selected') {
+                    this.setDates(value);
+                }
+
+                if (type !== 'disabled') {
+                    this.emit("update", result);
+                }
+            });
+            this.on('init', (type) => {
+                this.emit('select', this.createDatePicker(type))
+            });
             this.on('switch', (size: number) => {
                 const curr = {
                     year: this.date.getFullYear(),
@@ -421,7 +420,7 @@ export default class DatePicker {
                 };
                 this.date = new Date(curr.year, curr.month + size, curr.date);
                 this.isInit = false;
-                this.update(this.createDatePicker('switch'));
+                this.createDatePicker('switch')
             });
             this.on('picker-handler', () => {
                 handlePickDate({
@@ -439,6 +438,7 @@ export default class DatePicker {
             clearNextTick(next)
         })
     };
+
     constructor(option: datePickerOptions) {
         if (option.from) {
             deprecatedWarn('option.from', 'use option.startDate');
