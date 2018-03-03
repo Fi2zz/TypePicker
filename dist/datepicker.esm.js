@@ -849,6 +849,9 @@ function getViews(view) {
         }
     }
 }
+function deprecatedWarn(key, instead) {
+    console.warn("[deprecated]" + key + " is deprecated " + (instead ? ',' + instead + ' instead' : ''));
+}
 var DatePicker = (function () {
     function DatePicker(option) {
         var _this = this;
@@ -874,6 +877,14 @@ var DatePicker = (function () {
         this.inDates = function (date) { return _this.dates.indexOf(date) >= 0; };
         this.format = function (date, format$$1) { return format(date, format$$1 ? format$$1 : _this.dateFormat); };
         this.parse = function (string, format$$1) { return parseFormatted(string, format$$1 ? format$$1 : _this.dateFormat); };
+        if (option.from) {
+            deprecatedWarn('option.from', 'use option.startDate');
+            delete option.from;
+        }
+        if (option.to) {
+            deprecatedWarn('option.to', 'use option.endDate');
+            delete option.to;
+        }
         this.init(option);
     }
     DatePicker.prototype.update = function (result) {
@@ -1112,8 +1123,8 @@ var DatePicker = (function () {
         }
         this.dateFormat = option.format;
         this.views = getViews(option.views);
-        this.startDate = isDate(option.from) ? option.from : new Date();
-        this.endDate = isDate(option.to) ? option.to : new Date(this.startDate.getFullYear(), this.startDate.getMonth() + 6, 0);
+        this.startDate = isDate(option.startDate) && option.startDate || new Date();
+        this.endDate = isDate(option.endDate) && option.endDate || new Date(this.startDate.getFullYear(), this.startDate.getMonth() + 6, 0);
         this.date = this.startDate;
         this.limit = this.double ? (isNumber(option.limit) ? option.limit : 2) : 1;
         this.element = parseEl(option.el);
@@ -1125,14 +1136,15 @@ var DatePicker = (function () {
         var next = nextTick(function () {
             _this.isInit = _this.selected.length > 0;
             _this.bindData = Object.keys(_this.data).length > 0;
-            if (!isDate(option.from) || !isDate(option.to)) {
+            if (!isDate(option.startDate) || !isDate(option.endDate)) {
                 _this.infiniteMode = true;
                 if (_this.bindData) {
-                    warn('init', "infiniteMode is on, please provide [from] and [to] while binding data to datepicker  ");
+                    warn('init', "infiniteMode is on, please provide [startDate] and [endDate] while binding data to" +
+                        " DatePicker  ");
                 }
             }
             if (!_this.bindData) {
-                if (isDate(option.from) && isDate(option.to)) {
+                if (isDate(option.startDate) && isDate(option.startDate)) {
                     var gap$$1 = diff(_this.endDate, currDate, "days");
                     var year = currDate.getFullYear();
                     var month = currDate.getMonth();

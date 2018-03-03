@@ -1,11 +1,11 @@
 
 ### OPTIONS
 
-| OPTION       | TYPE               | DESC                                     | DEFAULT VALUE  |
+| OPTION       | TYPE               | DESC                                     | DEFAULT VALUE         |
 |--------------|--------------------|------------------------------------------|-----------------------|
 | el           | string,HTMLElement | element to mount DatePcker               |                       |
-| from         | Date               | Start date of DatePicker                 | new Date              |
-| to           | Date               | End date of DatePicker                   | new Date() + 6 months |
+| startDate    | Date               | Start date of DatePicker                 | new Date              |
+| endDate      | Date               | End date of DatePicker                   | new Date() + 6 months |
 | doubleSelect | boolean            | Enable pick two dates                    | false                 |
 | limit        | number             | Limitation between two dates while `doubleSelect` is on |                       |
 | views        | number,string      | Display views of DatePicker              | auto,1,2              |
@@ -57,8 +57,8 @@
        
        datepicker = <any>new DatePicker({
             el: document.getElementById("datepicker"),
-            to,
-            from,
+            endDate:to,
+            startDate:from,
             limit: 7,
             format: dateFormat,
             doubleSelect: true,

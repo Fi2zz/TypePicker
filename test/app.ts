@@ -12,6 +12,7 @@ const dateFormat = 'YYYY-M-D';
 const activeLanguageCode: string = "en-us";
 const formControl = <HTMLInputElement> document.getElementById("date-value");
 
+console.log(DatePicker);
 function createDatePicker(create: boolean = true, selected?: Array<any>) {
 
     let datepicker = null;
@@ -22,12 +23,12 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
             date: date.getDate()
         };
         const currDate = new Date(dist.year, dist.month, dist.date);
-        const from = new Date(dist.year, dist.month, dist.date);
-        const to = new Date(dist.year, dist.month + 7, dist.date);
+        const startDate = new Date(dist.year, dist.month, dist.date);
+        const endDate = new Date(dist.year, dist.month + 7, dist.date);
         datepicker = <any>new DatePicker({
             el: document.getElementById("datepicker"),
-            to,
-            from,
+            startDate,
+            endDate,
             limit: 7,
             format: dateFormat,
             doubleSelect: true,
@@ -122,7 +123,7 @@ function popupHandler(visible: boolean) {
 }
 
 function init(document: Document) {
-    createDatePicker(true, ['2018-3-7','2018-3-14',]);
+    createDatePicker(true, ['2018-3-7', '2018-3-14',]);
     document.addEventListener("click", (e) => {
         const target = <HTMLElement> e.target;
         if (target) {

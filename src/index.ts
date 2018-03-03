@@ -22,13 +22,10 @@ import HTML from './datepicker.template'
 import handlePickDate from './datepicer.picker'
 import {parseFormatted, format as formatter} from "./datepicker.formatter"
 import {setInitRange} from "./datepicker.ranger";
-
-
 const getDisableDates = (startDate: Date, endDate: Date, dateFormat: string, should: boolean) => {
     const startMonthDates = startDate.getDate();
     const temp: any = {};
     if (should) {
-
         //处理开始日期前的日期
         for (let i = 1; i <= startMonthDates - 1; i++) {
             let date = new Date(startDate.getFullYear(), startDate.getMonth(), startMonthDates - i);
@@ -71,8 +68,9 @@ function getViews(view: number | string) {
     }
 }
 
-// function validate
-
+function deprecatedWarn(key: string, instead?: string) {
+    console.warn(`[deprecated]${key} is deprecated ${instead ? ',' + instead + ' instead' : ''}`)
+}
 
 export default class DatePicker {
     private dateFormat: string;
@@ -255,8 +253,6 @@ export default class DatePicker {
             dateFormatter: this.format,
             views: this.views
         }).template;
-
-
         const rangeOption = {
             collector: this.element,
             collection: this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
@@ -268,8 +264,6 @@ export default class DatePicker {
             disables: this.disables,
             isInit: this.isInit,
         };
-
-
         this.selected = setInitRange(rangeOption);
         if (this.views === 1) {
             if (this.double && this.selected.length >= 2) {
@@ -337,18 +331,17 @@ export default class DatePicker {
 
     private init(option: any) {
 
-        // this.temp ={};
-        const currDate = new Date();
 
+        const currDate = new Date();
         if (option.doubleSelect) {
             this.double = option.doubleSelect
         }
         this.dateFormat = option.format;
         this.views = getViews(option.views);
         //开始日期
-        this.startDate = isDate(option.from) ? option.from : new Date();
+        this.startDate = isDate(option.startDate) && option.startDate || new Date();
         //结束日期
-        this.endDate = isDate(option.to) ? option.to : new Date(this.startDate.getFullYear(), this.startDate.getMonth() + 6, 0);
+        this.endDate = isDate(option.endDate) && option.endDate || new Date(this.startDate.getFullYear(), this.startDate.getMonth() + 6, 0);
         //初始视图所在日期
         this.date = this.startDate;
         //選擇日期區間最大限制
@@ -364,14 +357,15 @@ export default class DatePicker {
 
             this.isInit = this.selected.length > 0;
             this.bindData = Object.keys(this.data).length > 0;
-            if (!isDate(option.from) || !isDate(option.to)) {
+            if (!isDate(option.startDate) || !isDate(option.endDate)) {
                 this.infiniteMode = true;
                 if (this.bindData) {
-                    warn('init', "infiniteMode is on, please provide [from] and [to] while binding data to datepicker  ")
+                    warn('init', "infiniteMode is on, please provide [startDate] and [endDate] while binding data to" +
+                        " DatePicker  ")
                 }
             }
             if (!this.bindData) {
-                if (isDate(option.from) && isDate(option.to)) {
+                if (isDate(option.startDate) && isDate(option.startDate)) {
                     const gap = diff(this.endDate, currDate, "days");
                     const year = currDate.getFullYear();
                     const month = currDate.getMonth();
@@ -385,6 +379,7 @@ export default class DatePicker {
                     this.dates = dates;
                 }
             }
+
             //如果是infiniteMode,则不自动把过期日期设置为disabled
             const disableBeforeStartDateAndAfterEndDate = getDisableDates(this.startDate, this.endDate, this.dateFormat, !this.infiniteMode);
             //合并外部传入的disabled dates & start date & end date
@@ -394,8 +389,6 @@ export default class DatePicker {
             if (disableList.length > 0) {
                 const datesList = this.dates;
                 const newDateList = [];
-
-
                 const removed = removeDisableDates(disableList, this.data);
                 if (Object.keys(removed).length > 0) {
                     for (let key in removed) {
@@ -447,7 +440,15 @@ export default class DatePicker {
         })
     };
 
-    constructor(option?: datePickerOptions) {
+    constructor(option: datePickerOptions) {
+        if (option.from) {
+            deprecatedWarn('option.from', 'use option.startDate');
+            delete  option.from
+        }
+        if (option.to) {
+            deprecatedWarn('option.to', 'use option.endDate');
+            delete  option.to
+        }
         this.init(option);
     }
 }

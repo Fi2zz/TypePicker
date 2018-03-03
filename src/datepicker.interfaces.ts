@@ -6,7 +6,9 @@ export interface datePickerOptions {
     format?: string;
     doubleSelect?: boolean;
     views?: number | string,
-    disables?: any
+    disables?: any,
+    startDate?: Date,
+    endDate?: Date
 }
 
 
