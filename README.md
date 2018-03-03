@@ -55,7 +55,7 @@
        const currDate = new Date(dist.year, dist.month, dist.date);
        const dateFormat = 'YYYY-M-D';
        
-         datepicker = <any>new DatePicker({
+       datepicker = <any>new DatePicker({
             el: document.getElementById("datepicker"),
             to,
             from,
@@ -64,8 +64,7 @@
             doubleSelect: true,
             views: 1
         });
-        if (datepicker) {
-            datepicker.on("update", (result: any) => {
+       datepicker.on("update", (result: any) => {
                 //`update`  fired by select dates
                 //result contains two keys
                 // value =>  selected dates
@@ -73,7 +72,7 @@
                 // your code goes here
                 
             });
-            datepicker.on("disabled", (result: any) => {
+       datepicker.on("disabled", (result: any) => {
                 
                 // `disabled`event fired by `setDisabled`
                 //set disabled state to HTML nodes
@@ -88,7 +87,7 @@
                 }
                 
             });
-            datepicker.on("data", (result: any) => {
+       datepicker.on("data", (result: any) => {
                 // 'data' event fired by `setData` 
                 //set HTML nodes 
             
@@ -113,14 +112,16 @@
                     }
                 }
             });
-            
-            //tuple type,accept <string> and <Date>
-            const selected=["2018-2-21",new Date()];
-            datepicker.setDates(selected);
-            //disabled dates, 
-            // dates<tuple>,accept <Date> and  <string>
-            // days<Array<number>> accept 0,1,2,3,4,5,6
-            datepicker.setDisabled({
+       //tuple type,accept <string> and <Date>
+       const selected=["2018-2-21",new Date()];
+       datepicker.setDates(selected);
+       //set disabled dates, 
+       // if you want to set specified date or day to disabled,
+       // use `setDisabled`,
+       // `setDisabled` accept an object => {dates,days},
+       // <tuple>dates,accept <Date> and  <string>
+       // <Array<number>>days accept 0,1,2,3,4,5,6
+       datepicker.setDisabled({
                 dates: [
                     "2018-2-18",
                     "2018-2-19",
@@ -129,8 +130,13 @@
                 ],
                 days: [1, 5, 2, 6]
             });
-            //set data to DatePicker
-            datepicker.setData(() => {
+        //set data to DatePicker
+        // if you want to display your data,like price info on
+        // date cell, you need to use `setData` to passing your 
+        // data to `DatePicker` instance,then listen to `data` event
+        // to do what you want to do
+         
+       datepicker.setData(() => {
                     
                     
                     /*data accept Object like
@@ -149,13 +155,12 @@
               });
             //set DatePicker's language
             //language options 
-           const language={
+       const language={
                  days: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
                  months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
                  year: "" 
             }
-            datepicker.setLanguage(language)
-        }
+       datepicker.setLanguage(language)
        
        
        
