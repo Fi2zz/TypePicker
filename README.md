@@ -15,16 +15,16 @@
 
 
 
-| API         | DESC                                     |
-|-------------|------------------------------------------|
-| setDates    | Set init dates to DatePicker,more detail see below |
-| setLanguage | Set Datapicker's language,more detail see below |
-| setData     | Set data to DatePicker,more detail see below |
-| setDisabled | Set disable dates to DataPicker,more detail see below |
-| parse       | Transform date string into date object   |
-| format      | Transform date object into string       |
-| on          | Event listener                           |
-| diff        | Diff between two dates                   |
+| API                  | PARAMS                                   | DESC                                     |
+|----------------------|------------------------------------------|------------------------------------------|
+| setDates(param)      | <tupe>param= [string,Date]               | Set init dates to DatePicker,more detail see below |
+| setLanguage(param)   | <any>param={<br>  days:Array<string>,<br> months:Array<string>,<br> year?:string<br>} | Set Datapicker's language,more detail see below |
+| setData(param)       | <any>param={<br>    dateString:value,<br><br>} | Set data to DatePicker,more detail see below |
+| setDisabled(param)   | <any>param={<br> days?:Array<number>,<br>dates?:tuple[string,Date]<br><br>} | Set disable dates to DataPicker,more detail see below |
+| parse(string,format) | <string>string=2018-1-31,<br><string>format='YYYY-M-D' | Transform date string into date object   |
+| format(date,format)  | <Date>date,<br><string>format='YYYY-M-D' | Transform date object into string        |
+| on(event,fn)         | <string>event,<br><Function>fn           | Event listener                           |
+| diff                 |                                          | Diff between two dates                   |
 
 
 

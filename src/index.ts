@@ -439,7 +439,6 @@ export default class DatePicker {
             clearNextTick(next)
         })
     };
-
     constructor(option: datePickerOptions) {
         if (option.from) {
             deprecatedWarn('option.from', 'use option.startDate');
