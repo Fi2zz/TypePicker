@@ -1,3 +1,7 @@
+#tyDatePicker
+
+datepicker built with typescript
+
 
 ## OPTIONS
 
@@ -72,6 +76,8 @@
 
     //umd
     <script src="/dist/datepicker.min.js"></script>
+    
+    
       
     const date = new Date();
     const dist = {
@@ -85,7 +91,7 @@
     const currDate = new Date(dist.year, dist.month, dist.date);
        
     //setup DatePicker instance
-    const app:any = new DatePicker({
+    const app = new DatePicker({
             el: document.getElementById("datepicker"),
             endDate:to,
             startDate:from,
@@ -96,7 +102,7 @@
     });
        
        //`update`  fired by click on date cell or DatePicker init function 
-    app.on("update", (result: any) => {
+    app.on("update", (result) => {
         // result contains two keys, `value` and `type`
         // value =>  selected dates
         // type  =>  two types => `init` and `selected`
@@ -104,7 +110,7 @@
     });
        
     // `disabled`event fired by `setDisabled` and DatePicker init function
-    app.on("disabled", (result: any) => {
+    app.on("disabled", (result) => {
         // result contains two keys, `dateList` and `nodeList`
         const {dateList, nodeList} = result;
         for (let n = 0; n < nodeList.length; n++) {
@@ -116,7 +122,7 @@
     });
        
     // 'data' event fired by `setData` 
-    app.on("data", (result: any) => {
+    app.on("data", (result) => {
         //set HTML nodes states
         // result contains two keys, `data:any` and `nodeList:Array<string>`
                 const data = result.data;

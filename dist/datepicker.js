@@ -625,6 +625,7 @@ var handlePickDate = function (options) {
     var _loop_1 = function (i) {
         var item = collection[i];
         item.addEventListener("click", function () {
+            var subCache = selected;
             var type = 'selected';
             var date = attr(item, "data-date");
             var index = selected.indexOf(date);
@@ -678,6 +679,7 @@ var handlePickDate = function (options) {
                     start: getFront(handled.selected),
                     end: getPeek(handled.selected)
                 };
+                var peek = getPeek(handled.selected);
                 var diffAfterHandled = gap(parseFormatted(afterHandled.start, dateFormat), parseFormatted(afterHandled.end, dateFormat));
                 var dates = handled.dates;
                 var datesList = [];
@@ -692,14 +694,18 @@ var handlePickDate = function (options) {
                     }
                 }
                 if (notInDatesList.length > 0) {
-                    handled.selected.shift();
-                    afterHandled.start = afterHandled.end;
+                    if (handled.selected.length >= 2) {
+                        inDates(peek) ? handled.selected.shift() : handled.selected.pop();
+                    }
+                    if (inDates(afterHandled.end)) {
+                        afterHandled.start = afterHandled.end;
+                    }
                     afterHandled.end = null;
                 }
                 if (handled.selected.length <= 1) {
-                    if (!inDates(getPeek(handled.selected))) {
+                    if (!inDates(peek)) {
+                        handled.selected = subCache;
                         type = 'disabled';
-                        handled.selected = cache;
                     }
                 }
                 doublePick(element, afterHandled.start, afterHandled.end, diffAfterHandled, diffAfterHandled > limit || diffAfterHandled < 0);
@@ -1169,8 +1175,8 @@ var DatePicker = (function () {
         }
         this.dateFormat = option.format;
         this.views = getViews(option.views);
-        this.startDate = isDate(option.startDate) && option.startDate || new Date();
-        this.endDate = isDate(option.endDate) && option.endDate || new Date(this.startDate.getFullYear(), this.startDate.getMonth() + 6, 0);
+        this.startDate = isDate(option.startDate) ? option.startDate : new Date();
+        this.endDate = isDate(option.endDate) ? option.endDate : new Date(this.startDate.getFullYear(), this.startDate.getMonth() + 6, 0);
         this.date = this.startDate;
         this.limit = this.double ? (isNumber(option.limit) ? option.limit : 2) : 1;
         this.element = parseEl(option.el);
@@ -1178,54 +1184,58 @@ var DatePicker = (function () {
             warn('init', "invalid selector,current selector " + this.element);
             return false;
         }
-        var className = [
-            this.element.className,
-            "calendar",
-            "calendar-" + (this.views === 2 ? "double-views" : this.views === 1 ? "single-view" : "flat-view")
-        ];
-        this.element.className = className.join(" ");
+        this.element.className = this.element.className + " calendar calendar-" + (this.views === 2 ? "double-views" : this.views === 1 ? "single-view" : "flat-view");
         var next = nextTick(function () {
             _this.isInit = _this.selected.length > 0;
+            _this.bindData = Object.keys(_this.data).length > 0;
             if (!isDate(option.startDate) || !isDate(option.endDate)) {
                 _this.infiniteMode = true;
                 if (_this.bindData) {
-                    warn('init', "infiniteMode is on, please provide [startDate] and [endDate] while binding data to" +
-                        " DatePicker  ");
+                    warn('init', "infiniteMode is on, please provide [from] and [to] while binding data to datepicker  ");
                 }
             }
             if (!_this.bindData) {
-                if (isDate(option.startDate) && isDate(option.startDate)) {
+                if (isDate(option.startDate) && isDate(option.end)) {
                     var gap$$1 = diff(_this.endDate, currDate, "days");
                     var year = currDate.getFullYear();
                     var month = currDate.getMonth();
                     var date = currDate.getDate();
+                    var dates = [];
                     for (var i = 0; i < gap$$1; i++) {
                         var item = new Date(year, month, date + i);
                         var formatted = _this.format(item).value;
-                        _this.data[formatted] = formatted;
+                        dates.push(formatted);
                     }
+                    _this.dates = dates;
                 }
             }
             var disableBeforeStartDateAndAfterEndDate = getDisableDates(_this.startDate, _this.endDate, _this.dateFormat, !_this.infiniteMode);
             var disables = merge(disableBeforeStartDateAndAfterEndDate, _this.disables);
             var disableList = Object.keys(disables);
             if (disableList.length > 0) {
+                var datesList = _this.dates;
+                var newDateList = [];
                 var removed = removeDisableDates(disableList, _this.data);
                 if (Object.keys(removed).length > 0) {
                     for (var key in removed) {
                         delete _this.data[key];
                     }
                 }
+                for (var _i = 0, datesList_1 = datesList; _i < datesList_1.length; _i++) {
+                    var date = datesList_1[_i];
+                    if (!removed[date]) {
+                        newDateList.push(date);
+                    }
+                }
+                _this.dates = newDateList;
             }
-            _this.dates = Object.keys(_this.data).sort(function (a, b) { return +_this.parse(a) - _this.parse(b); });
             if (_this.views === 'auto') {
                 if (_this.selected.length > 0) {
                     _this.date = _this.parse(_this.selected[0]);
                 }
                 else {
-                    var dates = Object.keys(_this.data);
-                    if (dates.length > 0) {
-                        _this.date = _this.parse(dates[0]);
+                    if (_this.dates.length > 0) {
+                        _this.date = _this.parse(_this.dates[0]);
                     }
                 }
             }
@@ -1234,7 +1244,7 @@ var DatePicker = (function () {
                 if (type === 'selected') {
                     _this.setDates(value);
                 }
-                if (type !== 'disabled') {
+                if (type !== 'disabled' && type !== 'switch') {
                     _this.emit("update", result);
                 }
             });
@@ -1256,6 +1266,16 @@ var DatePicker = (function () {
                 _this.createDatePicker();
             });
             _this.on('picker-handler', function () {
+                handlePickDate({
+                    dateFormat: _this.dateFormat,
+                    element: _this.element,
+                    selected: _this.selected,
+                    isDouble: _this.double,
+                    limit: _this.limit,
+                    bindData: _this.bindData,
+                    emitter: _this.emit,
+                    inDates: _this.inDates,
+                });
             });
             _this.emit('init', 'init');
             clearNextTick(next);
