@@ -16,6 +16,7 @@
 
 ```typescript
 
+
    setDates([dates]:tuple);
    //Set  dates to DatePicker
    //dates accept <string> and <Date>
@@ -35,8 +36,10 @@
    //Set disabled dates to DataPicker
    //dates =>dates accept <string> and <Date>,  all dates in [dates] will be disabled 
    //days => days accept number of [0~6],   all days in [days] will be disabled
-   //from => from accept <string> or <Date>, all dates after [from] date will be disabled,eg: from = 2018-3-31 => disabled from 2018-4-1  
-   //to   => to accept <string> or <Date> all dates before [to] date will be disabled, eg: to =2018-3-4 => all dates before 2018-3-5 will be disabled
+   //from => from accept <string> or <Date>, all dates after [from] date will be disabled,
+   //        eg: from = 2018-3-31 => disabled from 2018-4-1  
+   //to   => to accept <string> or <Date> all dates before [to] date will be disabled, 
+   //        eg: to =2018-3-4 => all dates before 2018-3-5 will be disabled
    
    parse(formattedDate:string,dateFormat:string)
    //Transform date string into date object,return Date object
