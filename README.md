@@ -27,10 +27,10 @@
    //set data to DatePicker
    
    setDisabled({
-        days?:Array<number>,
-        dates?:tuple<string,Date>,
-        from?:Date|string,
-        to?:Date|string
+        days?:Array<number>[5],
+        dates?:tuple<string,Date>["2018-4-12",new Date(2018,3,5)],
+        from?:<Date|string>new Date(2018,3,0),
+        to?:<Date|string>"2018-3-3"
     })
    //Set disabled dates to DataPicker
    //from => from [from] date will be set disabled,eg: from = 2018-3-31 => disabled from 2018-4-1  
@@ -38,12 +38,17 @@
 
    parse(formattedDate:string,dateFormat:string)
    //Transform date string into date object,return Date object
+   //eg: formattedDate ='2018-3-4',format='YYYY-M-D" =>  new Date(2018,2,4)
 
    format(date:Date,format:string)
    //Transform date object into string,return string  
-   
+   //eg: date =new Date(),format='YYYY-MM-DD' => 2018-03-04
+
    on(event:string,fn:Function)
    //Event listener
+   //eg: datePicker.on("event",(result)=>{ 
+                //your logic
+   //    })
    
    diff(date1:Date,date2:Date) 
    // Diff between two dates,return  number type 
