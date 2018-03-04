@@ -23,7 +23,7 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
         };
         const currDate = new Date(dist.year, dist.month, dist.date);
         const startDate = new Date(dist.year, dist.month, dist.date);
-        const endDate = new Date(dist.year, dist.month + 7, dist.date);
+        const endDate = new Date(dist.year, dist.month + 20, dist.date);
         app = new DatePicker({
             el: document.getElementById("datepicker"),
             startDate,
@@ -94,12 +94,12 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
                     "2018-3-20",
                     "2018-3-19",
                 ],
-                from: new Date(2018, 6, 1),
-                to: new Date(2018, 4, 15)
+                // from: new Date(2018, 6, 1),
+                // to: new Date(2018, 4, 15)
                 // days: [1, 5, 2, 6]
             });
 
-            const bindData = true;
+            const bindData = !true;
             if (bindData) {
                 app.setData(() => {
                     Object.keys(source).forEach(date => {

@@ -79,7 +79,6 @@ export default class DatePicker {
     private date: Date = new Date();
     private startDate: Date = null;
     private endDate: Date = null;
-    private dates: string[] = [];
     private selected: string[] = [];
     private data: any = {};
     private disables: any = {};
@@ -93,7 +92,14 @@ export default class DatePicker {
     private bindData: boolean = false;
     private infiniteMode: boolean = false;
     private isInit: boolean = false;
-    private inDates = (date: string) => this.dates.indexOf(date) >= 0;
+    private inDates = (date: string) => {
+
+        let dates = Object.keys(this.data).sort((a: string, b: string) => this.parse(a) - this.parse(b));
+
+        return dates.indexOf(date) >= 0
+
+
+    };
 
 
     private emit(event: string, data: any) {
@@ -254,7 +260,7 @@ export default class DatePicker {
             const result = cb();
             if (isObject(result) && Object.keys(result).length > 0) {
                 this.data = result;
-                this.dates = Object.keys(result).sort((a: string, b: string) => this.parse(a) - this.parse(b));
+                this.bindData = true;
             } else {
                 warn("setData", `you are passing wrong type of data to DatePicker,data should be like :
                     {
@@ -326,7 +332,8 @@ export default class DatePicker {
                 }
             }
         }
-        if (Object.keys(this.data).length > 0) {
+
+        if (this.bindData) {
             this.emit("data", {
                 data: this.data,
                 nodeList: this.element.querySelectorAll(".calendar-cell")
@@ -365,7 +372,7 @@ export default class DatePicker {
         this.element.className = `${this.element.className} calendar calendar-${this.views === 2 ? "double-views" : this.views === 1 ? "single-view" : "flat-view"}`;
         const next = nextTick(() => {
             this.isInit = this.selected.length > 0;
-            this.bindData = Object.keys(this.data).length > 0;
+
             if (!isDate(option.startDate) || !isDate(option.endDate)) {
                 this.infiniteMode = true;
                 if (this.bindData) {
@@ -379,14 +386,12 @@ export default class DatePicker {
                     const year = currDate.getFullYear();
                     const month = currDate.getMonth();
                     const date = currDate.getDate();
-                    let dates = [];
-                    const dateMap = {};
                     for (let i = 0; i < gap; i++) {
                         let item = <Date>new Date(year, month, date + i);
                         let formatted = this.format(item).value;
-                        dates.push(formatted)
+                        this.data[formatted] = formatted;
                     }
-                    this.dates = dates;
+
                 }
             }
             //如果是infiniteMode,则不自动把过期日期设置为disabled
@@ -395,27 +400,21 @@ export default class DatePicker {
             const disables = merge(disableBeforeStartDateAndAfterEndDate, this.disables);
             const disableList = Object.keys(disables);
             if (disableList.length > 0) {
-                const datesList = this.dates;
-                const newDateList = [];
                 const removed = removeDisableDates(disableList, this.data);
                 if (Object.keys(removed).length > 0) {
                     for (let key in removed) {
                         delete this.data[key]
                     }
                 }
-                for (let date of datesList) {
-                    if (!removed[date]) {
-                        newDateList.push(date)
-                    }
-                }
-                this.dates = newDateList
             }
             if (this.views === 'auto') {
                 if (this.selected.length > 0) {
+
                     this.date = this.parse(this.selected[0])
                 } else {
-                    if (this.dates.length > 0) {
-                        this.date = this.parse(this.dates[0])
+                    let dates = Object.keys(this.data);
+                    if (dates.length > 0) {
+                        this.date = this.parse(dates[0])
                     }
                 }
             }
