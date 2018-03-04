@@ -93,23 +93,15 @@ export default class DatePicker {
     private infiniteMode: boolean = false;
     private isInit: boolean = false;
     private inDates = (date: string) => {
-
         let dates = Object.keys(this.data).sort((a: string, b: string) => this.parse(a) - this.parse(b));
-
         return dates.indexOf(date) >= 0
-
-
     };
-
-
     private emit(event: string, data: any) {
         return Observer.$emit(event, data)
     };
-
     public on(ev: string, cb: Function) {
         return Observer.$on(ev, cb)
     };
-
     public format: Function = (date: Date, format?: string) => formatter(date, format ? format : this.dateFormat);
     public parse: Function = (string: string, format?: string) => parseFormatted(string, format ? format : this.dateFormat);
     public setDates(dates: Array<any>) {
