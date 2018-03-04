@@ -29,7 +29,6 @@ export default function (options: pickerHandler) {
     const collection = element.querySelectorAll(".calendar-date-cell");
     const cache = selected;
 
-    console.log(options)
     for (let i = 0; i < collection.length; i++) {
         const item = collection[i];
         item.addEventListener("click", () => {
@@ -47,7 +46,6 @@ export default function (options: pickerHandler) {
             const prevDateString = format(prevDate, dateFormat).value;
             const prevDateIsValid = inDates(prevDateString);
 
-
             if (!date
                 || (selected.length <= 0 && !inDates(date) && bindData)
                 || (isDouble && !prevDateIsValid && !inDates(date))
@@ -60,7 +58,6 @@ export default function (options: pickerHandler) {
             //但是用户实际想选择的是 2018-02-04~2018-02-05，
             //此时 用户再次选择 2018-02-04，其他日期将被删除
             if (index >= 0) {
-
                 selected = inDates(getPeek(selected)) ? [getPeek(selected)] : [getFront(selected)]
             }
             //双选，但选择的日期数量大于2，或单选
@@ -148,7 +145,6 @@ export default function (options: pickerHandler) {
                     }
                 }
 
-                // console.log(handled)
                 selected = handled.selected;
             }
             emitter('select', {

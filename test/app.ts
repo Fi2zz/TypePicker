@@ -125,7 +125,7 @@ function popupHandler(visible: boolean) {
 }
 
 function init(document: Document) {
-    createDatePicker(true, []);
+    createDatePicker(true, ['2018-3-7', '2018-3-14',]);
     document.addEventListener("click", (e) => {
         const target = <HTMLElement>e.target;
         if (target) {

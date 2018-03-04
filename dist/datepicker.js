@@ -622,7 +622,6 @@ var handlePickDate = function (options) {
     var element = options.element, selected = options.selected, isDouble = options.isDouble, limit = options.limit, inDates = options.inDates, bindData = options.bindData, dateFormat = options.dateFormat, emitter = options.emitter;
     var collection = element.querySelectorAll(".calendar-date-cell");
     var cache = selected;
-    console.log(options);
     var _loop_1 = function (i) {
         var item = collection[i];
         item.addEventListener("click", function () {
