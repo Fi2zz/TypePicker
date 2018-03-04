@@ -1,4 +1,4 @@
-#tyDatePicker
+# tyDatePicker
 
 datepicker built with typescript
 
