@@ -28,8 +28,9 @@ datepicker built with typescript
    setLanguage(language:any);
    //set DatePicker's language
    
-   setData(data:any)
+   setData(callback)
    //set data to DatePicker
+   //more detail see [USAGE]
    
    setDisabled({
         days?:Array<number>[5],
