@@ -21,6 +21,7 @@ datepicker built with typescript
 ```typescript
 
 
+
    setDates([dates]:tuple);
    //Set  dates to DatePicker
    //dates accept <string> and <Date>
@@ -62,6 +63,8 @@ datepicker built with typescript
    
    diff(date1:Date,date2:Date) 
    // Diff between two dates,return  number type 
+    
+    
     
 ```
 
