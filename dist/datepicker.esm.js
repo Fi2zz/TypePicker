@@ -616,9 +616,11 @@ var handlePickDate = function (options) {
     var element = options.element, selected = options.selected, isDouble = options.isDouble, limit = options.limit, inDates = options.inDates, bindData = options.bindData, dateFormat = options.dateFormat, emitter = options.emitter;
     var collection = element.querySelectorAll(".calendar-date-cell");
     var cache = selected;
+    console.log(options);
     var _loop_1 = function (i) {
         var item = collection[i];
         item.addEventListener("click", function () {
+            var type = 'selected';
             var date = attr(item, "data-date");
             var index = selected.indexOf(date);
             var now = parseFormatted(date, dateFormat);
@@ -689,19 +691,27 @@ var handlePickDate = function (options) {
                     afterHandled.start = afterHandled.end;
                     afterHandled.end = null;
                 }
-                doublePick(element, afterHandled.start, afterHandled.end, diffAfterHandled, diffAfterHandled > limit || diffAfterHandled < 0);
-                if (bindData) {
-                    if (notInDatesList.length <= 0) {
-                        setRange(datesList, element, dates.length <= 0);
+                if (handled.selected.length <= 1) {
+                    if (!inDates(getPeek(handled.selected))) {
+                        type = 'disabled';
+                        handled.selected = cache;
                     }
                 }
-                else {
-                    setRange(datesList, element, dates.length <= 0);
+                doublePick(element, afterHandled.start, afterHandled.end, diffAfterHandled, diffAfterHandled > limit || diffAfterHandled < 0);
+                if (type !== 'disabled') {
+                    if (bindData) {
+                        if (notInDatesList.length <= 0) {
+                            setRange(datesList, element, dates.length <= 0);
+                        }
+                    }
+                    else {
+                        setRange(datesList, element, dates.length <= 0);
+                    }
                 }
                 selected = handled.selected;
             }
             emitter('select', {
-                type: "selected",
+                type: type,
                 value: selected
             });
         });
@@ -855,6 +865,7 @@ function deprecatedWarn(key, instead) {
 var DatePicker = (function () {
     function DatePicker(option) {
         var _this = this;
+        this.dates = [];
         this.limit = 1;
         this.views = 1;
         this.date = new Date();
@@ -874,8 +885,7 @@ var DatePicker = (function () {
         this.infiniteMode = false;
         this.isInit = false;
         this.inDates = function (date) {
-            var dates = Object.keys(_this.data).sort(function (a, b) { return _this.parse(a) - _this.parse(b); });
-            return dates.indexOf(date) >= 0;
+            return _this.dates.indexOf(date) >= 0;
         };
         this.format = function (date, format$$1) { return format(date, format$$1 ? format$$1 : _this.dateFormat); };
         this.parse = function (string, format$$1) { return parseFormatted(string, format$$1 ? format$$1 : _this.dateFormat); };
@@ -1044,10 +1054,12 @@ var DatePicker = (function () {
     };
     
     DatePicker.prototype.setData = function (cb) {
+        var _this = this;
         if (isFunction(cb)) {
             var result = cb();
             if (isObject(result) && Object.keys(result).length > 0) {
                 this.data = result;
+                this.dates = Object.keys(result).sort(function (a, b) { return +_this.parse(a) - _this.parse(b); });
                 this.bindData = true;
             }
             else {
@@ -1059,7 +1071,7 @@ var DatePicker = (function () {
     DatePicker.prototype.diff = function (d1, d2) {
         return diff(d1, d2, "days");
     };
-    DatePicker.prototype.createDatePicker = function (type) {
+    DatePicker.prototype.createDatePicker = function () {
         var _this = this;
         this.element.innerHTML = new HTML({
             startDate: this.date,
@@ -1069,6 +1081,18 @@ var DatePicker = (function () {
             dateFormatter: this.format,
             views: this.views
         }).template;
+        var rangeOption = {
+            collector: this.element,
+            collection: this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
+            data: this.double ? this.selected : [this.format(this.date).value],
+            isDouble: this.double,
+            parse: this.parse,
+            format: this.format,
+            inDates: this.inDates,
+            disables: this.disables,
+            isInit: this.isInit,
+        };
+        this.selected = setInitRange(rangeOption);
         if (this.views === 1) {
             if (this.double && this.selected.length >= 2) {
                 var start = this.selected[0];
@@ -1078,10 +1102,6 @@ var DatePicker = (function () {
                 }
             }
         }
-        var updateEventData = {
-            type: type,
-            value: this.selected
-        };
         var prev = this.element.querySelector(".calendar-action-prev");
         var next = this.element.querySelector(".calendar-action-next");
         if (prev && next) {
@@ -1094,25 +1114,21 @@ var DatePicker = (function () {
                 if (endGap > 1) {
                     next.addEventListener("click", function () {
                         _this.emit('switch', 1);
-                        removeClass(prev, "disabled");
-                        removeClass(prev, "calendar-action-disabled");
+                        removeClass(prev, "disabled calendar-action-disabled");
                     });
                 }
                 else {
-                    addClass(next, "disabled");
-                    addClass(next, "calendar-action-disabled");
+                    addClass(next, "disabled calendar-action-disabled");
                 }
                 var startGap = diff(this.date, this.startDate);
                 if (startGap >= 1) {
                     prev.addEventListener("click", function () {
                         _this.emit('switch', -1);
-                        removeClass(next, "disabled");
-                        removeClass(next, "calendar-action-disabled");
+                        removeClass(next, "disabled calendar-action-disabled");
                     });
                 }
                 else {
-                    addClass(prev, "disabled");
-                    addClass(prev, "calendar-action-disabled");
+                    addClass(prev, "disabled calendar-action-disabled");
                 }
             }
         }
@@ -1128,8 +1144,16 @@ var DatePicker = (function () {
                 dateList: this.disables
             });
         }
-        this.emit('picker-handler', true);
-        return updateEventData;
+        handlePickDate({
+            dateFormat: this.dateFormat,
+            element: this.element,
+            selected: this.selected,
+            isDouble: this.double,
+            limit: this.limit,
+            bindData: this.bindData,
+            emitter: this.emit,
+            inDates: this.inDates,
+        });
     };
     
     DatePicker.prototype.init = function (option) {
@@ -1149,7 +1173,12 @@ var DatePicker = (function () {
             warn('init', "invalid selector,current selector " + this.element);
             return false;
         }
-        this.element.className = this.element.className + " calendar calendar-" + (this.views === 2 ? "double-views" : this.views === 1 ? "single-view" : "flat-view");
+        var className = [
+            this.element.className,
+            "calendar",
+            "calendar-" + (this.views === 2 ? "double-views" : this.views === 1 ? "single-view" : "flat-view")
+        ];
+        this.element.className = className.join(" ");
         var next = nextTick(function () {
             _this.isInit = _this.selected.length > 0;
             if (!isDate(option.startDate) || !isDate(option.endDate)) {
@@ -1183,6 +1212,7 @@ var DatePicker = (function () {
                     }
                 }
             }
+            _this.dates = Object.keys(_this.data).sort(function (a, b) { return +_this.parse(a) - _this.parse(b); });
             if (_this.views === 'auto') {
                 if (_this.selected.length > 0) {
                     _this.date = _this.parse(_this.selected[0]);
@@ -1203,20 +1233,12 @@ var DatePicker = (function () {
                     _this.emit("update", result);
                 }
             });
-            _this.on('init', function (type) {
-                _this.emit('select', _this.createDatePicker(type));
-                var rangeOption = {
-                    collector: _this.element,
-                    collection: _this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
-                    data: _this.double ? _this.selected : [_this.format(_this.date).value],
-                    isDouble: _this.double,
-                    parse: _this.parse,
-                    format: _this.format,
-                    inDates: _this.inDates,
-                    disables: _this.disables,
-                    isInit: _this.isInit,
-                };
-                _this.selected = setInitRange(rangeOption);
+            _this.on('init', function () {
+                _this.createDatePicker();
+                _this.emit('select', {
+                    type: 'init',
+                    value: _this.selected
+                });
             });
             _this.on('switch', function (size) {
                 var curr = {
@@ -1226,19 +1248,9 @@ var DatePicker = (function () {
                 };
                 _this.date = new Date(curr.year, curr.month + size, curr.date);
                 _this.isInit = false;
-                _this.createDatePicker('switch');
+                _this.createDatePicker();
             });
             _this.on('picker-handler', function () {
-                handlePickDate({
-                    dateFormat: _this.dateFormat,
-                    element: _this.element,
-                    selected: _this.selected,
-                    isDouble: _this.double,
-                    limit: _this.limit,
-                    bindData: _this.bindData,
-                    emitter: _this.emit,
-                    inDates: _this.inDates,
-                });
             });
             _this.emit('init', 'init');
             clearNextTick(next);

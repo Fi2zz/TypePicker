@@ -13,9 +13,8 @@ import {
     gap
 } from "./util"
 
-import {parseFormatted, format} from "./datepicker.formatter";
-import {setRange} from './datepicker.ranger'
-
+import { parseFormatted, format } from "./datepicker.formatter";
+import { setRange } from './datepicker.ranger'
 export default function (options: pickerHandler) {
     let {
         element,
@@ -30,100 +29,115 @@ export default function (options: pickerHandler) {
     const collection = element.querySelectorAll(".calendar-date-cell");
     const cache = selected;
 
+    console.log(options)
     for (let i = 0; i < collection.length; i++) {
         const item = collection[i];
         item.addEventListener("click", () => {
-                //缓存已选的日期
-                const date = attr(item, "data-date");
-                const index = selected.indexOf(date);
-                //不可选的日期
-                //点击无效日期时，返回false
-                //初始化时，selected的length为0，点击不可选日期
-                //当前点击的日期的前一天是无效日期，则返回false
-                // 如  2018-02-23，2018-02-24 为无效日期，则点击2018-02-24返回无效日期
-                const now = parseFormatted(date, dateFormat);
-                const prevDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
-                const prevDateString = format(prevDate, dateFormat).value;
-                const prevDateIsValid = inDates(prevDateString);
-                if (!date
-                    || (selected.length <= 0 && !inDates(date) && bindData)
-                    || (isDouble && !prevDateIsValid && !inDates(date))
-                    || index >= 0 && !inDates(date)
-                ) {
-                    return false;
-                }
-                //重复选择
-                //如选择了 2018-02-04 ~ 2018-02-06
-                //但是用户实际想选择的是 2018-02-04~2018-02-05，
-                //此时 用户再次选择 2018-02-04，其他日期将被删除
-                if (index >= 0) {
+            //缓存已选的日期
+            let type = 'selected'
+            const date = attr(item, "data-date");
+            const index = selected.indexOf(date);
+            //不可选的日期
+            //点击无效日期时，返回false
+            //初始化时，selected的length为0，点击不可选日期
+            //当前点击的日期的前一天是无效日期，则返回false
+            // 如  2018-02-23，2018-02-24 为无效日期，则点击2018-02-24返回无效日期
+            const now = parseFormatted(date, dateFormat);
+            const prevDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+            const prevDateString = format(prevDate, dateFormat).value;
+            const prevDateIsValid = inDates(prevDateString);
 
-                    selected = inDates(getPeek(selected)) ? [getPeek(selected)] : [getFront(selected)]
-                }
-                //双选，但选择的日期数量大于2，或单选
-                if (isDouble && selected.length >= 2 || !isDouble) {
-                    selected = []
-                }
-                selected.push(date);
-                if (!isDouble) {
-                    const handled = singlePick(item, element, inDates(date), selected);
-                    selected = handled.length > 0 ? handled : cache;
-                } else {
-                    const beforeHandled = {
-                        start: getFront(selected),
-                        end: getPeek(selected)
-                    };
-                    const diffBeforeHandled = gap(
-                        parseFormatted(beforeHandled.start, dateFormat),
-                        parseFormatted(beforeHandled.end, dateFormat));
-                    if (diffBeforeHandled < 0) {
-                        if (!inDates(beforeHandled.end)) {
-                            selected.pop()  //= [date]
-                        } else {
-                            selected = [date]
-                        }
-                    }
-                    else {
-                        if (!inDates(beforeHandled.end) && !prevDateIsValid) {
-                            selected = [beforeHandled.start]
-                        }
-                    }
 
-                    const handled = handleDoubleSelect({
-                        date,
-                        dateFormat,
-                        selected,
-                        limit,
-                    }, inDates);
-                    const afterHandled = {
-                        start: getFront(handled.selected),
-                        end: getPeek(handled.selected)
-                    };
-                    const diffAfterHandled = gap(parseFormatted(afterHandled.start, dateFormat), parseFormatted(afterHandled.end, dateFormat));
-                    //找出全部选中的无效日期
-                    const dates = handled.dates;
-                    const datesList = [];
-                    const notInDatesList = [];
-                    for (let date of dates) {
-                        if (inDates(date)) {
-                            datesList.push(date)
-                        } else {
-                            notInDatesList.push(date)
-                        }
+            if (!date
+                || (selected.length <= 0 && !inDates(date) && bindData)
+                || (isDouble && !prevDateIsValid && !inDates(date))
+                || index >= 0 && !inDates(date)
+            ) {
+                return false;
+            }
+            //重复选择
+            //如选择了 2018-02-04 ~ 2018-02-06
+            //但是用户实际想选择的是 2018-02-04~2018-02-05，
+            //此时 用户再次选择 2018-02-04，其他日期将被删除
+            if (index >= 0) {
+
+                selected = inDates(getPeek(selected)) ? [getPeek(selected)] : [getFront(selected)]
+            }
+            //双选，但选择的日期数量大于2，或单选
+            if (isDouble && selected.length >= 2 || !isDouble) {
+                selected = []
+            }
+            selected.push(date);
+            if (!isDouble) {
+                const handled = singlePick(item, element, inDates(date), selected);
+                selected = handled.length > 0 ? handled : cache;
+            } else {
+                const beforeHandled = {
+                    start: getFront(selected),
+                    end: getPeek(selected)
+                };
+                const diffBeforeHandled = gap(
+                    parseFormatted(beforeHandled.start, dateFormat),
+                    parseFormatted(beforeHandled.end, dateFormat));
+                if (diffBeforeHandled < 0) {
+                    if (!inDates(beforeHandled.end)) {
+                        selected.pop()  //= [date]
+                    } else {
+                        selected = [date]
                     }
-                    //判断无效日期的长度来决定selected
-                    if (notInDatesList.length > 0) {
-                        handled.selected.shift();
-                        afterHandled.start = afterHandled.end;
-                        afterHandled.end = null;
+                }
+                else {
+                    if (!inDates(beforeHandled.end) && !prevDateIsValid) {
+                        selected = [beforeHandled.start]
                     }
-                    doublePick(
-                        element,
-                        afterHandled.start,
-                        afterHandled.end,
-                        diffAfterHandled,
-                        diffAfterHandled > limit || diffAfterHandled < 0,
-                    );
+                }
+
+                const handled = handleDoubleSelect({
+                    date,
+                    dateFormat,
+                    selected,
+                    limit,
+                }, inDates);
+                const afterHandled = {
+                    start: getFront(handled.selected),
+                    end: getPeek(handled.selected)
+                };
+
+
+                const diffAfterHandled = gap(parseFormatted(afterHandled.start, dateFormat), parseFormatted(afterHandled.end, dateFormat));
+                //找出全部选中的无效日期
+                const dates = handled.dates;
+                const datesList = [];
+                const notInDatesList = [];
+                for (let date of dates) {
+                    if (inDates(date)) {
+                        datesList.push(date)
+                    } else {
+                        notInDatesList.push(date)
+                    }
+                }
+                //判断无效日期的长度来决定selected
+                if (notInDatesList.length > 0) {
+                    handled.selected.shift();
+                    afterHandled.start = afterHandled.end;
+                    afterHandled.end = null;
+                }
+
+                if (handled.selected.length <= 1) {
+                    if (!inDates(getPeek(handled.selected))) {
+                        type = 'disabled'
+                        handled.selected = cache;
+                    }
+                }
+                doublePick(
+                    element,
+                    afterHandled.start,
+                    afterHandled.end,
+                    diffAfterHandled,
+                    diffAfterHandled > limit || diffAfterHandled < 0,
+                );
+                if (type !== 'disabled') {
+
                     if (bindData) {
                         if (notInDatesList.length <= 0) {
                             setRange(datesList, element, dates.length <= 0)
@@ -132,13 +146,16 @@ export default function (options: pickerHandler) {
                     else {
                         setRange(datesList, element, dates.length <= 0)
                     }
-                    selected = handled.selected;
                 }
-                emitter('select', {
-                    type: "selected",
-                    value: selected
-                })
+
+                // console.log(handled)
+                selected = handled.selected;
             }
+            emitter('select', {
+                type: type,
+                value: selected
+            })
+        }
         );
     }
 }
