@@ -9,7 +9,7 @@
 | doubleSelect | boolean            | Enable pick two dates                    | false                 |
 | limit        | number             | Limitation between two dates while `doubleSelect` is on |                       |
 | views        | number,string      | Display views of DatePicker              | auto,1,2              |
-	
+
 	
 ##  API
 
@@ -28,14 +28,16 @@
    
    setDisabled({
         days?:Array<number>[5],
-        dates?:tuple<string,Date>["2018-4-12",new Date(2018,3,5)],
-        from?:<Date|string>new Date(2018,3,0),
-        to?:<Date|string>"2018-3-3"
+        dates?:Array<string|Date>,
+        from?:<Date|string>,
+        to?:<Date|string>
     })
    //Set disabled dates to DataPicker
-   //from => from [from] date will be set disabled,eg: from = 2018-3-31 => disabled from 2018-4-1  
-   //to   => set disabled until [to] date, eg: to =2018-3-4 => disabled until 2018-3-5  
-
+   //dates =>dates accept <string> and <Date>,  all dates in [dates] will be disabled 
+   //days => days accept number of [0~6],   all days in [days] will be disabled
+   //from => from accept <string> or <Date>, all dates after [from] date will be disabled,eg: from = 2018-3-31 => disabled from 2018-4-1  
+   //to   => to accept <string> or <Date> all dates before [to] date will be disabled, eg: to =2018-3-4 => all dates before 2018-3-5 will be disabled
+   
    parse(formattedDate:string,dateFormat:string)
    //Transform date string into date object,return Date object
    //eg: formattedDate ='2018-3-4',format='YYYY-M-D" =>  new Date(2018,2,4)
@@ -59,28 +61,28 @@
 ```typescript
 
         
-      //es module
-      import DatePicker from '/dist/datepicker.esm.js'
+    //es module
+    import DatePicker from '/dist/datepicker.esm.js'
       
-      //cjs
-      const DatePicker =require("/dist/datepicker.js");
-      
-      //umd
-      //<script src="/dist/datepicker.min.js"></script>
+    //cjs
+    const DatePicker =require("/dist/datepicker.js");
 
-       const date = new Date();
-       const dist = {
+    //umd
+    <script src="/dist/datepicker.min.js"></script>
+      
+    const date = new Date();
+    const dist = {
            year: date.getFullYear(),
            month: date.getMonth(),
            date: date.getDate()
-       };
+    };
        
-       const from = new Date(dist.year, dist.month, dist.date)
-       const to = new Date(dist.year, dist.month + 9, 0);
-       const currDate = new Date(dist.year, dist.month, dist.date);
+    const from = new Date(dist.year, dist.month, dist.date)
+    const to = new Date(dist.year, dist.month + 9, 0);
+    const currDate = new Date(dist.year, dist.month, dist.date);
        
-       //setup DatePicker instance
-       const datepicker = <any>new DatePicker({
+    //setup DatePicker instance
+    const app:any = new DatePicker({
             el: document.getElementById("datepicker"),
             endDate:to,
             startDate:from,
@@ -88,32 +90,30 @@
             format: 'YYYY-M-D',
             doubleSelect: true,
             views: 1
-        });
+    });
        
        //`update`  fired by click on date cell or DatePicker init function 
-       datepicker.on("update", (result: any) => {
+    app.on("update", (result: any) => {
         // result contains two keys, `value` and `type`
         // value =>  selected dates
         // type  =>  two types => `init` and `selected`
         // place your logic  here
-       });
+    });
        
-       // `disabled`event fired by `setDisabled` and DatePicker init function
-       datepicker.on("disabled", (result: any) => {
-            //set disabled state to HTML nodes
-            // result contains two keys, `dateList` and `nodeList`
-            
-            const {dateList, nodeList} = result;
-            for (let n = 0; n < nodeList.length; n++) {
-                let node = nodeList[n];
-                if (dateList[node.getAttribute("data-date")]) {
-                    node.classList.add('disabled')
-                }
+    // `disabled`event fired by `setDisabled` and DatePicker init function
+    app.on("disabled", (result: any) => {
+        // result contains two keys, `dateList` and `nodeList`
+        const {dateList, nodeList} = result;
+        for (let n = 0; n < nodeList.length; n++) {
+            let node = nodeList[n];
+            if (dateList[node.getAttribute("data-date")]) {
+                node.classList.add('disabled')
             }
-       });
+        }
+    });
        
-       // 'data' event fired by `setData` 
-       datepicker.on("data", (result: any) => {
+    // 'data' event fired by `setData` 
+    app.on("data", (result: any) => {
         //set HTML nodes states
         // result contains two keys, `data:any` and `nodeList:Array<string>`
                 const data = result.data;
@@ -141,13 +141,13 @@
        //tuple type,accept <string> and <Date>
        const selected=["2018-2-21",new Date()];
        //use `setDates` to set init dates to DatePicker instance 
-       datepicker.setDates(selected);
+       app.setDates(selected);
 
        // use `setDisabled` to set specified date or day to disabled,
        // `setDisabled` accept an object => {dates,days},
        // <tuple>dates,accept <Date> and  <string>
        // <Array<number>>days accept 0,1,2,3,4,5,6
-       datepicker.setDisabled({
+       app.setDisabled({
                 dates: [
                     "2018-2-18",
                     "2018-2-19",
@@ -161,7 +161,7 @@
         // use `setData` to pass data to `DatePicker` instance
         // `setData` function will dispatch `data` event
         // setup a listener to handle it
-       datepicker.setData(() => {
+       app.setData(() => {
                     
                     
                     /*data accept Object like
@@ -186,7 +186,7 @@
                  months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
                  year: "" 
        };
-       datepicker.setLanguage(language)
+       app.setLanguage(language)
        
        
        

@@ -3,18 +3,18 @@ import './test.styl'
 
 
 import DatePicker from '../src/index'
-import {source, languages as language} from './mock'
-import {addClass, diff} from "../src/util";
+import { source, languages as language } from './mock'
+import { addClass, diff } from "../src/util";
 
 const date = new Date();
 
 const dateFormat = 'YYYY-M-D';
 const activeLanguageCode: string = "en-us";
-const formControl = <HTMLInputElement> document.getElementById("date-value");
+const formControl = <HTMLInputElement>document.getElementById("date-value");
 
 function createDatePicker(create: boolean = true, selected?: Array<any>) {
 
-    let datepicker = null;
+    let app: any = null;
     if (create) {
         const dist = {
             year: date.getFullYear(),
@@ -24,7 +24,7 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
         const currDate = new Date(dist.year, dist.month, dist.date);
         const startDate = new Date(dist.year, dist.month, dist.date);
         const endDate = new Date(dist.year, dist.month + 7, dist.date);
-        datepicker = <any>new DatePicker({
+        app = new DatePicker({
             el: document.getElementById("datepicker"),
             startDate,
             endDate,
@@ -33,11 +33,11 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
             doubleSelect: true,
             views: 2//'auto'
         });
-        console.log(datepicker);
+        console.log(app);
 
 
-        if (datepicker) {
-            datepicker.on("update", (result: any) => {
+        if (app) {
+            app.on("update", (result: any) => {
 
                 // console.log(JSON.stringify(result,null,2));
                 if (result.type === 'selected' && result.value.length === 2) {
@@ -45,8 +45,8 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
                 }
                 formControl.value = result.value;
             });
-            datepicker.on("disabled", (result: any) => {
-                const {dateList, nodeList} = result;
+            app.on("disabled", (result: any) => {
+                const { dateList, nodeList } = result;
                 for (let n = 0; n < nodeList.length; n++) {
                     let node = nodeList[n];
                     if (dateList[node.getAttribute("data-date")]) {
@@ -54,7 +54,7 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
                     }
                 }
             });
-            datepicker.on("data", (result: any) => {
+            app.on("data", (result: any) => {
                 const data = result.data;
                 const nodeList = result.nodeList;
                 for (let i = 0; i < nodeList.length; i++) {
@@ -77,10 +77,10 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
                 }
             });
             if (selected.length >= 2) {
-                datepicker.setDates(selected);
+                app.setDates(selected);
             }
 
-            datepicker.setDisabled({
+            app.setDisabled({
                 dates: [
                     // "2018-2-18",
                     // "2018-2-19",
@@ -94,19 +94,18 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
                     "2018-3-20",
                     "2018-3-19",
                 ],
-                from:new Date(2018,6,1),
-                to:new Date(2018,4,15)
+                from: new Date(2018, 6, 1),
+                to: new Date(2018, 4, 15)
                 // days: [1, 5, 2, 6]
             });
 
-            console.log(new Date(2018,6,15))
-            const bindData =true;
+            const bindData = true;
             if (bindData) {
-                datepicker.setData(() => {
+                app.setData(() => {
                     Object.keys(source).forEach(date => {
-                        let item = datepicker.parse(date);
-                        
-                        if (datepicker.diff(item, currDate) < 0) {
+                        let item = app.parse(date);
+
+                        if (app.diff(item, currDate) < 0) {
                             delete source[date]
                         }
                     });
@@ -114,21 +113,21 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
                 });
             }
 
-            datepicker.setLanguage(language[activeLanguageCode])
+            app.setLanguage(language[activeLanguageCode])
         }
     }
-    return datepicker
+    return app
 }
 
 function popupHandler(visible: boolean) {
-    const pop = <HTMLElement> document.querySelector(".popup");
+    const pop = <HTMLElement>document.querySelector(".popup");
     pop.style.display = visible ? 'block' : 'none';
 }
 
 function init(document: Document) {
     createDatePicker(true, ['2018-3-7', '2018-3-14',]);
     document.addEventListener("click", (e) => {
-        const target = <HTMLElement> e.target;
+        const target = <HTMLElement>e.target;
         if (target) {
             const parent = <HTMLElement>target.parentNode;
             if (parent.nodeType === 1) {
