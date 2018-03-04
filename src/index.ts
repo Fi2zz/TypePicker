@@ -160,6 +160,7 @@ export default class DatePicker {
         }
         this.selected = datesList;
     };
+
     public setLanguage(pack?: any) {
         if (isArray(pack.days) && isArray(pack.months)) {
             this.language = {
@@ -169,6 +170,7 @@ export default class DatePicker {
             }
         }
     };
+
     public setDisabled(param: disable) {
         if (!param || isObject(param) && Object.keys(param).length <= 0) {
             warn("setDisabled",
@@ -208,24 +210,9 @@ export default class DatePicker {
         const to = param.to
         const from = param.from;
 
-        if (to) {
-            if (isDate(to)) {
-                toDate = to
-            }
-            else {
-                const parsed = this.parse(to);
-                if (isDate(parsed)) {
-                    toDate = parsed
-                }
-                else {
-                    return false
-                }
-            }
-            this.endDate = toDate
-        }
         if (from) {
             if (isDate(from)) {
-                fromDate = from;
+                fromDate = from
             }
             else {
                 const parsed = this.parse(from);
@@ -236,8 +223,23 @@ export default class DatePicker {
                     return false
                 }
             }
-            this.date = fromDate;
-            this.startDate = fromDate
+            this.endDate = fromDate
+        }
+        if (to) {
+            if (isDate(to)) {
+                toDate = to;
+            }
+            else {
+                const parsed = this.parse(to);
+                if (isDate(parsed)) {
+                    toDate = parsed
+                }
+                else {
+                    return false
+                }
+            }
+            this.date = toDate;
+            this.startDate = toDate
         }
         if (fromDate || toDate) {
             this.infiniteMode = false;

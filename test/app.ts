@@ -94,8 +94,8 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
                     "2018-3-20",
                     "2018-3-19",
                 ],
-                // from:new Date(2018,4,1),
-                // to:new Date(2018,10,15)
+                from:new Date(2018,6,1),
+                to:new Date(2018,4,15)
                 // days: [1, 5, 2, 6]
             });
 

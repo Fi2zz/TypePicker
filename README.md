@@ -1,5 +1,5 @@
 
-### OPTIONS
+## OPTIONS
 
 | OPTION       | TYPE               | DESC                                     | DEFAULT VALUE         |
 |--------------|--------------------|------------------------------------------|-----------------------|
@@ -11,7 +11,7 @@
 | views        | number,string      | Display views of DatePicker              | auto,1,2              |
 	
 	
-###  API
+##  API
 
 
 ```typescript
@@ -28,13 +28,17 @@
    
    setDisabled({
         days?:Array<number>,
-        dates?:tuple<string,Date>
+        dates?:tuple<string,Date>,
+        from?:Date|string,
+        to?:Date|string
     })
    //Set disabled dates to DataPicker
-   
+   //from => from [from] date will be set disabled,eg: from = 2018-3-31 => disabled from 2018-4-1  
+   //to   => set disabled until [to] date, eg: to =2018-3-4 => disabled until 2018-3-5  
+
    parse(formattedDate:string,dateFormat:string)
    //Transform date string into date object,return Date object
-   
+
    format(date:Date,format:string)
    //Transform date object into string,return string  
    
@@ -46,7 +50,7 @@
     
 ```
 
-### USAGE
+## USAGE
 ```typescript
 
         

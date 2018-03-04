@@ -1006,21 +1006,6 @@ var DatePicker = (function () {
         var toDate;
         var to = param.to;
         var from = param.from;
-        if (to) {
-            if (isDate(to)) {
-                toDate = to;
-            }
-            else {
-                var parsed = this.parse(to);
-                if (isDate(parsed)) {
-                    toDate = parsed;
-                }
-                else {
-                    return false;
-                }
-            }
-            this.endDate = toDate;
-        }
         if (from) {
             if (isDate(from)) {
                 fromDate = from;
@@ -1034,8 +1019,23 @@ var DatePicker = (function () {
                     return false;
                 }
             }
-            this.date = fromDate;
-            this.startDate = fromDate;
+            this.endDate = fromDate;
+        }
+        if (to) {
+            if (isDate(to)) {
+                toDate = to;
+            }
+            else {
+                var parsed = this.parse(to);
+                if (isDate(parsed)) {
+                    toDate = parsed;
+                }
+                else {
+                    return false;
+                }
+            }
+            this.date = toDate;
+            this.startDate = toDate;
         }
         if (fromDate || toDate) {
             this.infiniteMode = false;
