@@ -996,6 +996,44 @@ var DatePicker = (function () {
                 }
             }
         }
+        var fromDate;
+        var toDate;
+        var to = param.to;
+        var from = param.from;
+        if (to) {
+            if (isDate(to)) {
+                toDate = to;
+            }
+            else {
+                var parsed = this.parse(to);
+                if (isDate(parsed)) {
+                    toDate = parsed;
+                }
+                else {
+                    return false;
+                }
+            }
+            this.endDate = toDate;
+        }
+        if (from) {
+            if (isDate(from)) {
+                fromDate = from;
+            }
+            else {
+                var parsed = this.parse(from);
+                if (isDate(parsed)) {
+                    fromDate = parsed;
+                }
+                else {
+                    return false;
+                }
+            }
+            this.date = fromDate;
+            this.startDate = fromDate;
+        }
+        if (fromDate || toDate) {
+            this.infiniteMode = false;
+        }
         for (var _e = 0, dateList_1 = dateList; _e < dateList_1.length; _e++) {
             var date = dateList_1[_e];
             dateMap[date] = date;
@@ -1030,18 +1068,6 @@ var DatePicker = (function () {
             dateFormatter: this.format,
             views: this.views
         }).template;
-        var rangeOption = {
-            collector: this.element,
-            collection: this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
-            data: this.double ? this.selected : [this.format(this.date).value],
-            isDouble: this.double,
-            parse: this.parse,
-            format: this.format,
-            inDates: this.inDates,
-            disables: this.disables,
-            isInit: this.isInit,
-        };
-        this.selected = setInitRange(rangeOption);
         if (this.views === 1) {
             if (this.double && this.selected.length >= 2) {
                 var start = this.selected[0];
@@ -1064,7 +1090,7 @@ var DatePicker = (function () {
             }
             else {
                 var endGap = diff(this.date, this.endDate);
-                if (endGap >= 1) {
+                if (endGap > 1) {
                     next.addEventListener("click", function () {
                         _this.emit('switch', 1);
                         removeClass(prev, "disabled");
@@ -1189,6 +1215,18 @@ var DatePicker = (function () {
             });
             _this.on('init', function (type) {
                 _this.emit('select', _this.createDatePicker(type));
+                var rangeOption = {
+                    collector: _this.element,
+                    collection: _this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
+                    data: _this.double ? _this.selected : [_this.format(_this.date).value],
+                    isDouble: _this.double,
+                    parse: _this.parse,
+                    format: _this.format,
+                    inDates: _this.inDates,
+                    disables: _this.disables,
+                    isInit: _this.isInit,
+                };
+                _this.selected = setInitRange(rangeOption);
             });
             _this.on('switch', function (size) {
                 var curr = {

@@ -51,6 +51,8 @@ export interface pickerHandler {
 export interface disable {
     dates?: Array<any>;
     days?: Array<number> ;
+    to?:Date|string;
+    from?:Date|string;
 }
 
 export interface handleDoubleSelect {

@@ -12,7 +12,6 @@ const dateFormat = 'YYYY-M-D';
 const activeLanguageCode: string = "en-us";
 const formControl = <HTMLInputElement> document.getElementById("date-value");
 
-console.log(DatePicker);
 function createDatePicker(create: boolean = true, selected?: Array<any>) {
 
     let datepicker = null;
@@ -95,14 +94,18 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
                     "2018-3-20",
                     "2018-3-19",
                 ],
+                // from:new Date(2018,4,1),
+                // to:new Date(2018,10,15)
                 // days: [1, 5, 2, 6]
             });
 
-            const bindData = true;
+            console.log(new Date(2018,6,15))
+            const bindData =true;
             if (bindData) {
                 datepicker.setData(() => {
                     Object.keys(source).forEach(date => {
                         let item = datepicker.parse(date);
+                        
                         if (datepicker.diff(item, currDate) < 0) {
                             delete source[date]
                         }

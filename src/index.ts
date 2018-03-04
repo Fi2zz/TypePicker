@@ -1,4 +1,4 @@
-import {datePickerOptions, disable} from "./datepicker.interfaces";
+import { datePickerOptions, disable } from "./datepicker.interfaces";
 import Observer from './datepicker.observer';
 import {
     diff,
@@ -20,8 +20,8 @@ import {
 import merge from './merge'
 import HTML from './datepicker.template'
 import handlePickDate from './datepicer.picker'
-import {parseFormatted, format as formatter} from "./datepicker.formatter"
-import {setInitRange} from "./datepicker.ranger";
+import { parseFormatted, format as formatter } from "./datepicker.formatter"
+import { setInitRange } from "./datepicker.ranger";
 const getDisableDates = (startDate: Date, endDate: Date, dateFormat: string, should: boolean) => {
     const startMonthDates = startDate.getDate();
     const temp: any = {};
@@ -106,7 +106,6 @@ export default class DatePicker {
 
     public format: Function = (date: Date, format?: string) => formatter(date, format ? format : this.dateFormat);
     public parse: Function = (string: string, format?: string) => parseFormatted(string, format ? format : this.dateFormat);
-
     public setDates(dates: Array<any>) {
         if (!isArray(dates)) {
             dates = [];
@@ -116,7 +115,7 @@ export default class DatePicker {
         const bindDataHandler = (startDate: Date, endDate: Date, diffed: number) => {
             if (diffed < 0
                 || diffed > this.limit
-                || (!this.inDates(this.format(startDate).value) && !this.inDates(this.format(endDate).value) )//开始日期和结束日期均为无效日期
+                || (!this.inDates(this.format(startDate).value) && !this.inDates(this.format(endDate).value))//开始日期和结束日期均为无效日期
                 || !this.inDates(this.format(startDate).value)
             ) {
                 warn(`setDates`, `Illegal dates,[${dates}]`);
@@ -160,9 +159,7 @@ export default class DatePicker {
             datesList = [isDate(d) ? this.format(d).value : d]
         }
         this.selected = datesList;
-        //  this.currentSelection = datesList;
     };
-
     public setLanguage(pack?: any) {
         if (isArray(pack.days) && isArray(pack.months)) {
             this.language = {
@@ -172,7 +169,6 @@ export default class DatePicker {
             }
         }
     };
-
     public setDisabled(param: disable) {
         if (!param || isObject(param) && Object.keys(param).length <= 0) {
             warn("setDisabled",
@@ -207,12 +203,50 @@ export default class DatePicker {
                 }
             }
         }
+        let fromDate: any;
+        let toDate: any;
+        const to = param.to
+        const from = param.from;
+
+        if (to) {
+            if (isDate(to)) {
+                toDate = to
+            }
+            else {
+                const parsed = this.parse(to);
+                if (isDate(parsed)) {
+                    toDate = parsed
+                }
+                else {
+                    return false
+                }
+            }
+            this.endDate = toDate
+        }
+        if (from) {
+            if (isDate(from)) {
+                fromDate = from;
+            }
+            else {
+                const parsed = this.parse(from);
+                if (isDate(parsed)) {
+                    fromDate = parsed
+                }
+                else {
+                    return false
+                }
+            }
+            this.date = fromDate;
+            this.startDate = fromDate
+        }
+        if (fromDate || toDate) {
+            this.infiniteMode = false;
+        }
         for (let date of dateList) {
             dateMap[date] = date;
         }
         this.disables = dateMap;
     };
-
     public setData(cb: Function) {
         if (isFunction(cb)) {
             const result = cb();
@@ -231,7 +265,6 @@ export default class DatePicker {
     public diff(d1: Date, d2: Date) {
         return diff(d1, d2, "days")
     }
-
     private createDatePicker(type: string) {
         this.element.innerHTML = new HTML({
             startDate: this.date,
@@ -241,18 +274,7 @@ export default class DatePicker {
             dateFormatter: this.format,
             views: this.views
         }).template;
-        const rangeOption = {
-            collector: this.element,
-            collection: this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
-            data: this.double ? this.selected : [this.format(this.date).value],
-            isDouble: this.double,
-            parse: this.parse,
-            format: this.format,
-            inDates: this.inDates,
-            disables: this.disables,
-            isInit: this.isInit,
-        };
-        this.selected = setInitRange(rangeOption);
+
         if (this.views === 1) {
             if (this.double && this.selected.length >= 2) {
                 const start = this.selected[0];
@@ -262,6 +284,7 @@ export default class DatePicker {
                 }
             }
         }
+
         const updateEventData = {
             type,
             value: this.selected
@@ -275,7 +298,7 @@ export default class DatePicker {
                 prev.addEventListener("click", () => this.emit('switch', -1))
             } else {
                 const endGap = diff(this.date, this.endDate);
-                if (endGap >= 1) {
+                if (endGap > 1) {
                     next.addEventListener("click", () => {
                         this.emit('switch', 1);
                         removeClass(prev, "disabled");
@@ -318,8 +341,6 @@ export default class DatePicker {
     };
 
     private init(option: any) {
-
-
         const currDate = new Date();
         if (option.doubleSelect) {
             this.double = option.doubleSelect
@@ -340,9 +361,7 @@ export default class DatePicker {
             return false
         }
         this.element.className = `${this.element.className} calendar calendar-${this.views === 2 ? "double-views" : this.views === 1 ? "single-view" : "flat-view"}`;
-
         const next = nextTick(() => {
-
             this.isInit = this.selected.length > 0;
             this.bindData = Object.keys(this.data).length > 0;
             if (!isDate(option.startDate) || !isDate(option.endDate)) {
@@ -359,6 +378,7 @@ export default class DatePicker {
                     const month = currDate.getMonth();
                     const date = currDate.getDate();
                     let dates = [];
+                    const dateMap = {};
                     for (let i = 0; i < gap; i++) {
                         let item = <Date>new Date(year, month, date + i);
                         let formatted = this.format(item).value;
@@ -367,13 +387,11 @@ export default class DatePicker {
                     this.dates = dates;
                 }
             }
-
             //如果是infiniteMode,则不自动把过期日期设置为disabled
             const disableBeforeStartDateAndAfterEndDate = getDisableDates(this.startDate, this.endDate, this.dateFormat, !this.infiniteMode);
             //合并外部传入的disabled dates & start date & end date
             const disables = merge(disableBeforeStartDateAndAfterEndDate, this.disables);
             const disableList = Object.keys(disables);
-
             if (disableList.length > 0) {
                 const datesList = this.dates;
                 const newDateList = [];
@@ -400,7 +418,7 @@ export default class DatePicker {
                 }
             }
             this.on("select", (result: any) => {
-                const {type, value} = result;
+                const { type, value } = result;
                 if (type === 'selected') {
                     this.setDates(value);
                 }
@@ -411,6 +429,19 @@ export default class DatePicker {
             });
             this.on('init', (type) => {
                 this.emit('select', this.createDatePicker(type))
+
+                const rangeOption = {
+                    collector: this.element,
+                    collection: this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
+                    data: this.double ? this.selected : [this.format(this.date).value],
+                    isDouble: this.double,
+                    parse: this.parse,
+                    format: this.format,
+                    inDates: this.inDates,
+                    disables: this.disables,
+                    isInit: this.isInit,
+                };
+                this.selected = setInitRange(rangeOption);
             });
             this.on('switch', (size: number) => {
                 const curr = {
@@ -442,11 +473,11 @@ export default class DatePicker {
     constructor(option: datePickerOptions) {
         if (option.from) {
             deprecatedWarn('option.from', 'use option.startDate');
-            delete  option.from
+            delete option.from
         }
         if (option.to) {
             deprecatedWarn('option.to', 'use option.endDate');
-            delete  option.to
+            delete option.to
         }
         this.init(option);
     }
