@@ -13,6 +13,9 @@ import {
     gap
 } from "./util"
 
+import Observer from './datepicker.observer'
+
+
 import {parseFormatted, format} from "./datepicker.formatter";
 import {setRange} from './datepicker.ranger'
 export default function (options: pickerHandler) {
@@ -24,7 +27,6 @@ export default function (options: pickerHandler) {
         inDates,
         bindData,
         dateFormat,
-        emitter
     } = options;
     const collection = element.querySelectorAll(".calendar-date-cell");
     const cache = selected;
@@ -149,7 +151,7 @@ export default function (options: pickerHandler) {
 
                     selected = handled.selected;
                 }
-                emitter('select', {
+            Observer.$emit('select', {
                     type: type,
                     value: selected
                 })

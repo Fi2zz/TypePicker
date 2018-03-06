@@ -44,7 +44,7 @@ export interface pickerHandler {
     inDates: Function;
     bindData: boolean,
     dateFormat: string,
-    emitter: Function
+    emitter?: Function
 
 }
 

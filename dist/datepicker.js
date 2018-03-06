@@ -619,7 +619,7 @@ function setInitRange(options) {
 }
 
 var handlePickDate = function (options) {
-    var element = options.element, selected = options.selected, isDouble = options.isDouble, limit = options.limit, inDates = options.inDates, bindData = options.bindData, dateFormat = options.dateFormat, emitter = options.emitter;
+    var element = options.element, selected = options.selected, isDouble = options.isDouble, limit = options.limit, inDates = options.inDates, bindData = options.bindData, dateFormat = options.dateFormat;
     var collection = element.querySelectorAll(".calendar-date-cell");
     var cache = selected;
     var _loop_1 = function (i) {
@@ -721,7 +721,7 @@ var handlePickDate = function (options) {
                 }
                 selected = handled.selected;
             }
-            emitter('select', {
+            Observer.$emit('select', {
                 type: type,
                 value: selected
             });
