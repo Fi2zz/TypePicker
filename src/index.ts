@@ -19,7 +19,7 @@ import {
 } from "./util"
 import merge from './merge'
 import HTML from './datepicker.template'
-import handlePickDate from './datepicer.picker'
+import handlePickDate from './datepicker.picker'
 import {parseFormatted, format as formatter} from "./datepicker.formatter"
 import {setInitRange} from "./datepicker.ranger";
 const getDisableDates = (startDate: Date, endDate: Date, dateFormat: string, should: boolean) => {
