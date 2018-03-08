@@ -922,7 +922,6 @@ var DatePicker = (function () {
         });
         Observer.$on('create', function (result) {
             var type = result.type, size = result.size;
-            console.log(result);
             if (type === 'switch') {
                 var curr = {
                     year: _this.date.getFullYear(),
@@ -1286,7 +1285,6 @@ var DatePicker = (function () {
                     }
                 }
             }
-            console.log(_this.date);
             Observer.$emit('create', { type: 'init', size: 0 });
             clearNextTick(next);
         });

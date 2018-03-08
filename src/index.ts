@@ -447,8 +447,6 @@ export default class DatePicker {
             }
 
 
-            console.log(this.date)
-
             Observer.$emit('create', {type: 'init', size: 0});
             clearNextTick(next)
         });
@@ -474,9 +472,6 @@ export default class DatePicker {
         });
         Observer.$on('create', (result: any) => {
             const {type, size} = result;
-
-
-            console.log(result)
             if (type === 'switch') {
                 const curr = {
                     year: this.date.getFullYear(),
