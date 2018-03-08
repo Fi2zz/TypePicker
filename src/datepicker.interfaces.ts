@@ -1,6 +1,6 @@
 export interface datePickerOptions {
     el: string | HTMLElement;
-    to?: Date ;
+    to?: Date;
     from?: Date;
     limit?: number;
     format?: string;
@@ -44,15 +44,16 @@ export interface pickerHandler {
     inDates: Function;
     bindData: boolean,
     dateFormat: string,
-    emitter?: Function
+    emitter?: Function,
+    infiniteMode: boolean
 
 }
 
 export interface disable {
     dates?: Array<any>;
-    days?: Array<number> ;
-    to?:Date|string;
-    from?:Date|string;
+    days?: Array<number>;
+    to?: Date | string;
+    from?: Date | string;
 }
 
 export interface handleDoubleSelect {

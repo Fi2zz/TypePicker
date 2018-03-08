@@ -24,7 +24,7 @@ export function diff(start: Date, end: Date, type: string = "month") {
         end = new Date()
     }
     if (type === "month") {
-        return Math.abs((start.getFullYear() * 12 + start.getMonth()) - ( end.getFullYear() * 12 + end.getMonth()))
+        return Math.abs((start.getFullYear() * 12 + start.getMonth()) - (end.getFullYear() * 12 + end.getMonth()))
     } else if (type === "days") {
         const startTime = <any>new Date(start.getFullYear(), start.getMonth(), start.getDate());
         const endTime = <any>new Date(end.getFullYear(), end.getMonth(), end.getDate());
@@ -162,8 +162,96 @@ export function getPeek(list: Array<any>) {
 
 }
 
-export  function gap(d1: Date, d2: Date) {
+export function gap(d1: Date, d2: Date) {
     const value = diff(d1, d2, "days");
     return value === 0 ? 0 : value * -1
 }
 
+
+export function merge(...args: Array<any>) {
+    let merged: any = {};
+
+    function toString(object: any) {
+        return Object.prototype.toString.call(object)
+    }
+
+    function whichType(object: any, type: string) {
+        return toString(object) === `[object ${type}]`
+    }
+
+    function generateObject(target: any = {}, object: any) {
+        for (let key in object) {
+            if (object.hasOwnProperty(key)) {
+                target[key] = object[key]
+            }
+        }
+        return target
+    }
+
+    for (let i = 0; i < args.length; i++) {
+        let arg = args[i];
+        if (arg) {
+            if (whichType(arg, "Array")) {
+                for (let i = 0; i < arg.length; i++) {
+                    let argItem = arg[i];
+                    if (whichType(argItem, "Object")) {
+                        merged = generateObject(merged, argItem)
+                    } else if (!whichType(argItem, "Date")) {
+                        merged[argItem] = argItem
+                    }
+                }
+            } else if (whichType(arg, "Object")) {
+                merged = generateObject(merged, arg)
+            } else if (whichType(arg, "String") || whichType(arg, "Number")) {
+                merged[arg] = arg
+            }
+        }
+    }
+    return merged
+}
+
+
+export function isEmpty(listOrObject: any) {
+
+
+    if (!isArray(listOrObject) && !isObject(listOrObject)) {
+        warn("isEmpty", "Expect an Object or an Array,but got " + _toString(listOrObject));
+        return false;
+    }
+
+
+    if (isArray(listOrObject)) {
+        return listOrObject.length <= 0;
+    }
+
+    else if (isObject(listOrObject)) {
+
+        for (let key in listOrObject) {
+            if (key) {
+                return false
+            }
+        }
+        return true;
+    }
+
+
+}
+
+export  function logger(arg: any) {
+
+
+    let msg //=arg;
+
+    if (!isObject(arg) && !isArray(arg)) {
+        msg = arg;
+
+    }
+
+    else {
+
+        msg = JSON.stringify(arg, null, 2)
+
+    }
+
+    console.log(msg)
+}

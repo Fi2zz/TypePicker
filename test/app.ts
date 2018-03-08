@@ -3,8 +3,8 @@ import './test.styl'
 
 
 import DatePicker from '../src/index'
-import { source, languages as language } from './mock'
-import { addClass, diff } from "../src/util";
+import {source, languages as language} from './mock'
+import {addClass} from "../src/util";
 
 const date = new Date();
 
@@ -12,27 +12,32 @@ const dateFormat = 'YYYY-M-D';
 const activeLanguageCode: string = "en-us";
 const formControl = <HTMLInputElement>document.getElementById("date-value");
 
+
 function createDatePicker(create: boolean = true, selected?: Array<any>) {
 
-    let app: any = null;
-    if (create) {
-        const dist = {
-            year: date.getFullYear(),
-            month: date.getMonth(),
-            date: date.getDate()
-        };
-        const currDate = new Date(dist.year, dist.month, dist.date);
-        const startDate = new Date(dist.year, dist.month, dist.date);
-        const endDate = new Date(dist.year, dist.month + 20, dist.date);
-        app = new DatePicker({
-            el: document.getElementById("datepicker"),
-            startDate,
-            endDate,
-            limit: 7,
-            format: dateFormat,
-            doubleSelect: true,
-            views: 2//'auto'
-        });
+    const dist = {
+        year: date.getFullYear(),
+        month: date.getMonth(),
+        date: date.getDate()
+    };
+    const currDate = new Date(dist.year, dist.month, dist.date);
+    const startDate = new Date(dist.year, dist.month, dist.date);
+    const endDate = new Date(dist.year, dist.month + 20, dist.date);
+
+
+    let app: any =create ?  new DatePicker({
+        el: document.getElementById("datepicker"),
+        startDate,
+        endDate,
+        limit: 7,
+        format: dateFormat,
+        doubleSelect: true,
+        // views: 2//'auto'
+    }) :  null;
+
+
+    if (app) {
+
         console.log(app);
 
 
@@ -46,7 +51,7 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
                 formControl.value = result.value;
             });
             app.on("disabled", (result: any) => {
-                const { dateList, nodeList } = result;
+                const {dateList, nodeList} = result;
                 for (let n = 0; n < nodeList.length; n++) {
                     let node = nodeList[n];
                     if (dateList[node.getAttribute("data-date")]) {
@@ -87,6 +92,7 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
                     // "2018-2-22",
                     // "2018-2-23",
                     // "2018-3-24",
+                    new Date(),
                     "2018-2-27",
                     "2018-2-25",
                     "2018-3-28",

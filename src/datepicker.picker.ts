@@ -18,6 +18,7 @@ import Observer from './datepicker.observer'
 
 import {parseFormatted, format} from "./datepicker.formatter";
 import {setRange} from './datepicker.ranger'
+
 export default function (options: pickerHandler) {
     let {
         element,
@@ -27,6 +28,7 @@ export default function (options: pickerHandler) {
         inDates,
         bindData,
         dateFormat,
+        infiniteMode
     } = options;
     const collection = element.querySelectorAll(".calendar-date-cell");
     const cache = selected;
@@ -50,9 +52,9 @@ export default function (options: pickerHandler) {
                 const prevDateIsValid = inDates(prevDateString);
 
                 if (!date
-                    || (selected.length <= 0 && !inDates(date) && bindData)
-                    || (isDouble && !prevDateIsValid && !inDates(date))
-                    || index >= 0 && !inDates(date)
+                    || (selected.length <= 0 && !inDates(date) && bindData && !infiniteMode)
+                    || (isDouble && !prevDateIsValid && !inDates(date) && !infiniteMode)
+                    || index >= 0 && !inDates(date) && !infiniteMode
                 ) {
                     return false;
                 }
@@ -138,20 +140,12 @@ export default function (options: pickerHandler) {
                         diffAfterHandled,
                         diffAfterHandled > limit || diffAfterHandled < 0,
                     );
-                    if (type !== 'disabled') {
-                        if (bindData) {
-                            if (notInDatesList.length <= 0) {
-                                setRange(datesList, element, dates.length <= 0)
-                            }
-                        }
-                        else {
-                            setRange(datesList, element, dates.length <= 0)
-                        }
+                    if (notInDatesList.length <= 0 && type !== 'disabled') {
+                        setRange(datesList, element, dates.length <= 0)
                     }
-
                     selected = handled.selected;
                 }
-            Observer.$emit('select', {
+                Observer.$emit('select', {
                     type: type,
                     value: selected
                 })
