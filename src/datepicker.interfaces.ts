@@ -26,12 +26,13 @@ export interface initRangeOptions {
     collection: HTMLCollection;
     data: Array<string>;
     isDouble: boolean;
-    parse: Function;
-    format: Function;
+    parse?: Function;
+    format?: Function;
     inDates: Function;
     isInit: boolean;
     active?: boolean,
-    disables: any
+    disables: any,
+    dateFormat:string
 
 }
 

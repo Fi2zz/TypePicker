@@ -1,3 +1,5 @@
+import {parseFormatted, format} from "./datepicker.formatter";
+
 export const attrSelector = (attr: string, value: string) => `[${attr}="${value}"]`;
 
 
@@ -237,7 +239,7 @@ export function isEmpty(listOrObject: any) {
 
 }
 
-export  function logger(arg: any) {
+export function logger(arg: any) {
 
 
     let msg //=arg;
@@ -254,4 +256,97 @@ export  function logger(arg: any) {
     }
 
     console.log(msg)
+}
+
+export function getRange(data: Array<any>, dateFormat: string, limit: number, inDates: Function) {
+    let startDate = getFront(data);
+    let endDate = getPeek(data);
+    let start: Date;
+    let end: Date;
+
+    const invalidDates = [];
+    const validDates = [];
+
+    if (startDate && endDate) {
+        if (!isDate(startDate)) {
+            start = <Date> parseFormatted(<string>startDate, dateFormat)
+        }
+        else {
+            start = <Date>startDate
+        }
+        if (!isDate(endDate)) {
+            end = <Date> parseFormatted(<string>endDate, dateFormat)
+        } else {
+            end = <Date>endDate
+        }
+        let gap = diff(<Date>start, <Date>end, "days");
+        if (+start - +end < 0) {
+            gap = diff(<Date>end, <Date>start, "days")
+        }
+
+        if (gap > 0 && gap <= limit) {
+            for (let i = 0; i < gap; i++) {
+                let date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+                let formatted = format(date, dateFormat).value;
+                if (!inDates(formatted) && i < gap - 1) {
+                    invalidDates.push(formatted)
+                }
+                else {
+                    validDates.push(formatted)
+                }
+            }
+        }
+    }
+
+    return {
+        invalidDates,
+        validDates
+    };
+
+}
+
+export function setHTMLNodeRange(data: Array<any>, collector: HTMLElement) {
+
+    let collection = collector.querySelectorAll(".in-range");
+    for (let i = 0; i < collection.length; i++) {
+        removeClass(collection[i], "in-range")
+    }
+
+
+    for (let i = 0; i < data.length; i++) {
+        let selector = <string> attrSelector("data-date", data[i]);
+        let element = collector.querySelector(selector);
+        if (!hasClass(element, "active")) {
+            addClass(element, "in-range")
+        }
+    }
+}
+
+export function setHTMLNodeState(el: HTMLElement, dates: Array<string>, isDouble) {
+
+    const nodes = el.querySelectorAll(".calendar-date-cell")
+
+
+    for (let i = 0; i < nodes.length; i++) {
+        removeClass(nodes[i], "active");
+        if (isDouble) {
+            removeClass(nodes[i], "start-date");
+            removeClass(nodes[i], "end-date");
+        }
+    }
+
+
+    for (let i = 0; i < dates.length; i++) {
+        let date = dates[i];
+        let dateElement = el.querySelector(`[data-date="${date}"]`);
+        addClass(dateElement, "active");
+        if (isDouble) {
+            if (i === 0) {
+                addClass(dateElement, "start-date");
+            }
+            if (dates.length === 2 && i === dates.length - 1) {
+                addClass(dateElement, "end-date");
+            }
+        }
+    }
 }

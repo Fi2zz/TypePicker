@@ -4,20 +4,16 @@ import {
 } from './datepicker.interfaces'
 import {
     attr,
-    removeClass,
-    addClass,
-    attrSelector,
-    hasClass,
     getFront,
     getPeek,
-    gap
+    gap,
+    // setRange,
 } from "./util"
 
 import Observer from './datepicker.observer'
 
 
 import {parseFormatted, format} from "./datepicker.formatter";
-import {setRange} from './datepicker.ranger'
 
 export default function (options: pickerHandler) {
     let {
@@ -71,8 +67,7 @@ export default function (options: pickerHandler) {
                 }
                 selected.push(date);
                 if (!isDouble) {
-                    const handled = singlePick(item, element, inDates(date), selected);
-                    selected = handled.length > 0 ? handled : cache;
+                    selected = inDates(date) ? selected : cache;
                 } else {
                     const beforeHandled = {
                         start: getFront(selected),
@@ -101,12 +96,9 @@ export default function (options: pickerHandler) {
                         selected,
                         limit,
                     }, inDates);
-                    const afterHandled = {
-                        start: getFront(handled.selected),
-                        end: getPeek(handled.selected)
-                    };
+
+                    
                     const peek = getPeek(handled.selected);
-                    const diffAfterHandled = gap(parseFormatted(afterHandled.start, dateFormat), parseFormatted(afterHandled.end, dateFormat));
                     //找出全部选中的无效日期
                     const dates = handled.dates;
                     const datesList = [];
@@ -122,27 +114,15 @@ export default function (options: pickerHandler) {
                         if (handled.selected.length >= 2) {
                             inDates(peek) ? handled.selected.shift() : handled.selected.pop()
                         }
-                        if (inDates(afterHandled.end)) {
-                            afterHandled.start = afterHandled.end;
-                        }
-                        afterHandled.end = null;
+
                     }
                     if (handled.selected.length <= 1) {
                         if (!inDates(peek)) {
-                            handled.selected = subCache
+                            handled.selected = subCache;
                             type = 'disabled'
                         }
                     }
-                    doublePick(
-                        element,
-                        afterHandled.start,
-                        afterHandled.end,
-                        diffAfterHandled,
-                        diffAfterHandled > limit || diffAfterHandled < 0,
-                    );
-                    if (notInDatesList.length <= 0 && type !== 'disabled') {
-                        setRange(datesList, element, dates.length <= 0)
-                    }
+
                     selected = handled.selected;
                 }
                 Observer.$emit('select', {
@@ -194,63 +174,3 @@ function handleDoubleSelect(options: handleDoubleSelect, inDates: Function) {
     }
 }
 
-function singlePick(selector: string, collector: HTMLElement, shouldChange: boolean, selected) {
-    if (shouldChange) {
-        const actives = collector.querySelectorAll(".active");
-        for (let i = 0; i < actives.length; i++) {
-            removeClass(actives[i], "active")
-        }
-        if (!hasClass(selector, "disabled")) {
-            addClass(selector, "active")
-        }
-        return selected
-    }
-    return []
-}
-
-function doublePick(collector: HTMLElement, start: string, end: string, diff: number, outOfLimit: boolean) {
-    //缓存已选的开始日期和结束日期
-    const cache = {
-        start: collector.querySelector(".start-date"),
-        end: collector.querySelector(".end-date")
-    };
-    const current = {
-        start: collector.querySelector(<string>attrSelector("data-date", start)),
-        end: collector.querySelector(<string>attrSelector("data-date", end))
-    };
-    //选择了开始日期，尚未选择结束日期
-    if (diff === 0) {
-        if (!hasClass(current.start, "disabled")) {
-            removeClass(cache.start, "start-date");
-            removeClass(cache.start, "active");
-            removeClass(cache.end, "end-date");
-            removeClass(cache.end, "active");
-            addClass(current.start, "active");
-            addClass(current.start, "start-date");
-        }
-    } else {
-        addClass(current.end, "active");
-        if (diff > 0) {
-            if (outOfLimit) {
-                addClass(current.end, "start-date");
-                removeClass(cache.start, "start-date");
-                removeClass(cache.start, "active");
-            } else {
-                if (start && !end) {
-                    removeClass(cache.start, "active");
-                    removeClass(cache.start, "start-date");
-                    addClass(current.start, 'active');
-                    addClass(current.start, 'start-date');
-                }
-                else if (end && start !== end) {
-                    addClass(current.end, 'active');
-                    addClass(current.end, 'end-date');
-                }
-            }
-        } else if (diff < 0) {
-            removeClass(current.start, "active");
-            removeClass(current.start, "start-date");
-            addClass(current.end, "start-date")
-        }
-    }
-}

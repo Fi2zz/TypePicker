@@ -18,15 +18,18 @@ import {
     getDates,
     merge,
     getPeek,
+    // setRange,
     getFront,
-    isEmpty
+    isEmpty,
+    getRange,
+    setHTMLNodeRange,
+    setHTMLNodeState
 } from "./util"
 
 
 import HTML from './datepicker.template'
 import handlePickDate from './datepicker.picker'
 import {parseFormatted, format as formatter} from "./datepicker.formatter"
-import {setInitRange} from "./datepicker.ranger";
 
 const getDisableDates = (startDate: Date, endDate: Date, dateFormat: string, should: boolean) => {
     const startMonthDates = startDate.getDate();
@@ -164,6 +167,7 @@ export default class DatePicker {
             datesList = [isDate(d) ? this.format(d).value : d]
         }
 
+        // console.log(datesList)
         this.selected = datesList;
     };
 
@@ -277,6 +281,20 @@ export default class DatePicker {
     }
 
     private createDatePicker() {
+        const initRanges: any = getRange(this.selected, this.dateFormat, this.limit, this.inDates);
+        const hasInvalidDate = initRanges.invalidDates.length > 0;
+        if (hasInvalidDate) {
+            this.selected = [];
+        }
+        if (this.views === 'auto') {
+            if (!isEmpty(this.selected)) {
+                this.date = this.parse(getFront(this.selected))
+            } else {
+                if (!isEmpty(this.dates)) {
+                    this.date = this.parse(getFront(this.dates))
+                }
+            }
+        }
         this.element.innerHTML = new HTML({
             startDate: this.date,
             endDate: this.endDate,
@@ -286,28 +304,16 @@ export default class DatePicker {
             views: this.views
         }).template;
 
-        const rangeOption = {
-            collector: this.element,
-            collection: this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
-            data: this.double ? this.selected : [this.format(this.date).value],
-            isDouble: this.double,
-            parse: this.parse,
-            format: this.format,
-            inDates: this.inDates,
-            disables: this.disables,
-            isInit: this.isInit,
-        };
-        this.selected = setInitRange(rangeOption);
+
         if (this.views === 1) {
             if (this.double && this.selected.length >= 2) {
-                const start = this.selected[0];
-                const end = this.selected[this.selected.length - 1];
+                const start = getFront(this.selected);
+                const end = getPeek(this.selected);
                 if (start === end) {
                     this.selected.pop()
                 }
             }
         }
-
         //日期切换
         const prev = this.element.querySelector(".calendar-action-prev");
         const next = this.element.querySelector(".calendar-action-next");
@@ -362,8 +368,6 @@ export default class DatePicker {
             return false
         }
         this.element.className = `${this.element.className} calendar calendar-${this.views === 2 ? "double-views" : this.views === 1 ? "single-view" : "flat-view"}`;
-
-
         const next = nextTick(() => {
             this.isInit = this.selected.length > 0;
             this.bindData = !isEmpty(this.data);
@@ -394,7 +398,6 @@ export default class DatePicker {
             const disableBeforeStartDateAndAfterEndDate = getDisableDates(this.startDate, this.endDate, this.dateFormat, !this.infiniteMode);
             //合并外部传入的disabled dates & start date & end date
             const disables = merge(disableBeforeStartDateAndAfterEndDate, this.disables);
-
             if (!isEmpty(disables)) {
                 const datesList = this.dates;
                 const newDateList = [];
@@ -415,35 +418,6 @@ export default class DatePicker {
                 }
 
                 this.dates = newDateList
-            }
-
-
-            if (this.selected.length >= 2 && this.double) {
-                let startDate = this.parse(getFront(this.selected));
-                let endDate = this.parse(getPeek(this.selected))
-                let diffed = this.diff(endDate, startDate);
-                let notInDates = [];
-                for (let i = 0; i < diffed - 1; i++) {
-                    let date = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
-                    let formatted = this.format(date).value;
-                    if (!this.inDates(formatted)) {
-                        notInDates.push(formatted);
-                    }
-                }
-                if (notInDates.length > 0) {
-                    this.selected = [];
-                }
-            }
-
-
-            if (this.views === 'auto') {
-                if (this.selected.length > 0) {
-                    this.date = this.parse(this.selected[0])
-                } else {
-                    if (this.dates.length > 0) {
-                        this.date = this.parse(this.dates[0])
-                    }
-                }
             }
 
 
@@ -468,8 +442,19 @@ export default class DatePicker {
             }
             if (type !== 'disabled') {
                 Observer.$emit("update", result);
+                if (this.double) {
+                    const currRange: any = getRange(value, this.dateFormat, this.limit, this.inDates);
+
+
+
+
+
+                    setHTMLNodeRange(currRange.validDates, this.element);
+                }
+                setHTMLNodeState(this.element, value, this.double);
             }
         });
+
         Observer.$on('create', (result: any) => {
             const {type, size} = result;
             if (type === 'switch') {
@@ -481,6 +466,8 @@ export default class DatePicker {
                 this.date = new Date(curr.year, curr.month + size, curr.date);
                 this.isInit = false;
             }
+
+
             this.createDatePicker();
             if (type == 'init') {
                 Observer.$emit('select', {
@@ -488,14 +475,12 @@ export default class DatePicker {
                     value: this.selected
                 })
             }
-
             if (this.bindData) {
                 Observer.$emit("data", {
                     data: this.data,
                     nodeList: this.element.querySelectorAll(".calendar-cell")
                 });
             }
-
             if (!isEmpty(this.disables)) {
                 Observer.$emit("disabled", {
                     nodeList: this.element.querySelectorAll(".calendar-cell"),

@@ -48,6 +48,106 @@ var Observer = (function () {
     };
 }());
 
+function parse(string) {
+    if (!string)
+        return new Date();
+    if (string instanceof Date)
+        return string;
+    var date = new Date(string);
+    if (!date.getTime())
+        return null;
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+function isZeroLeading(format) {
+    var splitFormat = format.split(/\W/, 3);
+    splitFormat.shift();
+    var temp = [];
+    for (var i = 0; i < splitFormat.length; i++) {
+        var item = splitFormat[i];
+        if (/\w\w/.test(item)) {
+            temp.push(item);
+        }
+    }
+    return splitFormat.length === temp.length;
+}
+function format(date, format) {
+    if (!format) {
+        format = 'YYYY-MM-DD';
+    }
+    format = format.toUpperCase();
+    var parts = {
+        YYYY: date.getFullYear(),
+        DD: padding(date.getDate()),
+        MM: padding(date.getMonth() + 1),
+        D: date.getDate(),
+        M: date.getMonth() + 1,
+    };
+    var zeroLeading = isZeroLeading(format);
+    return {
+        origin: date,
+        date: zeroLeading ? parts["DD"] : parts["D"],
+        month: zeroLeading ? parts["MM"] : parts["M"],
+        year: parts["YYYY"],
+        day: date.getDay(),
+        value: format.replace(/(?:\b|%)([dDMyY]+)(?:\b|%)/g, function (match, $1) {
+            return parts[$1] === undefined ? $1 : parts[$1];
+        })
+    };
+}
+function parseFormatted(strDate, format) {
+    if (!format) {
+        format = 'YYYY-MM-DD';
+    }
+    var ret = parse(strDate);
+    if (ret)
+        return ret;
+    var token = /d{1,4}|M{1,4}|YY(?:YY)?|S{1,3}|Do|ZZ|([HhMsDm])\1?|[aA]|"[^"]*"|'[^']*'/g;
+    var parseFlags = {
+        D: [/\d{1,2}/, function (d, v) { return d.day = parseInt(v); }],
+        M: [/\d{1,2}/, function (d, v) { return (d.month = parseInt(v) - 1); }],
+        DD: [/\d{2}/, function (d, v) { return d.day = parseInt(v); }],
+        MM: [/\d{2}/, function (d, v) { return d.month = parseInt(v) - 1; }],
+        YY: [/\d{2,4}/, function (d, v) { return d.year = parseInt(v); }],
+        YYYY: [/\d{2,4}/, function (d, v) { return d.year = parseInt(v); }],
+    };
+    ret = function (dateStr, format) {
+        if (dateStr.length > 1000) {
+            return null;
+        }
+        var isValid = true;
+        var dateInfo = {
+            year: 0,
+            month: 0,
+            day: 0
+        };
+        format.replace(token, function ($0) {
+            if (parseFlags[$0]) {
+                var info = parseFlags[$0];
+                var regExp = info[0];
+                var handler_1 = info[info.length - 1];
+                var index_1 = dateStr.search(regExp);
+                if (!~index_1) {
+                    isValid = false;
+                }
+                else {
+                    dateStr.replace(info[0], function (result) {
+                        handler_1(dateInfo, result);
+                        dateStr = dateStr.substr(index_1 + result.length);
+                        return result;
+                    });
+                }
+            }
+            return parseFlags[$0] ? '' : $0.slice(1, $0.length - 1);
+        });
+        if (!isValid) {
+            return null;
+        }
+        var parsed = new Date(dateInfo.year, dateInfo.month, dateInfo.day);
+        return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+    };
+    return ret(strDate, format);
+}
+
 var attrSelector = function (attr, value) { return "[" + attr + "=\"" + value + "\"]"; };
 function parseToInt(string) {
     return parseInt(string, 10);
@@ -244,6 +344,85 @@ function isEmpty(listOrObject) {
     }
 }
 
+function getRange(data, dateFormat, limit, inDates) {
+    var startDate = getFront(data);
+    var endDate = getPeek(data);
+    var start;
+    var end;
+    var invalidDates = [];
+    var validDates = [];
+    if (startDate && endDate) {
+        if (!isDate(startDate)) {
+            start = parseFormatted(startDate, dateFormat);
+        }
+        else {
+            start = startDate;
+        }
+        if (!isDate(endDate)) {
+            end = parseFormatted(endDate, dateFormat);
+        }
+        else {
+            end = endDate;
+        }
+        var gap_1 = diff(start, end, "days");
+        if (+start - +end < 0) {
+            gap_1 = diff(end, start, "days");
+        }
+        if (gap_1 > 0 && gap_1 <= limit) {
+            for (var i = 0; i < gap_1; i++) {
+                var date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+                var formatted = format(date, dateFormat).value;
+                if (!inDates(formatted) && i < gap_1 - 1) {
+                    invalidDates.push(formatted);
+                }
+                else {
+                    validDates.push(formatted);
+                }
+            }
+        }
+    }
+    return {
+        invalidDates: invalidDates,
+        validDates: validDates
+    };
+}
+function setHTMLNodeRange(data, collector) {
+    var collection = collector.querySelectorAll(".in-range");
+    for (var i = 0; i < collection.length; i++) {
+        removeClass(collection[i], "in-range");
+    }
+    for (var i = 0; i < data.length; i++) {
+        var selector = attrSelector("data-date", data[i]);
+        var element = collector.querySelector(selector);
+        if (!hasClass(element, "active")) {
+            addClass(element, "in-range");
+        }
+    }
+}
+function setHTMLNodeState(el, dates, isDouble) {
+    var nodes = el.querySelectorAll(".calendar-date-cell");
+    for (var i = 0; i < nodes.length; i++) {
+        removeClass(nodes[i], "active");
+        if (isDouble) {
+            removeClass(nodes[i], "start-date");
+            removeClass(nodes[i], "end-date");
+        }
+    }
+    for (var i = 0; i < dates.length; i++) {
+        var date = dates[i];
+        var dateElement = el.querySelector("[data-date=\"" + date + "\"]");
+        addClass(dateElement, "active");
+        if (isDouble) {
+            if (i === 0) {
+                addClass(dateElement, "start-date");
+            }
+            if (dates.length === 2 && i === dates.length - 1) {
+                addClass(dateElement, "end-date");
+            }
+        }
+    }
+}
+
 var currDate = new Date();
 var HTML = (function () {
     function HTML(options) {
@@ -401,239 +580,6 @@ var HTML = (function () {
     return HTML;
 }());
 
-function parse(string) {
-    if (!string)
-        return new Date();
-    if (string instanceof Date)
-        return string;
-    var date = new Date(string);
-    if (!date.getTime())
-        return null;
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-function isZeroLeading(format) {
-    var splitFormat = format.split(/\W/, 3);
-    splitFormat.shift();
-    var temp = [];
-    for (var i = 0; i < splitFormat.length; i++) {
-        var item = splitFormat[i];
-        if (/\w\w/.test(item)) {
-            temp.push(item);
-        }
-    }
-    return splitFormat.length === temp.length;
-}
-function format(date, format) {
-    if (!format) {
-        format = 'YYYY-MM-DD';
-    }
-    format = format.toUpperCase();
-    var parts = {
-        YYYY: date.getFullYear(),
-        DD: padding(date.getDate()),
-        MM: padding(date.getMonth() + 1),
-        D: date.getDate(),
-        M: date.getMonth() + 1,
-    };
-    var zeroLeading = isZeroLeading(format);
-    return {
-        origin: date,
-        date: zeroLeading ? parts["DD"] : parts["D"],
-        month: zeroLeading ? parts["MM"] : parts["M"],
-        year: parts["YYYY"],
-        day: date.getDay(),
-        value: format.replace(/(?:\b|%)([dDMyY]+)(?:\b|%)/g, function (match, $1) {
-            return parts[$1] === undefined ? $1 : parts[$1];
-        })
-    };
-}
-function parseFormatted(strDate, format) {
-    if (!format) {
-        format = 'YYYY-MM-DD';
-    }
-    var ret = parse(strDate);
-    if (ret)
-        return ret;
-    var token = /d{1,4}|M{1,4}|YY(?:YY)?|S{1,3}|Do|ZZ|([HhMsDm])\1?|[aA]|"[^"]*"|'[^']*'/g;
-    var parseFlags = {
-        D: [/\d{1,2}/, function (d, v) { return d.day = parseInt(v); }],
-        M: [/\d{1,2}/, function (d, v) { return (d.month = parseInt(v) - 1); }],
-        DD: [/\d{2}/, function (d, v) { return d.day = parseInt(v); }],
-        MM: [/\d{2}/, function (d, v) { return d.month = parseInt(v) - 1; }],
-        YY: [/\d{2,4}/, function (d, v) { return d.year = parseInt(v); }],
-        YYYY: [/\d{2,4}/, function (d, v) { return d.year = parseInt(v); }],
-    };
-    ret = function (dateStr, format) {
-        if (dateStr.length > 1000) {
-            return null;
-        }
-        var isValid = true;
-        var dateInfo = {
-            year: 0,
-            month: 0,
-            day: 0
-        };
-        format.replace(token, function ($0) {
-            if (parseFlags[$0]) {
-                var info = parseFlags[$0];
-                var regExp = info[0];
-                var handler_1 = info[info.length - 1];
-                var index_1 = dateStr.search(regExp);
-                if (!~index_1) {
-                    isValid = false;
-                }
-                else {
-                    dateStr.replace(info[0], function (result) {
-                        handler_1(dateInfo, result);
-                        dateStr = dateStr.substr(index_1 + result.length);
-                        return result;
-                    });
-                }
-            }
-            return parseFlags[$0] ? '' : $0.slice(1, $0.length - 1);
-        });
-        if (!isValid) {
-            return null;
-        }
-        var parsed = new Date(dateInfo.year, dateInfo.month, dateInfo.day);
-        return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
-    };
-    return ret(strDate, format);
-}
-
-var date = new Date();
-var currDate$1 = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-function getRange(collection, start, end) {
-    var temp = [];
-    for (var i = 0; i < collection.length; i++) {
-        var date_1 = attr(collection[i], "data-date");
-        if (date_1) {
-            temp.push(date_1);
-        }
-    }
-    var startIndex = -1;
-    var endIndex = -1;
-    for (var i = 0; i < temp.length; i++) {
-        var data = temp[i];
-        if (data === start) {
-            startIndex = i;
-        }
-        else if (data === end) {
-            endIndex = i;
-        }
-    }
-    if (endIndex === startIndex || endIndex < 0) {
-        return [];
-    }
-    return temp.slice(startIndex + 1, endIndex);
-}
-function setStartAndEnd(collection, inDates, data, parse) {
-    var temp = [];
-    var start = data[0];
-    var end = data[data.length - 1];
-    for (var i = 0; i < collection.length; i++) {
-        var item = collection[i];
-        var nextItem = collection[i + 1];
-        if (data.length > 0) {
-            var date_2 = attr(collection[i], "data-date");
-            if (date_2 === start) {
-                addClass(item, "start-date");
-            }
-            else if (date_2 === end) {
-                addClass(item, "end-date");
-            }
-        }
-        else {
-            if (item && nextItem) {
-                var curr = attr(item, "data-date");
-                var next = attr(nextItem, "data-date");
-                if (curr && next) {
-                    var start_1 = parse(curr);
-                    if (diff(start_1, currDate$1, "days") >= 0) {
-                        var hasItem = inDates(next) && inDates(curr) || inDates(curr) && !inDates(next);
-                        if (hasItem) {
-                            if (temp.length < 2) {
-                                addClass(item, "start-date");
-                                addClass(nextItem, "end-date");
-                                temp.push(curr, next);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    if (data.length > 0) {
-        temp = data;
-    }
-    return temp;
-}
-function setRange(data, collector, remove) {
-    if (remove) {
-        var collection = collector.querySelectorAll(".in-range");
-        for (var i = 0; i < collection.length; i++) {
-            removeClass(collection[i], "in-range");
-        }
-    }
-    else {
-        for (var i = 0; i < data.length; i++) {
-            var selector = attrSelector("data-date", data[i]);
-            var element = collector.querySelector(selector);
-            if (!hasClass(element, "active")) {
-                addClass(element, "in-range");
-            }
-        }
-    }
-}
-function setInitRange(options) {
-    var collector = options.collector, collection = options.collection, data = options.data, isDouble = options.isDouble, parse = options.parse, format = options.format, inDates = options.inDates, isInit = options.isInit;
-    var dates = [];
-    if (!isDouble) {
-        dates = data;
-    }
-    else {
-        if (data.length >= 2) {
-            var start_2 = data[0];
-            var end_1 = data[data.length - 1];
-            if (!inDates(start_2)) {
-                data = [];
-            }
-            var startDate = parse(start_2);
-            var endDate = parse(end_1);
-            var year = startDate.getFullYear();
-            var month = startDate.getMonth();
-            var date_3 = startDate.getDate();
-            var inValidDates = [];
-            var gap$$1 = diff(endDate, startDate, "days") + 1;
-            for (var i = 0; i < gap$$1; i++) {
-                var d = new Date(year, month, date_3 + i);
-                var formatted = format(d).value;
-                if (!inDates(formatted)) {
-                    inValidDates.push(formatted);
-                }
-            }
-            if (inValidDates.length >= 2) {
-                data = [];
-            }
-        }
-        if (data.length > 0 && isInit || !isInit) {
-            dates = setStartAndEnd(collection, inDates, data, parse);
-        }
-        var start = dates[0];
-        var end = dates[dates.length - 1];
-        var range = getRange(collection, start, end);
-        if (range.length > 0) {
-            setRange(range, collector, false);
-        }
-    }
-    for (var i = 0; i < dates.length; i++) {
-        var selector = attrSelector("data-date", dates[i]);
-        var element = collector.querySelector(selector);
-        addClass(element, "active");
-    }
-    return dates;
-}
-
 var handlePickDate = function (options) {
     var element = options.element, selected = options.selected, isDouble = options.isDouble, limit = options.limit, inDates = options.inDates, bindData = options.bindData, dateFormat = options.dateFormat, infiniteMode = options.infiniteMode;
     var collection = element.querySelectorAll(".calendar-date-cell");
@@ -663,8 +609,7 @@ var handlePickDate = function (options) {
             }
             selected.push(date);
             if (!isDouble) {
-                var handled = singlePick(item, element, inDates(date), selected);
-                selected = handled.length > 0 ? handled : cache;
+                selected = inDates(date) ? selected : cache;
             }
             else {
                 var beforeHandled = {
@@ -724,10 +669,6 @@ var handlePickDate = function (options) {
                         type = 'disabled';
                     }
                 }
-                doublePick(element, afterHandled.start, afterHandled.end, diffAfterHandled, diffAfterHandled > limit || diffAfterHandled < 0);
-                if (notInDatesList.length <= 0 && type !== 'disabled') {
-                    setRange(datesList, element, dates.length <= 0);
-                }
                 selected = handled.selected;
             }
             Observer.$emit('select', {
@@ -776,66 +717,6 @@ function handleDoubleSelect(options, inDates) {
         dates: dates,
         selected: selected
     };
-}
-function singlePick(selector, collector, shouldChange, selected) {
-    if (shouldChange) {
-        var actives = collector.querySelectorAll(".active");
-        for (var i = 0; i < actives.length; i++) {
-            removeClass(actives[i], "active");
-        }
-        if (!hasClass(selector, "disabled")) {
-            addClass(selector, "active");
-        }
-        return selected;
-    }
-    return [];
-}
-function doublePick(collector, start, end, diff$$1, outOfLimit) {
-    var cache = {
-        start: collector.querySelector(".start-date"),
-        end: collector.querySelector(".end-date")
-    };
-    var current = {
-        start: collector.querySelector(attrSelector("data-date", start)),
-        end: collector.querySelector(attrSelector("data-date", end))
-    };
-    if (diff$$1 === 0) {
-        if (!hasClass(current.start, "disabled")) {
-            removeClass(cache.start, "start-date");
-            removeClass(cache.start, "active");
-            removeClass(cache.end, "end-date");
-            removeClass(cache.end, "active");
-            addClass(current.start, "active");
-            addClass(current.start, "start-date");
-        }
-    }
-    else {
-        addClass(current.end, "active");
-        if (diff$$1 > 0) {
-            if (outOfLimit) {
-                addClass(current.end, "start-date");
-                removeClass(cache.start, "start-date");
-                removeClass(cache.start, "active");
-            }
-            else {
-                if (start && !end) {
-                    removeClass(cache.start, "active");
-                    removeClass(cache.start, "start-date");
-                    addClass(current.start, 'active');
-                    addClass(current.start, 'start-date');
-                }
-                else if (end && start !== end) {
-                    addClass(current.end, 'active');
-                    addClass(current.end, 'end-date');
-                }
-            }
-        }
-        else if (diff$$1 < 0) {
-            removeClass(current.start, "active");
-            removeClass(current.start, "start-date");
-            addClass(current.end, "start-date");
-        }
-    }
 }
 
 var getDisableDates = function (startDate, endDate, dateFormat, should) {
@@ -924,6 +805,11 @@ var DatePicker = (function () {
             }
             if (type !== 'disabled') {
                 Observer.$emit("update", result);
+                if (_this.double) {
+                    var currRange = getRange(value, _this.dateFormat, _this.limit, _this.inDates);
+                    setHTMLNodeRange(currRange.validDates, _this.element);
+                }
+                setHTMLNodeState(_this.element, value, _this.double);
             }
         });
         Observer.$on('create', function (result) {
@@ -1138,6 +1024,21 @@ var DatePicker = (function () {
         return diff(d1, d2, "days");
     };
     DatePicker.prototype.createDatePicker = function () {
+        var initRanges = getRange(this.selected, this.dateFormat, this.limit, this.inDates);
+        var hasInvalidDate = initRanges.invalidDates.length > 0;
+        if (hasInvalidDate) {
+            this.selected = [];
+        }
+        if (this.views === 'auto') {
+            if (!isEmpty(this.selected)) {
+                this.date = this.parse(getFront(this.selected));
+            }
+            else {
+                if (!isEmpty(this.dates)) {
+                    this.date = this.parse(getFront(this.dates));
+                }
+            }
+        }
         this.element.innerHTML = new HTML({
             startDate: this.date,
             endDate: this.endDate,
@@ -1146,22 +1047,10 @@ var DatePicker = (function () {
             dateFormatter: this.format,
             views: this.views
         }).template;
-        var rangeOption = {
-            collector: this.element,
-            collection: this.element.querySelectorAll(".calendar-date-cell:not(.empty)"),
-            data: this.double ? this.selected : [this.format(this.date).value],
-            isDouble: this.double,
-            parse: this.parse,
-            format: this.format,
-            inDates: this.inDates,
-            disables: this.disables,
-            isInit: this.isInit,
-        };
-        this.selected = setInitRange(rangeOption);
         if (this.views === 1) {
             if (this.double && this.selected.length >= 2) {
-                var start = this.selected[0];
-                var end = this.selected[this.selected.length - 1];
+                var start = getFront(this.selected);
+                var end = getPeek(this.selected);
                 if (start === end) {
                     this.selected.pop();
                 }
@@ -1264,32 +1153,6 @@ var DatePicker = (function () {
                     }
                 }
                 _this.dates = newDateList;
-            }
-            if (_this.selected.length >= 2 && _this.double) {
-                var startDate = _this.parse(getFront(_this.selected));
-                var endDate = _this.parse(getPeek(_this.selected));
-                var diffed = _this.diff(endDate, startDate);
-                var notInDates = [];
-                for (var i = 0; i < diffed - 1; i++) {
-                    var date = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
-                    var formatted = _this.format(date).value;
-                    if (!_this.inDates(formatted)) {
-                        notInDates.push(formatted);
-                    }
-                }
-                if (notInDates.length > 0) {
-                    _this.selected = [];
-                }
-            }
-            if (_this.views === 'auto') {
-                if (_this.selected.length > 0) {
-                    _this.date = _this.parse(_this.selected[0]);
-                }
-                else {
-                    if (_this.dates.length > 0) {
-                        _this.date = _this.parse(_this.dates[0]);
-                    }
-                }
             }
             Observer.$emit('create', { type: 'init', size: 0 });
             clearNextTick(next);
