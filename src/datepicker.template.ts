@@ -126,15 +126,11 @@ export default class HTML {
             ];
             return `<div class="${className.join(" ")}">${day}</div>`
         }).join("");
-
-
         return `  <div class="calendar-day">${template}</div>`
     }
-
     private createMonthBody(content: any) {
         return `<div class="calendar-body">${content}</div>`
     }
-
     private createMonthHeader(year: number, month: number) {
         const heading = function (pack, year, month) {
             if (pack.year) {
@@ -145,11 +141,9 @@ export default class HTML {
         };
         return `<div class="calendar-head"><div class="calendar-title">${heading(this.language, year, month)}</div></div>`
     };
-
     private  createNode(className: string, key: string, text: string, day: number) {
         return `<div class="${className}" ${day >= 0 ? "data-day=" + day : ""} ${key ? "data-date=" + key : ""}>${text}</div>`
     }
-
     private  createPlaceholder(date?: string) {
         return `<div class="date">${date ? date : ''}</div><div class="placeholder"></div>`
     }
