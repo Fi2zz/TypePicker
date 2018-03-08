@@ -68,6 +68,8 @@ export default function (options: pickerHandler) {
                 selected.push(date);
                 if (!isDouble) {
                     selected = inDates(date) ? selected : cache;
+                    type=!inDates(date) ?'disabled':'selected'
+
                 } else {
                     const beforeHandled = {
                         start: getFront(selected),
@@ -97,16 +99,13 @@ export default function (options: pickerHandler) {
                         limit,
                     }, inDates);
 
-                    
+
                     const peek = getPeek(handled.selected);
                     //找出全部选中的无效日期
                     const dates = handled.dates;
-                    const datesList = [];
                     const notInDatesList = [];
                     for (let date of dates) {
-                        if (inDates(date)) {
-                            datesList.push(date)
-                        } else {
+                        if (!inDates(date)) {
                             notInDatesList.push(date)
                         }
                     }
@@ -122,7 +121,6 @@ export default function (options: pickerHandler) {
                             type = 'disabled'
                         }
                     }
-
                     selected = handled.selected;
                 }
                 Observer.$emit('select', {

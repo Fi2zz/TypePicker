@@ -610,6 +610,7 @@ var handlePickDate = function (options) {
             selected.push(date);
             if (!isDouble) {
                 selected = inDates(date) ? selected : cache;
+                type = !inDates(date) ? 'disabled' : 'selected';
             }
             else {
                 var beforeHandled = {
@@ -636,21 +637,12 @@ var handlePickDate = function (options) {
                     selected: selected,
                     limit: limit,
                 }, inDates);
-                var afterHandled = {
-                    start: getFront(handled.selected),
-                    end: getPeek(handled.selected)
-                };
                 var peek = getPeek(handled.selected);
-                var diffAfterHandled = gap(parseFormatted(afterHandled.start, dateFormat), parseFormatted(afterHandled.end, dateFormat));
                 var dates = handled.dates;
-                var datesList = [];
                 var notInDatesList = [];
                 for (var _i = 0, dates_1 = dates; _i < dates_1.length; _i++) {
                     var date_1 = dates_1[_i];
-                    if (inDates(date_1)) {
-                        datesList.push(date_1);
-                    }
-                    else {
+                    if (!inDates(date_1)) {
                         notInDatesList.push(date_1);
                     }
                 }
@@ -658,10 +650,6 @@ var handlePickDate = function (options) {
                     if (handled.selected.length >= 2) {
                         inDates(peek) ? handled.selected.shift() : handled.selected.pop();
                     }
-                    if (inDates(afterHandled.end)) {
-                        afterHandled.start = afterHandled.end;
-                    }
-                    afterHandled.end = null;
                 }
                 if (handled.selected.length <= 1) {
                     if (!inDates(peek)) {
@@ -800,16 +788,13 @@ var DatePicker = (function () {
         }
         Observer.$on("select", function (result) {
             var type = result.type, value = result.value;
-            if (type === 'selected') {
-                _this.setDates(value);
-            }
             if (type !== 'disabled') {
-                Observer.$emit("update", result);
+                var currRange = getRange(value, _this.dateFormat, _this.limit, _this.inDates);
                 if (_this.double) {
-                    var currRange = getRange(value, _this.dateFormat, _this.limit, _this.inDates);
                     setHTMLNodeRange(currRange.validDates, _this.element);
                 }
                 setHTMLNodeState(_this.element, value, _this.double);
+                Observer.$emit("update", result);
             }
         });
         Observer.$on('create', function (result) {
@@ -1026,7 +1011,7 @@ var DatePicker = (function () {
     DatePicker.prototype.createDatePicker = function () {
         var initRanges = getRange(this.selected, this.dateFormat, this.limit, this.inDates);
         var hasInvalidDate = initRanges.invalidDates.length > 0;
-        if (hasInvalidDate) {
+        if (hasInvalidDate || !this.inDates(getFront(this.selected)) && !this.double) {
             this.selected = [];
         }
         if (this.views === 'auto') {

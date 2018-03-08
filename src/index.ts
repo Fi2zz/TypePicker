@@ -283,9 +283,10 @@ export default class DatePicker {
     private createDatePicker() {
         const initRanges: any = getRange(this.selected, this.dateFormat, this.limit, this.inDates);
         const hasInvalidDate = initRanges.invalidDates.length > 0;
-        if (hasInvalidDate) {
+        if (hasInvalidDate || !this.inDates(getFront(this.selected)) && !this.double) {
             this.selected = [];
         }
+
         if (this.views === 'auto') {
             if (!isEmpty(this.selected)) {
                 this.date = this.parse(getFront(this.selected))
@@ -436,22 +437,14 @@ export default class DatePicker {
             delete option.to
         }
         Observer.$on("select", (result: any) => {
-            const {type, value} = result;
-            if (type === 'selected') {
-                this.setDates(value)
-            }
+            let {type, value} = result;
             if (type !== 'disabled') {
-                Observer.$emit("update", result);
+                let currRange: any = getRange(value, this.dateFormat, this.limit, this.inDates);
                 if (this.double) {
-                    const currRange: any = getRange(value, this.dateFormat, this.limit, this.inDates);
-
-
-
-
-
                     setHTMLNodeRange(currRange.validDates, this.element);
                 }
                 setHTMLNodeState(this.element, value, this.double);
+                Observer.$emit("update", result);
             }
         });
 
