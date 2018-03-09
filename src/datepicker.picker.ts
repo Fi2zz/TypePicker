@@ -7,14 +7,10 @@ import {
     getFront,
     getPeek,
     gap,
-    // setRange,
 } from "./util"
 
 import Observer from './datepicker.observer'
-
-
 import {parseFormatted, format} from "./datepicker.formatter";
-
 export default function (options: pickerHandler) {
     let {
         element,
@@ -28,7 +24,6 @@ export default function (options: pickerHandler) {
     } = options;
     const collection = element.querySelectorAll(".calendar-date-cell");
     const cache = selected;
-
     for (let i = 0; i < collection.length; i++) {
         const item = collection[i];
         item.addEventListener("click", () => {
@@ -46,7 +41,6 @@ export default function (options: pickerHandler) {
                 const prevDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
                 const prevDateString = format(prevDate, dateFormat).value;
                 const prevDateIsValid = inDates(prevDateString);
-
                 if (!date
                     || (selected.length <= 0 && !inDates(date) && bindData && !infiniteMode)
                     || (isDouble && !prevDateIsValid && !inDates(date) && !infiniteMode)
@@ -68,8 +62,7 @@ export default function (options: pickerHandler) {
                 selected.push(date);
                 if (!isDouble) {
                     selected = inDates(date) ? selected : cache;
-                    type=!inDates(date) ?'disabled':'selected'
-
+                    type = !inDates(date) ? 'disabled' : 'selected'
                 } else {
                     const beforeHandled = {
                         start: getFront(selected),
@@ -91,15 +84,12 @@ export default function (options: pickerHandler) {
                             selected = [beforeHandled.start]
                         }
                     }
-
                     const handled = handleDoubleSelect({
                         date,
                         dateFormat,
                         selected,
                         limit,
                     }, inDates);
-
-
                     const peek = getPeek(handled.selected);
                     //找出全部选中的无效日期
                     const dates = handled.dates;
@@ -113,7 +103,6 @@ export default function (options: pickerHandler) {
                         if (handled.selected.length >= 2) {
                             inDates(peek) ? handled.selected.shift() : handled.selected.pop()
                         }
-
                     }
                     if (handled.selected.length <= 1) {
                         if (!inDates(peek)) {
@@ -143,7 +132,6 @@ function handleDoubleSelect(options: handleDoubleSelect, inDates: Function) {
         selected.pop();
     }
     const diffs = gap(startDate, endDate);
-
     //选择了两个不同的日期，且第一个日期小于第二个日期
     if (diffs > 0) {
         if (diffs <= options.limit) {
@@ -158,7 +146,6 @@ function handleDoubleSelect(options: handleDoubleSelect, inDates: Function) {
             else {
                 selected.shift();
             }
-
         }
     }
     else if (diffs <= 0) {

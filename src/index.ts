@@ -25,8 +25,6 @@ import {
     setHTMLNodeRange,
     setHTMLNodeState
 } from "./util"
-
-
 import HTML from './datepicker.template'
 import handlePickDate from './datepicker.picker'
 import {parseFormatted, format as formatter} from "./datepicker.formatter"
@@ -49,7 +47,6 @@ const getDisableDates = (startDate: Date, endDate: Date, dateFormat: string, sho
             let formatted = formatter(date, dateFormat).value;
             temp[formatted] = formatted
         }
-
     }
     return temp
 
@@ -106,7 +103,6 @@ export default class DatePicker {
         return !isEmpty(this.dates) && this.dates.indexOf(date) >= 0 //|| !this.disables[date]
     };
 
-
     public on(ev: string, cb: Function) {
         return Observer.$on(ev, cb)
     };
@@ -139,7 +135,6 @@ export default class DatePicker {
             }
             return true
         };
-
         let datesList: Array<any> = [];
         let start: string = '', end: string = '';
         if (this.double) {
@@ -166,8 +161,6 @@ export default class DatePicker {
             const d = dates[dates.length - 1];
             datesList = [isDate(d) ? this.format(d).value : d]
         }
-
-        // console.log(datesList)
         this.selected = datesList;
     };
 
@@ -203,8 +196,16 @@ export default class DatePicker {
             }
         }
         if (isArray(param.days)) {
+
+            //此处还有问题，需要改进，
+            //此时并没有render calendar => 故this.element 找不到子节点
+            //故此处的by day是无效的
+            let nodes =this.element.querySelector("[data-date='2018-3-9']");
+            console.log(nodes,this.dates);
             for (let day of param.days) {
+
                 let dey = this.element.querySelectorAll(`[data-day="${day}"`);
+                console.log(dey,this.element,"data-day",day);
                 if (dey) {
                     for (let d of dey) {
                         let date = d.getAttribute("data-date");
@@ -217,9 +218,8 @@ export default class DatePicker {
         }
         let fromDate: any;
         let toDate: any;
-        const to = param.to
+        const to = param.to;
         const from = param.from;
-
         if (from) {
             if (isDate(from)) {
                 fromDate = from
@@ -233,6 +233,8 @@ export default class DatePicker {
                     return false
                 }
             }
+
+
             this.endDate = fromDate
         }
         if (to) {
@@ -248,9 +250,12 @@ export default class DatePicker {
                     return false
                 }
             }
+
+
             this.date = toDate;
             this.startDate = toDate
         }
+        //如果有 to 和 from, 那么 infiniteMode 为false
         if (fromDate || toDate) {
             this.infiniteMode = false;
         }
@@ -266,7 +271,6 @@ export default class DatePicker {
             if (isObject(result) && Object.keys(result).length > 0) {
                 this.data = result;
                 this.dates = Object.keys(result).sort((a: string, b: string) => +this.parse(a) - this.parse(b));
-                this.bindData = true;
             } else {
                 warn("setData", `you are passing wrong type of data to DatePicker,data should be like :
                     {
@@ -286,13 +290,17 @@ export default class DatePicker {
         if (hasInvalidDate || !this.inDates(getFront(this.selected)) && !this.double) {
             this.selected = [];
         }
-
         if (this.views === 'auto') {
             if (!isEmpty(this.selected)) {
                 this.date = this.parse(getFront(this.selected))
-            } else {
-                if (!isEmpty(this.dates)) {
-                    this.date = this.parse(getFront(this.dates))
+            } else if (!isEmpty(this.dates)) {
+                this.date = this.parse(getFront(this.dates))
+            }
+        }
+        if (this.views === 1) {
+            if (this.double && this.selected.length >= 2) {
+                if (getFront(this.selected) === getPeek(this.selected)) {
+                    this.selected.pop()
                 }
             }
         }
@@ -300,21 +308,10 @@ export default class DatePicker {
             startDate: this.date,
             endDate: this.endDate,
             language: this.language,
-            infiniteMode: this.infiniteMode,
-            dateFormatter: this.format,
-            views: this.views
+            views: this.views,
+            dateFormat: this.dateFormat
         }).template;
 
-
-        if (this.views === 1) {
-            if (this.double && this.selected.length >= 2) {
-                const start = getFront(this.selected);
-                const end = getPeek(this.selected);
-                if (start === end) {
-                    this.selected.pop()
-                }
-            }
-        }
         //日期切换
         const prev = this.element.querySelector(".calendar-action-prev");
         const next = this.element.querySelector(".calendar-action-next");
@@ -324,7 +321,7 @@ export default class DatePicker {
                 prev.addEventListener("click", () => Observer.$emit('create', {type: 'switch', size: -1}))
             } else {
                 const endGap = diff(this.date, this.endDate);
-                if (endGap >= 1) {
+                if (endGap > 1) {
                     next.addEventListener("click", () => {
                         Observer.$emit('create', {type: 'switch', size: 1});
                         removeClass(prev, "disabled calendar-action-disabled")
@@ -333,7 +330,6 @@ export default class DatePicker {
                 else {
                     addClass(next, "disabled calendar-action-disabled")
                 }
-
                 const startGap = diff(this.date, this.startDate);
                 if (startGap >= 1) {
                     prev.addEventListener("click", () => {
@@ -347,9 +343,8 @@ export default class DatePicker {
         }
     };
 
-    private init(option: any) {
+    private init(option: datePickerOptions) {
         const currDate = new Date();
-
         if (option.doubleSelect) {
             this.double = option.doubleSelect
         }
@@ -378,7 +373,6 @@ export default class DatePicker {
                     warn('init',
                         "infiniteMode is on, please provide [startDate] and [endDate] while binding data to datepicker  ")
                 }
-
             }
             if (!this.bindData) {
                 if (isDate(option.startDate) && isDate(option.endDate)) {
@@ -399,6 +393,7 @@ export default class DatePicker {
             const disableBeforeStartDateAndAfterEndDate = getDisableDates(this.startDate, this.endDate, this.dateFormat, !this.infiniteMode);
             //合并外部传入的disabled dates & start date & end date
             const disables = merge(disableBeforeStartDateAndAfterEndDate, this.disables);
+            this.disables = disables;
             if (!isEmpty(disables)) {
                 const datesList = this.dates;
                 const newDateList = [];
@@ -417,11 +412,8 @@ export default class DatePicker {
                         }
                     }
                 }
-
                 this.dates = newDateList
             }
-
-
             Observer.$emit('create', {type: 'init', size: 0});
             clearNextTick(next)
         });
@@ -447,7 +439,6 @@ export default class DatePicker {
                 Observer.$emit("update", result);
             }
         });
-
         Observer.$on('create', (result: any) => {
             const {type, size} = result;
             if (type === 'switch') {
@@ -459,8 +450,6 @@ export default class DatePicker {
                 this.date = new Date(curr.year, curr.month + size, curr.date);
                 this.isInit = false;
             }
-
-
             this.createDatePicker();
             if (type == 'init') {
                 Observer.$emit('select', {
@@ -480,8 +469,6 @@ export default class DatePicker {
                     dateList: this.disables
                 });
             }
-
-
             handlePickDate({
                 dateFormat: this.dateFormat,
                 element: this.element,
@@ -492,12 +479,8 @@ export default class DatePicker {
                 inDates: this.inDates,
                 infiniteMode: this.infiniteMode
             });
-
         });
         this.init(option);
-
     }
 }
-
-
 

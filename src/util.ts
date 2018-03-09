@@ -1,12 +1,8 @@
 import {parseFormatted, format} from "./datepicker.formatter";
-
 export const attrSelector = (attr: string, value: string) => `[${attr}="${value}"]`;
-
-
 export function parseToInt(string: any) {
     return parseInt(string, 10)
 }
-
 export function attr(el: any, attr: any, attrvalue: any | undefined = undefined) {
     if (!el) {
         return null
@@ -70,8 +66,6 @@ export function isDate(object: any) {
 export function isFunction(object: any) {
     return _toString(object) === '[object Function]';
 }
-
-
 export function hasClass(ele: any, className: string) {
     if (!ele || !className || !ele.className || ele.className.search(new RegExp("\\b" + className + "\\b")) == -1) {
         return false;
@@ -110,18 +104,7 @@ export function warn(where: string, msg: any) {
     }
     console.error(`[${where}] ${message} `)
 }
-
-
-export function log(msg: any) {
-    let message = msg;
-    if (isObject(msg) || isArray(msg)) {
-        message = JSON.stringify(msg, null, 2)
-    }
-
-    console.log(message)
-}
-
-export function parseEl(el: string) {
+export function parseEl(el: any) {
     if (!el) {
         return null
     }
@@ -142,8 +125,6 @@ export function parseEl(el: string) {
         }
     }
 }
-
-
 export function removeDisableDates(disableList: Array<string>, dataList: any) {
     const temp = {};
     for (let key in dataList) {
@@ -159,7 +140,6 @@ export function getFront(list: Array<any>) {
 }
 
 export function getPeek(list: Array<any>) {
-
     return list[list.length - 1];
 
 }
@@ -168,19 +148,14 @@ export function gap(d1: Date, d2: Date) {
     const value = diff(d1, d2, "days");
     return value === 0 ? 0 : value * -1
 }
-
-
 export function merge(...args: Array<any>) {
     let merged: any = {};
-
     function toString(object: any) {
         return Object.prototype.toString.call(object)
     }
-
     function whichType(object: any, type: string) {
         return toString(object) === `[object ${type}]`
     }
-
     function generateObject(target: any = {}, object: any) {
         for (let key in object) {
             if (object.hasOwnProperty(key)) {
@@ -189,7 +164,6 @@ export function merge(...args: Array<any>) {
         }
         return target
     }
-
     for (let i = 0; i < args.length; i++) {
         let arg = args[i];
         if (arg) {
@@ -211,23 +185,15 @@ export function merge(...args: Array<any>) {
     }
     return merged
 }
-
-
 export function isEmpty(listOrObject: any) {
-
-
     if (!isArray(listOrObject) && !isObject(listOrObject)) {
         warn("isEmpty", "Expect an Object or an Array,but got " + _toString(listOrObject));
         return false;
     }
-
-
     if (isArray(listOrObject)) {
         return listOrObject.length <= 0;
     }
-
     else if (isObject(listOrObject)) {
-
         for (let key in listOrObject) {
             if (key) {
                 return false
@@ -235,38 +201,14 @@ export function isEmpty(listOrObject: any) {
         }
         return true;
     }
-
-
 }
-
-export function logger(arg: any) {
-
-
-    let msg //=arg;
-
-    if (!isObject(arg) && !isArray(arg)) {
-        msg = arg;
-
-    }
-
-    else {
-
-        msg = JSON.stringify(arg, null, 2)
-
-    }
-
-    console.log(msg)
-}
-
 export function getRange(data: Array<any>, dateFormat: string, limit: number, inDates: Function) {
     let startDate = getFront(data);
     let endDate = getPeek(data);
     let start: Date;
     let end: Date;
-
     const invalidDates = [];
     const validDates = [];
-
     if (startDate && endDate) {
         if (!isDate(startDate)) {
             start = <Date> parseFormatted(<string>startDate, dateFormat)
@@ -283,7 +225,6 @@ export function getRange(data: Array<any>, dateFormat: string, limit: number, in
         if (+start - +end < 0) {
             gap = diff(<Date>end, <Date>start, "days")
         }
-
         if (gap > 0 && gap <= limit) {
             for (let i = 0; i < gap; i++) {
                 let date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
@@ -297,7 +238,6 @@ export function getRange(data: Array<any>, dateFormat: string, limit: number, in
             }
         }
     }
-
     return {
         invalidDates,
         validDates
@@ -306,13 +246,10 @@ export function getRange(data: Array<any>, dateFormat: string, limit: number, in
 }
 
 export function setHTMLNodeRange(data: Array<any>, collector: HTMLElement) {
-
     let collection = collector.querySelectorAll(".in-range");
     for (let i = 0; i < collection.length; i++) {
         removeClass(collection[i], "in-range")
     }
-
-
     for (let i = 0; i < data.length; i++) {
         let selector = <string> attrSelector("data-date", data[i]);
         let element = collector.querySelector(selector);
@@ -323,10 +260,7 @@ export function setHTMLNodeRange(data: Array<any>, collector: HTMLElement) {
 }
 
 export function setHTMLNodeState(el: HTMLElement, dates: Array<string>, isDouble) {
-
-    const nodes = el.querySelectorAll(".calendar-date-cell")
-
-
+    const nodes = el.querySelectorAll(".calendar-date-cell");
     for (let i = 0; i < nodes.length; i++) {
         removeClass(nodes[i], "active");
         if (isDouble) {
@@ -334,8 +268,6 @@ export function setHTMLNodeState(el: HTMLElement, dates: Array<string>, isDouble
             removeClass(nodes[i], "end-date");
         }
     }
-
-
     for (let i = 0; i < dates.length; i++) {
         let date = dates[i];
         let dateElement = el.querySelector(`[data-date="${date}"]`);

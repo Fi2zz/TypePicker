@@ -70,16 +70,21 @@ datepicker built with typescript
 
 ## USAGE
 ```typescript
-
+    
+    
         
     //es module
     import DatePicker from '/dist/datepicker.esm.js'
+    import '/dist/style.css'
       
     //cjs
     const DatePicker =require("/dist/datepicker.js");
+    require("/dist/style.css");
+
 
     //umd
     <script src="/dist/datepicker.min.js"></script>
+    <link  href="/dist/style.css" rel="stylesheet"/>   
     
     
       

@@ -16,9 +16,9 @@ export interface classTemplate {
     startDate: Date,
     endDate: Date,
     language: any,
-    infiniteMode: boolean,
-    dateFormatter: Function,
-    views: number | string
+    infiniteMode?: boolean,
+    views: number | string,
+    dateFormat:string
 }
 
 export interface initRangeOptions {
