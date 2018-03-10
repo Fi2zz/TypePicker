@@ -98,7 +98,8 @@ export default class DatePicker {
     private infiniteMode: boolean = false;
 
     private inDates = (date: string) => {
-        return !isEmpty(this.dates) && this.dates.indexOf(date) >= 0 //|| !this.disables[date]
+        console.log(this.disables);
+        return this.endDate ? this.dates.indexOf(date) >= 0 : Object.keys(this.disables).indexOf(date) // >= 0
     };
 
     public on(ev: string, cb: Function) {
@@ -278,34 +279,26 @@ export default class DatePicker {
         const prev = this.element.querySelector(".calendar-action-prev");
         const next = this.element.querySelector(".calendar-action-next");
         if (prev && next) {
-            if (this.infiniteMode) {
-                next.addEventListener("click", () => Observer.$emit('create', {type: 'switch', size: 1}));
-                prev.addEventListener("click", () => Observer.$emit('create', {type: 'switch', size: -1}))
+            const endGap = this.endDate ? diff(this.endDate, this.date) : 1;
+            const startGap = this.endDate ? diff(this.date, this.startDate) : 2;
+            if (startGap > 1) {
+                prev.addEventListener("click", () => {
+                    Observer.$emit('create', {type: 'switch', size: -1});
+                    removeClass(next, "disabled calendar-action-disabled")
+                });
             } else {
-                const endGap = diff(this.endDate, this.date);
-                const startGap = diff(this.date, this.startDate);
-                if (startGap > 1) {
-                    prev.addEventListener("click", () => {
-                        Observer.$emit('create', {type: 'switch', size: -1});
-                        removeClass(next, "disabled calendar-action-disabled")
-                    });
-                } else {
-                    addClass(prev, "disabled calendar-action-disabled")
-                }
-                if (endGap >= 1) {
-                    next.addEventListener("click", () => {
-                        Observer.$emit('create', {type: 'switch', size: 1});
-                        removeClass(prev, "disabled calendar-action-disabled")
-                    });
-                }
-                else {
-                    addClass(next, "disabled calendar-action-disabled")
-                }
-
+                addClass(prev, "disabled calendar-action-disabled")
+            }
+            if (endGap >= 1) {
+                next.addEventListener("click", () => {
+                    Observer.$emit('create', {type: 'switch', size: 1});
+                    removeClass(prev, "disabled calendar-action-disabled")
+                });
+            }
+            else {
+                addClass(next, "disabled calendar-action-disabled")
             }
         }
-
-
     };
 
     private init(option: datePickerOptions) {
@@ -330,7 +323,10 @@ export default class DatePicker {
             warn('init', `invalid selector,current selector ${this.element}`);
             return false
         }
-        let rawDisableMap: any = {};
+        let rawDisableMap: any = {
+            dateList: [],
+            dayList: []
+        };
         Observer.$on('setDisabled', (result: any) => rawDisableMap = result);
         this.element.className = `${this.element.className} calendar calendar-${this.views === 2 ? "double-views" : this.views === 1 ? "single-view" : "flat-view"}`;
         const next = nextTick(() => {
@@ -361,26 +357,34 @@ export default class DatePicker {
                     dateMap[key] = this.parse(key).getDay()
                 }
             }
-            const disabledDates = rawDisableMap.dateList;
-            const disabledDays = rawDisableMap.dayList;
+
             const disabledMap = {};
-            for (let date in dateMap) {
-                let day = parseToInt(dateMap[date]);
-                if (disabledDates.indexOf(date) >= 0) {
-                    delete  dateMap[date];
-                    if (!disabledMap[date]) {
-                        disabledMap[date] = date;
-                    }
-                }
-                if (disabledDays.indexOf(day) >= 0) {
-                    if (dateMap[date]) {
+            const {dateList, dayList} = rawDisableMap;
+            if (this.endDate) {
+                for (let date in dateMap) {
+                    let day = parseToInt(dateMap[date]);
+                    if (dateList.indexOf(date) >= 0) {
                         delete  dateMap[date];
+                        if (!disabledMap[date]) {
+                            disabledMap[date] = date;
+                        }
                     }
-                    if (!disabledMap[date]) {
-                        disabledMap[date] = date;
+                    if (dayList.indexOf(day) >= 0) {
+                        if (dateMap[date]) {
+                            delete  dateMap[date];
+                        }
+                        if (!disabledMap[date]) {
+                            disabledMap[date] = date;
+                        }
                     }
                 }
             }
+            else {
+                for (let date of dateList) {
+                    disabledMap[date] = date;
+                }
+            }
+
 
             const disableBeforeStartDateAndAfterEndDate = getDisableDates(this.startDate, this.endDate, this.dateFormat, !this.infiniteMode);
             //无效日期
