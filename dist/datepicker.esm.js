@@ -146,6 +146,12 @@ var attrSelector = function (attr, value) { return "[" + attr + "=\"" + value + 
 function parseToInt(string) {
     return parseInt(string, 10);
 }
+function getDates(year, month) {
+    var d = new Date(year, month, 1);
+    var utc = Date.UTC(d.getFullYear(), d.getMonth() + 1, 0);
+    return new Date(utc).getUTCDate();
+}
+
 function attr(el, attr, attrvalue) {
     if (attrvalue === void 0) { attrvalue = undefined; }
     if (!el) {
@@ -157,28 +163,23 @@ function attr(el, attr, attrvalue) {
     }
     return value ? value : el.setAttribute(attr, attrvalue);
 }
-function diff(start, end, type) {
+function diff(start, end, type, isAbsolute) {
     if (type === void 0) { type = "month"; }
     var result;
-    if (!start || !end) {
-        result = 0;
+    if (!isDate(start) || !isDate(end)) {
+        return 0;
     }
     if (type === "month") {
-        result = (start.getFullYear() * 12 + start.getMonth()) - (end.getFullYear() * 12 + end.getMonth());
+        result = Math.abs(start.getFullYear() * 12 + start.getMonth()) - (end.getFullYear() * 12 + end.getMonth());
     }
     else if (type === "days") {
         var startTime = new Date(start.getFullYear(), start.getMonth(), start.getDate());
         var endTime = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-        result = Math.round((startTime - endTime)) / (1000 * 60 * 60 * 24);
+        var calcu = Math.round((startTime - endTime)) / (1000 * 60 * 60 * 24);
+        result = isAbsolute ? Math.abs(calcu) : calcu;
     }
-    return Math.abs(result);
+    return result;
 }
-
-var getDates = function (year, month) {
-    var d = new Date(year, month, 1);
-    var utc = Date.UTC(d.getFullYear(), d.getMonth() + 1, 0);
-    return new Date(utc).getUTCDate();
-};
 var padding = function (n) { return "" + (n > 9 ? n : "0" + n); };
 function _toString(object) {
     return Object.prototype.toString.call(object);
@@ -254,7 +255,6 @@ function parseEl(el) {
         }
     }
 }
-
 function getFront(list) {
     return list[0];
 }
@@ -271,12 +271,6 @@ function merge() {
         args[_i] = arguments[_i];
     }
     var merged = {};
-    function toString(object) {
-        return Object.prototype.toString.call(object);
-    }
-    function whichType(object, type) {
-        return toString(object) === "[object " + type + "]";
-    }
     function generateObject(target, object) {
         if (target === void 0) { target = {}; }
         for (var key in object) {
@@ -289,21 +283,21 @@ function merge() {
     for (var i = 0; i < args.length; i++) {
         var arg = args[i];
         if (arg) {
-            if (whichType(arg, "Array")) {
+            if (isArray(arg)) {
                 for (var i_1 = 0; i_1 < arg.length; i_1++) {
                     var argItem = arg[i_1];
-                    if (whichType(argItem, "Object")) {
+                    if (isObject(argItem)) {
                         merged = generateObject(merged, argItem);
                     }
-                    else if (!whichType(argItem, "Date")) {
+                    else if (!isDate(argItem)) {
                         merged[argItem] = argItem;
                     }
                 }
             }
-            else if (whichType(arg, "Object")) {
+            else if (isObject(arg)) {
                 merged = generateObject(merged, arg);
             }
-            else if (whichType(arg, "String") || whichType(arg, "Number")) {
+            else if (isString(arg) || isNumber(arg)) {
                 merged[arg] = arg;
             }
         }
@@ -347,8 +341,8 @@ function getRange(data, dateFormat, limit, inDates) {
         else {
             end = endDate;
         }
-        var gap_1 = diff(start, end, "days");
-        if (gap_1 > 0 && gap_1 <= limit) {
+        var gap_1 = diff(start, end, "days", true);
+        if (gap_1 <= limit) {
             for (var i = 0; i < gap_1; i++) {
                 var date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
                 var formatted = format(date, dateFormat).value;
@@ -366,42 +360,6 @@ function getRange(data, dateFormat, limit, inDates) {
         validDates: validDates
     };
 }
-function setHTMLNodeRange(data, collector) {
-    var collection = collector.querySelectorAll(".in-range");
-    for (var i = 0; i < collection.length; i++) {
-        removeClass(collection[i], "in-range");
-    }
-    for (var i = 0; i < data.length; i++) {
-        var selector = attrSelector("data-date", data[i]);
-        var element = collector.querySelector(selector);
-        if (!hasClass(element, "active")) {
-            addClass(element, "in-range");
-        }
-    }
-}
-function setHTMLNodeState(el, dates, isDouble) {
-    var nodes = el.querySelectorAll(".calendar-date-cell");
-    for (var i = 0; i < nodes.length; i++) {
-        removeClass(nodes[i], "active");
-        if (isDouble) {
-            removeClass(nodes[i], "start-date");
-            removeClass(nodes[i], "end-date");
-        }
-    }
-    for (var i = 0; i < dates.length; i++) {
-        var date = dates[i];
-        var dateElement = el.querySelector("[data-date=\"" + date + "\"]");
-        addClass(dateElement, "active");
-        if (isDouble) {
-            if (i === 0) {
-                addClass(dateElement, "start-date");
-            }
-            if (dates.length === 2 && i === dates.length - 1) {
-                addClass(dateElement, "end-date");
-            }
-        }
-    }
-}
 
 var HTML = (function () {
     function HTML(options) {
@@ -409,12 +367,12 @@ var HTML = (function () {
         this.formatter = function (date) { return format(date, _this.dateFormat); };
         this.language = {};
         this.views = 1;
-        var startDate = options.startDate, views = options.views, language = options.language, dateFormat = options.dateFormat, diff$$1 = options.diff;
+        var date = options.date, views = options.views, language = options.language, dateFormat = options.dateFormat, diff$$1 = options.diff;
         this.dateFormat = dateFormat;
         var gap$$1 = views === 2 ? 1 : views === 'auto' ? diff$$1 : 0;
         this.language = language;
         this.views = views;
-        this.template = "" + this.createActionBar(this.views !== 'auto') + this.createView(this.createBody(gap$$1, startDate));
+        this.template = "" + this.createActionBar(this.views !== 'auto') + this.createView(this.createBody(gap$$1, date));
     }
     HTML.prototype.createActionBar = function (create) {
         if (!create) {
@@ -422,11 +380,11 @@ var HTML = (function () {
         }
         return "<div class=\"calendar-action-bar\">\n            <button class='calendar-action calendar-action-prev'><span>prev</span></button>\n            <button class='calendar-action calendar-action-next'><span>next</span></button>\n         </div>\n    ";
     };
-    HTML.prototype.createBody = function (gap$$1, startDate) {
+    HTML.prototype.createBody = function (gap$$1, date) {
         var template = [];
         for (var i = 0; i <= gap$$1; i++) {
-            var date = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
-            var paint = this.createMonthDateTemplate(date.getFullYear(), date.getMonth());
+            var dat = new Date(date.getFullYear(), date.getMonth() + i, 1);
+            var paint = this.createMonthDateTemplate(dat.getFullYear(), dat.getMonth());
             template.push({ template: paint.template, year: paint.year, month: paint.month });
         }
         return template;
@@ -737,7 +695,6 @@ var DatePicker = (function () {
         this.double = false;
         this.bindData = false;
         this.infiniteMode = false;
-        this.isInit = false;
         this.inDates = function (date) {
             return !isEmpty(_this.dates) && _this.dates.indexOf(date) >= 0;
         };
@@ -751,11 +708,46 @@ var DatePicker = (function () {
             deprecatedWarn('option.to', 'use option.endDate');
             delete option.to;
         }
+        function setHTMLNodeRange(data, collector) {
+            var collection = collector.querySelectorAll(".in-range");
+            for (var i = 0; i < collection.length; i++) {
+                removeClass(collection[i], "in-range");
+            }
+            for (var i = 0; i < data.length; i++) {
+                var selector = attrSelector("data-date", data[i]);
+                var element = collector.querySelector(selector);
+                if (!hasClass(element, "active")) {
+                    addClass(element, "in-range");
+                }
+            }
+        }
+        function setHTMLNodeState(el, dates, isDouble) {
+            var nodes = el.querySelectorAll(".calendar-date-cell");
+            for (var i = 0; i < nodes.length; i++) {
+                removeClass(nodes[i], "active");
+                if (isDouble) {
+                    removeClass(nodes[i], "start-date");
+                    removeClass(nodes[i], "end-date");
+                }
+            }
+            for (var i = 0; i < dates.length; i++) {
+                var date = dates[i];
+                var dateElement = el.querySelector("[data-date=\"" + date + "\"]");
+                addClass(dateElement, "active");
+                if (isDouble) {
+                    if (i === 0) {
+                        addClass(dateElement, "start-date");
+                    }
+                    if (dates.length === 2 && i === dates.length - 1) {
+                        addClass(dateElement, "end-date");
+                    }
+                }
+            }
+        }
         Observer.$on("select", function (result) {
             var type = result.type, value = result.value;
             if (type !== 'disabled') {
                 var currRange = getRange(value, _this.dateFormat, _this.limit, _this.inDates);
-                console.log(currRange, value, _this.double);
                 if (_this.double) {
                     setHTMLNodeRange(currRange.validDates, _this.element);
                 }
@@ -772,7 +764,6 @@ var DatePicker = (function () {
                     date: _this.date.getDate()
                 };
                 _this.date = new Date(curr.year, curr.month + size, curr.date);
-                _this.isInit = false;
             }
             _this.createDatePicker();
             if (type === 'init') {
@@ -960,12 +951,9 @@ var DatePicker = (function () {
         }
     };
     
-    DatePicker.prototype.diff = function (d1, d2) {
-        return diff(d1, d2, "days");
-    };
     DatePicker.prototype.createDatePicker = function () {
         this.element.innerHTML = new HTML({
-            startDate: this.date,
+            date: this.date,
             diff: diff(this.startDate, this.endDate),
             language: this.language,
             views: this.views,
@@ -979,18 +967,9 @@ var DatePicker = (function () {
                 prev.addEventListener("click", function () { return Observer.$emit('create', { type: 'switch', size: -1 }); });
             }
             else {
-                var endGap = diff(this.date, this.endDate);
-                if (endGap > 1) {
-                    next.addEventListener("click", function () {
-                        Observer.$emit('create', { type: 'switch', size: 1 });
-                        removeClass(prev, "disabled calendar-action-disabled");
-                    });
-                }
-                else {
-                    addClass(next, "disabled calendar-action-disabled");
-                }
+                var endGap = diff(this.endDate, this.date);
                 var startGap = diff(this.date, this.startDate);
-                if (startGap >= 1) {
+                if (startGap > 1) {
                     prev.addEventListener("click", function () {
                         Observer.$emit('create', { type: 'switch', size: -1 });
                         removeClass(next, "disabled calendar-action-disabled");
@@ -998,6 +977,15 @@ var DatePicker = (function () {
                 }
                 else {
                     addClass(prev, "disabled calendar-action-disabled");
+                }
+                if (endGap >= 1) {
+                    next.addEventListener("click", function () {
+                        Observer.$emit('create', { type: 'switch', size: 1 });
+                        removeClass(prev, "disabled calendar-action-disabled");
+                    });
+                }
+                else {
+                    addClass(next, "disabled calendar-action-disabled");
                 }
             }
         }
@@ -1027,7 +1015,6 @@ var DatePicker = (function () {
         this.element.className = this.element.className + " calendar calendar-" + (this.views === 2 ? "double-views" : this.views === 1 ? "single-view" : "flat-view");
         var next = nextTick(function () {
             var dateMap = {};
-            _this.isInit = _this.selected.length > 0;
             _this.bindData = !isEmpty(_this.data);
             if (!isDate(option.startDate) || !isDate(option.endDate)) {
                 _this.infiniteMode = true;
@@ -1075,7 +1062,7 @@ var DatePicker = (function () {
             }
             var disableBeforeStartDateAndAfterEndDate = getDisableDates(_this.startDate, _this.endDate, _this.dateFormat, !_this.infiniteMode);
             _this.disables = merge(disableBeforeStartDateAndAfterEndDate, disabledMap);
-            _this.dates = Object.keys(dateMap);
+            _this.dates = Object.keys(dateMap).sort(function (prev, next) { return _this.parse(prev) - _this.parse(next); });
             var initRanges = getRange(_this.selected, _this.dateFormat, _this.limit, _this.inDates);
             var hasInvalidDate = initRanges.invalidDates.length > 0;
             if (hasInvalidDate || !_this.inDates(getFront(_this.selected)) && !_this.double) {
@@ -1096,7 +1083,7 @@ var DatePicker = (function () {
                     }
                 }
             }
-            Observer.$emit('create', { type: 'init' });
+            Observer.$emit('create', { type: 'init', size: 0 });
             clearNextTick(next);
         });
     };

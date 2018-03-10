@@ -3,6 +3,12 @@ export const attrSelector = (attr: string, value: string) => `[${attr}="${value}
 export function parseToInt(string: any) {
     return parseInt(string, 10)
 }
+
+export function getDates(year: number, month: number): number {
+    let d = new Date(year, month, 1);
+    let utc = Date.UTC(d.getFullYear(), d.getMonth() + 1, 0);
+    return new Date(utc).getUTCDate()
+}
 export function attr(el: any, attr: any, attrvalue: any | undefined = undefined) {
     if (!el) {
         return null
@@ -14,28 +20,23 @@ export function attr(el: any, attr: any, attrvalue: any | undefined = undefined)
     return value ? value : el.setAttribute(attr, attrvalue)
 }
 
-export function diff(start: Date, end: Date, type: string = "month") {
+export function diff(start: Date, end: Date, type: string = "month", isAbsolute?: boolean) {
     let result: number;
-    if (!start || !end) {
-        result = 0
+    if (!isDate(start) || !isDate(end)) {
+        return 0
     }
     if (type === "month") {
-        result = (start.getFullYear() * 12 + start.getMonth()) - (end.getFullYear() * 12 + end.getMonth())
+        result = Math.abs(start.getFullYear() * 12 + start.getMonth()) - (end.getFullYear() * 12 + end.getMonth())
     } else if (type === "days") {
         const startTime = <any>new Date(start.getFullYear(), start.getMonth(), start.getDate());
         const endTime = <any>new Date(end.getFullYear(), end.getMonth(), end.getDate());
-        result = Math.round((startTime - endTime)) / (1000 * 60 * 60 * 24)
+        const calcu = Math.round((startTime - endTime)) / (1000 * 60 * 60 * 24);
+        result = isAbsolute ? Math.abs(calcu) : calcu
     }
-    return Math.abs(result)
+    return result
 }
 
-export const getFirstDay = (year: number, month: number): number => new Date(year, month, 1).getDay();
 
-export const getDates = (year: number, month: number): number => {
-    let d = new Date(year, month, 1);
-    let utc = Date.UTC(d.getFullYear(), d.getMonth() + 1, 0);
-    return new Date(utc).getUTCDate()
-};
 export const padding = (n: Number) => `${n > 9 ? n : "0" + n}`;
 
 function _toString(object: any) {
@@ -124,15 +125,7 @@ export function parseEl(el: any) {
         }
     }
 }
-export function removeDisableDates(disableList: Array<string>, dataList: any) {
-    const temp = {};
-    for (let key in dataList) {
-        if (disableList.indexOf(key) >= 0) {
-            temp[key] = key
-        }
-    }
-    return temp;
-}
+
 
 export function getFront(list: Array<any>) {
     return list[0]
@@ -150,14 +143,6 @@ export function gap(d1: Date, d2: Date) {
 export function merge(...args: Array<any>) {
     let merged: any = {};
 
-    function toString(object: any) {
-        return Object.prototype.toString.call(object)
-    }
-
-    function whichType(object: any, type: string) {
-        return toString(object) === `[object ${type}]`
-    }
-
     function generateObject(target: any = {}, object: any) {
         for (let key in object) {
             if (object.hasOwnProperty(key)) {
@@ -170,18 +155,18 @@ export function merge(...args: Array<any>) {
     for (let i = 0; i < args.length; i++) {
         let arg = args[i];
         if (arg) {
-            if (whichType(arg, "Array")) {
+            if (isArray(arg)) {
                 for (let i = 0; i < arg.length; i++) {
                     let argItem = arg[i];
-                    if (whichType(argItem, "Object")) {
+                    if (isObject(argItem)) {
                         merged = generateObject(merged, argItem)
-                    } else if (!whichType(argItem, "Date")) {
+                    } else if (!isDate(argItem)) {
                         merged[argItem] = argItem
                     }
                 }
-            } else if (whichType(arg, "Object")) {
+            } else if (isObject(arg)) {
                 merged = generateObject(merged, arg)
-            } else if (whichType(arg, "String") || whichType(arg, "Number")) {
+            } else if (isString(arg) || isNumber(arg)) {
                 merged[arg] = arg
             }
         }
@@ -224,10 +209,8 @@ export function getRange(data: Array<any>, dateFormat: string, limit: number, in
         } else {
             end = <Date>endDate
         }
-        let gap = diff(<Date>start, <Date>end, "days");
-
-
-        if (gap > 0 && gap <= limit) {
+        const gap = diff(<Date>start, <Date>end, "days", true);
+        if (gap <= limit) {
             for (let i = 0; i < gap; i++) {
                 let date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
                 let formatted = format(date, dateFormat).value;
@@ -244,44 +227,5 @@ export function getRange(data: Array<any>, dateFormat: string, limit: number, in
         invalidDates,
         validDates
     };
-
 }
 
-export function setHTMLNodeRange(data: Array<any>, collector: HTMLElement) {
-    let collection = collector.querySelectorAll(".in-range");
-    for (let i = 0; i < collection.length; i++) {
-        removeClass(collection[i], "in-range")
-    }
-    // console.log(data)
-    for (let i = 0; i < data.length; i++) {
-        let selector = <string> attrSelector("data-date", data[i]);
-        let element = collector.querySelector(selector);
-        if (!hasClass(element, "active")) {
-            addClass(element, "in-range")
-        }
-    }
-}
-
-export function setHTMLNodeState(el: HTMLElement, dates: Array<string>, isDouble) {
-    const nodes = el.querySelectorAll(".calendar-date-cell");
-    for (let i = 0; i < nodes.length; i++) {
-        removeClass(nodes[i], "active");
-        if (isDouble) {
-            removeClass(nodes[i], "start-date");
-            removeClass(nodes[i], "end-date");
-        }
-    }
-    for (let i = 0; i < dates.length; i++) {
-        let date = dates[i];
-        let dateElement = el.querySelector(`[data-date="${date}"]`);
-        addClass(dateElement, "active");
-        if (isDouble) {
-            if (i === 0) {
-                addClass(dateElement, "start-date");
-            }
-            if (dates.length === 2 && i === dates.length - 1) {
-                addClass(dateElement, "end-date");
-            }
-        }
-    }
-}

@@ -4,7 +4,7 @@ import './test.styl'
 
 import DatePicker from '../src/index'
 import {source, languages as language} from './mock'
-import {addClass} from "../src/util";
+import {addClass, diff} from "../src/util";
 
 const date = new Date();
 
@@ -25,7 +25,7 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
     const endDate = new Date(dist.year, dist.month + 20, dist.date);
 
 
-    let app: any =create ?  new DatePicker({
+    let app: any = create ? new DatePicker({
         el: document.getElementById("datepicker"),
         startDate,
         endDate,
@@ -33,7 +33,7 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
         format: dateFormat,
         doubleSelect: true,
         views: 2//'auto'
-    }) :  null;
+    }) : null;
 
 
     if (app) {
@@ -90,10 +90,10 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
                     // "abc123",
                     // "123abc",
                     "2018-2-18",
-                    // "2018-2-19",
-                    // "2018-2-22",
-                    // "2018-2-23",
-                    // new Date(),
+                    "2018-2-19",
+                    "2018-2-22",
+                    "2018-2-23",
+                    new Date(),
                     "2018-2-27",
                     "2018-2-25",
                     "2018-3-28",
@@ -101,18 +101,18 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
                     "2018-3-20",
                     "2018-3-19",
                 ],
-                // from: new Date(2018, 7,15),
-                // to: new Date(2018, 5, 15),
-               days: [1, 5, 2,]
+                from: new Date(2018, 8,15),
+                to: new Date(2018, 6, 15),
+                days: [5,]
             });
 
-            const bindData =  true;
+            const bindData = true;
             if (bindData) {
                 app.setData(() => {
                     Object.keys(source).forEach(date => {
                         let item = app.parse(date);
 
-                        if (app.diff(item, currDate) < 0) {
+                        if (diff(item, currDate) < 0) {
                             delete source[date]
                         }
                     });
@@ -130,7 +130,6 @@ function popupHandler(visible: boolean) {
     const pop = <HTMLElement>document.querySelector(".popup");
     pop.style.display = visible ? 'block' : 'none';
 }
-
 
 
 function init(document: Document) {

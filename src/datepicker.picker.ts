@@ -60,6 +60,7 @@ export default function (options: pickerHandler) {
                     selected = []
                 }
                 selected.push(date);
+
                 if (!isDouble) {
                     selected = inDates(date) ? selected : cache;
                     type = !inDates(date) ? 'disabled' : 'selected'

@@ -2,30 +2,26 @@ import {datePickerOptions, disable} from "./datepicker.interfaces";
 import Observer from './datepicker.observer';
 import {
     diff,
-    isObject,
-    isDate,
-    isArray,
-    attr,
-    attrSelector,
-    nextTick,
-    clearNextTick,
     warn,
-    addClass,
+    merge,
+    isDate,
+    isEmpty,
+    isArray,
     isNumber,
+    isObject,
+    isFunction,
+    parseEl,
+    getPeek,
+    getFront,
+    getRange,
+    getDates,
+    hasClass,
+    addClass,
     removeClass,
     parseToInt,
-    parseEl,
-    removeDisableDates,
-    isFunction,
-    getDates,
-    merge,
-    getPeek,
-    // setRange,
-    getFront,
-    isEmpty,
-    getRange,
-    setHTMLNodeRange,
-    setHTMLNodeState
+    nextTick,
+    attrSelector,
+    clearNextTick,
 } from "./util"
 import HTML from './datepicker.template'
 import handlePickDate from './datepicker.picker'
@@ -100,7 +96,7 @@ export default class DatePicker {
     private double: boolean = false;
     private bindData: boolean = false;
     private infiniteMode: boolean = false;
-    private isInit: boolean = false;
+
     private inDates = (date: string) => {
         return !isEmpty(this.dates) && this.dates.indexOf(date) >= 0 //|| !this.disables[date]
     };
@@ -269,14 +265,10 @@ export default class DatePicker {
         }
     };
 
-    public diff(d1: Date, d2: Date) {
-        return diff(d1, d2, "days")
-    }
-
     private createDatePicker() {
 
         this.element.innerHTML = new HTML({
-            startDate: this.date,
+            date: this.date,
             diff: diff(this.startDate, this.endDate),
             language: this.language,
             views: this.views,
@@ -290,8 +282,17 @@ export default class DatePicker {
                 next.addEventListener("click", () => Observer.$emit('create', {type: 'switch', size: 1}));
                 prev.addEventListener("click", () => Observer.$emit('create', {type: 'switch', size: -1}))
             } else {
-                const endGap = diff(this.date, this.endDate);
-                if (endGap > 1) {
+                const endGap = diff(this.endDate, this.date);
+                const startGap = diff(this.date, this.startDate);
+                if (startGap > 1) {
+                    prev.addEventListener("click", () => {
+                        Observer.$emit('create', {type: 'switch', size: -1});
+                        removeClass(next, "disabled calendar-action-disabled")
+                    });
+                } else {
+                    addClass(prev, "disabled calendar-action-disabled")
+                }
+                if (endGap >= 1) {
                     next.addEventListener("click", () => {
                         Observer.$emit('create', {type: 'switch', size: 1});
                         removeClass(prev, "disabled calendar-action-disabled")
@@ -300,15 +301,7 @@ export default class DatePicker {
                 else {
                     addClass(next, "disabled calendar-action-disabled")
                 }
-                const startGap = diff(this.date, this.startDate);
-                if (startGap >= 1) {
-                    prev.addEventListener("click", () => {
-                        Observer.$emit('create', {type: 'switch', size: -1});
-                        removeClass(next, "disabled calendar-action-disabled")
-                    });
-                } else {
-                    addClass(prev, "disabled calendar-action-disabled")
-                }
+
             }
         }
 
@@ -342,7 +335,6 @@ export default class DatePicker {
         this.element.className = `${this.element.className} calendar calendar-${this.views === 2 ? "double-views" : this.views === 1 ? "single-view" : "flat-view"}`;
         const next = nextTick(() => {
             const dateMap = {};
-            this.isInit = this.selected.length > 0;
             this.bindData = !isEmpty(this.data);
             if (!isDate(option.startDate) || !isDate(option.endDate)) {
                 this.infiniteMode = true;
@@ -394,9 +386,11 @@ export default class DatePicker {
             //无效日期
             this.disables = merge(disableBeforeStartDateAndAfterEndDate, disabledMap);
             //所有有效日期
-            this.dates = Object.keys(dateMap);
+            this.dates = Object.keys(dateMap).sort((prev: string, next: string) => this.parse(prev) - this.parse(next));
+
             const initRanges: any = getRange(this.selected, this.dateFormat, this.limit, this.inDates);
             const hasInvalidDate = initRanges.invalidDates.length > 0;
+
             if (hasInvalidDate || !this.inDates(getFront(this.selected)) && !this.double) {
                 this.selected = [];
             }
@@ -414,7 +408,7 @@ export default class DatePicker {
                     }
                 }
             }
-            Observer.$emit('create', {type: 'init'});
+            Observer.$emit('create', {type: 'init', size: 0});
             clearNextTick(next)
         })
 
@@ -430,12 +424,51 @@ export default class DatePicker {
             deprecatedWarn('option.to', 'use option.endDate');
             delete option.to
         }
+
+
+        function setHTMLNodeRange(data: Array<any>, collector: HTMLElement) {
+            let collection = collector.querySelectorAll(".in-range");
+            for (let i = 0; i < collection.length; i++) {
+                removeClass(collection[i], "in-range")
+            }
+            for (let i = 0; i < data.length; i++) {
+                let selector = <string> attrSelector("data-date", data[i]);
+                let element = collector.querySelector(selector);
+                if (!hasClass(element, "active")) {
+                    addClass(element, "in-range")
+                }
+            }
+        }
+
+        function setHTMLNodeState(el: HTMLElement, dates: Array<string>, isDouble) {
+            const nodes = el.querySelectorAll(".calendar-date-cell");
+            for (let i = 0; i < nodes.length; i++) {
+                removeClass(nodes[i], "active");
+                if (isDouble) {
+                    removeClass(nodes[i], "start-date");
+                    removeClass(nodes[i], "end-date");
+                }
+            }
+            for (let i = 0; i < dates.length; i++) {
+                let date = dates[i];
+                let dateElement = el.querySelector(`[data-date="${date}"]`);
+                addClass(dateElement, "active");
+                if (isDouble) {
+                    if (i === 0) {
+                        addClass(dateElement, "start-date");
+                    }
+                    if (dates.length === 2 && i === dates.length - 1) {
+                        addClass(dateElement, "end-date");
+                    }
+                }
+            }
+        }
+
+
         Observer.$on("select", (result: any) => {
             let {type, value} = result;
             if (type !== 'disabled') {
-                let currRange: any = getRange(value, this.dateFormat, this.limit, this.inDates);
-
-                console.log(currRange, value, this.double);
+                const currRange: any = getRange(value, this.dateFormat, this.limit, this.inDates);
                 if (this.double) {
                     setHTMLNodeRange(currRange.validDates, this.element);
                 }
@@ -445,6 +478,8 @@ export default class DatePicker {
         });
         Observer.$on('create', (result: any) => {
             let {type, size} = result;
+
+
             if (type === 'switch') {
                 const curr = {
                     year: this.date.getFullYear(),
@@ -452,7 +487,7 @@ export default class DatePicker {
                     date: this.date.getDate()
                 };
                 this.date = new Date(curr.year, curr.month + size, curr.date);
-                this.isInit = false;
+
             }
 
             this.createDatePicker();
@@ -486,8 +521,6 @@ export default class DatePicker {
                 infiniteMode: this.infiniteMode
             });
         });
-
-
         this.init(option);
     }
 }

@@ -13,7 +13,8 @@ export interface datePickerOptions {
 
 
 export interface classTemplate {
-    startDate: Date,
+    // startDate: Date,
+    date:Date,
     language: any,
     infiniteMode?: boolean,
     views: number | string,

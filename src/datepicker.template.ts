@@ -1,13 +1,10 @@
 import {classTemplate} from './datepicker.interfaces'
-import {
-    getDates,
-    diff,
-} from "./util"
 import {format} from './datepicker.formatter'
+import {getDates} from './util'
 export default class HTML {
     constructor(options: classTemplate) {
         const {
-            startDate,
+            date,
             views,
             language,
             dateFormat,
@@ -18,7 +15,7 @@ export default class HTML {
         const gap = views === 2 ? 1 : views === 'auto' ? diff : 0;
         this.language = language;
         this.views = views;
-        this.template = `${this.createActionBar(this.views !== 'auto')}${this.createView(this.createBody(gap, startDate))}`
+        this.template = `${this.createActionBar(this.views !== 'auto')}${this.createView(this.createBody(gap, date))}`
     }
 
     private dateFormat: string;
@@ -38,11 +35,11 @@ export default class HTML {
     `
     }
 
-    private  createBody(gap: number, startDate: Date) {
+    private  createBody(gap: number, date: Date) {
         const template = [];
         for (let i = 0; i <= gap; i++) {
-            const date = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
-            const paint = this.createMonthDateTemplate(date.getFullYear(), date.getMonth());
+            const dat = new Date(date.getFullYear(), date.getMonth() + i, 1);
+            const paint = this.createMonthDateTemplate(dat.getFullYear(), dat.getMonth());
             template.push({template: paint.template, year: paint.year, month: paint.month})
         }
         return template
