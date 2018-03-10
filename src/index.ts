@@ -95,13 +95,9 @@ export default class DatePicker {
     private element: any = null;
     private double: boolean = false;
     private bindData: boolean = false;
-    private infiniteMode: boolean = false;
-
     private inDates = (date: string) => {
-        console.log(this.disables);
-        return this.endDate ? this.dates.indexOf(date) >= 0 : Object.keys(this.disables).indexOf(date) // >= 0
+        return this.endDate ? this.dates.indexOf(date) >= 0 : Object.keys(this.disables).indexOf(date) <= -1
     };
-
     public on(ev: string, cb: Function) {
         return Observer.$on(ev, cb)
     };
@@ -233,11 +229,6 @@ export default class DatePicker {
             this.date = toDate;
             this.startDate = toDate
         }
-
-        //如果有 to 和 from, 那么 infiniteMode 为false
-        if (fromDate || toDate) {
-            this.infiniteMode = false;
-        }
         Observer.$emit('setDisabled', {
             dayList,
             dateList
@@ -333,10 +324,9 @@ export default class DatePicker {
             const dateMap = {};
             this.bindData = !isEmpty(this.data);
             if (!isDate(option.startDate) || !isDate(option.endDate)) {
-                this.infiniteMode = true;
                 if (this.bindData) {
                     warn('init',
-                        "infiniteMode is on, please provide [startDate] and [endDate] while binding data to datepicker  ")
+                        "please provide [startDate] and [endDate] while binding data to datepicker")
                 }
             }
             if (!this.bindData) {
@@ -386,7 +376,7 @@ export default class DatePicker {
             }
 
 
-            const disableBeforeStartDateAndAfterEndDate = getDisableDates(this.startDate, this.endDate, this.dateFormat, !this.infiniteMode);
+            const disableBeforeStartDateAndAfterEndDate = getDisableDates(this.startDate, this.endDate, this.dateFormat, !!this.endDate);
             //无效日期
             this.disables = merge(disableBeforeStartDateAndAfterEndDate, disabledMap);
             //所有有效日期
@@ -522,7 +512,7 @@ export default class DatePicker {
                 limit: this.limit,
                 bindData: this.bindData,
                 inDates: this.inDates,
-                infiniteMode: this.infiniteMode
+                infiniteMode: !!this.endDate
             });
         });
         this.init(option);
