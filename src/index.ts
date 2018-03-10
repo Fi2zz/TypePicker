@@ -597,12 +597,10 @@ export default class DatePicker {
         }
       }
       //初始化的时候的选中状态
-      // if (type === "init") {
       Observer.$emit("select", {
         type,
         value: this.selected
       });
-      // }
       if (this.bindData) {
         Observer.$emit("data", {
           data: this.data,
