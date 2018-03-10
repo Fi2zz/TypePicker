@@ -5,6 +5,8 @@ import {
     isObject,
     isDate,
     isArray,
+    attr,
+    attrSelector,
     nextTick,
     clearNextTick,
     warn,
@@ -184,38 +186,23 @@ export default class DatePicker {
             warn("setDisabled", `invalid params  { dates:<Array<any>>${param.dates}, days:<Array<number>>${param.days} }`);
             return false;
         }
-        const dateMap = {};
-        const dateList = [];
-        if (isArray(param.dates)) {
-            for (let date of param.dates) {
-                if (isDate(date)) {
-                    dateList.push(this.format(date).value)
-                } else {
-                    dateList.push(date);
+
+        const dateList = isArray(param.dates) ? param.dates.map((date: any) => {
+            if (date instanceof Date) {
+                return this.format(date).value
+            }
+            else {
+                let parsed = this.parse(date);
+                if (parsed instanceof Date) {
+                    return date
                 }
             }
-        }
-        if (isArray(param.days)) {
+        }).filter((item: string) => !!item) : [];
+        const dayList = isArray(param.days) ? param.days.filter((item: any) => {
+            let parsed = parseToInt(item);
+            return !isNaN(parsed) && parsed >= 0 && parsed <= 6
+        }) : [];
 
-            //此处还有问题，需要改进，
-            //此时并没有render calendar => 故this.element 找不到子节点
-            //故此处的by day是无效的
-            let nodes =this.element.querySelector("[data-date='2018-3-9']");
-            console.log(nodes,this.dates);
-            for (let day of param.days) {
-
-                let dey = this.element.querySelectorAll(`[data-day="${day}"`);
-                console.log(dey,this.element,"data-day",day);
-                if (dey) {
-                    for (let d of dey) {
-                        let date = d.getAttribute("data-date");
-                        if (date) {
-                            dateList.push(date);
-                        }
-                    }
-                }
-            }
-        }
         let fromDate: any;
         let toDate: any;
         const to = param.to;
@@ -228,13 +215,10 @@ export default class DatePicker {
                 const parsed = this.parse(from);
                 if (isDate(parsed)) {
                     fromDate = parsed
-                }
-                else {
-                    return false
+                } else {
+                    return false;
                 }
             }
-
-
             this.endDate = fromDate
         }
         if (to) {
@@ -245,32 +229,37 @@ export default class DatePicker {
                 const parsed = this.parse(to);
                 if (isDate(parsed)) {
                     toDate = parsed
-                }
-                else {
-                    return false
+                } else {
+                    return false;
                 }
             }
-
-
             this.date = toDate;
             this.startDate = toDate
         }
+
         //如果有 to 和 from, 那么 infiniteMode 为false
         if (fromDate || toDate) {
             this.infiniteMode = false;
         }
-        for (let date of dateList) {
-            dateMap[date] = date;
-        }
-        this.disables = dateMap;
+        Observer.$emit('setDisabled', {
+            dayList,
+            dateList
+        })
+
     };
 
     public setData(cb: Function) {
+
         if (isFunction(cb)) {
             const result = cb();
             if (isObject(result) && Object.keys(result).length > 0) {
-                this.data = result;
-                this.dates = Object.keys(result).sort((a: string, b: string) => +this.parse(a) - this.parse(b));
+
+                for (let key in result) {
+                    let date = this.parse(key);
+                    if (date instanceof Date) {
+                        this.data[key] = result[key]
+                    }
+                }
             } else {
                 warn("setData", `you are passing wrong type of data to DatePicker,data should be like :
                     {
@@ -285,33 +274,14 @@ export default class DatePicker {
     }
 
     private createDatePicker() {
-        const initRanges: any = getRange(this.selected, this.dateFormat, this.limit, this.inDates);
-        const hasInvalidDate = initRanges.invalidDates.length > 0;
-        if (hasInvalidDate || !this.inDates(getFront(this.selected)) && !this.double) {
-            this.selected = [];
-        }
-        if (this.views === 'auto') {
-            if (!isEmpty(this.selected)) {
-                this.date = this.parse(getFront(this.selected))
-            } else if (!isEmpty(this.dates)) {
-                this.date = this.parse(getFront(this.dates))
-            }
-        }
-        if (this.views === 1) {
-            if (this.double && this.selected.length >= 2) {
-                if (getFront(this.selected) === getPeek(this.selected)) {
-                    this.selected.pop()
-                }
-            }
-        }
+
         this.element.innerHTML = new HTML({
             startDate: this.date,
-            endDate: this.endDate,
+            diff: diff(this.startDate, this.endDate),
             language: this.language,
             views: this.views,
             dateFormat: this.dateFormat
         }).template;
-
         //日期切换
         const prev = this.element.querySelector(".calendar-action-prev");
         const next = this.element.querySelector(".calendar-action-next");
@@ -341,6 +311,8 @@ export default class DatePicker {
                 }
             }
         }
+
+
     };
 
     private init(option: datePickerOptions) {
@@ -353,7 +325,9 @@ export default class DatePicker {
         //开始日期
         this.startDate = isDate(option.startDate) ? option.startDate : new Date();
         //结束日期
-        this.endDate = isDate(option.endDate) ? option.endDate : new Date(this.startDate.getFullYear(), this.startDate.getMonth() + 6, 0);
+        if (isDate(option.endDate)) {
+            this.endDate = option.endDate
+        }
         //初始视图所在日期
         this.date = this.startDate;
         //選擇日期區間最大限制
@@ -363,8 +337,11 @@ export default class DatePicker {
             warn('init', `invalid selector,current selector ${this.element}`);
             return false
         }
+        let rawDisableMap: any = {};
+        Observer.$on('setDisabled', (result: any) => rawDisableMap = result);
         this.element.className = `${this.element.className} calendar calendar-${this.views === 2 ? "double-views" : this.views === 1 ? "single-view" : "flat-view"}`;
         const next = nextTick(() => {
+            const dateMap = {};
             this.isInit = this.selected.length > 0;
             this.bindData = !isEmpty(this.data);
             if (!isDate(option.startDate) || !isDate(option.endDate)) {
@@ -380,43 +357,68 @@ export default class DatePicker {
                     const year = currDate.getFullYear();
                     const month = currDate.getMonth();
                     const date = currDate.getDate();
-                    let dates = [];
                     for (let i = 0; i < gap; i++) {
                         let item: Date = new Date(year, month, date + i);
                         let formatted = this.format(item).value;
-                        dates.push(formatted)
+                        dateMap[formatted] = item.getDay()
                     }
-                    this.dates = dates;
                 }
             }
-            //如果是infiniteMode,则不自动把过期日期设置为disabled
+            else {
+                for (let key in this.data) {
+                    dateMap[key] = this.parse(key).getDay()
+                }
+            }
+            const disabledDates = rawDisableMap.dateList;
+            const disabledDays = rawDisableMap.dayList;
+            const disabledMap = {};
+            for (let date in dateMap) {
+                let day = parseToInt(dateMap[date]);
+                if (disabledDates.indexOf(date) >= 0) {
+                    delete  dateMap[date];
+                    if (!disabledMap[date]) {
+                        disabledMap[date] = date;
+                    }
+                }
+                if (disabledDays.indexOf(day) >= 0) {
+                    if (dateMap[date]) {
+                        delete  dateMap[date];
+                    }
+                    if (!disabledMap[date]) {
+                        disabledMap[date] = date;
+                    }
+                }
+            }
+
             const disableBeforeStartDateAndAfterEndDate = getDisableDates(this.startDate, this.endDate, this.dateFormat, !this.infiniteMode);
-            //合并外部传入的disabled dates & start date & end date
-            const disables = merge(disableBeforeStartDateAndAfterEndDate, this.disables);
-            this.disables = disables;
-            if (!isEmpty(disables)) {
-                const datesList = this.dates;
-                const newDateList = [];
-                const removed = removeDisableDates(Object.keys(this.disables), this.data);
-                for (let date of datesList) {
-                    if (this.bindData) {
-                        if (!removed[date]) {
-                            newDateList.push(date)
-                        } else {
-                            delete this.data[date]
-                        }
-                    }
-                    else {
-                        if (!disables[date]) {
-                            newDateList.push(date)
-                        }
+            //无效日期
+            this.disables = merge(disableBeforeStartDateAndAfterEndDate, disabledMap);
+            //所有有效日期
+            this.dates = Object.keys(dateMap);
+            const initRanges: any = getRange(this.selected, this.dateFormat, this.limit, this.inDates);
+            const hasInvalidDate = initRanges.invalidDates.length > 0;
+            if (hasInvalidDate || !this.inDates(getFront(this.selected)) && !this.double) {
+                this.selected = [];
+            }
+            if (this.views === 'auto') {
+                if (!isEmpty(this.selected)) {
+                    this.date = this.parse(getFront(this.selected))
+                } else if (!isEmpty(this.dates)) {
+                    this.date = this.parse(getFront(this.dates))
+                }
+            }
+            if (this.views === 1) {
+                if (this.double && this.selected.length >= 2) {
+                    if (getFront(this.selected) === getPeek(this.selected)) {
+                        this.selected.pop()
                     }
                 }
-                this.dates = newDateList
             }
-            Observer.$emit('create', {type: 'init', size: 0});
+            Observer.$emit('create', {type: 'init'});
             clearNextTick(next)
-        });
+        })
+
+
     };
 
     constructor(option: datePickerOptions) {
@@ -432,6 +434,8 @@ export default class DatePicker {
             let {type, value} = result;
             if (type !== 'disabled') {
                 let currRange: any = getRange(value, this.dateFormat, this.limit, this.inDates);
+
+                console.log(currRange, value, this.double);
                 if (this.double) {
                     setHTMLNodeRange(currRange.validDates, this.element);
                 }
@@ -440,7 +444,7 @@ export default class DatePicker {
             }
         });
         Observer.$on('create', (result: any) => {
-            const {type, size} = result;
+            let {type, size} = result;
             if (type === 'switch') {
                 const curr = {
                     year: this.date.getFullYear(),
@@ -450,12 +454,14 @@ export default class DatePicker {
                 this.date = new Date(curr.year, curr.month + size, curr.date);
                 this.isInit = false;
             }
+
             this.createDatePicker();
-            if (type == 'init') {
+            //初始化的时候的选中状态
+            if (type === 'init') {
                 Observer.$emit('select', {
                     type: 'init',
                     value: this.selected
-                })
+                });
             }
             if (this.bindData) {
                 Observer.$emit("data", {
@@ -480,6 +486,8 @@ export default class DatePicker {
                 infiniteMode: this.infiniteMode
             });
         });
+
+
         this.init(option);
     }
 }

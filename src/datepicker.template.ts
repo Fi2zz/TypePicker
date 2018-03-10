@@ -8,14 +8,14 @@ export default class HTML {
     constructor(options: classTemplate) {
         const {
             startDate,
-            endDate,
             views,
             language,
-            dateFormat
+            dateFormat,
+            diff
         } = options;
 
         this.dateFormat = dateFormat;
-        const gap = views === 2 ? 1 : views === 'auto' ? diff(startDate, endDate) : 0;
+        const gap = views === 2 ? 1 : views === 'auto' ? diff : 0;
         this.language = language;
         this.views = views;
         this.template = `${this.createActionBar(this.views !== 'auto')}${this.createView(this.createBody(gap, startDate))}`

@@ -15,19 +15,18 @@ export function attr(el: any, attr: any, attrvalue: any | undefined = undefined)
 }
 
 export function diff(start: Date, end: Date, type: string = "month") {
-    if (!start) {
-        start = new Date()
-    }
-    if (!end) {
-        end = new Date()
+    let result: number;
+    if (!start || !end) {
+        result = 0
     }
     if (type === "month") {
-        return Math.abs((start.getFullYear() * 12 + start.getMonth()) - (end.getFullYear() * 12 + end.getMonth()))
+        result = (start.getFullYear() * 12 + start.getMonth()) - (end.getFullYear() * 12 + end.getMonth())
     } else if (type === "days") {
         const startTime = <any>new Date(start.getFullYear(), start.getMonth(), start.getDate());
         const endTime = <any>new Date(end.getFullYear(), end.getMonth(), end.getDate());
-        return Math.round((startTime - endTime)) / (1000 * 60 * 60 * 24);
+        result = Math.round((startTime - endTime)) / (1000 * 60 * 60 * 24)
     }
+    return Math.abs(result)
 }
 
 export const getFirstDay = (year: number, month: number): number => new Date(year, month, 1).getDay();
@@ -150,12 +149,15 @@ export function gap(d1: Date, d2: Date) {
 }
 export function merge(...args: Array<any>) {
     let merged: any = {};
+
     function toString(object: any) {
         return Object.prototype.toString.call(object)
     }
+
     function whichType(object: any, type: string) {
         return toString(object) === `[object ${type}]`
     }
+
     function generateObject(target: any = {}, object: any) {
         for (let key in object) {
             if (object.hasOwnProperty(key)) {
@@ -164,6 +166,7 @@ export function merge(...args: Array<any>) {
         }
         return target
     }
+
     for (let i = 0; i < args.length; i++) {
         let arg = args[i];
         if (arg) {
@@ -222,9 +225,8 @@ export function getRange(data: Array<any>, dateFormat: string, limit: number, in
             end = <Date>endDate
         }
         let gap = diff(<Date>start, <Date>end, "days");
-        if (+start - +end < 0) {
-            gap = diff(<Date>end, <Date>start, "days")
-        }
+
+
         if (gap > 0 && gap <= limit) {
             for (let i = 0; i < gap; i++) {
                 let date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
@@ -250,6 +252,7 @@ export function setHTMLNodeRange(data: Array<any>, collector: HTMLElement) {
     for (let i = 0; i < collection.length; i++) {
         removeClass(collection[i], "in-range")
     }
+    // console.log(data)
     for (let i = 0; i < data.length; i++) {
         let selector = <string> attrSelector("data-date", data[i]);
         let element = collector.querySelector(selector);

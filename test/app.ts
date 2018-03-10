@@ -87,11 +87,12 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
 
             app.setDisabled({
                 dates: [
-                    // "2018-2-18",
+                    // "abc123",
+                    // "123abc",
+                    "2018-2-18",
                     // "2018-2-19",
                     // "2018-2-22",
                     // "2018-2-23",
-                    // "2018-3-24",
                     // new Date(),
                     "2018-2-27",
                     "2018-2-25",
@@ -102,10 +103,10 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
                 ],
                 // from: new Date(2018, 7,15),
                 // to: new Date(2018, 5, 15),
-               days: [1, 5, 2, 6]
+               days: [1, 5, 2,]
             });
 
-            const bindData = !true;
+            const bindData =  true;
             if (bindData) {
                 app.setData(() => {
                     Object.keys(source).forEach(date => {
@@ -133,7 +134,7 @@ function popupHandler(visible: boolean) {
 
 
 function init(document: Document) {
-    createDatePicker(true, ['2018-3-9', '2018-3-14',]);
+    createDatePicker(true, ['2018-3-10', '2018-3-12',]);
     document.addEventListener("click", (e) => {
         const target = <HTMLElement>e.target;
         if (target) {

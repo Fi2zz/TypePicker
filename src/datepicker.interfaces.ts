@@ -14,11 +14,11 @@ export interface datePickerOptions {
 
 export interface classTemplate {
     startDate: Date,
-    endDate: Date,
     language: any,
     infiniteMode?: boolean,
     views: number | string,
-    dateFormat:string
+    dateFormat:string,
+    diff:number
 }
 
 export interface initRangeOptions {
