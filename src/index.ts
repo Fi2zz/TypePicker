@@ -623,11 +623,13 @@ export default class DatePicker {
         node.addEventListener("click", () => {
           let type = "selected";
           const date = attr(node, "data-date");
+          //没有日期，直接返回
+          if (!date) {
+            return false;
+          }
           const index = selected.indexOf(date);
-          //不可选的日期
-          //点击无效日期时，返回false
-          //初始化时，selected的length为0，点击不可选日期
-          //当前点击的日期的前一天是无效日期，则返回false
+          //bindData 状态下，且selected的length为0，点击不可选日期，返回
+          //无效日期可以当作结束日期，但不能当作开始日期，故选择的日期的前一天是无效日期，返回
           // 如  2018-02-23，2018-02-24 为无效日期，则点击2018-02-24返回无效日期
           const isDisabledDate = isDisabled(date);
           const now = this.parse(date);
@@ -638,7 +640,6 @@ export default class DatePicker {
           );
           const prevDateIsInValid = isDisabled(this.format(prevDate).value);
           if (
-            !date ||
             (bindData && selected.length <= 0 && isDisabledDate) ||
             (isDoubleSelect && prevDateIsInValid && isDisabledDate) ||
             (index >= 0 && isDisabledDate)
