@@ -467,14 +467,16 @@ export default class DatePicker {
         this.disableDays = dayList;
       }
 
-      const disableBeforeStartDateAndAfterEndDate = getDisableDates(
-        this.startDate,
-        this.endDate,
-        this.dateFormat,
-        !!this.endDate
-      );
       //无效日期
-      this.disables = merge(disableBeforeStartDateAndAfterEndDate, disabledMap);
+      this.disables = merge(
+        getDisableDates(
+          this.startDate,
+          this.endDate,
+          this.dateFormat,
+          !!this.endDate
+        ),
+        disabledMap
+      );
       const front = getFront(this.selected);
       const peek = getPeek(this.selected);
       if (

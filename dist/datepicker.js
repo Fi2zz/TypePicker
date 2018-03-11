@@ -1075,8 +1075,7 @@ var DatePicker = (function () {
                 }
                 _this.disableDays = dayList;
             }
-            var disableBeforeStartDateAndAfterEndDate = getDisableDates(_this.startDate, _this.endDate, _this.dateFormat, !!_this.endDate);
-            _this.disables = merge(disableBeforeStartDateAndAfterEndDate, disabledMap);
+            _this.disables = merge(getDisableDates(_this.startDate, _this.endDate, _this.dateFormat, !!_this.endDate), disabledMap);
             var front = getFront(_this.selected);
             var peek = getPeek(_this.selected);
             if (_this.disables[front] ||

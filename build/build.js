@@ -7,7 +7,6 @@ const uglify = require("uglify-js");
 
 const commonJs = require("rollup-plugin-commonjs");
 const typescript = require("rollup-plugin-typescript");
-const node = require("rollup-plugin-node-resolve");
 
 const config = {
   dest: "./dist",
@@ -15,11 +14,7 @@ const config = {
   build: {
     input: "./src/index.ts",
     output: dest => bundleTypes("DatePicker", dest),
-    plugins: [
-      commonJs(),
-      node(),
-      typescript({ typescript: require("typescript") })
-    ]
+    plugins: [commonJs(), typescript({ typescript: require("typescript") })]
   },
   style: "./src/style.styl"
 };
