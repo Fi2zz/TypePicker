@@ -109,12 +109,14 @@ DatePicker build with typescript
             views: 1
     });
 
-    //`update` event  fired by click on date cell and DatePicker init  
+    //`update` event fired by click on date cell and DatePicker init
     app.on("update", (result) => {
         // result contains two keys, `value` and `type`
         // value =>  selected dates
         // type  =>  two types => `init` and `selected`
         // place your logic  here
+        //eg:
+        // document.getElementById("dates").innerText = value
     });
 
     // `disabled`event fired by `setDisabled`
