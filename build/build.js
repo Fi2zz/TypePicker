@@ -75,20 +75,18 @@ function stylusCompiler(config, dest, resolve) {
   });
 }
 
-
 function banner(code) {
-
   return `  /*
-   *  tyDatePicker v1.5.6
+   *  TypePicker v1.5.8
    *  Fi2zz / wenjingbiao@outlook.com
-   *  https://github.com/Fi2zz/tyDatepicker
+   *  https://github.com/Fi2zz/datepicker
    *  (c) 2017-${new Date().getFullYear()}, wenjingbiao@outlook.com
    *  MIT License
   */
   
   
 ${code}
-  `
+  `;
 }
 
 function write(file, code) {

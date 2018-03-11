@@ -1,7 +1,7 @@
   /*
-   *  tyDatePicker v1.5.6
+   *  TypePicker v1.5.8
    *  Fi2zz / wenjingbiao@outlook.com
-   *  https://github.com/Fi2zz/tyDatepicker
+   *  https://github.com/Fi2zz/datepicker
    *  (c) 2017-2018, wenjingbiao@outlook.com
    *  MIT License
   */
