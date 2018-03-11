@@ -124,6 +124,7 @@ function setNodeRangeState(
   data: Array<any>,
   should?: boolean
 ) {
+  if(!should) return ;
   let collection = el.querySelectorAll(".in-range");
   for (let i = 0; i < collection.length; i++) {
     removeClass(collection[i], "in-range");

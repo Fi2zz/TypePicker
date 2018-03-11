@@ -543,6 +543,8 @@ function parseEl(el) {
     }
 }
 function setNodeRangeState(el, data, should) {
+    if (!should)
+        return;
     var collection = el.querySelectorAll(".in-range");
     for (var i = 0; i < collection.length; i++) {
         removeClass(collection[i], "in-range");
