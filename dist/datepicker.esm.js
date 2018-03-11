@@ -939,6 +939,9 @@ var DatePicker = (function () {
             this.date = toDate;
             this.startDate = toDate;
         }
+        if (toDate) {
+            var to_1 = this.format(toDate).value;
+        }
         Observer.$emit("setDisabled", {
             dayList: dayList,
             dateList: dateList
@@ -1059,6 +1062,12 @@ var DatePicker = (function () {
                         if (!disabledMap[date]) {
                             disabledMap[date] = date;
                         }
+                    }
+                }
+                for (var date in disabledMap) {
+                    var parsed = _this.parse(date);
+                    if (diff(_this.endDate, parsed, "days") < 0) {
+                        delete disabledMap[date];
                     }
                 }
             }

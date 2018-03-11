@@ -261,7 +261,7 @@ export default class DatePicker {
       return false;
     }
 
-    const dateList = isArray(param.dates)
+    let dateList = isArray(param.dates)
       ? param.dates
           .map((date: any) => {
             if (date instanceof Date) {
@@ -298,6 +298,7 @@ export default class DatePicker {
           return false;
         }
       }
+
       this.endDate = fromDate;
     }
     if (to) {
@@ -315,6 +316,11 @@ export default class DatePicker {
       this.date = toDate;
       this.startDate = toDate;
     }
+
+    if (toDate) {
+      let to = this.format(toDate).value;
+    }
+
     Observer.$emit("setDisabled", {
       dayList,
       dateList
@@ -458,6 +464,13 @@ export default class DatePicker {
             if (!disabledMap[date]) {
               disabledMap[date] = date;
             }
+          }
+        }
+        //处理结束日期之后的日期，避免disables 对象过大
+        for (let date in disabledMap) {
+          let parsed = this.parse(date);
+          if (diff(this.endDate, parsed, "days") < 0) {
+            delete disabledMap[date];
           }
         }
       } else {
