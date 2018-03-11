@@ -1,6 +1,19 @@
-# tyDatePicker
+# DatePicker
 
-datepicker built with typescript
+DatePicker build with typescript
+
+## FEATURES
+
+1.  Base on event
+2.  Easy to set data date by date by using `data` event
+3.  Support multi views and single views
+4.  Disabled date can be selected as end date
+5.  Single selection and double selection
+6.  Limitaion for two selected dates
+
+## RUN DEMO
+
+    yarn dev or npm run dev
 
 ## OPTIONS
 
