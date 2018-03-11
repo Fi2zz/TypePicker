@@ -4,7 +4,7 @@ interface datePickerOptions {
   format?: string;
   doubleSelect?: boolean;
   views?: number | string;
-  startDate?: Date | string;
+  startDate?: Date;
   endDate?: Date;
 }
 interface disable {
@@ -291,8 +291,6 @@ export default class DatePicker {
         fromDate = from;
       } else {
         const parsed = this.parse(from, this.dateFormat);
-
-        console.log(parsed);
         if (isDate(parsed)) {
           fromDate = parsed;
         } else {
@@ -391,25 +389,11 @@ export default class DatePicker {
     this.doubleSelect = isBoolean(option.doubleSelect);
     this.dateFormat = option.format;
     this.views = getViews(option.views);
-    //开始日期
-    // this.startDate = isDate(option.startDate) ? option.startDate : new Date();
+    this.startDate = isDate(option.startDate) ? option.startDate : new Date();
 
-    const getDateObject = (
-      date: Date | string,
-      returnValue: boolean = true
-    ): Date => {
-      let value;
-      if (!isDate(date)) {
-        let parsed = this.parse(date);
-        value = isDate(parsed) ? parsed : returnValue ? new Date() : null;
-      } else {
-        value = returnValue ? date : null;
-      }
-      return value;
-    };
-
-    this.startDate = getDateObject(option.startDate);
-    this.endDate = getDateObject(option.endDate, false);
+    if (option.endDate && isDate(option.endDate)) {
+      this.endDate = option.endDate;
+    }
 
     //初始视图所在日期
     this.date = this.startDate;

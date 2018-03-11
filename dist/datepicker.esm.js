@@ -912,7 +912,6 @@ var DatePicker = (function () {
             }
             else {
                 var parsed = this.parse(from, this.dateFormat);
-                console.log(parsed);
                 if (isDate(parsed)) {
                     fromDate = parsed;
                 }
@@ -1006,20 +1005,10 @@ var DatePicker = (function () {
         this.doubleSelect = isBoolean(option.doubleSelect);
         this.dateFormat = option.format;
         this.views = getViews(option.views);
-        var getDateObject = function (date, returnValue) {
-            if (returnValue === void 0) { returnValue = true; }
-            var value;
-            if (!isDate(date)) {
-                var parsed = _this.parse(date);
-                value = isDate(parsed) ? parsed : returnValue ? new Date() : null;
-            }
-            else {
-                value = returnValue ? date : null;
-            }
-            return value;
-        };
-        this.startDate = getDateObject(option.startDate);
-        this.endDate = getDateObject(option.endDate, false);
+        this.startDate = isDate(option.startDate) ? option.startDate : new Date();
+        if (option.endDate && isDate(option.endDate)) {
+            this.endDate = option.endDate;
+        }
         this.date = this.startDate;
         this.limit = this.doubleSelect
             ? isNumber(option.limit) ? option.limit : 2
