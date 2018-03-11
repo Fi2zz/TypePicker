@@ -1,4 +1,6 @@
 import { padding } from "./util";
+const formatReg = /\d{2,4}(\W{1})\d{1,2}(\W{1})\d{1,2}/;
+
 function parse(string: string | Date): any {
   if (!string) return new Date();
   if (string instanceof Date) return string;
@@ -54,7 +56,13 @@ export function parseFormatted(strDate: string, format: string) {
   if (!format) {
     format = "YYYY-MM-DD";
   }
+
+  const formatRegExpTester = createDateFormatVaildator(format);
+  if (!formatReg.test(strDate) || !formatRegExpTester.test(strDate)) {
+    return null;
+  }
   let ret = parse(strDate);
+
   if (ret) return ret;
   const token = /d{1,4}|M{1,4}|YY(?:YY)?|S{1,3}|Do|ZZ|([HhMsDm])\1?|[aA]|"[^"]*"|'[^']*'/g;
   const parseFlags: any = {
@@ -99,5 +107,19 @@ export function parseFormatted(strDate: string, format: string) {
     const parsed = new Date(dateInfo.year, dateInfo.month, dateInfo.day);
     return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
   };
+
   return ret(strDate, format);
+}
+
+function createDateFormatVaildator(formate: string) {
+  const sepreator = formate.split(/\w/).filter(item => item);
+  let result: string = formate
+    .split(/\W/)
+    .map(string => `\\d{1,${string.length + 1}}`)
+    .join("^");
+  for (let i = 0; i < sepreator.length; i++) {
+    let item = sepreator[i];
+    result = result.replace(/\^/, item);
+  }
+  return new RegExp(result);
 }

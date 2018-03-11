@@ -61,10 +61,18 @@ function _toString(object: any) {
   return Object.prototype.toString.call(object);
 }
 
+export function toString(val: any) {
+  return val == null
+    ? ""
+    : typeof val === "object" ? JSON.stringify(val, null, 2) : String(val);
+}
+
 export function isString(object: any) {
   return _toString(object) === "[object String]";
 }
-
+export function isObject(object: any) {
+  return object !== null && typeof object === "object";
+}
 export function isArray(object: any) {
   return _toString(object) === "[object Array]";
 }
@@ -72,7 +80,7 @@ export function isBoolean(object: any) {
   return _toString(object) === "[object Boolean]";
 }
 
-export function isObject(object: any) {
+export function isPlainObject(object: any) {
   return _toString(object) === "[object Object]";
 }
 
@@ -140,7 +148,7 @@ export function nextTick(fn: Function, autoReset: boolean = true) {
 
 export function warn(where: string, msg: any) {
   let message = msg;
-  if (isObject(msg) || isArray(msg)) {
+  if (isPlainObject(msg) || isArray(msg)) {
     message = JSON.stringify(msg);
   }
   console.error(`[${where}] ${message} `);
@@ -172,13 +180,13 @@ export function merge(...args: Array<any>) {
       if (isArray(arg)) {
         for (let i = 0; i < arg.length; i++) {
           let argItem = arg[i];
-          if (isObject(argItem)) {
+          if (isPlainObject(argItem)) {
             merged = generateObject(merged, argItem);
           } else if (!isDate(argItem)) {
             merged[argItem] = argItem;
           }
         }
-      } else if (isObject(arg)) {
+      } else if (isPlainObject(arg)) {
         merged = generateObject(merged, arg);
       } else if (isString(arg) || isNumber(arg)) {
         merged[arg] = arg;
@@ -188,7 +196,7 @@ export function merge(...args: Array<any>) {
   return merged;
 }
 export function isEmpty(listOrObject: any) {
-  if (!isArray(listOrObject) && !isObject(listOrObject)) {
+  if (!isArray(listOrObject) && !isPlainObject(listOrObject)) {
     warn(
       "isEmpty",
       "Expect an Object or an Array,but got " + _toString(listOrObject)
@@ -197,7 +205,7 @@ export function isEmpty(listOrObject: any) {
   }
   if (isArray(listOrObject)) {
     return listOrObject.length <= 0;
-  } else if (isObject(listOrObject)) {
+  } else if (isPlainObject(listOrObject)) {
     for (let key in listOrObject) {
       if (key) {
         return false;

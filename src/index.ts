@@ -1,13 +1,10 @@
 interface datePickerOptions {
   el: string | HTMLElement;
-  to?: Date;
-  from?: Date;
   limit?: number;
   format?: string;
   doubleSelect?: boolean;
   views?: number | string;
-  disables?: any;
-  startDate?: Date;
+  startDate?: Date | string;
   endDate?: Date;
 }
 interface disable {
@@ -28,9 +25,10 @@ import {
   isArray,
   isNumber,
   isString,
-  isObject,
+  isPlainObject,
   isBoolean,
   isFunction,
+  toString,
   getPeek,
   getFront,
   getDates,
@@ -124,7 +122,7 @@ function setNodeRangeState(
   data: Array<any>,
   should?: boolean
 ) {
-  if(!should) return ;
+  if (!should) return;
   let collection = el.querySelectorAll(".in-range");
   for (let i = 0; i < collection.length; i++) {
     removeClass(collection[i], "in-range");
@@ -243,20 +241,23 @@ export default class DatePicker {
   }
 
   public setDisabled(param: disable) {
-    if (!param || (isObject(param) && Object.keys(param).length <= 0)) {
-      warn(
-        "setDisabled",
-        `invalid params, \nparams should be {dates:<Array<any>>[], days:<Array<number>>[] }`
-      );
+    const result = toString({
+      dates: `[optional]Expect an array of string or Date got ${toString(
+        param.dates
+      )} `,
+      days: `[optional]Expect an array of number,got ${toString(param.days)}`,
+      from: `[optional]Expect a string or Date ,got ${toString(param.to)}`,
+      to: `[optional]Expect a string or Date ,got ${toString(param.to)}`
+    });
+    if (!param || (isPlainObject(param) && Object.keys(param).length <= 0)) {
+      warn("setDisabled", result);
       return false;
     }
-    if (!isArray(param.dates) && !isArray(param.days)) {
-      warn(
-        "setDisabled",
-        `invalid params  { dates:<Array<any>>${
-          param.dates
-        }, days:<Array<number>>${param.days} }`
-      );
+    if (
+      (param.dates && !isArray(param.dates)) ||
+      (param.days && !isArray(param.days))
+    ) {
+      warn("setDisabled", result);
       return false;
     }
 
@@ -289,10 +290,13 @@ export default class DatePicker {
       if (isDate(from)) {
         fromDate = from;
       } else {
-        const parsed = this.parse(from);
+        const parsed = this.parse(from, this.dateFormat);
+
+        console.log(parsed);
         if (isDate(parsed)) {
           fromDate = parsed;
         } else {
+          warn("setDisabled", `invalid param,${toString({ from: from })}`);
           return false;
         }
       }
@@ -302,10 +306,11 @@ export default class DatePicker {
       if (isDate(to)) {
         toDate = to;
       } else {
-        const parsed = this.parse(to);
+        const parsed = this.parse(to, this.dateFormat);
         if (isDate(parsed)) {
           toDate = parsed;
         } else {
+          warn("setDisabled", `invalid param,${toString({ to: to })}`);
           return false;
         }
       }
@@ -321,7 +326,7 @@ export default class DatePicker {
   public setData(cb: Function) {
     if (isFunction(cb)) {
       const result = cb();
-      if (isObject(result) && Object.keys(result).length > 0) {
+      if (isPlainObject(result) && Object.keys(result).length > 0) {
         const map = {};
         for (let key in result) {
           let date = this.parse(key);
@@ -335,6 +340,8 @@ export default class DatePicker {
         warn(
           "setData",
           `you are passing wrong type of data to DatePicker,data should be like :
+
+          
                     {${key}:"value"}`
         );
       }
@@ -385,11 +392,25 @@ export default class DatePicker {
     this.dateFormat = option.format;
     this.views = getViews(option.views);
     //开始日期
-    this.startDate = isDate(option.startDate) ? option.startDate : new Date();
-    //结束日期
-    if (isDate(option.endDate)) {
-      this.endDate = option.endDate;
-    }
+    // this.startDate = isDate(option.startDate) ? option.startDate : new Date();
+
+    const getDateObject = (
+      date: Date | string,
+      returnValue: boolean = true
+    ): Date => {
+      let value;
+      if (!isDate(date)) {
+        let parsed = this.parse(date);
+        value = isDate(parsed) ? parsed : returnValue ? new Date() : null;
+      } else {
+        value = returnValue ? date : null;
+      }
+      return value;
+    };
+
+    this.startDate = getDateObject(option.startDate);
+    this.endDate = getDateObject(option.endDate, false);
+
     //初始视图所在日期
     this.date = this.startDate;
     //選擇日期區間最大限制
@@ -507,20 +528,12 @@ export default class DatePicker {
       warn("init", `invalid selector,current selector ${this.element}`);
       return;
     }
-    if (option.from) {
-      warn("option.from", "use option.startDate instead");
-      delete option.from;
-    }
-    if (option.to) {
-      warn("option.to", "use option.endDate instead");
-      delete option.to;
-    }
 
     const getRange = (data: Array<any>) => {
       const startDate = getFront(data);
       const endDate = getPeek(data);
-      const invalidDates = [];
-      const validDates = [];
+      const invalidDates: Array<string> = [];
+      const validDates: Array<string> = [];
       if (startDate && endDate) {
         let start: Date;
         let end: Date;

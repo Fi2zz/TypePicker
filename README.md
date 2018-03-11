@@ -2,37 +2,31 @@
 
 datepicker built with typescript
 
-
 ## OPTIONS
 
-| OPTION       | TYPE               | DESC                                     | DEFAULT VALUE         |
-|--------------|--------------------|------------------------------------------|-----------------------|
-| el           | string,HTMLElement | element to mount DatePcker               |                       |
-| startDate    | Date               | Start date of DatePicker                 | new Date              |
-| endDate      | Date               | End date of DatePicker                   | new Date() + 6 months |
-| doubleSelect | boolean            | Enable pick two dates                    | false                 |
+| OPTION       | TYPE               | DESC                                                    | DEFAULT VALUE         |
+| ------------ | ------------------ | ------------------------------------------------------- | --------------------- |
+| el           | string,HTMLElement | element to mount DatePcker                              |                       |
+| startDate    | Date               | Start date of DatePicker                                | new Date              |
+| endDate      | Date               | End date of DatePicker                                  | new Date() + 6 months |
+| doubleSelect | boolean            | Enable pick two dates                                   | false                 |
 | limit        | number             | Limitation between two dates while `doubleSelect` is on |                       |
-| views        | number,string      | Display views of DatePicker              | auto,1,2              |
+| views        | number,string      | Display views of DatePicker                             | auto,1,2              |
 
-	
-##  API
-
+## API
 
 ```typescript
-
-
-
    setDates([dates]:tuple);
    //Set  dates to DatePicker
    //dates accept <string> and <Date>
-   
+
    setLanguage(language:any);
    //set DatePicker's language
-   
+
    setData(callback)
    //set data to DatePicker
    //more detail see [USAGE]
-   
+
    setDisabled({
         days?:Array<number>[5],
         dates?:Array<string|Date>,
@@ -40,13 +34,13 @@ datepicker built with typescript
         to?:<Date|string>
     })
    //Set disabled dates to DataPicker
-   //dates =>dates accept <string> and <Date>,  all dates in [dates] will be disabled 
+   //dates =>dates accept <string> and <Date>,  all dates in [dates] will be disabled
    //days => days accept number of [0~6],   all days in [days] will be disabled
    //from => from accept <string> or <Date>, all dates after [from] date will be disabled,
    //        eg: from = 2018-3-31 => disabled from 2018-4-1  
-   //to   => to accept <string> or <Date> all dates before [to] date will be disabled, 
+   //to   => to accept <string> or <Date> all dates before [to] date will be disabled,
    //        eg: to =2018-3-4 => all dates before 2018-3-5 will be disabled
-   
+
    parse(formattedDate:string,dateFormat:string)
    //Transform date string into date object,return Date object
    //eg: formattedDate ='2018-3-4',format='YYYY-M-D" =>  new Date(2018,2,4)
@@ -57,23 +51,18 @@ datepicker built with typescript
 
    on(event:string,fn:Function)
    //Event listener
-   //eg: datePicker.on("event",(result)=>{ 
+   //eg: datePicker.on("event",(result)=>{
                 //your logic
    //    })
-  
-    
-    
 ```
 
 ## USAGE
+
 ```typescript
-    
-    
-        
     //es module
     import DatePicker from '/dist/datepicker.esm.js'
     import '/dist/style.css'
-      
+
     //cjs
     const DatePicker =require("/dist/datepicker.js");
     require("/dist/style.css");
@@ -81,21 +70,21 @@ datepicker built with typescript
 
     //umd
     <script src="/dist/datepicker.min.js"></script>
-    <link  href="/dist/style.css" rel="stylesheet"/>   
-    
-    
-      
+    <link  href="/dist/style.css" rel="stylesheet"/>
+
+
+
     const date = new Date();
     const dist = {
            year: date.getFullYear(),
            month: date.getMonth(),
            date: date.getDate()
     };
-       
+
     const from = new Date(dist.year, dist.month, dist.date)
     const to = new Date(dist.year, dist.month + 9, 0);
     const currDate = new Date(dist.year, dist.month, dist.date);
-       
+
     //setup DatePicker instance
     const app = new DatePicker({
             el: document.getElementById("datepicker"),
@@ -106,16 +95,16 @@ datepicker built with typescript
             doubleSelect: true,
             views: 1
     });
-       
-       //`update`  fired by click on date cell or DatePicker init function 
+
+    //`update` event  fired by click on date cell and DatePicker init  
     app.on("update", (result) => {
         // result contains two keys, `value` and `type`
         // value =>  selected dates
         // type  =>  two types => `init` and `selected`
         // place your logic  here
     });
-       
-    // `disabled`event fired by `setDisabled` and DatePicker init function
+
+    // `disabled`event fired by `setDisabled`
     app.on("disabled", (result) => {
         // result contains two keys, `dateList` and `nodeList`
         const {dateList, nodeList} = result;
@@ -126,38 +115,35 @@ datepicker built with typescript
             }
         }
     });
-       
-    // 'data' event fired by `setData` 
+    // 'data' event fired by `setData`
     app.on("data", (result) => {
         //set HTML nodes states
         // result contains two keys, `data:any` and `nodeList:Array<string>`
-                const data = result.data;
-                const nodeList = result.nodeList;
-                for (let i = 0; i < nodeList.length; i++) {
-                    let node = nodeList[i];
-                    let date = node.getAttribute("data-date");
-                    if (date in data) {
-                        if (!node.classList.contains("disabled")) {
-                            let itemData = source[date];
-                            if (itemData.highlight) {
-                                addClass(node, "highlight")
-                            }
-                            let placeholder: HTMLElement = node.querySelector(".placeholder");
-                            placeholder.innerHTML = itemData.value
-
+            const data = result.data;
+            const nodeList = result.nodeList;
+            for (let i = 0; i < nodeList.length; i++) {
+                let node = nodeList[i];
+                let date = node.getAttribute("data-date");
+                if (date in data) {
+                    if (!node.classList.contains("disabled")) {
+                        let itemData = source[date];
+                        if (itemData.highlight) {
+                            addClass(node, "highlight")
                         }
-
-                    } else {
-                        addClass(node, "disabled")
+                        let placeholder = node.querySelector(".placeholder");
+                        placeholder.innerHTML = itemData.value
                     }
+
+                } else {
+                    addClass(node, "disabled")
                 }
+            }
         });
 
        //tuple type,accept <string> and <Date>
        const selected=["2018-2-21",new Date()];
-       //use `setDates` to set init dates to DatePicker instance 
+       //use `setDates` to set init dates to DatePicker instance
        app.setDates(selected);
-
        // use `setDisabled` to set specified date or day to disabled,
        // `setDisabled` accept an object => {dates,days},
        // <tuple>dates,accept <Date> and  <string>
@@ -169,54 +155,36 @@ datepicker built with typescript
                     "2018-2-22",
                     new Date
                 ],
-                days: [1, 5, 2, 6]
+                days: [1, 5, 2, 6],
+                from:new Date(2018,2,10)
+                to:'2018-7-15'
             });
-       
-        // To display your data,like price info on date cell, 
+
+        // To display your data,like price info on date cell,
         // use `setData` to pass data to `DatePicker` instance
         // `setData` function will dispatch `data` event
         // setup a listener to handle it
        app.setData(() => {
-                    
-                    
+                    const data ={};
                     /*data accept Object like
                      {
-                       "2018-1-31":123,
+                       "2018-1-31":{/*your codes * },
                        "2018-2-21":123,
                         }
                     */
-                    Object.keys(source).forEach(date => {
-                        let item = datepicker.parse(date);
-                        if (datepicker.diff(item, currDate) < 0) {
-                            delete source[date]
-                        }
-                    });
-                    return source
-              });
-       
+                    //your logic here
+
+
+                    //return data when your logic done
+                    return data
+        });
+
        //set DatePicker's language
-       //language options 
+       //language options
        const language={
                  days: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
                  months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-                 year: "" 
+                 year: ""
        };
        app.setLanguage(language)
-       
-       
-       
-
 ```
-
-
-
-
-
-
-	
-	
-	
-	
-	
-
-

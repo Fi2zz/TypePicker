@@ -104,16 +104,22 @@ var padding = function (n) { return "" + (n > 9 ? n : "0" + n); };
 function _toString(object) {
     return Object.prototype.toString.call(object);
 }
+function toString(val) {
+    return val == null
+        ? ""
+        : typeof val === "object" ? JSON.stringify(val, null, 2) : String(val);
+}
 function isString(object) {
     return _toString(object) === "[object String]";
 }
+
 function isArray(object) {
     return _toString(object) === "[object Array]";
 }
 function isBoolean(object) {
     return _toString(object) === "[object Boolean]";
 }
-function isObject(object) {
+function isPlainObject(object) {
     return _toString(object) === "[object Object]";
 }
 function isNumber(object) {
@@ -167,7 +173,7 @@ function nextTick(fn, autoReset) {
 }
 function warn(where, msg) {
     var message = msg;
-    if (isObject(msg) || isArray(msg)) {
+    if (isPlainObject(msg) || isArray(msg)) {
         message = JSON.stringify(msg);
     }
     console.error("[" + where + "] " + message + " ");
@@ -199,7 +205,7 @@ function merge() {
             if (isArray(arg)) {
                 for (var i_1 = 0; i_1 < arg.length; i_1++) {
                     var argItem = arg[i_1];
-                    if (isObject(argItem)) {
+                    if (isPlainObject(argItem)) {
                         merged = generateObject(merged, argItem);
                     }
                     else if (!isDate(argItem)) {
@@ -207,7 +213,7 @@ function merge() {
                     }
                 }
             }
-            else if (isObject(arg)) {
+            else if (isPlainObject(arg)) {
                 merged = generateObject(merged, arg);
             }
             else if (isString(arg) || isNumber(arg)) {
@@ -218,14 +224,14 @@ function merge() {
     return merged;
 }
 function isEmpty(listOrObject) {
-    if (!isArray(listOrObject) && !isObject(listOrObject)) {
+    if (!isArray(listOrObject) && !isPlainObject(listOrObject)) {
         warn("isEmpty", "Expect an Object or an Array,but got " + _toString(listOrObject));
         return false;
     }
     if (isArray(listOrObject)) {
         return listOrObject.length <= 0;
     }
-    else if (isObject(listOrObject)) {
+    else if (isPlainObject(listOrObject)) {
         for (var key in listOrObject) {
             if (key) {
                 return false;
@@ -235,6 +241,7 @@ function isEmpty(listOrObject) {
     }
 }
 
+var formatReg = /\d{2,4}(\W{1})\d{1,2}(\W{1})\d{1,2}/;
 function parse(string) {
     if (!string)
         return new Date();
@@ -285,6 +292,10 @@ function parseFormatted(strDate, format) {
     if (!format) {
         format = "YYYY-MM-DD";
     }
+    var formatRegExpTester = createDateFormatVaildator(format);
+    if (!formatReg.test(strDate) || !formatRegExpTester.test(strDate)) {
+        return null;
+    }
     var ret = parse(strDate);
     if (ret)
         return ret;
@@ -333,6 +344,18 @@ function parseFormatted(strDate, format) {
         return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
     };
     return ret(strDate, format);
+}
+function createDateFormatVaildator(formate) {
+    var sepreator = formate.split(/\w/).filter(function (item) { return item; });
+    var result = formate
+        .split(/\W/)
+        .map(function (string) { return "\\d{1," + (string.length + 1) + "}"; })
+        .join("^");
+    for (var i = 0; i < sepreator.length; i++) {
+        var item = sepreator[i];
+        result = result.replace(/\^/, item);
+    }
+    return new RegExp(result);
 }
 
 var HTML = (function () {
@@ -635,14 +658,6 @@ var DatePicker = (function () {
             warn("init", "invalid selector,current selector " + this.element);
             return;
         }
-        if (option.from) {
-            warn("option.from", "use option.startDate instead");
-            delete option.from;
-        }
-        if (option.to) {
-            warn("option.to", "use option.endDate instead");
-            delete option.to;
-        }
         var getRange = function (data) {
             var startDate = getFront(data);
             var endDate = getPeek(data);
@@ -857,12 +872,19 @@ var DatePicker = (function () {
     };
     DatePicker.prototype.setDisabled = function (param) {
         var _this = this;
-        if (!param || (isObject(param) && Object.keys(param).length <= 0)) {
-            warn("setDisabled", "invalid params, \nparams should be {dates:<Array<any>>[], days:<Array<number>>[] }");
+        var result = toString({
+            dates: "[optional]Expect an array of string or Date got " + toString(param.dates) + " ",
+            days: "[optional]Expect an array of number,got " + toString(param.days),
+            from: "[optional]Expect a string or Date ,got " + toString(param.to),
+            to: "[optional]Expect a string or Date ,got " + toString(param.to)
+        });
+        if (!param || (isPlainObject(param) && Object.keys(param).length <= 0)) {
+            warn("setDisabled", result);
             return false;
         }
-        if (!isArray(param.dates) && !isArray(param.days)) {
-            warn("setDisabled", "invalid params  { dates:<Array<any>>" + param.dates + ", days:<Array<number>>" + param.days + " }");
+        if ((param.dates && !isArray(param.dates)) ||
+            (param.days && !isArray(param.days))) {
+            warn("setDisabled", result);
             return false;
         }
         var dateList = isArray(param.dates)
@@ -895,11 +917,13 @@ var DatePicker = (function () {
                 fromDate = from;
             }
             else {
-                var parsed = this.parse(from);
+                var parsed = this.parse(from, this.dateFormat);
+                console.log(parsed);
                 if (isDate(parsed)) {
                     fromDate = parsed;
                 }
                 else {
+                    warn("setDisabled", "invalid param," + toString({ from: from }));
                     return false;
                 }
             }
@@ -910,11 +934,12 @@ var DatePicker = (function () {
                 toDate = to;
             }
             else {
-                var parsed = this.parse(to);
+                var parsed = this.parse(to, this.dateFormat);
                 if (isDate(parsed)) {
                     toDate = parsed;
                 }
                 else {
+                    warn("setDisabled", "invalid param," + toString({ to: to }));
                     return false;
                 }
             }
@@ -929,7 +954,7 @@ var DatePicker = (function () {
     DatePicker.prototype.setData = function (cb) {
         if (isFunction(cb)) {
             var result = cb();
-            if (isObject(result) && Object.keys(result).length > 0) {
+            if (isPlainObject(result) && Object.keys(result).length > 0) {
                 var map = {};
                 for (var key in result) {
                     var date = this.parse(key);
@@ -941,7 +966,7 @@ var DatePicker = (function () {
             }
             else {
                 var key = this.format(new Date(), this.dateFormat).value;
-                warn("setData", "you are passing wrong type of data to DatePicker,data should be like :\n                    {" + key + ":\"value\"}");
+                warn("setData", "you are passing wrong type of data to DatePicker,data should be like :\n\n          \n                    {" + key + ":\"value\"}");
             }
         }
     };
@@ -987,10 +1012,20 @@ var DatePicker = (function () {
         this.doubleSelect = isBoolean(option.doubleSelect);
         this.dateFormat = option.format;
         this.views = getViews(option.views);
-        this.startDate = isDate(option.startDate) ? option.startDate : new Date();
-        if (isDate(option.endDate)) {
-            this.endDate = option.endDate;
-        }
+        var getDateObject = function (date, returnValue) {
+            if (returnValue === void 0) { returnValue = true; }
+            var value;
+            if (!isDate(date)) {
+                var parsed = _this.parse(date);
+                value = isDate(parsed) ? parsed : returnValue ? new Date() : null;
+            }
+            else {
+                value = returnValue ? date : null;
+            }
+            return value;
+        };
+        this.startDate = getDateObject(option.startDate);
+        this.endDate = getDateObject(option.endDate, false);
         this.date = this.startDate;
         this.limit = this.doubleSelect
             ? isNumber(option.limit) ? option.limit : 2
