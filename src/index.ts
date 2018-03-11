@@ -119,21 +119,25 @@ function parseEl(el: any) {
     }
   }
 }
-function setHTMLNodeRange(data: Array<any>, collector: HTMLElement) {
-  let collection = collector.querySelectorAll(".in-range");
+function setNodeRangeState(
+  el: HTMLElement,
+  data: Array<any>,
+  should?: boolean
+) {
+  let collection = el.querySelectorAll(".in-range");
   for (let i = 0; i < collection.length; i++) {
     removeClass(collection[i], "in-range");
   }
   for (let i = 0; i < data.length; i++) {
     let selector = <string>attrSelector("data-date", data[i]);
-    let element = collector.querySelector(selector);
+    let element = el.querySelector(selector);
     if (!hasClass(element, "active")) {
       addClass(element, "in-range");
     }
   }
 }
 
-function setHTMLNodeState(el: HTMLElement, dates: Array<string>, isDouble) {
+function setNodeActiveState(el: HTMLElement, dates: Array<string>, isDouble) {
   const nodes = el.querySelectorAll(".calendar-date-cell");
   for (let i = 0; i < nodes.length; i++) {
     removeClass(nodes[i], "active");
@@ -487,7 +491,7 @@ export default class DatePicker {
           }
         }
       }
-      Observer.$emit("create", { type: "init", size: 0 });
+      Observer.$emit("create", { type: "init" });
     });
   }
 
@@ -565,20 +569,20 @@ export default class DatePicker {
         Observer.$emit("update", result);
       }
       const currRange: any = getRange(value);
-      if (this.doubleSelect) {
-        setHTMLNodeRange(currRange.validDates, this.element);
-      }
-      setHTMLNodeState(this.element, value, this.doubleSelect);
+      //设置日期区间范围状态
+      setNodeRangeState(this.element, currRange.validDates, this.doubleSelect);
+      //设置激活的日期，开始日期和结束日期的状态
+      setNodeActiveState(this.element, value, this.doubleSelect);
     });
     Observer.$on("create", (result: any) => {
-      let { type, size } = result;
+      let { type } = result;
       if (type === "switch") {
         const curr = {
           year: this.date.getFullYear(),
           month: this.date.getMonth(),
           date: this.date.getDate()
         };
-        this.date = new Date(curr.year, curr.month + size, curr.date);
+        this.date = new Date(curr.year, curr.month + result.size, curr.date);
       }
 
       this.createDatePicker();
@@ -620,92 +624,91 @@ export default class DatePicker {
       const isDisabled = (date: string) => !!this.disables[date];
       let selected = this.selected;
       const loop = node => {
-        node.addEventListener("click", () => {
-          let type = "selected";
-          const date = attr(node, "data-date");
-          //没有日期，直接返回
-          if (!date) {
-            return false;
-          }
-          const index = selected.indexOf(date);
-          //bindData 状态下，且selected的length为0，点击不可选日期，返回
-          //无效日期可以当作结束日期，但不能当作开始日期，故选择的日期的前一天是无效日期，返回
-          // 如  2018-02-23，2018-02-24 为无效日期，则点击2018-02-24返回无效日期
-          const isDisabledDate = isDisabled(date);
-          const now = this.parse(date);
-          const prevDate = new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate() - 1
-          );
-          const prevDateIsInValid = isDisabled(this.format(prevDate).value);
-          if (
-            (bindData && selected.length <= 0 && isDisabledDate) ||
-            (isDoubleSelect && prevDateIsInValid && isDisabledDate) ||
-            (index >= 0 && isDisabledDate)
-          ) {
-            return false;
-          }
-          //重复选择
-          //如选择了 2018-02-04 ~ 2018-02-06
-          //但是用户实际想选择的是 2018-02-04~2018-02-05，
-          //此时 用户再次选择 2018-02-04，其他日期将被删除
-          if (index >= 0) {
-            selected = !!this.disables[getPeek(selected)]
-              ? [getPeek(selected)]
-              : [getFront(selected)];
-          }
-          //选择的日期数量超出了范围，置空selected
-          if ((isDoubleSelect && selected.length >= 2) || !isDoubleSelect) {
-            selected = [];
-          }
-          selected.push(date);
-          if (!isDoubleSelect) {
-            selected = isDisabledDate ? cache : selected;
-            type = isDisabledDate ? "disabled" : "selected";
-          } else {
+        let type = "selected";
+        const date = attr(node, "data-date");
+        //没有日期，直接返回
+        if (!date) {
+          return false;
+        }
+        const index = selected.indexOf(date);
+        //bindData 状态下，且selected的length为0，点击不可选日期，返回
+        //无效日期可以当作结束日期，但不能当作开始日期，故选择的日期的前一天是无效日期，返回
+        // 如  2018-02-23，2018-02-24 为无效日期，则点击2018-02-24返回无效日期
+        const isDisabledDate = isDisabled(date);
+        const now = this.parse(date);
+        const prevDate = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() - 1
+        );
+        const prevDateIsInValid = isDisabled(this.format(prevDate).value);
+        if (
+          (bindData && selected.length <= 0 && isDisabledDate) ||
+          (isDoubleSelect && prevDateIsInValid && isDisabledDate) ||
+          (index >= 0 && isDisabledDate)
+        ) {
+          return false;
+        }
+        //重复选择
+        //如选择了 2018-02-04 ~ 2018-02-06
+        //但是用户实际想选择的是 2018-02-04~2018-02-05，
+        //此时 用户再次选择 2018-02-04，其他日期将被删除
+        if (index >= 0) {
+          selected = !!this.disables[getPeek(selected)]
+            ? [getPeek(selected)]
+            : [getFront(selected)];
+        }
+        //选择的日期数量超出了范围，置空selected
+        if ((isDoubleSelect && selected.length >= 2) || !isDoubleSelect) {
+          selected = [];
+        }
+        selected.push(date);
+        if (!isDoubleSelect) {
+          selected = isDisabledDate ? cache : selected;
+          type = isDisabledDate ? "disabled" : "selected";
+        } else {
+          if (selected.length >= 2) {
+            //两次选择的日期相同，选择
             let front = getFront(selected);
             let peek = getPeek(selected);
-            if (front === peek) {
+            const diffed = diff(
+              this.parse(peek),
+              this.parse(front),
+              "days",
+              false
+            );
+            if (diffed === 0) {
               selected = [front];
-            }
-            if (selected.length >= 2) {
-              let diffed = diff(
-                this.parse(peek),
-                this.parse(front),
-                "days",
-                false
-              );
-              if (diffed < 0) {
-                peek = getPeek(selected);
-                if (isDisabled(peek)) {
-                  selected.pop();
-                } else {
-                  selected.shift();
-                }
+            } else if (diffed < 0) {
+              peek = getPeek(selected);
+              if (isDisabled(peek)) {
+                selected.pop();
               } else {
-                let range = getRange(selected);
-                if (range.invalidDates.length > 0 || diffed > this.limit) {
-                  selected.shift();
-                }
+                selected.shift();
               }
-            }
-            //selected 长度为1 且 唯一的元素还是无效日期，则读取缓存
-            if (selected.length <= 1) {
-              if (isDisabled(getFront(selected))) {
-                type = "disabled";
-                selected = cache;
+            } else {
+              let range = getRange(selected);
+              if (range.invalidDates.length > 0 || diffed > this.limit) {
+                selected.shift();
               }
             }
           }
-          Observer.$emit("select", {
-            type,
-            value: selected
-          });
+          //selected 长度为1 且 唯一的元素还是无效日期，则读取缓存
+          if (selected.length <= 1) {
+            if (isDisabled(getFront(selected))) {
+              type = "disabled";
+              selected = cache;
+            }
+          }
+        }
+        Observer.$emit("select", {
+          type,
+          value: selected
         });
       };
       for (let i = 0; i < nodeList.length; i++) {
-        loop(nodeList[i]);
+        let node = nodeList[i];
+        node.addEventListener("click", () => loop(node));
       }
     });
     this.init(option);

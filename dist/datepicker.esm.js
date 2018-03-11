@@ -542,20 +542,20 @@ function parseEl(el) {
         }
     }
 }
-function setHTMLNodeRange(data, collector) {
-    var collection = collector.querySelectorAll(".in-range");
+function setNodeRangeState(el, data, should) {
+    var collection = el.querySelectorAll(".in-range");
     for (var i = 0; i < collection.length; i++) {
         removeClass(collection[i], "in-range");
     }
     for (var i = 0; i < data.length; i++) {
         var selector = attrSelector("data-date", data[i]);
-        var element = collector.querySelector(selector);
+        var element = el.querySelector(selector);
         if (!hasClass(element, "active")) {
             addClass(element, "in-range");
         }
     }
 }
-function setHTMLNodeState(el, dates, isDouble) {
+function setNodeActiveState(el, dates, isDouble) {
     var nodes = el.querySelectorAll(".calendar-date-cell");
     for (var i = 0; i < nodes.length; i++) {
         removeClass(nodes[i], "active");
@@ -685,20 +685,18 @@ var DatePicker = (function () {
                 Observer.$emit("update", result);
             }
             var currRange = getRange(value);
-            if (_this.doubleSelect) {
-                setHTMLNodeRange(currRange.validDates, _this.element);
-            }
-            setHTMLNodeState(_this.element, value, _this.doubleSelect);
+            setNodeRangeState(_this.element, currRange.validDates, _this.doubleSelect);
+            setNodeActiveState(_this.element, value, _this.doubleSelect);
         });
         Observer.$on("create", function (result) {
-            var type = result.type, size = result.size;
+            var type = result.type;
             if (type === "switch") {
                 var curr = {
                     year: _this.date.getFullYear(),
                     month: _this.date.getMonth(),
                     date: _this.date.getDate()
                 };
-                _this.date = new Date(curr.year, curr.month + size, curr.date);
+                _this.date = new Date(curr.year, curr.month + result.size, curr.date);
             }
             _this.createDatePicker();
             var nodeList = _this.element.querySelectorAll(".calendar-cell");
@@ -735,74 +733,76 @@ var DatePicker = (function () {
             var isDisabled = function (date) { return !!_this.disables[date]; };
             var selected = _this.selected;
             var loop = function (node) {
-                node.addEventListener("click", function () {
-                    var type = "selected";
-                    var date = attr(node, "data-date");
-                    if (!date) {
-                        return false;
-                    }
-                    var index = selected.indexOf(date);
-                    var isDisabledDate = isDisabled(date);
-                    var now = _this.parse(date);
-                    var prevDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
-                    var prevDateIsInValid = isDisabled(_this.format(prevDate).value);
-                    if ((bindData && selected.length <= 0 && isDisabledDate) ||
-                        (isDoubleSelect && prevDateIsInValid && isDisabledDate) ||
-                        (index >= 0 && isDisabledDate)) {
-                        return false;
-                    }
-                    if (index >= 0) {
-                        selected = !!_this.disables[getPeek(selected)]
-                            ? [getPeek(selected)]
-                            : [getFront(selected)];
-                    }
-                    if ((isDoubleSelect && selected.length >= 2) || !isDoubleSelect) {
-                        selected = [];
-                    }
-                    selected.push(date);
-                    if (!isDoubleSelect) {
-                        selected = isDisabledDate ? cache : selected;
-                        type = isDisabledDate ? "disabled" : "selected";
-                    }
-                    else {
+                var type = "selected";
+                var date = attr(node, "data-date");
+                if (!date) {
+                    return false;
+                }
+                var index = selected.indexOf(date);
+                var isDisabledDate = isDisabled(date);
+                var now = _this.parse(date);
+                var prevDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+                var prevDateIsInValid = isDisabled(_this.format(prevDate).value);
+                if ((bindData && selected.length <= 0 && isDisabledDate) ||
+                    (isDoubleSelect && prevDateIsInValid && isDisabledDate) ||
+                    (index >= 0 && isDisabledDate)) {
+                    return false;
+                }
+                if (index >= 0) {
+                    selected = !!_this.disables[getPeek(selected)]
+                        ? [getPeek(selected)]
+                        : [getFront(selected)];
+                }
+                if ((isDoubleSelect && selected.length >= 2) || !isDoubleSelect) {
+                    selected = [];
+                }
+                selected.push(date);
+                if (!isDoubleSelect) {
+                    selected = isDisabledDate ? cache : selected;
+                    type = isDisabledDate ? "disabled" : "selected";
+                }
+                else {
+                    if (selected.length >= 2) {
                         var front = getFront(selected);
                         var peek = getPeek(selected);
-                        if (front === peek) {
+                        var diffed = diff(_this.parse(peek), _this.parse(front), "days", false);
+                        if (diffed === 0) {
                             selected = [front];
                         }
-                        if (selected.length >= 2) {
-                            var diffed = diff(_this.parse(peek), _this.parse(front), "days", false);
-                            if (diffed < 0) {
-                                peek = getPeek(selected);
-                                if (isDisabled(peek)) {
-                                    selected.pop();
-                                }
-                                else {
-                                    selected.shift();
-                                }
+                        else if (diffed < 0) {
+                            peek = getPeek(selected);
+                            if (isDisabled(peek)) {
+                                selected.pop();
                             }
                             else {
-                                var range = getRange(selected);
-                                if (range.invalidDates.length > 0 || diffed > _this.limit) {
-                                    selected.shift();
-                                }
+                                selected.shift();
                             }
                         }
-                        if (selected.length <= 1) {
-                            if (isDisabled(getFront(selected))) {
-                                type = "disabled";
-                                selected = cache;
+                        else {
+                            var range = getRange(selected);
+                            if (range.invalidDates.length > 0 || diffed > _this.limit) {
+                                selected.shift();
                             }
                         }
                     }
-                    Observer.$emit("select", {
-                        type: type,
-                        value: selected
-                    });
+                    if (selected.length <= 1) {
+                        if (isDisabled(getFront(selected))) {
+                            type = "disabled";
+                            selected = cache;
+                        }
+                    }
+                }
+                Observer.$emit("select", {
+                    type: type,
+                    value: selected
                 });
             };
+            var _loop_1 = function (i) {
+                var node = nodeList[i];
+                node.addEventListener("click", function () { return loop(node); });
+            };
             for (var i = 0; i < nodeList.length; i++) {
-                loop(nodeList[i]);
+                _loop_1(i);
             }
         });
         this.init(option);
@@ -1064,7 +1064,7 @@ var DatePicker = (function () {
                     }
                 }
             }
-            Observer.$emit("create", { type: "init", size: 0 });
+            Observer.$emit("create", { type: "init" });
         });
     };
     return DatePicker;
