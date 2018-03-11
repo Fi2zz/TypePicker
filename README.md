@@ -60,10 +60,7 @@ datepicker built with typescript
    //eg: datePicker.on("event",(result)=>{ 
                 //your logic
    //    })
-   
-   diff(date1:Date,date2:Date) 
-   // Diff between two dates,return  number type 
-    
+  
     
     
 ```
