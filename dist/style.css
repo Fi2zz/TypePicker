@@ -1,6 +1,7 @@
   /*
-   *  tyDatePicker v1.5.5
+   *  tyDatePicker v1.5.6
    *  Fi2zz / wenjingbiao@outlook.com
+   *  https://github.com/Fi2zz/tyDatepicker
    *  (c) 2017-2018, wenjingbiao@outlook.com
    *  MIT License
   */
