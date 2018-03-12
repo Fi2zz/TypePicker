@@ -67,6 +67,9 @@ export function toString(val: any) {
     : typeof val === "object" ? JSON.stringify(val, null, 2) : String(val);
 }
 
+export function isUndefined(v) {
+  return v === undefined || v === null;
+}
 export function isString(object: any) {
   return _toString(object) === "[object String]";
 }

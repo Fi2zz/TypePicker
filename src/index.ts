@@ -8,6 +8,7 @@ interface datePickerOptions {
   endDate?: Date;
   multiSelect?: boolean;
 }
+
 interface disable {
   dates?: Array<any>;
   days?: Array<number>;
@@ -26,6 +27,7 @@ import {
   isArray,
   isNumber,
   isString,
+  isUndefined,
   isPlainObject,
   isBoolean,
   isFunction,
@@ -42,6 +44,14 @@ import {
 } from "./util";
 import HTML from "./datepicker.template";
 import { parseFormatted, format as formatter } from "./datepicker.formatter";
+
+const standardDate = (date?: Date, size?: number) => {
+  if (!size) {
+    size = 0;
+  }
+  const curr: Date = isDate(date) ? date : new Date();
+  return new Date(curr.getFullYear(), curr.getMonth(), curr.getDate() + size);
+};
 
 const getDisableDates = (
   startDate: Date,
@@ -65,6 +75,7 @@ const getDisableDates = (
     //处理结束日期后的日期
     const endMonthDates = getDates(endDate.getFullYear(), endDate.getMonth());
     const diffs = endMonthDates - endDate.getDate();
+
     for (let i = 1; i <= diffs; i++) {
       let date = new Date(
         endDate.getFullYear(),
@@ -118,6 +129,7 @@ function parseEl(el: any) {
     }
   }
 }
+
 function setNodeRangeState(
   el: HTMLElement,
   data: Array<any>,
@@ -174,6 +186,8 @@ export default class DatePicker {
   private element: any = null;
   private doubleSelect: boolean = false;
   private disableDays: number[] = [];
+  private disableAfter: Date = null;
+  private disableBefore: Date = null;
   private language: any = {
     days: ["日", "一", "二", "三", "四", "五", "六"],
     months: [
@@ -275,17 +289,14 @@ export default class DatePicker {
           })
           .filter((item: string) => !!item)
       : [];
-    const dayList = isArray(param.days)
-      ? param.days.filter((item: any) => {
-          let parsed = parseToInt(item);
-          return !isNaN(parsed) && parsed >= 0 && parsed <= 6;
-        })
-      : [];
 
     let fromDate: any;
     let toDate: any;
+    let fromDateString: string;
+    let toDateString: string;
     const to = param.to;
     const from = param.from;
+
     if (from) {
       if (isDate(from)) {
         fromDate = from;
@@ -299,7 +310,7 @@ export default class DatePicker {
         }
       }
 
-      this.endDate = fromDate;
+      fromDate = standardDate(fromDate);
     }
     if (to) {
       if (isDate(to)) {
@@ -313,17 +324,21 @@ export default class DatePicker {
           return false;
         }
       }
-      this.date = toDate;
-      this.startDate = toDate;
+      toDate = standardDate(toDate);
     }
 
-    if (toDate) {
-      let to = this.format(toDate).value;
-    }
+    const dayList = isArray(param.days)
+      ? param.days.filter((item: any) => {
+          let parsed = parseToInt(item);
+          return !isNaN(parsed) && parsed >= 0 && parsed <= 6;
+        })
+      : [];
 
     Observer.$emit("setDisabled", {
       dayList,
-      dateList
+      dateList,
+      disableAfter: fromDate,
+      disableBefore: toDate
     });
   }
 
@@ -371,7 +386,7 @@ export default class DatePicker {
     if (prev && next) {
       const endGap = this.endDate ? diff(this.endDate, this.date) : 1;
       const startGap = this.endDate ? diff(this.date, this.startDate) : 2;
-      if (startGap > 1) {
+      if (startGap >= 1) {
         prev.addEventListener("click", () => {
           Observer.$emit("create", { type: "switch", size: -1 });
           removeClass(next, "disabled calendar-action-disabled");
@@ -379,7 +394,7 @@ export default class DatePicker {
       } else {
         addClass(prev, "disabled calendar-action-disabled");
       }
-      if (endGap >= 1) {
+      if (endGap > 1) {
         next.addEventListener("click", () => {
           Observer.$emit("create", { type: "switch", size: 1 });
           removeClass(prev, "disabled calendar-action-disabled");
@@ -394,14 +409,15 @@ export default class DatePicker {
     this.doubleSelect = isBoolean(option.doubleSelect);
     this.dateFormat = option.format;
     this.views = getViews(option.views);
-    this.startDate = isDate(option.startDate) ? option.startDate : new Date();
+
+    this.startDate = isDate(option.startDate)
+      ? option.startDate
+      : standardDate();
 
     if (option.endDate && isDate(option.endDate)) {
       this.endDate = option.endDate;
     }
 
-    //初始视图所在日期
-    this.date = this.startDate;
     //選擇日期區間最大限制
     this.limit = this.doubleSelect
       ? isNumber(option.limit) ? option.limit : 2
@@ -409,7 +425,9 @@ export default class DatePicker {
 
     let rawDisableMap: any = {
       dateList: [],
-      dayList: []
+      dayList: [],
+      disableBefore: null,
+      disableAfter: null
     };
 
     Observer.$on("setDates", (result: any) => (this.selected = result));
@@ -430,53 +448,47 @@ export default class DatePicker {
 
       const disabledMap = {};
       const { dateList, dayList } = rawDisableMap;
-      if (this.endDate) {
-        for (let key in this.data) {
-          dateMap[key] = this.parse(key).getDay();
-        }
-        if (bindData) {
-          const diffs = diff(this.startDate, this.endDate, "days", true);
-          for (let i = 0; i < diffs; i++) {
-            let date = new Date(
-              this.startDate.getFullYear(),
-              this.startDate.getMonth(),
-              this.startDate.getDate() + i
-            );
-            let formatted = this.format(date).value;
-            if (!this.data[formatted]) {
+
+      this.disableDays = dayList;
+      //如果有 from 和 to，
+      //那么to为startDate,from 为endDate
+      if (rawDisableMap.disableBefore) {
+        this.startDate = rawDisableMap.disableBefore;
+      }
+      if (rawDisableMap.disableAfter) {
+        this.endDate = rawDisableMap.disableAfter;
+      }
+
+      console.log(rawDisableMap.disableAfter);
+      const isInfinite = isUndefined(this.endDate);
+
+      if (!isInfinite) {
+        //找出开始日期与结束日期之间的全部日期并与data做对比，找出其中无效日期
+        const days = diff(this.startDate, this.endDate, "days", true);
+        for (let i = 0; i <= days; i++) {
+          let date = standardDate(this.startDate, parseToInt(i));
+          let formatted = this.format(date).value;
+          let day = date.getDay();
+          //disable by date
+          if (dateList.indexOf(date) >= 0) {
+            if (!disabledMap[formatted]) {
               disabledMap[formatted] = formatted;
             }
           }
-        }
-        for (let date in dateMap) {
-          let day = parseToInt(dateMap[date]);
-          if (dateList.indexOf(date) >= 0) {
-            delete this.data[date];
-            if (!disabledMap[date]) {
-              disabledMap[date] = date;
-            }
-          }
+          //disable by day
           if (dayList.indexOf(day) >= 0) {
-            if (dateMap[date]) {
-              delete this.data[date];
-            }
-            if (!disabledMap[date]) {
-              disabledMap[date] = date;
+            if (!disabledMap[formatted]) {
+              disabledMap[formatted] = formatted;
             }
           }
-        }
-        //处理结束日期之后的日期，避免disables 对象过大
-        for (let date in disabledMap) {
-          let parsed = this.parse(date);
-          if (diff(this.endDate, parsed, "days") < 0) {
-            delete disabledMap[date];
+          if (!this.data[formatted] && bindData) {
+            disabledMap[formatted] = formatted;
           }
         }
       } else {
         for (let date of dateList) {
           disabledMap[date] = date;
         }
-        this.disableDays = dayList;
       }
 
       //无效日期
@@ -485,10 +497,23 @@ export default class DatePicker {
           this.startDate,
           this.endDate,
           this.dateFormat,
-          !!this.endDate
+          !!this.endDate || bindData
         ),
         disabledMap
       );
+
+      //去掉data里的无效日期
+      if (bindData) {
+        for (let key in this.disables) {
+          if (this.data[key]) {
+            delete this.data[key];
+          }
+        }
+      }
+
+      //初始视图所在日期
+      this.date = this.startDate;
+
       const front = getFront(this.selected);
       const peek = getPeek(this.selected);
       if (
@@ -609,7 +634,7 @@ export default class DatePicker {
       this.createDatePicker();
       const nodeList = this.element.querySelectorAll(".calendar-cell");
       //因为没有日期列表，因此只能在实例化后再设置by day的disable 状态
-      if (!this.endDate && !isEmpty(this.disableDays)) {
+      if (!isEmpty(this.disableDays)) {
         const days = this.disableDays;
         for (let i = 0; i < nodeList.length; i++) {
           let node = nodeList[i];

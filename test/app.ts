@@ -83,7 +83,7 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
           "2018-2-19",
           "2018-2-22",
           "2018-2-23",
-          // new Date(),
+          new Date(),
           "2018-2-27",
           "2018-2-25",
           "2018-3-28",
@@ -91,8 +91,8 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
           "2018-3-20",
           "2018-3-19"
         ],
-        from: new Date(2018, 3, 0), //"2018-5-1",
-        // to: new Date(2018, 6, 15)
+        // from: new Date(2018, 4, 1), //"2018-5-1",
+        to: new Date(2018,2,15),
         days: [5]
       });
 
@@ -101,7 +101,6 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
         app.setData(() => {
           Object.keys(source).forEach(date => {
             let item = app.parse(date);
-
             if (diff(item, currDate) < 0) {
               delete source[date];
             }
