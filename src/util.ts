@@ -206,11 +206,6 @@ export function isEmpty(listOrObject: any) {
   if (isArray(listOrObject)) {
     return listOrObject.length <= 0;
   } else if (isPlainObject(listOrObject)) {
-    for (let key in listOrObject) {
-      if (key) {
-        return false;
-      }
-    }
-    return true;
+    return Object.keys(listOrObject).length <= 0;
   }
 }

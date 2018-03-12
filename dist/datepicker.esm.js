@@ -226,12 +226,7 @@ function isEmpty(listOrObject) {
         return listOrObject.length <= 0;
     }
     else if (isPlainObject(listOrObject)) {
-        for (var key in listOrObject) {
-            if (key) {
-                return false;
-            }
-        }
-        return true;
+        return Object.keys(listOrObject).length <= 0;
     }
 }
 
@@ -617,7 +612,6 @@ var DatePicker = (function () {
         this.disables = {};
         this.element = null;
         this.doubleSelect = false;
-        this.bindData = false;
         this.disableDays = [];
         this.language = {
             days: ["日", "一", "二", "三", "四", "五", "六"],
@@ -707,6 +701,7 @@ var DatePicker = (function () {
             setNodeActiveState(_this.element, value, _this.doubleSelect);
         });
         Observer.$on("create", function (result) {
+            var bindData = !isEmpty(_this.data);
             var type = result.type;
             if (type === "switch") {
                 var curr = {
@@ -718,7 +713,7 @@ var DatePicker = (function () {
             }
             _this.createDatePicker();
             var nodeList = _this.element.querySelectorAll(".calendar-cell");
-            if (!_this.endDate) {
+            if (!_this.endDate && !isEmpty(_this.disableDays)) {
                 var days = _this.disableDays;
                 for (var i = 0; i < nodeList.length; i++) {
                     var node = nodeList[i];
@@ -733,7 +728,7 @@ var DatePicker = (function () {
                 type: type,
                 value: _this.selected
             });
-            if (_this.bindData) {
+            if (bindData) {
                 Observer.$emit("data", {
                     data: _this.data,
                     nodeList: nodeList
@@ -745,7 +740,6 @@ var DatePicker = (function () {
                     dateList: _this.disables
                 });
             }
-            var bindData = _this.bindData;
             var isDoubleSelect = _this.doubleSelect;
             var cache = _this.selected;
             var isDisabled = function (date) { return !!_this.disables[date]; };
@@ -962,7 +956,7 @@ var DatePicker = (function () {
             }
             else {
                 var key = this.format(new Date(), this.dateFormat).value;
-                warn("setData", "you are passing wrong type of data to DatePicker,data should be like :\n\n          \n                    {" + key + ":\"value\"}");
+                warn("setData", "you are passing wrong type of data to DatePicker,data should be like :\n          \n                    {" + key + ":\"value\"}");
             }
         }
     };
@@ -1025,9 +1019,9 @@ var DatePicker = (function () {
         Observer.$on("setDisabled", function (result) { return (rawDisableMap = result); });
         nextTick(function () {
             var dateMap = {};
-            _this.bindData = !isEmpty(_this.data);
+            var bindData = !isEmpty(_this.data);
             if (!isDate(option.startDate) || !isDate(option.endDate)) {
-                if (_this.bindData) {
+                if (bindData) {
                     warn("init", "please provide [startDate] and [endDate] while binding data to datepicker");
                 }
             }
@@ -1037,7 +1031,7 @@ var DatePicker = (function () {
                 for (var key in _this.data) {
                     dateMap[key] = _this.parse(key).getDay();
                 }
-                if (_this.bindData) {
+                if (bindData) {
                     var diffs = diff(_this.startDate, _this.endDate, "days", true);
                     for (var i = 0; i < diffs; i++) {
                         var date = new Date(_this.startDate.getFullYear(), _this.startDate.getMonth(), _this.startDate.getDate() + i);
@@ -1090,6 +1084,9 @@ var DatePicker = (function () {
             if (_this.views === "auto") {
                 if (!isEmpty(_this.selected)) {
                     _this.date = _this.parse(getFront(_this.selected));
+                }
+                if (!_this.endDate) {
+                    _this.endDate = new Date(_this.startDate.getFullYear(), _this.startDate.getMonth() + 6, _this.startDate.getDate());
                 }
             }
             if (_this.views === 1) {

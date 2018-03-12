@@ -83,7 +83,7 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
           "2018-2-19",
           "2018-2-22",
           "2018-2-23",
-          new Date(),
+          // new Date(),
           "2018-2-27",
           "2018-2-25",
           "2018-3-28",
@@ -122,7 +122,14 @@ function popupHandler(visible: boolean) {
 }
 
 function init(document: Document) {
-  createDatePicker(true, ["2018-3-11", "2018-3-12"]);
+
+
+  const date =new Date();
+
+
+
+
+  createDatePicker(true, []);
   document.addEventListener("click", e => {
     const target = <HTMLElement>e.target;
     if (target) {

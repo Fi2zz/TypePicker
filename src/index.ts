@@ -6,6 +6,7 @@ interface datePickerOptions {
   views?: number | string;
   startDate?: Date;
   endDate?: Date;
+  multiSelect?: boolean;
 }
 interface disable {
   dates?: Array<any>;
@@ -172,7 +173,6 @@ export default class DatePicker {
   private disables: any = {};
   private element: any = null;
   private doubleSelect: boolean = false;
-  private bindData: boolean = false;
   private disableDays: number[] = [];
   private language: any = {
     days: ["日", "一", "二", "三", "四", "五", "六"],
@@ -344,7 +344,6 @@ export default class DatePicker {
         warn(
           "setData",
           `you are passing wrong type of data to DatePicker,data should be like :
-
           
                     {${key}:"value"}`
         );
@@ -419,9 +418,9 @@ export default class DatePicker {
 
     nextTick(() => {
       const dateMap = {};
-      this.bindData = !isEmpty(this.data);
+      const bindData = !isEmpty(this.data);
       if (!isDate(option.startDate) || !isDate(option.endDate)) {
-        if (this.bindData) {
+        if (bindData) {
           warn(
             "init",
             "please provide [startDate] and [endDate] while binding data to datepicker"
@@ -435,7 +434,7 @@ export default class DatePicker {
         for (let key in this.data) {
           dateMap[key] = this.parse(key).getDay();
         }
-        if (this.bindData) {
+        if (bindData) {
           const diffs = diff(this.startDate, this.endDate, "days", true);
           for (let i = 0; i < diffs; i++) {
             let date = new Date(
@@ -503,6 +502,13 @@ export default class DatePicker {
       if (this.views === "auto") {
         if (!isEmpty(this.selected)) {
           this.date = this.parse(getFront(this.selected));
+        }
+        if (!this.endDate) {
+          this.endDate = new Date(
+            this.startDate.getFullYear(),
+            this.startDate.getMonth() + 6,
+            this.startDate.getDate()
+          );
         }
       }
       if (this.views === 1) {
@@ -588,6 +594,8 @@ export default class DatePicker {
       setNodeActiveState(this.element, value, this.doubleSelect);
     });
     Observer.$on("create", (result: any) => {
+      const bindData = !isEmpty(this.data);
+
       let { type } = result;
       if (type === "switch") {
         const curr = {
@@ -600,9 +608,8 @@ export default class DatePicker {
 
       this.createDatePicker();
       const nodeList = this.element.querySelectorAll(".calendar-cell");
-
       //因为没有日期列表，因此只能在实例化后再设置by day的disable 状态
-      if (!this.endDate) {
+      if (!this.endDate && !isEmpty(this.disableDays)) {
         const days = this.disableDays;
         for (let i = 0; i < nodeList.length; i++) {
           let node = nodeList[i];
@@ -618,7 +625,7 @@ export default class DatePicker {
         type,
         value: this.selected
       });
-      if (this.bindData) {
+      if (bindData) {
         Observer.$emit("data", {
           data: this.data,
           nodeList
@@ -631,7 +638,6 @@ export default class DatePicker {
         });
       }
 
-      const bindData = this.bindData;
       const isDoubleSelect = this.doubleSelect;
       const cache = this.selected;
       const isDisabled = (date: string) => !!this.disables[date];
