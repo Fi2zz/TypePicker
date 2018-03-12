@@ -623,8 +623,6 @@ var DatePicker = (function () {
         this.element = null;
         this.doubleSelect = false;
         this.disableDays = [];
-        this.disableAfter = null;
-        this.disableBefore = null;
         this.language = {
             days: ["日", "一", "二", "三", "四", "五", "六"],
             months: [

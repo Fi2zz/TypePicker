@@ -186,8 +186,7 @@ export default class DatePicker {
   private element: any = null;
   private doubleSelect: boolean = false;
   private disableDays: number[] = [];
-  private disableAfter: Date = null;
-  private disableBefore: Date = null;
+
   private language: any = {
     days: ["日", "一", "二", "三", "四", "五", "六"],
     months: [
@@ -292,8 +291,6 @@ export default class DatePicker {
 
     let fromDate: any;
     let toDate: any;
-    let fromDateString: string;
-    let toDateString: string;
     const to = param.to;
     const from = param.from;
 
