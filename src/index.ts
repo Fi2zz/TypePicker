@@ -394,7 +394,7 @@ export default class DatePicker {
       } else {
         addClass(prev, "disabled calendar-action-disabled");
       }
-      if (endGap > 1) {
+      if (endGap >= 1) {
         next.addEventListener("click", () => {
           Observer.$emit("create", { type: "switch", size: 1 });
           removeClass(prev, "disabled calendar-action-disabled");
@@ -435,7 +435,6 @@ export default class DatePicker {
     Observer.$on("setDisabled", (result: any) => (rawDisableMap = result));
 
     nextTick(() => {
-      const dateMap = {};
       const bindData = !isEmpty(this.data);
       if (!isDate(option.startDate) || !isDate(option.endDate)) {
         if (bindData) {
@@ -448,7 +447,6 @@ export default class DatePicker {
 
       const disabledMap = {};
       const { dateList, dayList } = rawDisableMap;
-
       this.disableDays = dayList;
       //如果有 from 和 to，
       //那么to为startDate,from 为endDate
@@ -459,7 +457,6 @@ export default class DatePicker {
         this.endDate = rawDisableMap.disableAfter;
       }
 
-      console.log(rawDisableMap.disableAfter);
       const isInfinite = isUndefined(this.endDate);
 
       if (!isInfinite) {
@@ -481,6 +478,7 @@ export default class DatePicker {
               disabledMap[formatted] = formatted;
             }
           }
+          //find out all dates not in data
           if (!this.data[formatted] && bindData) {
             disabledMap[formatted] = formatted;
           }
@@ -513,7 +511,6 @@ export default class DatePicker {
 
       //初始视图所在日期
       this.date = this.startDate;
-
       const front = getFront(this.selected);
       const peek = getPeek(this.selected);
       if (
@@ -528,7 +525,10 @@ export default class DatePicker {
         if (!isEmpty(this.selected)) {
           this.date = this.parse(getFront(this.selected));
         }
-        if (!this.endDate) {
+        //flat 视图情况下，
+        //自动限制endDate为半年后，
+        //避免因为dom过多导致界面卡顿
+        if (isUndefined(this.endDate)) {
           this.endDate = new Date(
             this.startDate.getFullYear(),
             this.startDate.getMonth() + 6,
@@ -620,7 +620,6 @@ export default class DatePicker {
     });
     Observer.$on("create", (result: any) => {
       const bindData = !isEmpty(this.data);
-
       let { type } = result;
       if (type === "switch") {
         const curr = {
@@ -634,7 +633,7 @@ export default class DatePicker {
       this.createDatePicker();
       const nodeList = this.element.querySelectorAll(".calendar-cell");
       //因为没有日期列表，因此只能在实例化后再设置by day的disable 状态
-      if (!isEmpty(this.disableDays)) {
+      if (!isEmpty(this.disableDays) && isUndefined(this.endDate)) {
         const days = this.disableDays;
         for (let i = 0; i < nodeList.length; i++) {
           let node = nodeList[i];
@@ -698,9 +697,11 @@ export default class DatePicker {
         //但是用户实际想选择的是 2018-02-04~2018-02-05，
         //此时 用户再次选择 2018-02-04，其他日期将被删除
         if (index >= 0) {
-          selected = !!this.disables[getPeek(selected)]
-            ? [getPeek(selected)]
-            : [getFront(selected)];
+          let peek = getPeek(selected);
+          let front = getFront(selected);
+          //如果选择的最后一个日期不是无效日期
+          //则把最后一个日期保留，其他删除
+          selected = isUndefined(this.disables[peek]) ? [peek] : [front];
         }
         //选择的日期数量超出了范围，置空selected
         if ((isDoubleSelect && selected.length >= 2) || !isDoubleSelect) {

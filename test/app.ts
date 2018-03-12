@@ -96,7 +96,7 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
         days: [5]
       });
 
-      const bindData = true;
+      const bindData = !true;
       if (bindData) {
         app.setData(() => {
           Object.keys(source).forEach(date => {

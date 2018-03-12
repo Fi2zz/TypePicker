@@ -725,7 +725,7 @@ var DatePicker = (function () {
             }
             _this.createDatePicker();
             var nodeList = _this.element.querySelectorAll(".calendar-cell");
-            if (!isEmpty(_this.disableDays)) {
+            if (!isEmpty(_this.disableDays) && isUndefined(_this.endDate)) {
                 var days = _this.disableDays;
                 for (var i = 0; i < nodeList.length; i++) {
                     var node = nodeList[i];
@@ -773,9 +773,9 @@ var DatePicker = (function () {
                     return false;
                 }
                 if (index >= 0) {
-                    selected = !!_this.disables[getPeek(selected)]
-                        ? [getPeek(selected)]
-                        : [getFront(selected)];
+                    var peek = getPeek(selected);
+                    var front = getFront(selected);
+                    selected = isUndefined(_this.disables[peek]) ? [peek] : [front];
                 }
                 if ((isDoubleSelect && selected.length >= 2) || !isDoubleSelect) {
                     selected = [];
@@ -996,7 +996,7 @@ var DatePicker = (function () {
             else {
                 addClass(prev, "disabled calendar-action-disabled");
             }
-            if (endGap > 1) {
+            if (endGap >= 1) {
                 next.addEventListener("click", function () {
                     Observer.$emit("create", { type: "switch", size: 1 });
                     removeClass(prev, "disabled calendar-action-disabled");
@@ -1046,7 +1046,6 @@ var DatePicker = (function () {
             if (rawDisableMap.disableAfter) {
                 _this.endDate = rawDisableMap.disableAfter;
             }
-            console.log(rawDisableMap.disableAfter);
             var isInfinite = isUndefined(_this.endDate);
             if (!isInfinite) {
                 var days = diff(_this.startDate, _this.endDate, "days", true);
@@ -1096,7 +1095,7 @@ var DatePicker = (function () {
                 if (!isEmpty(_this.selected)) {
                     _this.date = _this.parse(getFront(_this.selected));
                 }
-                if (!_this.endDate) {
+                if (isUndefined(_this.endDate)) {
                     _this.endDate = new Date(_this.startDate.getFullYear(), _this.startDate.getMonth() + 6, _this.startDate.getDate());
                 }
             }
