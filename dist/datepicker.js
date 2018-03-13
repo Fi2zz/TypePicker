@@ -282,7 +282,7 @@ var HTML = (function () {
         var _this = this;
         var template = data.map(function (item) { return "\n                <div class=\"calendar-main\">\n                <div class=\"calendar-head\">\n                    <div class=\"calendar-title\">" + item.heading + "</div>\n                </div>\n                " + (!renderWeekOnTop ? _this.createMonthWeek(week) : "") + "\n                <div class=\"calendar-body\">" + _this.createMonthDateTemplate(item.dates).join(" ") + "</div>\n                </div>\n            "; });
         if (renderWeekOnTop) {
-            template.unshift(week);
+            template.unshift(this.createMonthWeek(week));
         }
         return template.join("").trim();
     };

@@ -56,7 +56,11 @@ export default class HTML {
       );
     });
   }
-  private createView(data: Array<any>, week, renderWeekOnTop: Boolean) {
+  private createView(
+    data: Array<any>,
+    week: Array<any>,
+    renderWeekOnTop: Boolean
+  ) {
     const template = data.map(
       (item: any) => `
                 <div class="calendar-main">
@@ -72,7 +76,7 @@ export default class HTML {
     );
 
     if (renderWeekOnTop) {
-      template.unshift(week);
+      template.unshift(this.createMonthWeek(week));
     }
     return template.join("").trim();
   }

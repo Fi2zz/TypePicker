@@ -418,7 +418,11 @@ export default class DatePicker {
     return createMonths(date);
   }
 
-  private render(baseClassName: string, data, renderWeekOnTop) {
+  private render(
+    baseClassName: string,
+    data: Array<any>,
+    renderWeekOnTop: boolean
+  ) {
     const template = new HTML({
       renderWeekOnTop,
       data,
