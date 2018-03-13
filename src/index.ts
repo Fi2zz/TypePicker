@@ -363,25 +363,78 @@ export default class DatePicker {
     }
   }
 
-  private createDatePicker() {
-    this.element.className = `${this.element.className} calendar calendar-${
-      this.views === 2
-        ? "double-views"
-        : this.views === 1 ? "single-view" : "flat-view"
-    }`;
+  private createMonths(date: Date) {
     const monthSize =
       this.views === 2
         ? 1
         : this.views === "auto" ? diff(this.endDate, this.startDate) : 0;
+    const heading = function(pack, year, month) {
+      if (pack.year) {
+        return `${year}${pack.year}${pack.months[month]}`;
+      } else {
+        return `${pack.months[month]} ${year}`;
+      }
+    };
+    const createMonths = date => {
+      const template = [];
 
+      for (let i = 0; i <= monthSize; i++) {
+        let dat = new Date(date.getFullYear(), date.getMonth() + i, 1);
+
+        let dates = getDates(dat.getFullYear(), dat.getMonth());
+        template.push({
+          dates,
+          year: dat.getFullYear(),
+          month: dat.getMonth()
+        });
+      }
+      return template.map((item: any) => {
+        let dates = {};
+        let firstDay = new Date(item.year, item.month, 1);
+        let lastMonthDates = new Date(item.year, item.month, 0).getDate();
+        for (let i = 0; i < firstDay.getDay(); i++) {
+          let lateMonthDate: any = new Date(
+            item.year,
+            item.month - 1,
+            lastMonthDates - i
+          );
+          let formatted: any = this.format(lateMonthDate);
+          dates[formatted.value] = { date: false, day: false };
+        }
+        for (let i = 0; i < item.dates; i++) {
+          let date = new Date(item.year, item.month, i + 1);
+          let formatted = this.format(date);
+          dates[formatted.value] = {
+            date: formatted.date,
+            day: formatted.day
+          };
+        }
+        return {
+          heading: heading(this.language, item.year, item.month),
+          dates
+        };
+      });
+    };
+    return createMonths(date);
+  }
+
+  private render(baseClassName: string, data, renderWeekOnTop) {
     const template = new HTML({
-      date: this.date,
-      size: monthSize,
-      language: this.language,
-      dateFormat: this.dateFormat,
-      renderWeekOnTop:this.views ==="auto"
+      renderWeekOnTop,
+      data,
+      week: this.language.days
     });
+
+    this.element.className = [
+      `${baseClassName} calendar calendar-${
+        this.views === 2
+          ? "double-views"
+          : this.views === 1 ? "single-view" : "flat-view"
+      }`
+    ].join(" ");
+
     this.element.innerHTML = template[0];
+
     //日期切换
     const prev = this.element.querySelector(".calendar-action-prev");
     const next = this.element.querySelector(".calendar-action-next");
@@ -565,6 +618,8 @@ export default class DatePicker {
       return;
     }
 
+    const baseClassName = this.element.className;
+
     const getRange = (data: Array<any>) => {
       const startDate = getFront(data);
       const endDate = getPeek(data);
@@ -635,8 +690,11 @@ export default class DatePicker {
         };
         this.date = new Date(curr.year, curr.month + result.size, curr.date);
       }
-
-      this.createDatePicker();
+      this.render(
+        baseClassName,
+        this.createMonths(this.date),
+        this.views === "auto"
+      );
       const nodeList = this.element.querySelectorAll(".calendar-cell");
       //因为没有日期列表，因此只能在实例化后再设置by day的disable 状态
       if (!isEmpty(this.disableDays) && isUndefined(this.endDate)) {

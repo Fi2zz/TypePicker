@@ -29,7 +29,7 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
         limit: 7,
         format: dateFormat,
         doubleSelect: true,
-        views: 'auto'
+        views: 2//'auto'
       })
     : null;
 

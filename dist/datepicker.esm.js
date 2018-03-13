@@ -233,6 +233,74 @@ function isEmpty(listOrObject) {
     }
 }
 
+var HTML = (function () {
+    function HTML(options) {
+        var renderWeekOnTop = options.renderWeekOnTop, data = options.data, week = options.week;
+        return [
+            this.createActionBar(!renderWeekOnTop) + "  \n       " + this.createView(data, week, renderWeekOnTop)
+        ];
+    }
+    HTML.prototype.createActionBar = function (create) {
+        if (!create) {
+            return "";
+        }
+        return "<div class=\"calendar-action-bar\">\n            <button class='calendar-action calendar-action-prev'><span>prev</span></button>\n            <button class='calendar-action calendar-action-next'><span>next</span></button>\n         </div>\n    ";
+    };
+    HTML.prototype.createMonthDateTemplate = function (dates) {
+        var _this = this;
+        return Object.keys(dates).map(function (item) {
+            var result = dates[item];
+            var day = result.day;
+            var date = result.date;
+            var data = {
+                key: day ? item : "",
+                text: "<div class=\"date\">" + (date ? date : "") + "</div><div class=\"placeholder\"></div>",
+                day: day ? day : ""
+            };
+            var classNames = ["calendar-cell", "calendar-date-cell"];
+            if (!day) {
+                classNames.push("disabled", "empty");
+            }
+            else {
+                if (day === 0) {
+                    classNames.push("calendar-cell-weekend");
+                }
+                if (day === 6) {
+                    classNames.push("calendar-cell-weekday");
+                }
+            }
+            return _this.createNode(classNames.join(" "), data.key, data.text, data.day);
+        });
+    };
+    HTML.prototype.createView = function (data, week, renderWeekOnTop) {
+        var _this = this;
+        var template = data.map(function (item) { return "\n                <div class=\"calendar-main\">\n                <div class=\"calendar-head\">\n                    <div class=\"calendar-title\">" + item.heading + "</div>\n                </div>\n                " + (!renderWeekOnTop ? _this.createMonthWeek(week) : "") + "\n                <div class=\"calendar-body\">" + _this.createMonthDateTemplate(item.dates).join(" ") + "</div>\n                </div>\n            "; });
+        if (renderWeekOnTop) {
+            template.unshift(week);
+        }
+        return template.join("").trim();
+    };
+    HTML.prototype.createMonthWeek = function (language) {
+        var template = language
+            .map(function (day, index) {
+            var className = [
+                "calendar-cell",
+                "calendar-day-cell",
+                index === 0
+                    ? "calendar-cell-weekday"
+                    : index === 6 ? "calendar-cell-weekend" : ""
+            ];
+            return "<div class=\"" + className.join(" ") + "\">" + day + "</div>";
+        })
+            .join("");
+        return "  <div class=\"calendar-day\">" + template + "</div>";
+    };
+    HTML.prototype.createNode = function (className, key, text, day) {
+        return "<div class=\"" + className + "\" " + (day ? "data-day=" + day : "") + " " + (key ? "data-date=" + key : "") + ">" + text + "</div>";
+    };
+    return HTML;
+}());
+
 var formatReg = /\d{2,4}(\W{1})\d{1,2}(\W{1})\d{1,2}/;
 function parse(string) {
     if (!string)
@@ -349,139 +417,6 @@ function createDateFormatVaildator(formate) {
     }
     return new RegExp(result);
 }
-
-var HTML = (function () {
-    function HTML(options) {
-        this.language = {};
-        var date = options.date, language = options.language, dateFormat = options.dateFormat, size = options.size, renderWeekOnTop = options.renderWeekOnTop;
-        this.dateFormat = dateFormat;
-        this.language = language;
-        return [
-            this.createActionBar(!renderWeekOnTop) + "  \n       " + this.createView(size, date, renderWeekOnTop)
-        ];
-    }
-    HTML.prototype.createActionBar = function (create) {
-        if (!create) {
-            return "";
-        }
-        return "<div class=\"calendar-action-bar\">\n            <button class='calendar-action calendar-action-prev'><span>prev</span></button>\n            <button class='calendar-action calendar-action-next'><span>next</span></button>\n         </div>\n    ";
-    };
-    HTML.prototype.createBody = function (size, date) {
-        var template = [];
-        for (var i = 0; i <= size; i++) {
-            var dat = new Date(date.getFullYear(), date.getMonth() + i, 1);
-            var paint = this.createMonthDateTemplate(dat.getFullYear(), dat.getMonth());
-            template.push({
-                template: paint.template,
-                year: paint.year,
-                month: paint.month
-            });
-        }
-        return template;
-    };
-    HTML.prototype.createMonthDateTemplate = function (year, month) {
-        var _this = this;
-        var d = new Date(year, month, 1);
-        var curr = {
-            year: d.getFullYear(),
-            month: d.getMonth(),
-            date: d.getDate(),
-            index: d.getMonth()
-        };
-        var firstDay = new Date(curr.year, curr.month, 1).getDay();
-        var template = [];
-        for (var i = 0; i < firstDay; i++) {
-            template.push({
-                date: "",
-                className: this.setNodeClassName(),
-                text: this.createPlaceholder(),
-                key: ""
-            });
-        }
-        for (var i = 1; i <= getDates(curr.year, curr.month); i++) {
-            var date = new Date(curr.year, curr.month, i);
-            var formatted = format(date, this.dateFormat);
-            var key = formatted.value;
-            var text = this.createPlaceholder(formatted.date);
-            var className = this.setNodeClassName(date);
-            var day = formatted.day;
-            template.push({ className: className, text: text, key: key, day: day });
-        }
-        var tpl = template
-            .map(function (item) {
-            return _this.createNode(item.className, item.key, item.text, item.day);
-        })
-            .join("");
-        return {
-            template: tpl,
-            year: curr.year,
-            month: curr.index
-        };
-    };
-    HTML.prototype.createView = function (size, date, renderWeekOnTop) {
-        var _this = this;
-        var week = this.createMonthWeek();
-        var template = this.createBody(size, date).map(function (item) {
-            var head = _this.createMonthHeader(item.year, item.month);
-            return "<div class='calendar-main'> \n        " + head + "   \n        " + (!renderWeekOnTop ? week : "") + " \n        <div class=\"calendar-body\">" + item.template + "</div>\n      </div> ";
-        });
-        if (renderWeekOnTop) {
-            template.unshift(week);
-        }
-        return template.join("").trim();
-    };
-    HTML.prototype.createMonthWeek = function () {
-        var template = this.language.days
-            .map(function (day, index) {
-            var className = [
-                "calendar-cell",
-                "calendar-day-cell",
-                index === 0
-                    ? "calendar-cell-weekday"
-                    : index === 6 ? "calendar-cell-weekend" : ""
-            ];
-            return "<div class=\"" + className.join(" ") + "\">" + day + "</div>";
-        })
-            .join("");
-        return "  <div class=\"calendar-day\">" + template + "</div>";
-    };
-    HTML.prototype.createMonthBody = function (content) {
-        return "<div class=\"calendar-body\">" + content + "</div>";
-    };
-    HTML.prototype.createMonthHeader = function (year, month) {
-        var heading = function (pack, year, month) {
-            if (pack.year) {
-                return "" + year + pack.year + pack.months[month];
-            }
-            else {
-                return pack.months[month] + " " + year;
-            }
-        };
-        return "<div class=\"calendar-head\"><div class=\"calendar-title\">" + heading(this.language, year, month) + "</div></div>";
-    };
-    HTML.prototype.createNode = function (className, key, text, day) {
-        return "<div class=\"" + className + "\" " + (day >= 0 ? "data-day=" + day : "") + " " + (key ? "data-date=" + key : "") + ">" + text + "</div>";
-    };
-    HTML.prototype.createPlaceholder = function (date) {
-        return "<div class=\"date\">" + (date ? date : "") + "</div><div class=\"placeholder\"></div>";
-    };
-    HTML.prototype.setNodeClassName = function (date) {
-        var classStack = ["calendar-cell", "calendar-date-cell"];
-        if (!date) {
-            classStack.push("disabled", "empty");
-        }
-        else {
-            if (date.getDay() === 0) {
-                classStack.push("calendar-cell-weekend");
-            }
-            if (date.getDay() === 6) {
-                classStack.push("calendar-cell-weekday");
-            }
-        }
-        return classStack.join(" ");
-    };
-    return HTML;
-}());
 
 var standardDate = function (date, size) {
     if (!size) {
@@ -639,6 +574,7 @@ var DatePicker = (function () {
             warn("init", "invalid selector,current selector " + this.element);
             return;
         }
+        var baseClassName = this.element.className;
         var getRange = function (data) {
             var startDate = getFront(data);
             var endDate = getPeek(data);
@@ -704,7 +640,7 @@ var DatePicker = (function () {
                 };
                 _this.date = new Date(curr.year, curr.month + result.size, curr.date);
             }
-            _this.createDatePicker();
+            _this.render(baseClassName, _this.createMonths(_this.date), _this.views === "auto");
             var nodeList = _this.element.querySelectorAll(".calendar-cell");
             if (!isEmpty(_this.disableDays) && isUndefined(_this.endDate)) {
                 var days = _this.disableDays;
@@ -951,20 +887,66 @@ var DatePicker = (function () {
             }
         }
     };
-    DatePicker.prototype.createDatePicker = function () {
-        this.element.className = this.element.className + " calendar calendar-" + (this.views === 2
-            ? "double-views"
-            : this.views === 1 ? "single-view" : "flat-view");
+    DatePicker.prototype.createMonths = function (date) {
+        var _this = this;
         var monthSize = this.views === 2
             ? 1
             : this.views === "auto" ? diff(this.endDate, this.startDate) : 0;
+        var heading = function (pack, year, month) {
+            if (pack.year) {
+                return "" + year + pack.year + pack.months[month];
+            }
+            else {
+                return pack.months[month] + " " + year;
+            }
+        };
+        var createMonths = function (date) {
+            var template = [];
+            for (var i = 0; i <= monthSize; i++) {
+                var dat = new Date(date.getFullYear(), date.getMonth() + i, 1);
+                var dates = getDates(dat.getFullYear(), dat.getMonth());
+                template.push({
+                    dates: dates,
+                    year: dat.getFullYear(),
+                    month: dat.getMonth()
+                });
+            }
+            return template.map(function (item) {
+                var dates = {};
+                var firstDay = new Date(item.year, item.month, 1);
+                var lastMonthDates = new Date(item.year, item.month, 0).getDate();
+                for (var i = 0; i < firstDay.getDay(); i++) {
+                    var lateMonthDate = new Date(item.year, item.month - 1, lastMonthDates - i);
+                    var formatted = _this.format(lateMonthDate);
+                    dates[formatted.value] = { date: false, day: false };
+                }
+                for (var i = 0; i < item.dates; i++) {
+                    var date_1 = new Date(item.year, item.month, i + 1);
+                    var formatted = _this.format(date_1);
+                    dates[formatted.value] = {
+                        date: formatted.date,
+                        day: formatted.day
+                    };
+                }
+                return {
+                    heading: heading(_this.language, item.year, item.month),
+                    dates: dates
+                };
+            });
+        };
+        return createMonths(date);
+    };
+    DatePicker.prototype.render = function (baseClassName, data, renderWeekOnTop) {
         var template = new HTML({
-            date: this.date,
-            size: monthSize,
-            language: this.language,
-            dateFormat: this.dateFormat,
-            renderWeekOnTop: this.views === "auto"
+            renderWeekOnTop: renderWeekOnTop,
+            data: data,
+            week: this.language.days
         });
+        this.element.className = [
+            baseClassName + " calendar calendar-" + (this.views === 2
+                ? "double-views"
+                : this.views === 1 ? "single-view" : "flat-view")
+        ].join(" ");
         this.element.innerHTML = template[0];
         var prev = this.element.querySelector(".calendar-action-prev");
         var next = this.element.querySelector(".calendar-action-next");
