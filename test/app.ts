@@ -29,7 +29,7 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
         limit: 7,
         format: dateFormat,
         doubleSelect: true,
-        views: 2 //'auto'
+        views: 'auto'
       })
     : null;
 
@@ -124,9 +124,6 @@ function init(document: Document) {
 
 
   const date =new Date();
-
-
-
 
   createDatePicker(true, []);
   document.addEventListener("click", e => {

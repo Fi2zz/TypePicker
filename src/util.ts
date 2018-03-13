@@ -30,6 +30,7 @@ export function diff(
   type: string = "month",
   isAbsolute?: boolean
 ) {
+
   let result: number;
   if (!isDate(start) || !isDate(end)) {
     return 0;
@@ -38,6 +39,8 @@ export function diff(
     result =
       Math.abs(start.getFullYear() * 12 + start.getMonth()) -
       (end.getFullYear() * 12 + end.getMonth());
+
+
   } else if (type === "days") {
     const startTime = <any>new Date(
       start.getFullYear(),
@@ -52,6 +55,7 @@ export function diff(
     const calcu = Math.round(startTime - endTime) / (1000 * 60 * 60 * 24);
     result = isAbsolute ? Math.abs(calcu) : calcu;
   }
+
   return result;
 }
 

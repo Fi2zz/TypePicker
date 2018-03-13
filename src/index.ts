@@ -369,12 +369,17 @@ export default class DatePicker {
         ? "double-views"
         : this.views === 1 ? "single-view" : "flat-view"
     }`;
+    const monthSize =
+      this.views === 2
+        ? 1
+        : this.views === "auto" ? diff(this.endDate, this.startDate) : 0;
+
     const template = new HTML({
       date: this.date,
-      size: diff(this.startDate, this.endDate),
+      size: monthSize,
       language: this.language,
-      views: this.views,
-      dateFormat: this.dateFormat
+      dateFormat: this.dateFormat,
+      renderWeekOnTop:this.views ==="auto"
     });
     this.element.innerHTML = template[0];
     //日期切换
@@ -407,11 +412,11 @@ export default class DatePicker {
     this.dateFormat = option.format;
     this.views = getViews(option.views);
 
-    this.startDate = isDate(option.startDate)
-      ? option.startDate
-      : standardDate();
+    if (!isUndefined(option.startDate) && isDate(option.startDate)) {
+      this.startDate = option.startDate;
+    }
 
-    if (option.endDate && isDate(option.endDate)) {
+    if (!isUndefined(option.endDate) && isDate(option.endDate)) {
       this.endDate = option.endDate;
     }
 
@@ -507,7 +512,8 @@ export default class DatePicker {
       }
 
       //初始视图所在日期
-      this.date = this.startDate;
+      this.date = isUndefined(this.startDate) ? new Date() : this.startDate;
+
       const front = getFront(this.selected);
       const peek = getPeek(this.selected);
       if (
@@ -525,11 +531,14 @@ export default class DatePicker {
         //flat 视图情况下，
         //自动限制endDate为半年后，
         //避免因为dom过多导致界面卡顿
+        if (isUndefined(this.startDate)) {
+          this.startDate = this.date;
+        }
         if (isUndefined(this.endDate)) {
           this.endDate = new Date(
-            this.startDate.getFullYear(),
-            this.startDate.getMonth() + 6,
-            this.startDate.getDate()
+            this.date.getFullYear(),
+            this.date.getMonth() + 6,
+            this.date.getDate()
           );
         }
       }
