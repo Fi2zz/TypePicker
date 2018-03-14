@@ -59,7 +59,10 @@ const getDisableDates = (
   dateFormat: string,
   should: boolean
 ) => {
-  const startMonthDates = startDate.getDate();
+  const startMonthDates = getDates(
+    startDate.getFullYear(),
+    startDate.getMonth()
+  );
   const temp: any = {};
   if (should) {
     //处理开始日期前的日期
@@ -173,6 +176,25 @@ function setNodeActiveState(el: HTMLElement, dates: Array<string>, isDouble) {
   }
 }
 
+const DEFAULT_LANGUAGE = {
+  days: ["日", "一", "二", "三", "四", "五", "六"],
+  months: [
+    "01月",
+    "02月",
+    "03月",
+    "04月",
+    "05月",
+    "06月",
+    "07月",
+    "08月",
+    "09月",
+    "10月",
+    "11月",
+    "12月"
+  ],
+  year: "年"
+};
+
 export default class DatePicker {
   private dateFormat: string;
   private limit: number = 1;
@@ -186,26 +208,7 @@ export default class DatePicker {
   private element: any = null;
   private doubleSelect: boolean = false;
   private disableDays: number[] = [];
-
-  private language: any = {
-    days: ["日", "一", "二", "三", "四", "五", "六"],
-    months: [
-      "01月",
-      "02月",
-      "03月",
-      "04月",
-      "05月",
-      "06月",
-      "07月",
-      "08月",
-      "09月",
-      "10月",
-      "11月",
-      "12月"
-    ],
-    year: "年"
-  };
-
+  private language: any = DEFAULT_LANGUAGE;
   public on(ev: string, cb: Function) {
     return Observer.$on(ev, cb);
   }
@@ -377,7 +380,6 @@ export default class DatePicker {
     };
     const createMonths = date => {
       const template = [];
-
       for (let i = 0; i <= monthSize; i++) {
         let dat = new Date(date.getFullYear(), date.getMonth() + i, 1);
 
@@ -516,7 +518,8 @@ export default class DatePicker {
         this.endDate = rawDisableMap.disableAfter;
       }
 
-      const isInfinite = isUndefined(this.endDate);
+      const isInfinite =
+        isUndefined(this.endDate) || isUndefined(this.startDate);
 
       if (!isInfinite) {
         //找出开始日期与结束日期之间的全部日期并与data做对比，找出其中无效日期
@@ -586,7 +589,7 @@ export default class DatePicker {
           this.date = this.parse(getFront(this.selected));
         }
         //flat 视图情况下，
-        //自动限制endDate为半年后，
+        //自动限制endDate为半年后，startDate为当前日期
         //避免因为dom过多导致界面卡顿
         if (isUndefined(this.startDate)) {
           this.startDate = this.date;
