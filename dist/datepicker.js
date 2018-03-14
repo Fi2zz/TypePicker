@@ -302,7 +302,7 @@ var HTML = (function () {
         return "  <div class=\"calendar-day\">" + template + "</div>";
     };
     HTML.prototype.createNode = function (className, key, text, day) {
-        return "<div class=\"" + className + "\" " + (day ? "data-day=" + day : "") + " " + (key ? "data-date=" + key : "") + ">" + text + "</div>";
+        return "<div class=\"" + className + "\"  " + (day >= 0 ? "data-day=" + day : "") + " " + (key ? "data-date=" + key : "") + ">" + text + "</div>";
     };
     return HTML;
 }());
@@ -432,11 +432,11 @@ var standardDate = function (date, size) {
     return new Date(curr.getFullYear(), curr.getMonth(), curr.getDate() + size);
 };
 var getDisableDates = function (startDate, endDate, dateFormat, should) {
-    var startMonthDates = startDate.getDate();
     var temp = {};
     if (should) {
-        for (var i = 1; i <= startMonthDates - 1; i++) {
-            var date = new Date(startDate.getFullYear(), startDate.getMonth(), startMonthDates - i);
+        var startDateIndex = startDate.getDate();
+        for (var i = 1; i <= startDateIndex - 1; i++) {
+            var date = new Date(startDate.getFullYear(), startDate.getMonth(), startDateIndex - i);
             var formatted = format(date, dateFormat).value;
             temp[formatted] = formatted;
         }
@@ -533,6 +533,24 @@ function setNodeActiveState(el, dates, isDouble) {
         }
     }
 }
+var DEFAULT_LANGUAGE = {
+    days: ["日", "一", "二", "三", "四", "五", "六"],
+    months: [
+        "01月",
+        "02月",
+        "03月",
+        "04月",
+        "05月",
+        "06月",
+        "07月",
+        "08月",
+        "09月",
+        "10月",
+        "11月",
+        "12月"
+    ],
+    year: "年"
+};
 var DatePicker = (function () {
     function DatePicker(option) {
         var _this = this;
@@ -547,24 +565,7 @@ var DatePicker = (function () {
         this.element = null;
         this.doubleSelect = false;
         this.disableDays = [];
-        this.language = {
-            days: ["日", "一", "二", "三", "四", "五", "六"],
-            months: [
-                "01月",
-                "02月",
-                "03月",
-                "04月",
-                "05月",
-                "06月",
-                "07月",
-                "08月",
-                "09月",
-                "10月",
-                "11月",
-                "12月"
-            ],
-            year: "年"
-        };
+        this.language = DEFAULT_LANGUAGE;
         this.format = function (date, format$$1) {
             return format(date, format$$1 ? format$$1 : _this.dateFormat);
         };
@@ -635,7 +636,7 @@ var DatePicker = (function () {
             setNodeRangeState(_this.element, currRange.validDates, _this.doubleSelect);
             setNodeActiveState(_this.element, value, _this.doubleSelect);
         });
-        Observer.$on("create", function (result) {
+        Observer.$on("render", function (result) {
             var bindData = !isEmpty(_this.data);
             var type = result.type;
             if (type === "switch") {
@@ -648,7 +649,7 @@ var DatePicker = (function () {
             }
             _this.render(baseClassName, _this.createMonths(_this.date), _this.views === "auto");
             var nodeList = _this.element.querySelectorAll(".calendar-cell");
-            if (!isEmpty(_this.disableDays) && isUndefined(_this.endDate)) {
+            if (!isEmpty(_this.disableDays) && (isUndefined(_this.endDate) || isUndefined(_this.startDate))) {
                 var days = _this.disableDays;
                 for (var i = 0; i < nodeList.length; i++) {
                     var node = nodeList[i];
@@ -679,11 +680,14 @@ var DatePicker = (function () {
             var cache = _this.selected;
             var isDisabled = function (date) { return !!_this.disables[date]; };
             var selected = _this.selected;
-            var loop = function (node) {
+            var pickDate = function (node) {
                 var type = "selected";
                 var date = attr(node, "data-date");
                 if (!date) {
-                    return false;
+                    return {
+                        type: "disabled",
+                        value: []
+                    };
                 }
                 var index = selected.indexOf(date);
                 var isDisabledDate = isDisabled(date);
@@ -693,7 +697,10 @@ var DatePicker = (function () {
                 if ((bindData && selected.length <= 0 && isDisabledDate) ||
                     (isDoubleSelect && prevDateIsInValid && isDisabledDate) ||
                     (index >= 0 && isDisabledDate)) {
-                    return false;
+                    return {
+                        type: "disabled",
+                        value: []
+                    };
                 }
                 if (index >= 0) {
                     var peek = getPeek(selected);
@@ -739,14 +746,14 @@ var DatePicker = (function () {
                         }
                     }
                 }
-                Observer.$emit("select", {
+                return {
                     type: type,
                     value: selected
-                });
+                };
             };
             var _loop_1 = function (i) {
                 var node = nodeList[i];
-                node.addEventListener("click", function () { return loop(node); });
+                node.addEventListener("click", function () { return Observer.$emit("select", pickDate(node)); });
             };
             for (var i = 0; i < nodeList.length; i++) {
                 _loop_1(i);
@@ -930,8 +937,8 @@ var DatePicker = (function () {
                     var date_1 = new Date(item.year, item.month, i + 1);
                     var formatted = _this.format(date_1);
                     dates[formatted.value] = {
-                        date: formatted.date,
-                        day: formatted.day
+                        date: "" + formatted.date,
+                        day: "" + formatted.day
                     };
                 }
                 return {
@@ -961,7 +968,7 @@ var DatePicker = (function () {
             var startGap = this.endDate ? diff(this.date, this.startDate) : 2;
             if (startGap >= 1) {
                 prev.addEventListener("click", function () {
-                    Observer.$emit("create", { type: "switch", size: -1 });
+                    Observer.$emit("render", { type: "switch", size: -1 });
                     removeClass(next, "disabled calendar-action-disabled");
                 });
             }
@@ -970,7 +977,7 @@ var DatePicker = (function () {
             }
             if (endGap >= 1) {
                 next.addEventListener("click", function () {
-                    Observer.$emit("create", { type: "switch", size: 1 });
+                    Observer.$emit("render", { type: "switch", size: 1 });
                     removeClass(prev, "disabled calendar-action-disabled");
                 });
             }
@@ -1018,7 +1025,7 @@ var DatePicker = (function () {
             if (rawDisableMap.disableAfter) {
                 _this.endDate = rawDisableMap.disableAfter;
             }
-            var isInfinite = isUndefined(_this.endDate);
+            var isInfinite = isUndefined(_this.endDate) || isUndefined(_this.startDate);
             if (!isInfinite) {
                 var days = diff(_this.startDate, _this.endDate, "days", true);
                 for (var i = 0; i <= days; i++) {
@@ -1046,13 +1053,15 @@ var DatePicker = (function () {
                     disabledMap[date] = date;
                 }
             }
-            _this.disables = merge(getDisableDates(_this.startDate, _this.endDate, _this.dateFormat, !!_this.endDate || bindData), disabledMap);
+            _this.disables = merge(getDisableDates(_this.startDate, _this.endDate, _this.dateFormat, bindData || (!isUndefined(_this.startDate) || !isUndefined(_this.endDate))), disabledMap);
             if (bindData) {
+                var map = _this.data;
                 for (var key in _this.disables) {
-                    if (_this.data[key]) {
-                        delete _this.data[key];
+                    if (map[key]) {
+                        delete map[key];
                     }
                 }
+                _this.data = map;
             }
             _this.date = isUndefined(_this.startDate) ? new Date() : _this.startDate;
             var front = getFront(_this.selected);
@@ -1081,7 +1090,7 @@ var DatePicker = (function () {
                     }
                 }
             }
-            Observer.$emit("create", { type: "init" });
+            Observer.$emit("render", { type: "init" });
         });
     };
     return DatePicker;

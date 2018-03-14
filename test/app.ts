@@ -19,7 +19,7 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
   };
   const currDate = new Date(dist.year, dist.month, dist.date);
   const startDate = new Date(dist.year, dist.month, dist.date);
-  const endDate = new Date(dist.year, dist.month + 20, dist.date);
+  const endDate = new Date(dist.year, dist.month + 6, dist.date);
 
   let app: any = create
     ? new DatePicker({
@@ -29,7 +29,7 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
         limit: 7,
         format: dateFormat,
         doubleSelect: true,
-        views: 2//'auto'
+        views: 2 //'auto'
       })
     : null;
 
@@ -56,9 +56,14 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
       app.on("data", (result: any) => {
         const data = result.data;
         const nodeList = result.nodeList;
+
+        console.log(data);
         for (let i = 0; i < nodeList.length; i++) {
           let node = nodeList[i];
           let date = node.getAttribute("data-date");
+
+
+
           if (date in data) {
             if (!node.classList.contains("disabled")) {
               let itemData = source[date];
@@ -83,7 +88,7 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
           "2018-2-19",
           "2018-2-22",
           "2018-2-23",
-          new Date(),
+          // new Date(),
           "2018-2-27",
           "2018-2-25",
           "2018-3-28",
@@ -91,12 +96,12 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
           "2018-3-20",
           "2018-3-19"
         ],
-        // from: new Date(2018, 4, 1), //"2018-5-1",
-        to: new Date(2018,2,15),
+        from: new Date(2018, 4, 1), //"2018-5-1",
+        to: new Date(2018, 2, 15),
         days: [5]
       });
 
-      const bindData = !true;
+      const bindData = true;
       if (bindData) {
         app.setData(() => {
           Object.keys(source).forEach(date => {
@@ -121,9 +126,7 @@ function popupHandler(visible: boolean) {
 }
 
 function init(document: Document) {
-
-
-  const date =new Date();
+  const date = new Date();
 
   createDatePicker(true, []);
   document.addEventListener("click", e => {

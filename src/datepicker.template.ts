@@ -103,7 +103,7 @@ export default class HTML {
     text: string,
     day: number
   ) {
-    return `<div class="${className}" ${day ? "data-day=" + day : ""} ${
+    return `<div class="${className}"  ${day>=0 ? "data-day=" + day : ""} ${
       key ? "data-date=" + key : ""
     }>${text}</div>`;
   }
