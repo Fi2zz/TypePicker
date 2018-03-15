@@ -25,7 +25,7 @@ DatePicker build with typescript
 | doubleSelect | boolean            | Enable pick two dates                                   | false                 |
 | limit        | number             | Limitation between two dates while `doubleSelect` is on |                       |
 | views        | number,string      | Display views of DatePicker                             | auto,1,2              |
-| selection    | number             | Size of picked dates                                    | 1                     |
+| selection    | number             | Size of picked dates,value must be not less than `2`    | 1                     |
 
 #### NOTE
 
