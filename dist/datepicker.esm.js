@@ -435,7 +435,8 @@ var getDisableDates = function (startDate, endDate, dateFormat, should) {
             temp[formatted] = formatted;
         }
         var endMonthDates = getDates(endDate.getFullYear(), endDate.getMonth());
-        var diffs = endMonthDates - endDate.getDate();
+        var endDateNextMonthDate = getDates(endDate.getFullYear(), endDate.getMonth() + 1);
+        var diffs = endMonthDates - endDate.getDate() + endDateNextMonthDate;
         for (var i = 1; i <= diffs; i++) {
             var date = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate() + i);
             var formatted = format(date, dateFormat).value;
@@ -615,6 +616,8 @@ var DatePicker = (function () {
                 validDates: validDates
             };
         };
+        Observer.$on("setDates", function (result) { return (_this.selected = result); });
+        Observer.$on("setData", function (result) { return (_this.data = result); });
         Observer.$on("select", function (result) {
             var type = result.type, value = result.value;
             if (type === "disabled") {
@@ -643,7 +646,8 @@ var DatePicker = (function () {
             }
             _this.render(baseClassName, _this.createMonths(_this.date), _this.views === "auto");
             var nodeList = _this.element.querySelectorAll(".calendar-cell");
-            if (!isEmpty(_this.disableDays) && (isUndefined(_this.endDate) || isUndefined(_this.startDate))) {
+            if (!isEmpty(_this.disableDays) &&
+                (isUndefined(_this.endDate) || isUndefined(_this.startDate))) {
                 var days = _this.disableDays;
                 for (var i = 0; i < nodeList.length; i++) {
                     var node = nodeList[i];
@@ -747,7 +751,9 @@ var DatePicker = (function () {
             };
             var _loop_1 = function (i) {
                 var node = nodeList[i];
-                node.addEventListener("click", function () { return Observer.$emit("select", pickDate(node)); });
+                node.addEventListener("click", function () {
+                    return Observer.$emit("select", pickDate(node));
+                });
             };
             for (var i = 0; i < nodeList.length; i++) {
                 _loop_1(i);
@@ -1000,8 +1006,6 @@ var DatePicker = (function () {
             disableBefore: null,
             disableAfter: null
         };
-        Observer.$on("setDates", function (result) { return (_this.selected = result); });
-        Observer.$on("setData", function (result) { return (_this.data = result); });
         Observer.$on("setDisabled", function (result) { return (rawDisableMap = result); });
         nextTick(function () {
             var bindData = !isEmpty(_this.data);
@@ -1047,7 +1051,8 @@ var DatePicker = (function () {
                     disabledMap[date] = date;
                 }
             }
-            _this.disables = merge(getDisableDates(_this.startDate, _this.endDate, _this.dateFormat, bindData || (!isUndefined(_this.startDate) || !isUndefined(_this.endDate))), disabledMap);
+            _this.disables = merge(getDisableDates(_this.startDate, _this.endDate, _this.dateFormat, bindData ||
+                (!isUndefined(_this.startDate) || !isUndefined(_this.endDate))), disabledMap);
             if (bindData) {
                 var map = _this.data;
                 for (var key in _this.disables) {
