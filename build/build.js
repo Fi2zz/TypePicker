@@ -4,7 +4,7 @@ const path = require("path");
 const stylus = require("stylus");
 const colorful = require("colors/safe");
 const uglify = require("uglify-js");
-
+const pkg = require("../package.json")
 const commonJs = require("rollup-plugin-commonjs");
 const typescript = require("rollup-plugin-typescript");
 const config = {
@@ -70,11 +70,11 @@ function stylusCompiler(config, dest, resolve) {
 
 function banner(code) {
     return `  /*
-   *  TypePicker v1.5.8
+   *  TypePicker v${pkg.version}
    *  Fi2zz / wenjingbiao@outlook.com
    *  https://github.com/Fi2zz/datepicker
    *  (c) 2017-${new Date().getFullYear()}, wenjingbiao@outlook.com
-   *  MIT License
+   *  ${pkg.license} License
   */
   
   

@@ -584,7 +584,7 @@ export default class DatePicker {
         this.disables[peek] ||
         (this.doubleSelect && front && front === peek && peek)
       ) {
-        warn("setDates", "Illegal dates" + this.selected);
+        warn("setDates", "Illegal dates [" + this.selected + "]");
         this.selected = [];
       }
       if (this.views === "auto") {

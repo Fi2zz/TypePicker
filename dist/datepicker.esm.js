@@ -1,5 +1,5 @@
   /*
-   *  TypePicker v1.5.8
+   *  TypePicker v1.6.0
    *  Fi2zz / wenjingbiao@outlook.com
    *  https://github.com/Fi2zz/datepicker
    *  (c) 2017-2018, wenjingbiao@outlook.com
@@ -1068,7 +1068,7 @@ var DatePicker = (function () {
             if (_this.disables[front] ||
                 _this.disables[peek] ||
                 (_this.doubleSelect && front && front === peek && peek)) {
-                warn("setDates", "Illegal dates" + _this.selected);
+                warn("setDates", "Illegal dates [" + _this.selected + "]");
                 _this.selected = [];
             }
             if (_this.views === "auto") {
