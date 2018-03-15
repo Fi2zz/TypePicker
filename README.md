@@ -29,7 +29,8 @@ DatePicker build with typescript
 
 #### NOTE
 
-    when  `selection` is greater than 2, `bindData` and `doubleSelect` will be set to `false`, and `option.limit` will be set the same as `selection`
+    when  `selection` is greater than 2, `bindData` and `doubleSelect` will be set to `false`,
+    and `option.limit` will be set the same as `selection`
 
 ## API
 
