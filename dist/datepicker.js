@@ -1,5 +1,5 @@
   /*
-   *  TypePicker v1.6.0
+   *  TypePicker v1.6.1
    *  Fi2zz / wenjingbiao@outlook.com
    *  https://github.com/Fi2zz/datepicker
    *  (c) 2017-2018, wenjingbiao@outlook.com
@@ -567,6 +567,7 @@ var DatePicker = (function () {
         this.doubleSelect = false;
         this.disableDays = [];
         this.language = DEFAULT_LANGUAGE;
+        this.canSelectLength = 1;
         this.format = function (date, format$$1) {
             return format(date, format$$1 ? format$$1 : _this.dateFormat);
         };
@@ -582,7 +583,11 @@ var DatePicker = (function () {
             warn("init", "invalid selector,current selector " + this.element);
             return;
         }
+        this.views = getViews(option.views);
         var baseClassName = this.element.className;
+        this.element.className = baseClassName + " calendar calendar-" + (this.views === 2
+            ? "double-views"
+            : this.views === 1 ? "single-view" : "flat-view");
         var getRange = function (data) {
             var startDate = getFront(data);
             var endDate = getPeek(data);
@@ -640,7 +645,11 @@ var DatePicker = (function () {
             setNodeActiveState(_this.element, value, _this.doubleSelect);
         });
         Observer.$on("render", function (result) {
+            var isMultiSelect = _this.canSelectLength >= 2;
             var bindData = !isEmpty(_this.data);
+            if (isMultiSelect) {
+                bindData = false;
+            }
             var type = result.type;
             if (type === "switch") {
                 var curr = {
@@ -650,7 +659,7 @@ var DatePicker = (function () {
                 };
                 _this.date = new Date(curr.year, curr.month + result.size, curr.date);
             }
-            _this.render(baseClassName, _this.createMonths(_this.date), _this.views === "auto");
+            _this.render(_this.createMonths(_this.date), _this.views === "auto");
             var nodeList = _this.element.querySelectorAll(".calendar-cell");
             if (!isEmpty(_this.disableDays) &&
                 (isUndefined(_this.endDate) || isUndefined(_this.startDate))) {
@@ -755,10 +764,40 @@ var DatePicker = (function () {
                     value: selected
                 };
             };
+            var multiPick = function (node) {
+                var date = attr(node, "data-date");
+                var index = selected.indexOf(date);
+                var isDisabledDate = isDisabled(date);
+                if (!date || isDisabledDate) {
+                    return {
+                        type: "disabled",
+                        value: selected
+                    };
+                }
+                if (index >= 0) {
+                    var temp = [];
+                    for (var i = 0; i < selected.length; i++) {
+                        if (selected[i] !== date) {
+                            temp.push(selected[i]);
+                        }
+                    }
+                    selected = temp;
+                }
+                else {
+                    selected.push(date);
+                }
+                if (selected.length > _this.limit) {
+                    selected = [date];
+                }
+                return {
+                    type: "selected",
+                    value: selected
+                };
+            };
             var _loop_1 = function (i) {
                 var node = nodeList[i];
                 node.addEventListener("click", function () {
-                    return Observer.$emit("select", pickDate(node));
+                    return Observer.$emit("select", isMultiSelect ? multiPick(node) : pickDate(node));
                 });
             };
             for (var i = 0; i < nodeList.length; i++) {
@@ -888,7 +927,7 @@ var DatePicker = (function () {
         });
     };
     DatePicker.prototype.setData = function (cb) {
-        if (isFunction(cb)) {
+        if (isFunction(cb) && this.canSelectLength <= 1) {
             var result = cb();
             if (isPlainObject(result) && Object.keys(result).length > 0) {
                 var map = {};
@@ -955,17 +994,12 @@ var DatePicker = (function () {
         };
         return createMonths(date);
     };
-    DatePicker.prototype.render = function (baseClassName, data, renderWeekOnTop) {
+    DatePicker.prototype.render = function (data, renderWeekOnTop) {
         var template = new HTML({
             renderWeekOnTop: renderWeekOnTop,
             data: data,
             week: this.language.days
         });
-        this.element.className = [
-            baseClassName + " calendar calendar-" + (this.views === 2
-                ? "double-views"
-                : this.views === 1 ? "single-view" : "flat-view")
-        ].join(" ");
         this.element.innerHTML = template[0];
         var prev = this.element.querySelector(".calendar-action-prev");
         var next = this.element.querySelector(".calendar-action-next");
@@ -994,9 +1028,18 @@ var DatePicker = (function () {
     };
     DatePicker.prototype.init = function (option) {
         var _this = this;
-        this.doubleSelect = isBoolean(option.doubleSelect);
+        this.doubleSelect =
+            isBoolean(option.doubleSelect) && option.doubleSelect === true;
+        var selection = parseToInt(option.selection);
+        var isMultiSelect = false;
+        if (option.selection && !isNaN(selection) && selection >= 2) {
+            this.canSelectLength = selection;
+            isMultiSelect = true;
+        }
+        if (this.canSelectLength >= 2) {
+            this.doubleSelect = false;
+        }
         this.dateFormat = option.format;
-        this.views = getViews(option.views);
         if (!isUndefined(option.startDate) && isDate(option.startDate)) {
             this.startDate = option.startDate;
         }
@@ -1006,6 +1049,9 @@ var DatePicker = (function () {
         this.limit = this.doubleSelect
             ? isNumber(option.limit) ? option.limit : 2
             : 1;
+        if (isMultiSelect) {
+            this.limit = this.canSelectLength;
+        }
         var rawDisableMap = {
             dateList: [],
             dayList: [],
@@ -1015,6 +1061,10 @@ var DatePicker = (function () {
         Observer.$on("setDisabled", function (result) { return (rawDisableMap = result); });
         nextTick(function () {
             var bindData = !isEmpty(_this.data);
+            if (isMultiSelect) {
+                bindData = false;
+                _this.data = {};
+            }
             if (!isDate(option.startDate) || !isDate(option.endDate)) {
                 if (bindData) {
                     warn("init", "please provide [startDate] and [endDate] while binding data to datepicker");

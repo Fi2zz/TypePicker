@@ -6,7 +6,7 @@ interface datePickerOptions {
   views?: number | string;
   startDate?: Date;
   endDate?: Date;
-  multiSelect?: boolean;
+  selection?: number;
 }
 
 interface disable {
@@ -212,7 +212,7 @@ export default class DatePicker {
   private doubleSelect: boolean = false;
   private disableDays: number[] = [];
   private language: any = DEFAULT_LANGUAGE;
-
+  private canSelectLength: number = 1;
   public on(ev: string, cb: Function) {
     return Observer.$on(ev, cb);
   }
@@ -347,7 +347,7 @@ export default class DatePicker {
   }
 
   public setData(cb: Function) {
-    if (isFunction(cb)) {
+    if (isFunction(cb) && this.canSelectLength <= 1) {
       const result = cb();
       if (isPlainObject(result) && Object.keys(result).length > 0) {
         const map = {};
@@ -386,7 +386,6 @@ export default class DatePicker {
       const template = [];
       for (let i = 0; i <= monthSize; i++) {
         let dat = new Date(date.getFullYear(), date.getMonth() + i, 1);
-
         let dates = getDates(dat.getFullYear(), dat.getMonth());
         template.push({
           dates,
@@ -424,24 +423,12 @@ export default class DatePicker {
     return createMonths(date);
   }
 
-  private render(
-    baseClassName: string,
-    data: Array<any>,
-    renderWeekOnTop: boolean
-  ) {
+  private render(data: Array<any>, renderWeekOnTop: boolean) {
     const template = new HTML({
       renderWeekOnTop,
       data,
       week: this.language.days
     });
-
-    this.element.className = [
-      `${baseClassName} calendar calendar-${
-        this.views === 2
-          ? "double-views"
-          : this.views === 1 ? "single-view" : "flat-view"
-      }`
-    ].join(" ");
 
     this.element.innerHTML = template[0];
 
@@ -471,9 +458,21 @@ export default class DatePicker {
   }
 
   private init(option: datePickerOptions) {
-    this.doubleSelect = isBoolean(option.doubleSelect);
+    this.doubleSelect =
+      isBoolean(option.doubleSelect) && option.doubleSelect === true;
+
+    const selection = parseToInt(option.selection);
+    let isMultiSelect = false;
+
+    if (option.selection && !isNaN(selection) && selection >= 2) {
+      this.canSelectLength = selection;
+      isMultiSelect = true;
+    }
+    if (this.canSelectLength >= 2) {
+      this.doubleSelect = false;
+    }
+
     this.dateFormat = option.format;
-    this.views = getViews(option.views);
 
     if (!isUndefined(option.startDate) && isDate(option.startDate)) {
       this.startDate = option.startDate;
@@ -488,6 +487,10 @@ export default class DatePicker {
       ? isNumber(option.limit) ? option.limit : 2
       : 1;
 
+    if (isMultiSelect) {
+      this.limit = this.canSelectLength;
+    }
+
     let rawDisableMap: any = {
       dateList: [],
       dayList: [],
@@ -498,7 +501,11 @@ export default class DatePicker {
     Observer.$on("setDisabled", (result: any) => (rawDisableMap = result));
 
     nextTick(() => {
-      const bindData = !isEmpty(this.data);
+      let bindData = !isEmpty(this.data);
+      if (isMultiSelect) {
+        bindData = false;
+        this.data = {};
+      }
       if (!isDate(option.startDate) || !isDate(option.endDate)) {
         if (bindData) {
           warn(
@@ -627,9 +634,15 @@ export default class DatePicker {
       warn("init", `invalid selector,current selector ${this.element}`);
       return;
     }
+    this.views = getViews(option.views);
 
     const baseClassName = this.element.className;
 
+    this.element.className = `${baseClassName} calendar calendar-${
+      this.views === 2
+        ? "double-views"
+        : this.views === 1 ? "single-view" : "flat-view"
+    }`;
     const getRange = (data: Array<any>) => {
       const startDate = getFront(data);
       const endDate = getPeek(data);
@@ -692,7 +705,13 @@ export default class DatePicker {
       setNodeActiveState(this.element, value, this.doubleSelect);
     });
     Observer.$on("render", (result: any) => {
-      const bindData = !isEmpty(this.data);
+      const isMultiSelect = this.canSelectLength >= 2;
+      let bindData = !isEmpty(this.data);
+
+      if (isMultiSelect) {
+        bindData = false;
+      }
+
       let { type } = result;
       if (type === "switch") {
         const curr = {
@@ -702,11 +721,7 @@ export default class DatePicker {
         };
         this.date = new Date(curr.year, curr.month + result.size, curr.date);
       }
-      this.render(
-        baseClassName,
-        this.createMonths(this.date),
-        this.views === "auto"
-      );
+      this.render(this.createMonths(this.date), this.views === "auto");
       const nodeList = this.element.querySelectorAll(".calendar-cell");
       //因为没有日期列表，因此只能在实例化后再设置by day的disable 状态
       if (
@@ -837,10 +852,46 @@ export default class DatePicker {
           value: selected
         };
       };
+      const multiPick = node => {
+        const date = attr(node, "data-date");
+        const index = selected.indexOf(date);
+
+        const isDisabledDate = isDisabled(date);
+        if (!date || isDisabledDate) {
+          return {
+            type: "disabled",
+            value: selected
+          };
+        }
+
+        if (index >= 0) {
+          let temp = [];
+
+          for (let i = 0; i < selected.length; i++) {
+            if (selected[i] !== date) {
+              temp.push(selected[i]);
+            }
+          }
+          selected = temp;
+        } else {
+          selected.push(date);
+        }
+        if (selected.length > this.limit) {
+          selected = [date];
+        }
+        return {
+          type: "selected",
+          value: selected
+        };
+      };
+
       for (let i = 0; i < nodeList.length; i++) {
         let node = nodeList[i];
         node.addEventListener("click", () =>
-          Observer.$emit("select", pickDate(node))
+          Observer.$emit(
+            "select",
+            isMultiSelect ? multiPick(node) : pickDate(node)
+          )
         );
       }
     });

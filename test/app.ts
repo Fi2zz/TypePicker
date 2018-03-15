@@ -28,8 +28,9 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
         endDate,
         limit: 7,
         format: dateFormat,
-        doubleSelect: true,
-        views:2//'auto'
+        doubleSelect: false,
+        selection: 1,
+        views: 2 //'auto'
       })
     : null;
 
@@ -61,8 +62,6 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
         for (let i = 0; i < nodeList.length; i++) {
           let node = nodeList[i];
           let date = node.getAttribute("data-date");
-
-
 
           if (date in data) {
             if (!node.classList.contains("disabled")) {
@@ -128,7 +127,7 @@ function popupHandler(visible: boolean) {
 function init(document: Document) {
   const date = new Date();
 
-  createDatePicker(true, [new Date,"2018-3-17"]);
+  createDatePicker(true, [new Date(), "2018-3-17"]);
   document.addEventListener("click", e => {
     const target = <HTMLElement>e.target;
     if (target) {
