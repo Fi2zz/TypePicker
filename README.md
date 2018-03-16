@@ -17,15 +17,15 @@ DatePicker build with typescript
 
 ## OPTIONS
 
-| OPTION       | TYPE               | DESC                                                    | DEFAULT VALUE         |
-| ------------ | ------------------ | ------------------------------------------------------- | --------------------- |
-| el           | string,HTMLElement | element to mount DatePcker                              |                       |
-| startDate    | Date               | Start date of DatePicker                                | new Date              |
-| endDate      | Date               | End date of DatePicker                                  | new Date() + 6 months |
-| doubleSelect | boolean            | Enable pick two dates                                   | false                 |
-| limit        | number             | Limitation between two dates while `doubleSelect` is on |                       |
-| views        | number,string      | Display views of DatePicker                             | auto,1,2              |
-| selection    | number             | Size of picked dates,value must be not less than `2`    | 1                     |
+| OPTION       |  RERUIRED| TYPE               | DESC                                                    | DEFAULT VALUE         |
+| ------------ |------------------| ------------------ | ------------------------------------------------------- | --------------------- |
+| el           |YEs | string,HTMLElement | element to mount DatePcker                              |                       |
+| startDate    |NO | Date               | Start date of DatePicker                                | new Date              |
+| endDate      |NO | Date               | End date of DatePicker                                  | new Date() + 6 months |
+| doubleSelect |NO | boolean            | Enable pick two dates                                   | false                 |
+| limit        |NO | number             | Limitation between two dates while `doubleSelect` is on |                       |
+| views        |YES | number,string      | Display views of DatePicker                             | auto,1,2              |
+| selection    |NO | number             | Size of picked dates,value must be not less than `2`    | 1                     |
 
 #### NOTE
 
