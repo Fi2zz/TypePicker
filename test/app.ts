@@ -28,9 +28,9 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
         endDate,
         limit: 7,
         format: dateFormat,
-        doubleSelect: false,
-        selection: 2,
-        views: 2 //'auto'
+        doubleSelect: !false,
+        selection: 5,
+        views: 3 //'auto'
       })
     : null;
 
@@ -58,7 +58,6 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
         const data = result.data;
         const nodeList = result.nodeList;
 
-        console.log(data);
         for (let i = 0; i < nodeList.length; i++) {
           let node = nodeList[i];
           let date = node.getAttribute("data-date");

@@ -459,7 +459,7 @@ function getViews(view) {
         }
     }
     else {
-        if (views > 2 || views <= 0) {
+        if (view > 2 || views <= 0) {
             return 1;
         }
         else {
@@ -467,6 +467,11 @@ function getViews(view) {
         }
     }
 }
+var getClassName = function (baseClassName, views) {
+    return baseClassName + " calendar calendar-" + (views === 2
+        ? "double-views"
+        : views > 2 ? "multi-views" : views === 1 ? "single-view" : "flat-view");
+};
 function parseEl(el) {
     if (!el) {
         return null;
@@ -569,7 +574,7 @@ var DatePicker = (function () {
             return parseFormatted(string, format$$1 ? format$$1 : _this.dateFormat);
         };
         if (!option) {
-            warn("init", "No instance option provided");
+            warn("init", "No datepicker instance option provided");
             return;
         }
         this.element = parseEl(option.el);
@@ -578,10 +583,7 @@ var DatePicker = (function () {
             return;
         }
         this.views = getViews(option.views);
-        var baseClassName = this.element.className;
-        this.element.className = baseClassName + " calendar calendar-" + (this.views === 2
-            ? "double-views"
-            : this.views === 1 ? "single-view" : "flat-view");
+        this.element.className = getClassName(this.element.className, this.views);
         var getRange = function (data) {
             var startDate = getFront(data);
             var endDate = getPeek(data);
@@ -941,7 +943,7 @@ var DatePicker = (function () {
     };
     DatePicker.prototype.createMonths = function (date) {
         var _this = this;
-        var monthSize = this.views === 2
+        var monthSize = this.views == 2
             ? 1
             : this.views === "auto" ? diff(this.endDate, this.startDate) : 0;
         var heading = function (pack, year, month) {

@@ -107,13 +107,21 @@ function getViews(view: number | string) {
       return "auto";
     }
   } else {
-    if (views > 2 || views <= 0) {
+    if (view > 2 || views <= 0) {
       return 1;
     } else {
       return views;
     }
   }
 }
+
+const getClassName = (baseClassName: string, views: number | string) => {
+  return `${baseClassName} calendar calendar-${
+    views === 2
+      ? "double-views"
+      : views > 2 ? "multi-views" : views === 1 ? "single-view" : "flat-view"
+  }`;
+};
 
 function parseEl(el: any) {
   if (!el) {
@@ -372,7 +380,7 @@ export default class DatePicker {
 
   private createMonths(date: Date) {
     const monthSize =
-      this.views === 2
+      this.views == 2
         ? 1
         : this.views === "auto" ? diff(this.endDate, this.startDate) : 0;
     const heading = function(pack, year, month) {
@@ -420,6 +428,7 @@ export default class DatePicker {
         };
       });
     };
+
     return createMonths(date);
   }
 
@@ -431,7 +440,6 @@ export default class DatePicker {
     });
 
     this.element.innerHTML = template[0];
-
     //日期切换
     const prev = this.element.querySelector(".calendar-action-prev");
     const next = this.element.querySelector(".calendar-action-next");
@@ -473,15 +481,12 @@ export default class DatePicker {
     }
 
     this.dateFormat = option.format;
-
     if (!isUndefined(option.startDate) && isDate(option.startDate)) {
       this.startDate = option.startDate;
     }
-
     if (!isUndefined(option.endDate) && isDate(option.endDate)) {
       this.endDate = option.endDate;
     }
-
     //選擇日期區間最大限制
     this.limit = this.doubleSelect
       ? isNumber(option.limit) ? option.limit : 2
@@ -622,7 +627,7 @@ export default class DatePicker {
 
   constructor(option: datePickerOptions) {
     if (!option) {
-      warn("init", "No instance option provided");
+      warn("init", "No datepicker instance option provided");
       return;
     }
 
@@ -632,14 +637,7 @@ export default class DatePicker {
       return;
     }
     this.views = getViews(option.views);
-
-    const baseClassName = this.element.className;
-
-    this.element.className = `${baseClassName} calendar calendar-${
-      this.views === 2
-        ? "double-views"
-        : this.views === 1 ? "single-view" : "flat-view"
-    }`;
+    this.element.className = getClassName(this.element.className, this.views);
     const getRange = (data: Array<any>) => {
       const startDate = getFront(data);
       const endDate = getPeek(data);
@@ -704,7 +702,6 @@ export default class DatePicker {
     Observer.$on("render", (result: any) => {
       const isMultiSelect = this.canSelectLength >= 2;
       let bindData = !isEmpty(this.data);
-
       if (isMultiSelect) {
         bindData = false;
       }

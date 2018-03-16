@@ -10,22 +10,21 @@ DatePicker build with typescript
 4.  Disabled date can be selected as end date
 5.  Multi selection
 
-
 ## RUN DEMO
 
     yarn dev or npm run dev
 
 ## OPTIONS
 
-| OPTION       |  RERUIRED| TYPE               | DESC                                                    | DEFAULT VALUE         |
-| ------------ |------------------| ------------------ | ------------------------------------------------------- | --------------------- |
-| el           |YEs | string,HTMLElement | element to mount DatePcker                              |                       |
-| startDate    |NO | Date               | Start date of DatePicker                                | new Date              |
-| endDate      |NO | Date               | End date of DatePicker                                  | new Date() + 6 months |
-| doubleSelect |NO | boolean            | Enable pick two dates                                   | false                 |
-| limit        |NO | number             | Limitation between two dates while `doubleSelect` is on |                       |
-| views        |YES | number,string      | Display views of DatePicker                             | auto,1,2              |
-| selection    |NO | number             | Size of picked dates,value must be not less than `2`    | 1                     |
+| OPTION       | RERUIRED | TYPE               | DESC                                                         | DEFAULT VALUE         |
+| ------------ | -------- | ------------------ | ------------------------------------------------------------ | --------------------- |
+| el           | YES      | string,HTMLElement | Element or selector to mount DatePcker                       |                       |
+| startDate    | NO       | Date               | Start date of DatePicker                                     | new Date              |
+| endDate      | NO       | Date               | End date of DatePicker                                       | new Date() + 6 months |
+| doubleSelect | NO       | boolean            | Enable pick two dates                                        | false                 |
+| limit        | NO       | number             | Limitation between two dates while `doubleSelect` is on      |                       |
+| views        | NO       | number,string      | Display views of DatePicker                                  | auto,1,2              |
+| selection    | NO       | number             | Size of dates can be picked ,value must be not less than `2` | 1                     |
 
 #### NOTE
 
@@ -114,7 +113,7 @@ DatePicker build with typescript
             doubleSelect: true,
             views: 1,
             selection:4 // if selection not less than 2, doubleSelect will be disabled,
-                        //and `data` event and `setData` will not work 
+                        //and `data` event and `setData` will not work
     });
 
     //`update` event fired by click on date cell and DatePicker init
