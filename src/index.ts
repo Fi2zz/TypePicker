@@ -501,11 +501,8 @@ export default class DatePicker {
     Observer.$on("setDisabled", (result: any) => (rawDisableMap = result));
 
     nextTick(() => {
-      let bindData = !isEmpty(this.data);
-      if (isMultiSelect) {
-        bindData = false;
-        this.data = {};
-      }
+      const bindData = !isEmpty(this.data) && !isMultiSelect;
+
       if (!isDate(option.startDate) || !isDate(option.endDate)) {
         if (bindData) {
           warn(

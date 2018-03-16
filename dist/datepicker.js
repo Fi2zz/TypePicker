@@ -1060,11 +1060,7 @@ var DatePicker = (function () {
         };
         Observer.$on("setDisabled", function (result) { return (rawDisableMap = result); });
         nextTick(function () {
-            var bindData = !isEmpty(_this.data);
-            if (isMultiSelect) {
-                bindData = false;
-                _this.data = {};
-            }
+            var bindData = !isEmpty(_this.data) && !isMultiSelect;
             if (!isDate(option.startDate) || !isDate(option.endDate)) {
                 if (bindData) {
                     warn("init", "please provide [startDate] and [endDate] while binding data to datepicker");
