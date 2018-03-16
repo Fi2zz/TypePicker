@@ -6,10 +6,10 @@ DatePicker build with typescript
 
 1.  Base on event
 2.  Easy to set data date by date by using `data` event
-3.  Support multi views and single views
+3.  Support multi views,flat view and single view
 4.  Disabled date can be selected as end date
-5.  Single selection and double selection
-6.  Limitaion for two selected dates
+5.  Multi selection
+
 
 ## RUN DEMO
 
@@ -29,7 +29,7 @@ DatePicker build with typescript
 
 #### NOTE
 
-    when  `selection` is greater than 2, `bindData` and `doubleSelect` will be set to `false`,
+    when `selection` is greater than 2, `bindData` and `doubleSelect` will be set to `false`,
     and `option.limit` will be set the same as `selection`
 
 ## API
@@ -112,7 +112,9 @@ DatePicker build with typescript
             limit: 7,
             format: 'YYYY-M-D',
             doubleSelect: true,
-            views: 1
+            views: 1,
+            selection:4 // if selection not less than 2, doubleSelect will be disabled,
+                        //and `data` event and `setData` will not work 
     });
 
     //`update` event fired by click on date cell and DatePicker init
