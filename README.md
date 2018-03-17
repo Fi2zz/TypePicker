@@ -25,10 +25,10 @@ DatePicker build with typescript
 ## FEATURES
 
 1.  Base on event
-2.  Easy to set data date by date by using `data` event
-3.  Support multi views,flat view and single view
-4.  Disabled date can be selected as end date
-5.  Multi selection
+2.  Easy to display data on html element by using `data` event
+3.  Support double views,flat view and single view
+4.  Disabled date can be selected as end date while using `setData` funccion
+5.  Support Multi selection
 
 ## RUN DEMO
 
