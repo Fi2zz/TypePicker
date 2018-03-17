@@ -2,8 +2,25 @@
 
 DatePicker build with typescript
 
-| <h3>single view </h3><img src="single.png" width="240"/><h3> double views <h3><img src="double.png" width="240"/> | <h3>flat view</h3><img src="auto.png" width="300"/> |
-|------------------------------------------|------------------------------------------|
+<table>
+    <tr>
+    <td colspan="2">
+            <h4>Double views</h4>
+            <img src="double.png">
+        </td>
+    </tr>
+    <tr>
+        <td valign="top">
+            <h4>Single view</h4>
+            <img src="single.png">
+        </td>
+        <td>
+            <h4>Flat view</h4>
+            <img src="auto.png">
+        </td>
+    </tr>
+    
+</table>
 
 ## FEATURES
 
