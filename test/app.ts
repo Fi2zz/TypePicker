@@ -30,7 +30,7 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
         format: dateFormat,
         doubleSelect: !false,
         selection: 5,
-        views: 3 //'auto'
+        views: 2 //"auto"
       })
     : null;
 
