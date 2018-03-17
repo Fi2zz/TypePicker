@@ -1,6 +1,6 @@
 const path = require("path");
 const webpack = require("webpack");
-const merge = require("webpack-merge");
+
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 function config() {
@@ -57,4 +57,4 @@ function config() {
     ]
   };
 }
-module.exports = new Promise((resolve, reject) => resolve(config()));
+module.exports = config(); //new Promise((resolve, reject) => resolve(config()));

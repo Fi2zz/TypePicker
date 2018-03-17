@@ -2,6 +2,9 @@
 
 DatePicker build with typescript
 
+| <h3>single view </h3><img src="single.png" width="240"/><h3> double views <h3><img src="double.png" width="240"/> | <h3>flat view</h3><img src="auto.png" width="300"/> |
+|------------------------------------------|------------------------------------------|
+
 ## FEATURES
 
 1.  Base on event
@@ -115,6 +118,9 @@ DatePicker build with typescript
             selection:4 // if selection not less than 2, doubleSelect will be disabled,
                         //and `data` event and `setData` will not work
     });
+
+
+
 
     //`update` event fired by click on date cell and DatePicker init
     app.on("update", (result) => {
