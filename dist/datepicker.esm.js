@@ -623,7 +623,6 @@ var DatePicker = (function () {
                 validDates: validDates
             };
         };
-        Observer.$on("setDates", function (result) { return (_this.selected = result); });
         Observer.$on("setData", function (result) { return (_this.data = result); });
         Observer.$on("select", function (result) {
             var type = result.type, value = result.value;
@@ -631,7 +630,7 @@ var DatePicker = (function () {
                 return false;
             }
             if (type === "selected") {
-                _this.setDates(value);
+                _this.selected = value;
             }
             if (type !== "switch") {
                 Observer.$emit("update", result);
@@ -830,7 +829,7 @@ var DatePicker = (function () {
             var d = dates[dates.length - 1];
             datesList = [isDate(d) ? this.format(d).value : d];
         }
-        Observer.$emit("setDates", datesList);
+        this.selected = datesList;
     };
     DatePicker.prototype.setLanguage = function (pack) {
         if (isArray(pack.days) && isArray(pack.months)) {

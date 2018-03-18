@@ -255,7 +255,7 @@ export default class DatePicker {
       const d = dates[dates.length - 1];
       datesList = [isDate(d) ? this.format(d).value : d];
     }
-    Observer.$emit("setDates", datesList);
+    this.selected = datesList;
   }
 
   public setLanguage(pack?: any) {
@@ -679,7 +679,6 @@ export default class DatePicker {
       };
     };
 
-    Observer.$on("setDates", (result: any) => (this.selected = result));
     Observer.$on("setData", (result: any) => (this.data = result));
     Observer.$on("select", (result: any) => {
       const { type, value } = result;
@@ -688,7 +687,7 @@ export default class DatePicker {
         return false;
       }
       if (type === "selected") {
-        this.setDates(value);
+        this.selected = value;
       }
       if (type !== "switch") {
         Observer.$emit("update", result);
@@ -846,7 +845,7 @@ export default class DatePicker {
           value: selected
         };
       };
-      const multiPick = node => {
+      const multiPick = (node: HTMLElement) => {
         const date = attr(node, "data-date");
         const index = selected.indexOf(date);
 
@@ -870,6 +869,7 @@ export default class DatePicker {
         } else {
           selected.push(date);
         }
+        // console.log(selected.length, this.limit, selected);
         if (selected.length > this.limit) {
           selected = [date];
         }

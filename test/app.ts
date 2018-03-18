@@ -39,7 +39,6 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
 
     if (app) {
       app.on("update", (result: any) => {
-        // console.log(JSON.stringify(result,null,2));
         if (result.type === "selected" && result.value.length === 2) {
           popupHandler(false);
         }
@@ -126,7 +125,7 @@ function popupHandler(visible: boolean) {
 function init(document: Document) {
   const date = new Date();
 
-  createDatePicker(true, [new Date(), "2018-3-17"]);
+  createDatePicker(true, [new Date(), new Date()]);
   document.addEventListener("click", e => {
     const target = <HTMLElement>e.target;
     if (target) {

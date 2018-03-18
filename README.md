@@ -32,10 +32,10 @@ DatePicker build with typescript
 
 ## RUN DEMO
 
-    yarn dev or npm run dev
+    yarn dev or npm run dev 
 
 ## OPTIONS
-
+6
 | OPTION       | RERUIRED | TYPE               | DESC                                                         | DEFAULT VALUE         |
 | ------------ | -------- | ------------------ | ------------------------------------------------------------ | --------------------- |
 | el           | YES      | string,HTMLElement | Element or selector to mount DatePcker                       |                       |
