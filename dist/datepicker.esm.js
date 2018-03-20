@@ -1099,7 +1099,7 @@ var DatePicker = (function () {
                 }
             }
             _this.disables = merge(getDisableDates(_this.startDate, _this.endDate, _this.dateFormat, bindData ||
-                (!isUndefined(_this.startDate) || !isUndefined(_this.endDate))), disabledMap);
+                (!isUndefined(_this.startDate) && !isUndefined(_this.endDate))), disabledMap);
             if (bindData) {
                 var map = _this.data;
                 for (var key in _this.disables) {

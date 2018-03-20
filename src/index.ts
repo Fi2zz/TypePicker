@@ -569,7 +569,7 @@ export default class DatePicker {
           this.endDate,
           this.dateFormat,
           bindData ||
-            (!isUndefined(this.startDate) || !isUndefined(this.endDate))
+            (!isUndefined(this.startDate) && !isUndefined(this.endDate))
         ),
         disabledMap
       );
