@@ -62,34 +62,39 @@ const getDisableDates = (
   const temp: any = {};
   if (should) {
     //处理开始日期前的日期
-    const startDateIndex = <number>startDate.getDate();
-    for (let i = 1; i <= startDateIndex - 1; i++) {
-      let date = new Date(
-        startDate.getFullYear(),
-        startDate.getMonth(),
-        startDateIndex - i
-      );
+    if (startDate instanceof Date) {
+      const startDateIndex = <number>startDate.getDate();
+      for (let i = 1; i <= startDateIndex - 1; i++) {
+        let date = new Date(
+          startDate.getFullYear(),
+          startDate.getMonth(),
+          startDateIndex - i
+        );
 
-      let formatted = formatter(date, dateFormat).value;
-      temp[formatted] = formatted;
+        let formatted = formatter(date, dateFormat).value;
+        temp[formatted] = formatted;
+      }
     }
-    //处理结束日期后的日期
-    const endMonthDates = getDates(endDate.getFullYear(), endDate.getMonth());
-    //结束日期往后计算多一个月，避免在 views=2 的情况下出错
-    const endDateNextMonthDate = getDates(
-      endDate.getFullYear(),
-      endDate.getMonth() + 1
-    );
-    const diffs = endMonthDates - endDate.getDate() + endDateNextMonthDate;
 
-    for (let i = 1; i <= diffs; i++) {
-      let date = new Date(
+    if (endDate instanceof Date) {
+      //处理结束日期后的日期
+      const endMonthDates = getDates(endDate.getFullYear(), endDate.getMonth());
+      //结束日期往后计算多一个月，避免在 views=2 的情况下出错
+      const endDateNextMonthDate = getDates(
         endDate.getFullYear(),
-        endDate.getMonth(),
-        endDate.getDate() + i
+        endDate.getMonth() + 1
       );
-      let formatted = formatter(date, dateFormat).value;
-      temp[formatted] = formatted;
+      const diffs = endMonthDates - endDate.getDate() + endDateNextMonthDate;
+
+      for (let i = 1; i <= diffs; i++) {
+        let date = new Date(
+          endDate.getFullYear(),
+          endDate.getMonth(),
+          endDate.getDate() + i
+        );
+        let formatted = formatter(date, dateFormat).value;
+        temp[formatted] = formatted;
+      }
     }
   }
   return temp;
@@ -569,7 +574,7 @@ export default class DatePicker {
           this.endDate,
           this.dateFormat,
           bindData ||
-            (!isUndefined(this.startDate) && !isUndefined(this.endDate))
+            !isUndefined(this.startDate) || !isUndefined(this.endDate)
         ),
         disabledMap
       );

@@ -1,5 +1,5 @@
   /*
-   *  TypePicker v1.6.1
+   *  TypePicker v1.6.5
    *  Fi2zz / wenjingbiao@outlook.com
    *  https://github.com/Fi2zz/datepicker
    *  (c) 2017-2018, wenjingbiao@outlook.com
@@ -434,19 +434,23 @@ var standardDate = function (date, size) {
 var getDisableDates = function (startDate, endDate, dateFormat, should) {
     var temp = {};
     if (should) {
-        var startDateIndex = startDate.getDate();
-        for (var i = 1; i <= startDateIndex - 1; i++) {
-            var date = new Date(startDate.getFullYear(), startDate.getMonth(), startDateIndex - i);
-            var formatted = format(date, dateFormat).value;
-            temp[formatted] = formatted;
+        if (startDate instanceof Date) {
+            var startDateIndex = startDate.getDate();
+            for (var i = 1; i <= startDateIndex - 1; i++) {
+                var date = new Date(startDate.getFullYear(), startDate.getMonth(), startDateIndex - i);
+                var formatted = format(date, dateFormat).value;
+                temp[formatted] = formatted;
+            }
         }
-        var endMonthDates = getDates(endDate.getFullYear(), endDate.getMonth());
-        var endDateNextMonthDate = getDates(endDate.getFullYear(), endDate.getMonth() + 1);
-        var diffs = endMonthDates - endDate.getDate() + endDateNextMonthDate;
-        for (var i = 1; i <= diffs; i++) {
-            var date = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate() + i);
-            var formatted = format(date, dateFormat).value;
-            temp[formatted] = formatted;
+        if (endDate instanceof Date) {
+            var endMonthDates = getDates(endDate.getFullYear(), endDate.getMonth());
+            var endDateNextMonthDate = getDates(endDate.getFullYear(), endDate.getMonth() + 1);
+            var diffs = endMonthDates - endDate.getDate() + endDateNextMonthDate;
+            for (var i = 1; i <= diffs; i++) {
+                var date = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate() + i);
+                var formatted = format(date, dateFormat).value;
+                temp[formatted] = formatted;
+            }
         }
     }
     return temp;
@@ -1105,7 +1109,7 @@ var DatePicker = (function () {
                 }
             }
             _this.disables = merge(getDisableDates(_this.startDate, _this.endDate, _this.dateFormat, bindData ||
-                (!isUndefined(_this.startDate) && !isUndefined(_this.endDate))), disabledMap);
+                !isUndefined(_this.startDate) || !isUndefined(_this.endDate)), disabledMap);
             if (bindData) {
                 var map = _this.data;
                 for (var key in _this.disables) {
