@@ -27,7 +27,7 @@ DatePicker build with typescript
 1.  Base on event
 2.  Easy to display data on html element by using `data` event
 3.  Support double views,flat view and single view
-4.  Disabled date can be selected as end date while using `setData` funccion
+4.  Disabled date can be selected as end date while using `setData` function
 5.  Support Multi selection
 
 ## RUN DEMO
@@ -35,16 +35,21 @@ DatePicker build with typescript
     yarn dev or npm run dev 
 
 ## OPTIONS
-6
-| OPTION       | RERUIRED | TYPE               | DESC                                                         | DEFAULT VALUE         |
-| ------------ | -------- | ------------------ | ------------------------------------------------------------ | --------------------- |
-| el           | YES      | string,HTMLElement | Element or selector to mount DatePcker                       |                       |
+
+
+
+| OPTION       | RERUIRED | TYPE               | DESC | DEFAULT VALUE         | 
+|------------|------------ | ------------- |---------------|------------------|
+| el           | YES      | string,HTMLElement | Element or selector to mount DatePcker  |    |                                       
 | startDate    | NO       | Date               | Start date of DatePicker                                     | new Date              |
 | endDate      | NO       | Date               | End date of DatePicker                                       | new Date() + 6 months |
 | doubleSelect | NO       | boolean            | Enable pick two dates                                        | false                 |
 | limit        | NO       | number             | Limitation between two dates while `doubleSelect` is on      |                       |
 | views        | NO       | number,string      | Display views of DatePicker                                  | auto,1,2              |
 | selection    | NO       | number             | Size of dates can be picked ,value must be not less than `2` | 1                     |
+
+
+
 
 #### NOTE
 
