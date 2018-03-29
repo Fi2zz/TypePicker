@@ -777,19 +777,24 @@ var handlePickDate = function (options) {
             var cache = selected;
             var date = attr(item, "data-date");
             var index = selected.indexOf(date);
-            if (!date || (selected.length <= 0 && !inDates(date)) && bindData) {
+            if (!date || (selected.length <= 0 && !inDates(date) && bindData)) {
                 return false;
             }
             if (index >= 0) {
                 selected = [selected[selected.length - 1]];
             }
-            if (isDouble && selected.length >= 2 || !isDouble) {
+            if ((isDouble && selected.length >= 2) || !isDouble) {
                 selected = [];
             }
             selected.push(date);
             if (isDouble) {
                 var handlerOptions = {
-                    date: date, selected: selected, cache: cache, limit: limit, format: format, parse: parse,
+                    date: date,
+                    selected: selected,
+                    cache: cache,
+                    limit: limit,
+                    format: format,
+                    parse: parse,
                     inDates: inDates,
                     infiniteMode: infiniteMode,
                     bindData: bindData
@@ -824,16 +829,20 @@ var handlePickDate = function (options) {
                 if (selected.length <= 1) {
                     var front = selected[0];
                     if (!inDates(front)) {
-                        type = 'disabled';
+                        type = "disabled";
                     }
                 }
                 else if (selected.length >= 2) {
-                    var prevEl = item.previousElementSibling;
+                    var prevEl = collection[i - 1]
+                        ? collection[i - 1]
+                        : item.previousElementSibling;
                     var prevDate = attr(prevEl, "data-date");
                     var startDate = parse(selected[0]);
                     var diffed = diff(startDate, parse(date), "days") * -1;
-                    if (!inDates(date) && !inDates(prevDate) || diffed > limit || diffed < 0) {
-                        type = 'disabled';
+                    if ((!inDates(date) && !inDates(prevDate)) ||
+                        diffed > limit ||
+                        diffed < 0) {
+                        type = "disabled";
                     }
                 }
             }
