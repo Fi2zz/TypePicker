@@ -26,7 +26,7 @@ export default function(options: pickerHandler) {
     infiniteMode,
     bindData
   } = options;
-  const collection = element.querySelectorAll(".calendar-date-cell");
+  const collection = element.querySelectorAll(".calendar-date-cell:not(.empty)");
 
   const init = selected;
 
@@ -109,6 +109,10 @@ export default function(options: pickerHandler) {
           const prevEl: HTMLElement = collection[i - 1]
             ? collection[i - 1]
             : item.previousElementSibling;
+          
+        //  const prevEl =item.  previousElementSibling 
+
+
           const prevDate = attr(prevEl, "data-date");
           const startDate = parse(selected[0]);
           const diffed = diff(startDate, parse(date), "days") * -1;

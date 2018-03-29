@@ -770,7 +770,7 @@ function init(option, renderer) {
 
 var handlePickDate = function (options) {
     var element = options.element, selected = options.selected, isDouble = options.isDouble, parse = options.parse, format = options.format, limit = options.limit, inDates = options.inDates, update = options.update, infiniteMode = options.infiniteMode, bindData = options.bindData;
-    var collection = element.querySelectorAll(".calendar-date-cell");
+    var collection = element.querySelectorAll(".calendar-date-cell:not(.empty)");
     var _loop_1 = function (i) {
         var item = collection[i];
         item.addEventListener("click", function () {

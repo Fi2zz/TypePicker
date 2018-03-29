@@ -15,7 +15,7 @@ const dist = {
 };
 
 const from = new Date(dist.year, dist.month, dist.date)
-const to = new Date(dist.year, dist.month+1 , 0);
+const to = new Date(dist.year, dist.month+3 , 0);
 
 const currDate = new Date(dist.year, dist.month, dist.date);
 const dateFormat = 'YYYY-M-D';
@@ -42,7 +42,7 @@ function createDatePicker(onUpdate: Function, create: boolean = true, selected?:
             format: dateFormat,
             doubleSelect: true,
             defaultLanguage: "zh",
-            views: 2
+            views: "auto"
         });
         if (datepicker) {
 
@@ -93,6 +93,10 @@ function onUpdate(result: any = {value: <Array<string>>[], type: <string>''}) {
     if (result.type === 'selected' && result.value.length === 2) {
         popupHandler(false)
     }
+
+
+    console.log(result.value)
+
 
     console.log(JSON.stringify(result,null,2))
     formControl.value = result.value;
