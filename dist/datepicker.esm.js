@@ -59,6 +59,7 @@ var attrSelector = function (attr, value) {
 function parseToInt(string) {
     return parseInt(string, 10);
 }
+var isFirefox = /firefox/i.test(window.navigator.userAgent);
 function getDates(year, month) {
     var d = new Date(year, month, 1);
     var utc = Date.UTC(d.getFullYear(), d.getMonth() + 1, 0);
@@ -597,27 +598,41 @@ var DatePicker = (function () {
                 var start = void 0;
                 var end = void 0;
                 if (!isDate(startDate)) {
-                    start = _this.parse(startDate);
+                    start = _this.parse(startDate, _this.dateFormat);
                 }
                 else {
                     start = startDate;
                 }
                 if (!isDate(endDate)) {
-                    end = _this.parse(endDate);
+                    end = _this.parse(endDate, _this.dateFormat);
                 }
                 else {
                     end = endDate;
                 }
-                var gap = diff(start, end, "days", true);
+                var gap = diff(end, start, "days");
                 if (gap <= _this.limit) {
-                    for (var i = 0; i < gap; i++) {
-                        var date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
-                        var formatted = _this.format(date).value;
-                        if (_this.disables[formatted]) {
-                            invalidDates.push(formatted);
+                    if (isFirefox) {
+                        for (var i = 1; i <= gap; i++) {
+                            var date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+                            var formatted = _this.format(date).value;
+                            if (_this.disables[formatted]) {
+                                invalidDates.push(formatted);
+                            }
+                            else {
+                                validDates.push(formatted);
+                            }
                         }
-                        else {
-                            validDates.push(formatted);
+                    }
+                    else {
+                        for (var i = 0; i < gap; i++) {
+                            var date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+                            var formatted = _this.format(date).value;
+                            if (_this.disables[formatted]) {
+                                invalidDates.push(formatted);
+                            }
+                            else {
+                                validDates.push(formatted);
+                            }
                         }
                     }
                 }

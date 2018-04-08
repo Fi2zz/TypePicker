@@ -3,6 +3,7 @@ export const attrSelector = (attr: string, value: string) =>
 export function parseToInt(string: any) {
   return parseInt(string, 10);
 }
+export const isFirefox = /firefox/i.test(window.navigator.userAgent);
 
 export function getDates(year: number, month: number): number {
   let d = new Date(year, month, 1);

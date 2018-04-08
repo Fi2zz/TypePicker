@@ -7,6 +7,14 @@ import { addClass, diff } from "../src/util";
 
 const date = new Date();
 
+
+
+function getUTC(date: Date) {
+    return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+}
+
+
+
 const dateFormat = "YYYY-M-D";
 const activeLanguageCode: string = "en-us";
 const formControl = <HTMLInputElement>document.getElementById("date-value");
@@ -18,7 +26,7 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
     date: date.getDate()
   };
   const currDate = new Date(dist.year, dist.month, dist.date);
-  const startDate = new Date(dist.year, dist.month, dist.date);
+  const startDate =  getUTC(new Date(dist.year, dist.month, dist.date));
   const endDate = new Date(dist.year, dist.month + 6, dist.date);
 
   let app: any = create
@@ -29,7 +37,7 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
         limit: 7,
         format: dateFormat,
         doubleSelect: !false,
-        selection: 5,
+        // selection: 5,
         views: 2 //"auto"
       })
     : null;
@@ -76,7 +84,8 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
         }
       });
       if (selected.length >= 2) {
-        app.setDates(selected);
+        // console.log(selected)
+        // app.setDates(selected);
       }
 
       app.setDisabled({
@@ -93,17 +102,38 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
           "2018-3-20",
           "2018-3-19"
         ],
-        from: new Date(2018, 4, 1), //"2018-5-1",
-        to: new Date(2018, 2, 15),
-        days: [5]
+        // from: new Date(2018, 4, 1), //"2018-5-1",
+        // to: new Date(2018, 2, 15),
+        // days: [5]
       });
 
       const bindData = true;
       if (bindData) {
+
         app.setData(() => {
+
+          let currDate =new Date();
           Object.keys(source).forEach(date => {
             let item = app.parse(date);
-            if (diff(item, currDate) < 0) {
+
+            // console.log({
+            //
+            //
+            //     date:app.parse(date),//,getUTC(app.parse(date)),
+            //
+            //     UTCNOW:getUTC(currDate)
+            //
+            // });
+
+              // console.log(date)
+
+
+
+            if (   diff(app.parse(date), getUTC(startDate),"days") < 0) {
+
+
+              // console.log(date,currDate.toDateString())
+
               delete source[date];
             }
           });
@@ -125,7 +155,7 @@ function popupHandler(visible: boolean) {
 function init(document: Document) {
   const date = new Date();
 
-  createDatePicker(true, [new Date(), new Date()]);
+  createDatePicker(true, [getUTC(new Date), getUTC(new Date(2018,3,10))]);
   document.addEventListener("click", e => {
     const target = <HTMLElement>e.target;
     if (target) {

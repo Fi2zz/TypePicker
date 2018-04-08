@@ -46,7 +46,7 @@ const devSever = {
 
 
 if (mode === modes.development) {
-    port = 8300;
+    port = 8810;
     host = "localhost";
     options.entry = [
         `webpack-dev-server/client?http://${host}:${port}/`,
