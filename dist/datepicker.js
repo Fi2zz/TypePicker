@@ -584,56 +584,11 @@ var DatePicker = (function () {
         this.parse = function (string, format$$1) {
             return parseFormatted(string, format$$1 ? format$$1 : _this.dateFormat);
         };
-        if (!option) {
-            warn("init", "No datepicker instance option provided");
+        if (!option || !parseEl(option.el))
             return;
-        }
         this.element = parseEl(option.el);
-        if (!this.element) {
-            warn("init", "invalid selector,current selector " + this.element);
-            return;
-        }
         this.views = getViews(option.views);
         this.element.className = getClassName(this.element.className, this.views);
-        var getRange = function (data) {
-            var startDate = getFront(data);
-            var endDate = getPeek(data);
-            var invalidDates = [];
-            var validDates = [];
-            if (startDate && endDate) {
-                var start = void 0;
-                var end = void 0;
-                if (!isDate(startDate)) {
-                    start = _this.parse(startDate, _this.dateFormat);
-                }
-                else {
-                    start = startDate;
-                }
-                if (!isDate(endDate)) {
-                    end = _this.parse(endDate, _this.dateFormat);
-                }
-                else {
-                    end = endDate;
-                }
-                var gap = diff(end, start, "days");
-                if (gap <= _this.limit) {
-                    for (var i = 0; i < gap; i++) {
-                        var date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
-                        var formatted = _this.format(date).value;
-                        if (_this.disables[formatted]) {
-                            invalidDates.push(formatted);
-                        }
-                        else {
-                            validDates.push(formatted);
-                        }
-                    }
-                }
-            }
-            return {
-                invalidDates: invalidDates,
-                validDates: validDates
-            };
-        };
         Observer.$on("setData", function (result) { return (_this.data = result); });
         Observer.$on("select", function (result) {
             var type = result.type, value = result.value;
@@ -646,7 +601,7 @@ var DatePicker = (function () {
             if (type !== "switch") {
                 Observer.$emit("update", result);
             }
-            var currRange = getRange(value);
+            var currRange = _this.getRange(value);
             setNodeRangeState(_this.element, currRange.validDates, _this.doubleSelect);
             setNodeActiveState(_this.element, value, _this.doubleSelect);
         });
@@ -752,7 +707,7 @@ var DatePicker = (function () {
                             }
                         }
                         else {
-                            var range = getRange(selected);
+                            var range = _this.getRange(selected);
                             if (range.invalidDates.length > 0 || diffed > _this.limit) {
                                 selected.shift();
                             }
@@ -816,11 +771,8 @@ var DatePicker = (function () {
         return Observer.$on(ev, cb);
     };
     DatePicker.prototype.setDates = function (dates) {
-        if (!isArray(dates)) {
-            dates = [];
-            warn("setDates", "no dates provided," + dates);
+        if (!isArray(dates))
             return;
-        }
         var datesList = [];
         var start = "", end = "";
         if (this.doubleSelect) {
@@ -1122,12 +1074,14 @@ var DatePicker = (function () {
             _this.date = isUndefined(_this.startDate) ? new Date() : _this.startDate;
             var front = getFront(_this.selected);
             var peek = getPeek(_this.selected);
+            var prevDate = _this.format(new Date(_this.parse(peek).getTime() - (24 * 3600 * 1000))).value;
             if (_this.disables[front] ||
-                _this.disables[peek] ||
+                _this.disables[peek] && _this.disables[prevDate] ||
                 (_this.doubleSelect && front && front === peek && peek)) {
                 warn("setDates", "Illegal dates [" + _this.selected + "]");
                 _this.selected = [];
             }
+            console.log(_this.disables[peek], _this.disables[prevDate]);
             if (_this.views === "auto") {
                 if (!isEmpty(_this.selected)) {
                     _this.date = _this.parse(getFront(_this.selected));
@@ -1149,6 +1103,46 @@ var DatePicker = (function () {
             Observer.$emit("render", { type: "init" });
         });
     };
+    DatePicker.prototype.getRange = function (data) {
+        var startDate = getFront(data);
+        var endDate = getPeek(data);
+        var invalidDates = [];
+        var validDates = [];
+        if (startDate && endDate) {
+            var start = void 0;
+            var end = void 0;
+            if (!isDate(startDate)) {
+                start = this.parse(startDate, this.dateFormat);
+            }
+            else {
+                start = startDate;
+            }
+            if (!isDate(endDate)) {
+                end = this.parse(endDate, this.dateFormat);
+            }
+            else {
+                end = endDate;
+            }
+            var gap = diff(end, start, "days");
+            if (gap <= this.limit) {
+                for (var i = 0; i < gap; i++) {
+                    var date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+                    var formatted = this.format(date).value;
+                    if (this.disables[formatted]) {
+                        invalidDates.push(formatted);
+                    }
+                    else {
+                        validDates.push(formatted);
+                    }
+                }
+            }
+        }
+        return {
+            invalidDates: invalidDates,
+            validDates: validDates
+        };
+    };
+    
     return DatePicker;
 }());
 
