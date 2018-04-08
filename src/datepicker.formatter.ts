@@ -3,8 +3,10 @@ const formatReg = /\d{2,4}(\W{1})\d{1,2}(\W{1})\d{1,2}/;
 
 function parse(string: string | Date): any {
   if (!string) return new Date();
+
   if (string instanceof Date) return string;
-  let date = new Date(string);
+  let split = string.split(/\W/).map(item => parseInt(item));
+  let date = new Date(split.join(" "));
   if (!date.getTime()) return null;
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
@@ -61,8 +63,8 @@ export function parseFormatted(strDate: string, format: string) {
   if (!formatReg.test(strDate) || !formatRegExpTester.test(strDate)) {
     return null;
   }
-  let ret = parse(strDate);
 
+  let ret = parse(strDate);
   if (ret) return ret;
   const token = /d{1,4}|M{1,4}|YY(?:YY)?|S{1,3}|Do|ZZ|([HhMsDm])\1?|[aA]|"[^"]*"|'[^']*'/g;
   const parseFlags: any = {

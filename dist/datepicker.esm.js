@@ -59,7 +59,6 @@ var attrSelector = function (attr, value) {
 function parseToInt(string) {
     return parseInt(string, 10);
 }
-var isFirefox = /firefox/i.test(window.navigator.userAgent);
 function getDates(year, month) {
     var d = new Date(year, month, 1);
     var utc = Date.UTC(d.getFullYear(), d.getMonth() + 1, 0);
@@ -90,7 +89,7 @@ function diff(start, end, type, isAbsolute) {
     else if (type === "days") {
         var startTime = new Date(start.getFullYear(), start.getMonth(), start.getDate());
         var endTime = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-        var calcu = Math.round(startTime - endTime) / (1000 * 60 * 60 * 24);
+        var calcu = Math.ceil(startTime - endTime) / (1000 * 60 * 60 * 24);
         result = isAbsolute ? Math.abs(calcu) : calcu;
     }
     return result;
@@ -308,7 +307,8 @@ function parse(string) {
         return new Date();
     if (string instanceof Date)
         return string;
-    var date = new Date(string);
+    var split = string.split(/\W/).map(function (item) { return parseInt(item); });
+    var date = new Date(split.join(" "));
     if (!date.getTime())
         return null;
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -611,28 +611,14 @@ var DatePicker = (function () {
                 }
                 var gap = diff(end, start, "days");
                 if (gap <= _this.limit) {
-                    if (isFirefox) {
-                        for (var i = 1; i <= gap; i++) {
-                            var date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
-                            var formatted = _this.format(date).value;
-                            if (_this.disables[formatted]) {
-                                invalidDates.push(formatted);
-                            }
-                            else {
-                                validDates.push(formatted);
-                            }
+                    for (var i = 0; i < gap; i++) {
+                        var date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+                        var formatted = _this.format(date).value;
+                        if (_this.disables[formatted]) {
+                            invalidDates.push(formatted);
                         }
-                    }
-                    else {
-                        for (var i = 0; i < gap; i++) {
-                            var date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
-                            var formatted = _this.format(date).value;
-                            if (_this.disables[formatted]) {
-                                invalidDates.push(formatted);
-                            }
-                            else {
-                                validDates.push(formatted);
-                            }
+                        else {
+                            validDates.push(formatted);
                         }
                     }
                 }
@@ -1117,8 +1103,7 @@ var DatePicker = (function () {
                     disabledMap[date] = date;
                 }
             }
-            _this.disables = merge(getDisableDates(_this.startDate, _this.endDate, _this.dateFormat, bindData ||
-                !isUndefined(_this.startDate) || !isUndefined(_this.endDate)), disabledMap);
+            _this.disables = merge(getDisableDates(_this.startDate, _this.endDate, _this.dateFormat, bindData || !isUndefined(_this.startDate) || !isUndefined(_this.endDate)), disabledMap);
             if (bindData) {
                 var map = _this.data;
                 for (var key in _this.disables) {

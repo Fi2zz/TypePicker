@@ -7,13 +7,9 @@ import { addClass, diff } from "../src/util";
 
 const date = new Date();
 
-
-
 function getUTC(date: Date) {
-    return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+  return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
 }
-
-
 
 const dateFormat = "YYYY-M-D";
 const activeLanguageCode: string = "en-us";
@@ -26,7 +22,7 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
     date: date.getDate()
   };
   const currDate = new Date(dist.year, dist.month, dist.date);
-  const startDate =  getUTC(new Date(dist.year, dist.month, dist.date));
+  const startDate = new Date(dist.year, dist.month, dist.date);
   const endDate = new Date(dist.year, dist.month + 6, dist.date);
 
   let app: any = create
@@ -85,7 +81,7 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
       });
       if (selected.length >= 2) {
         // console.log(selected)
-        // app.setDates(selected);
+        app.setDates(selected);
       }
 
       app.setDisabled({
@@ -101,7 +97,7 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
           "2018-3-22",
           "2018-3-20",
           "2018-3-19"
-        ],
+        ]
         // from: new Date(2018, 4, 1), //"2018-5-1",
         // to: new Date(2018, 2, 15),
         // days: [5]
@@ -109,10 +105,8 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
 
       const bindData = true;
       if (bindData) {
-
         app.setData(() => {
-
-          let currDate =new Date();
+          let currDate = new Date();
           Object.keys(source).forEach(date => {
             let item = app.parse(date);
 
@@ -125,13 +119,9 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
             //
             // });
 
-              // console.log(date)
+            // console.log(diff(app.parse(date), startDate, "days"),date,currDate)
 
-
-
-            if (   diff(app.parse(date), getUTC(startDate),"days") < 0) {
-
-
+            if (diff(app.parse(date), startDate, "days") < 0) {
               // console.log(date,currDate.toDateString())
 
               delete source[date];
@@ -155,7 +145,7 @@ function popupHandler(visible: boolean) {
 function init(document: Document) {
   const date = new Date();
 
-  createDatePicker(true, [getUTC(new Date), getUTC(new Date(2018,3,10))]);
+  createDatePicker(true, [new Date(), getUTC(new Date(2018, 3, 10))]);
   document.addEventListener("click", e => {
     const target = <HTMLElement>e.target;
     if (target) {
