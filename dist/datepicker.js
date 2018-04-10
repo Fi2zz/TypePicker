@@ -414,15 +414,30 @@ function parseFormatted(strDate, format) {
 }
 function createDateFormatVaildator(formate) {
     var sepreator = formate.split(/\w/).filter(function (item) { return !!item; });
-    var result = formate
-        .split(/\W/)
-        .map(function (string) { return "\\d{1," + (string.length + 1) + "}"; })
-        .join("^");
-    for (var i = 0; i < sepreator.length; i++) {
-        var item = sepreator[i];
-        result = result.replace(/\^/, item);
-    }
-    return new RegExp(result);
+    var result = formate.split(/\W/).map(function (string, index) {
+        var length = string.length;
+        if (index === 0) {
+            return "\\d{" + length + "}";
+        }
+        else if (index === 1) {
+            if (length === 1) {
+                return "(?:[1-9]?[0-9])";
+            }
+            else if (length === 2) {
+                return "([0-9][0-2])";
+            }
+        }
+        else if (index === 2) {
+            if (length === 1) {
+                return "(?:[1-9]?[0-9])";
+            }
+            else if (length === 2) {
+                return "[0-9][1-9]";
+            }
+        }
+    });
+    var regexpString = result.join("\\" + sepreator.pop());
+    return new RegExp(regexpString);
 }
 
 var standardDate = function (date, size) {

@@ -115,13 +115,24 @@ export function parseFormatted(strDate: string, format: string) {
 
 function createDateFormatVaildator(formate: string) {
   const sepreator = formate.split(/\w/).filter(item => !!item);
-  let result: string = formate
-    .split(/\W/)
-    .map(string => `\\d{1,${string.length + 1}}`)
-    .join("^");
-  for (let i = 0; i < sepreator.length; i++) {
-    let item = sepreator[i];
-    result = result.replace(/\^/, item);
-  }
-  return new RegExp(result);
+  let result: any = formate.split(/\W/).map((string, index) => {
+    let { length } = string;
+    if (index === 0) {
+      return `\\d{${length}}`;
+    } else if (index === 1) {
+      if (length === 1) {
+        return `\(?:[1-9]?[0-9])`;
+      } else if (length === 2) {
+        return `\([0-9][0-2])`;
+      }
+    } else if (index === 2) {
+      if (length === 1) {
+        return `\(?:[1-9]?[0-9])`;
+      } else if (length === 2) {
+        return `\[0-9][1-9]`;
+      }
+    }
+  });
+  let regexpString = result.join(`\\${sepreator.pop()}`);
+  return new RegExp(regexpString);
 }
