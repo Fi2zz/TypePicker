@@ -407,7 +407,7 @@ function parseFormatted(strDate, format) {
     return ret(strDate, format);
 }
 function createDateFormatVaildator(formate) {
-    var sepreator = formate.split(/\w/).filter(function (item) { return item; });
+    var sepreator = formate.split(/\w/).filter(function (item) { return !!item; });
     var result = formate
         .split(/\W/)
         .map(function (string) { return "\\d{1," + (string.length + 1) + "}"; })
@@ -1068,14 +1068,13 @@ var DatePicker = (function () {
             _this.date = isUndefined(_this.startDate) ? new Date() : _this.startDate;
             var front = getFront(_this.selected);
             var peek = getPeek(_this.selected);
-            var prevDate = _this.format(new Date(_this.parse(peek).getTime() - (24 * 3600 * 1000))).value;
+            var prevDate = _this.format(new Date(_this.parse(peek).getTime() - 24 * 3600 * 1000)).value;
             if (_this.disables[front] ||
-                _this.disables[peek] && _this.disables[prevDate] ||
+                (_this.disables[peek] && _this.disables[prevDate]) ||
                 (_this.doubleSelect && front && front === peek && peek)) {
                 warn("setDates", "Illegal dates [" + _this.selected + "]");
                 _this.selected = [];
             }
-            console.log(_this.disables[peek], _this.disables[prevDate]);
             if (_this.views === "auto") {
                 if (!isEmpty(_this.selected)) {
                     _this.date = _this.parse(getFront(_this.selected));
@@ -1136,7 +1135,6 @@ var DatePicker = (function () {
             validDates: validDates
         };
     };
-    
     return DatePicker;
 }());
 

@@ -114,7 +114,7 @@ export function parseFormatted(strDate: string, format: string) {
 }
 
 function createDateFormatVaildator(formate: string) {
-  const sepreator = formate.split(/\w/).filter(item => item);
+  const sepreator = formate.split(/\w/).filter(item => !!item);
   let result: string = formate
     .split(/\W/)
     .map(string => `\\d{1,${string.length + 1}}`)
