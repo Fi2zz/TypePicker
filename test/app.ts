@@ -11,6 +11,9 @@ function getUTC(date: Date) {
     return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
 }
 
+console.log(DatePicker)
+// DatePicker();
+
 const dateFormat = "YYYY-M-D";
 const activeLanguageCode: string = "en-us";
 const formControl = <HTMLInputElement>document.getElementById("date-value");
@@ -106,7 +109,7 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
                 days: [2]
             });
 
-            const bindData = true;
+            const bindData = !true;
             if (bindData) {
                 app.setData(() => {
                     let currDate = new Date();

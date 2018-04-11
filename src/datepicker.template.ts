@@ -13,7 +13,10 @@ export default class HTML {
         return <any>[
             `${this.createActionBar(!renderWeekOnTop)}  
              ${this.createView(data, week, renderWeekOnTop)}
-             <div class="extra-panel" style="display: none;"></div>`
+             <div class="extra-panel" style="display: none;">
+                        <div class="year-panel"></div>
+                        <div class="month-panel"></div>
+                </div>`
         ];
     }
 
@@ -109,32 +112,24 @@ export default class HTML {
     }
 }
 
-interface yearPanel {
-    years: Array<number>,
-    title: string
-}
 
-export class YearPanel {
-
-    constructor(data: yearPanel) {
-        console.log(data)
-
-        return <any>[this.createPanel(data.years, data.title)]
-    }
-
-    createPanel(years: Array<number>, title: string) {
-
-        return `<div class="year-panel">
+export function yearPanel(data: any) {
+    return `
                 
                 <div class="year-title">
                     <span class="year-prev">prev</span>
-                    ${title}
+                    ${data.title}
                     <span class="year-next">next</span>
                 </div>
                 <div class="year-list">
-                    ${years.map(item => '<div class="year-cell"><span>' + item + '</span></div>').join("")}
-                </div>
-            </div>`
-    }
+                    ${data.years.map(item => '<div class="year-cell" data-year=' + item + '><span>' + item + '</span></div>').join("")}            </div>`
 
 }
+
+
+export function monthPanel(year, months) {
+    let tem = months.map((item, index) => `<div class="month-cell" data-year="${year}" data-month="${index}"><span>${item}</span></div>`).join("")
+    let yearTitle = `<div class="year-title"><span>prev</span>${year}<span class="prev">next</span></div>`
+    return `${yearTitle}<div class="month-list">${tem}</div>`
+}
+

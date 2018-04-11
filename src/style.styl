@@ -121,7 +121,7 @@ brand-disabled = #ccc
   .calendar-main
     padding-top: 44px
 
-.calendar-year-panel
+.extra-panel
   position: absolute
   top: 0
   left: 0
@@ -171,3 +171,21 @@ brand-disabled = #ccc
         font-size: 14px
       &:hover
           background-color rgba(brand,.1)
+  .month-panel
+    height: 100%
+    padding-top: 44px
+  .month-list
+    height: 100%
+    .month-cell
+      display: inline-block
+      vertical-align: top
+      width (100/4)*1%
+      text-align: center
+      height (100/3)*1%
+      position: relative
+      cursor pointer
+      span
+        position: absolute
+        transform translate(-50%,-50%)
+        top: 50%
+        left: 50%

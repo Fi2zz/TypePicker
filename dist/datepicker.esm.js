@@ -195,11 +195,26 @@ function listToMap(list) {
     return map;
 }
 
+
+function css(el, styles) {
+    if (typeof el === 'string') {
+        el = document.querySelector(el);
+    }
+    for (var key in styles) {
+        var value = styles[key];
+        var curr = getComputedStyle(el, null).getPropertyValue(key);
+        if (!curr || curr && curr !== value) {
+            el.style[key] = value;
+        }
+    }
+    return el;
+}
+
 var HTML = (function () {
     function HTML(options) {
         var renderWeekOnTop = options.renderWeekOnTop, data = options.data, week = options.week;
         return [
-            this.createActionBar(!renderWeekOnTop) + "  \n             " + this.createView(data, week, renderWeekOnTop) + "\n             <div class=\"extra-panel\" style=\"display: none;\"></div>"
+            this.createActionBar(!renderWeekOnTop) + "  \n             " + this.createView(data, week, renderWeekOnTop) + "\n             <div class=\"extra-panel\" style=\"display: none;\">\n                        <div class=\"year-panel\"></div>\n                        <div class=\"month-panel\"></div>\n                </div>"
         ];
     }
     HTML.prototype.createActionBar = function (create) {
@@ -262,16 +277,14 @@ var HTML = (function () {
     };
     return HTML;
 }());
-var YearPanel = (function () {
-    function YearPanel(data) {
-        console.log(data);
-        return [this.createPanel(data.years, data.title)];
-    }
-    YearPanel.prototype.createPanel = function (years, title) {
-        return "<div class=\"year-panel\">\n                \n                <div class=\"year-title\">\n                    <span class=\"year-prev\">prev</span>\n                    " + title + "\n                    <span class=\"year-next\">next</span>\n                </div>\n                <div class=\"year-list\">\n                    " + years.map(function (item) { return '<div class="year-cell"><span>' + item + '</span></div>'; }).join("") + "\n                </div>\n            </div>";
-    };
-    return YearPanel;
-}());
+function yearPanel(data) {
+    return "\n                \n                <div class=\"year-title\">\n                    <span class=\"year-prev\">prev</span>\n                    " + data.title + "\n                    <span class=\"year-next\">next</span>\n                </div>\n                <div class=\"year-list\">\n                    " + data.years.map(function (item) { return '<div class="year-cell" data-year=' + item + '><span>' + item + '</span></div>'; }).join("") + "            </div>";
+}
+function monthPanel(year, months) {
+    var tem = months.map(function (item, index) { return "<div class=\"month-cell\" data-year=\"" + year + "\" data-month=\"" + index + "\"><span>" + item + "</span></div>"; }).join("");
+    var yearTitle = "<div class=\"year-title\"><span>prev</span>" + year + "<span class=\"prev\">next</span></div>";
+    return yearTitle + "<div class=\"month-list\">" + tem + "</div>";
+}
 
 var getDisableDates = function (startDate, endDate, dateFormat, should) {
     var temp = {};
@@ -514,6 +527,8 @@ function createDateFormatVaildator(formate) {
 function getDisabledDays(start, end, days, dateFormat) {
     var map = {};
     if (start && end) {
+        start = new Date(start.getFullYear(), start.getMonth(), 1);
+        end = new Date(end.getFullYear(), end.getMonth() + 1, getDates(end.getFullYear(), end.getMonth()));
         var gap = diff(start, end, "days", true);
         for (var i = 0; i < gap; i++) {
             var date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
@@ -592,7 +607,6 @@ var Observer = (function () {
 
 var DatePicker = (function () {
     function DatePicker(option) {
-        var _this = this;
         this.limit = 1;
         this.views = 1;
         this.date = new Date();
@@ -607,274 +621,13 @@ var DatePicker = (function () {
         this.canSelectLength = 1;
         this.format = format;
         this.parse = parse;
-        if (!option || !parseEl(option.el)) {
+        console.time("strt");
+        var canInit = this.beforeInit(option);
+        if (!canInit) {
             return;
         }
-        this.element = parseEl(option.el);
-        this.views = getViews(option.views);
-        this.element.className = getClassName(this.element.className, this.views);
-        this.doubleSelect =
-            isBoolean(option.doubleSelect) && option.doubleSelect === true;
-        var selection = parseToInt(option.selection);
-        var isMultiSelect = false;
-        if (option.selection && !isNaN(selection) && selection >= 2) {
-            this.canSelectLength = selection;
-            isMultiSelect = true;
-        }
-        if (this.canSelectLength >= 2) {
-            this.doubleSelect = false;
-        }
-        this.dateFormat = option.format;
-        if (!isUndefined(option.startDate) && isDate(option.startDate)) {
-            this.startDate = option.startDate;
-        }
-        if (!isUndefined(option.endDate) && isDate(option.endDate)) {
-            this.endDate = option.endDate;
-        }
-        this.limit = this.doubleSelect
-            ? !isNaN(option.limit) ? option.limit : 2
-            : 1;
-        if (isMultiSelect) {
-            this.limit = this.canSelectLength;
-        }
-        Observer.$on("select", function (result) {
-            var type = result.type, value = result.value;
-            if (type === "disabled") {
-                return false;
-            }
-            if (type === "selected") {
-                _this.selected = value;
-            }
-            if (type !== "switch") {
-                Observer.$emit("update", result);
-            }
-            var currRange = _this.getRange(value);
-            setNodeRangeState(_this.element, currRange.validDates, _this.doubleSelect);
-            setNodeActiveState(_this.element, value, _this.doubleSelect);
-        });
-        Observer.$on("render", function (result) {
-            var isMultiSelect = _this.canSelectLength >= 2;
-            var bindData = !isEmpty(_this.data);
-            if (isMultiSelect) {
-                bindData = false;
-            }
-            var type = result.type;
-            if (type === "switch") {
-                var curr = {
-                    year: _this.date.getFullYear(),
-                    month: _this.date.getMonth(),
-                    date: _this.date.getDate()
-                };
-                _this.date = new Date(curr.year, curr.month + result.size, curr.date);
-            }
-            _this.render(_this.createMonths(_this.date), _this.views === "auto");
-            var nodeList = _this.element.querySelectorAll(".calendar-cell");
-            var title = _this.element.querySelector('.calendar-title');
-            var yearNameNode = _this.element.querySelector(".calendar-title .year-name");
-            var monthNameNode = _this.element.querySelector(".calendar-title .month-name");
-            Observer.$emit("select", {
-                type: type,
-                value: _this.selected
-            });
-            if (!isEmpty(_this.disables)) {
-                Observer.$emit("disabled", {
-                    nodeList: nodeList,
-                    dateList: _this.disables
-                });
-            }
-            if (bindData) {
-                Observer.$emit("data", {
-                    data: _this.data,
-                    nodeList: nodeList
-                });
-            }
-            var isDoubleSelect = _this.doubleSelect;
-            var cache = _this.selected;
-            var isDisabled = function (date) { return !!_this.disables[date]; };
-            var selected = _this.selected;
-            var pickDate = function (date) {
-                var type = "selected";
-                if (!date) {
-                    return {
-                        type: "disabled",
-                        value: []
-                    };
-                }
-                var index = selected.indexOf(date);
-                var isDisabledDate = isDisabled(date);
-                var now = _this.parse(date, _this.dateFormat);
-                var prevDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
-                var prevDateIsInValid = isDisabled(_this.format(prevDate, _this.dateFormat));
-                if ((bindData && selected.length <= 0 && isDisabledDate) ||
-                    (isDoubleSelect && prevDateIsInValid && isDisabledDate) ||
-                    (index >= 0 && isDisabledDate)) {
-                    return {
-                        type: "disabled",
-                        value: []
-                    };
-                }
-                if (index >= 0) {
-                    var peek = getPeek(selected);
-                    var front = getFront(selected);
-                    selected = isUndefined(_this.disables[peek]) ? [peek] : [front];
-                }
-                if ((isDoubleSelect && selected.length >= 2) || !isDoubleSelect) {
-                    selected = [];
-                }
-                selected.push(date);
-                if (!isDoubleSelect) {
-                    selected = isDisabledDate ? cache : selected;
-                    type = isDisabledDate ? "disabled" : "selected";
-                }
-                else {
-                    if (selected.length >= 2) {
-                        var front = getFront(selected);
-                        var peek = getPeek(selected);
-                        var diffed = diff(_this.parse(peek, _this.dateFormat), _this.parse(front, _this.dateFormat), "days", false);
-                        if (diffed === 0) {
-                            selected = [front];
-                        }
-                        else if (diffed < 0) {
-                            peek = getPeek(selected);
-                            if (isDisabled(peek)) {
-                                selected.pop();
-                            }
-                            else {
-                                selected.shift();
-                            }
-                        }
-                        else {
-                            var range = _this.getRange(selected);
-                            if (range.invalidDates.length > 0 || diffed > _this.limit) {
-                                selected.shift();
-                            }
-                        }
-                    }
-                    if (selected.length <= 1) {
-                        if (isDisabled(getFront(selected))) {
-                            type = "disabled";
-                            selected = cache;
-                        }
-                    }
-                }
-                return {
-                    type: type,
-                    value: selected
-                };
-            };
-            var multiPick = function (date) {
-                var index = selected.indexOf(date);
-                var isDisabledDate = isDisabled(date);
-                if (!date || isDisabledDate) {
-                    return {
-                        type: "disabled",
-                        value: selected
-                    };
-                }
-                if (index >= 0) {
-                    var temp = [];
-                    for (var i = 0; i < selected.length; i++) {
-                        if (selected[i] !== date) {
-                            temp.push(selected[i]);
-                        }
-                    }
-                    selected = temp;
-                }
-                else {
-                    selected.push(date);
-                }
-                if (selected.length > _this.limit) {
-                    selected = [date];
-                }
-                return {
-                    type: "selected",
-                    value: selected
-                };
-            };
-            var _loop_1 = function (i) {
-                var node = nodeList[i];
-                node.addEventListener("click", function () {
-                    var date = attr(node, "data-date");
-                    Observer.$emit("select", isMultiSelect ? multiPick(date) : pickDate(date));
-                });
-            };
-            for (var i = 0; i < nodeList.length; i++) {
-                _loop_1(i);
-            }
-            
-        });
-        nextTick(function () {
-            var bindData = !isEmpty(_this.data) && !isMultiSelect;
-            if (!isDate(option.startDate) || !isDate(option.endDate)) {
-                if (bindData) {
-                    warn("init", "please provide [startDate] and [endDate] while binding data to datepicker");
-                }
-            }
-            _this.date = isUndefined(_this.startDate) ? new Date() : _this.startDate;
-            var disabledDays = [], disableDates = [];
-            if (!isUndefined(_this["disabledTemp"])) {
-                var _a = _this["disabledTemp"], dateList = _a.dateList, disableBefore = _a.disableBefore, disableAfter = _a.disableAfter, dayList = _a.dayList;
-                if (disableBefore) {
-                    _this.startDate = disableBefore;
-                }
-                if (disableAfter) {
-                    _this.endDate = disableAfter;
-                }
-                disableDates = dateList;
-                disabledDays = dayList;
-                delete _this["disabledTemp"];
-            }
-            _this.disables = merge(getDisableDates(_this.startDate, _this.endDate, _this.dateFormat, bindData), getDisabledDays(_this.startDate, _this.endDate, disabledDays, _this.dateFormat), listToMap(disableDates));
-            if (bindData) {
-                var data = _this.data;
-                _this.endDate = _this.parse(getPeek(Object.keys(data)), _this.dateFormat);
-                var gap = diff(_this.startDate, _this.endDate, "days", true);
-                for (var i = 0; i < gap; i++) {
-                    var date = setDate(_this.startDate, i);
-                    var formatted = _this.format(date, _this.dateFormat);
-                    if (isUndefined(data[formatted])) {
-                        _this.disables[formatted] = formatted;
-                    }
-                    else if (!isUndefined(_this.disables[formatted])) {
-                        delete data[formatted];
-                    }
-                }
-                _this.data = data;
-            }
-            var front = getFront(_this.selected);
-            var peek = getPeek(_this.selected);
-            var initRange = _this.getRange(_this.selected);
-            if (initRange.invalidDates.length > 0 ||
-                initRange.outOfRange ||
-                (_this.doubleSelect && front && front === peek && peek)) {
-                if (initRange.outOfRange) {
-                    warn('setDates', "[" + _this.selected + "] out of limit:" + _this.limit);
-                }
-                else {
-                    warn("setDates", "Illegal dates [" + _this.selected + "]");
-                }
-                _this.selected = [];
-            }
-            if (_this.views === "auto") {
-                if (!isEmpty(_this.selected)) {
-                    _this.date = _this.parse(getFront(_this.selected), _this.dateFormat);
-                }
-                if (isUndefined(_this.startDate)) {
-                    _this.startDate = _this.date;
-                }
-                if (isUndefined(_this.endDate)) {
-                    _this.endDate = setDate(_this.date, 6, "month");
-                }
-            }
-            if (_this.views === 1) {
-                if (_this.doubleSelect && _this.selected.length >= 2) {
-                    if (front === peek) {
-                        _this.selected.pop();
-                    }
-                }
-            }
-            Observer.$emit("render", { type: "init" });
-        });
+        this.bindListener();
+        this.init();
     }
     DatePicker.prototype.on = function (ev, cb) {
         return Observer.$on(ev, cb);
@@ -1101,16 +854,84 @@ var DatePicker = (function () {
             }
         }
     };
-    DatePicker.prototype.renderYearPanel = function (years) {
-        var title = years[0] + "~" + years[years.length - 1];
-        var panel = new YearPanel({
-            years: years,
-            title: title
-        });
-        var yearPrevAction = this.element.querySelector(".year-prev");
-        var yearNextAction = this.element.querySelector(".year-next");
+    DatePicker.prototype.renderYearPanel = function (visible) {
+        var _this = this;
+        var createPanel = function (years) {
+            var title = years[0] + "~" + years[years.length - 1];
+            yearPanelNode.innerHTML = yearPanel({
+                years: years,
+                title: title
+            });
+            var yearPrevAction = _this.element.querySelector(".year-prev");
+            var yearNextAction = _this.element.querySelector(".year-next");
+            yearPrevAction.addEventListener("click", function () {
+                var dateString = _this.date.toString();
+                var startDate = years[0] - 11;
+                var date = new Date(dateString);
+                date.setFullYear(startDate);
+                createPanel(createYearsList(date));
+            });
+            yearNextAction.addEventListener("click", function () {
+                var dateString = _this.date.toString();
+                var startDate = years[years.length - 1] + 11;
+                var date = new Date(dateString);
+                date.setFullYear(startDate);
+                createPanel(createYearsList(date));
+            });
+            var yearCell = _this.element.querySelectorAll(".year-cell");
+            var _loop_1 = function (i) {
+                var cell = yearCell[i];
+                cell.addEventListener("click", function () {
+                    var year = parseInt(attr(cell, "data-year"));
+                    _this.date.setFullYear(year);
+                    css('.year-panel', { display: 'none' });
+                    css('.month-panel', { display: 'block' });
+                    Observer.$emit("renderMonthPanel", true);
+                });
+            };
+            for (var i = 0; i < yearCell.length; i++) {
+                _loop_1(i);
+            }
+        };
+        var createYearsList = function (date) {
+            var year = date.getFullYear();
+            var start = year - 11;
+            var end = year;
+            var years = [];
+            for (var i = start; i <= end; i++) {
+                years.push(i);
+            }
+            return years;
+        };
+        var years = createYearsList(this.date);
+        var yearPanelNode = this.element.querySelector('.year-panel');
+        css('.extra-panel', { display: visible ? 'block' : 'none' });
+        css('.year-panel', { display: visible ? 'block' : 'none' });
+        createPanel(years);
     };
-    DatePicker.prototype.renderMonthPanel = function () {
+    DatePicker.prototype.renderMonthPanel = function (visible) {
+        var _this = this;
+        var month = this.element.querySelector(".month-panel");
+        css('.extra-panel', { display: 'block' });
+        css('.year-panel', { display: 'none' });
+        month.style.display = visible ? 'block' : 'none';
+        month.innerHTML = monthPanel(this.date.getFullYear(), this.language.months);
+        var monthNodes = month.querySelectorAll('.month-cell');
+        var _loop_2 = function (i) {
+            var cell = monthNodes[i];
+            cell.addEventListener("click", function () {
+                var month = parseInt(attr(cell, "data-month"));
+                css('.extra-panel', {
+                    display: 'none'
+                });
+                css('.month-panel', { display: 'none' });
+                _this.date.setMonth(month);
+                Observer.$emit("render", { type: 'select-month' });
+            });
+        };
+        for (var i = 0; i < monthNodes.length; i++) {
+            _loop_2(i);
+        }
     };
     DatePicker.prototype.getRange = function (data) {
         var startDate = getFront(data);
@@ -1156,6 +977,276 @@ var DatePicker = (function () {
             validDates: validDates,
             outOfRange: outOfRange
         };
+    };
+    DatePicker.prototype.initDisabled = function (bindData) {
+        var disabledDays = [], disableDates = [];
+        if (!isUndefined(this["disabledTemp"])) {
+            var _a = this["disabledTemp"], dateList = _a.dateList, disableBefore = _a.disableBefore, disableAfter = _a.disableAfter, dayList = _a.dayList;
+            if (disableBefore) {
+                this.startDate = disableBefore;
+            }
+            if (disableAfter) {
+                this.endDate = disableAfter;
+            }
+            disableDates = dateList;
+            disabledDays = dayList;
+        }
+        this.disables = merge(getDisableDates(this.startDate, this.endDate, this.dateFormat, bindData), getDisabledDays(this.startDate, this.endDate, disabledDays, this.dateFormat), listToMap(disableDates));
+    };
+    DatePicker.prototype.init = function () {
+        var _this = this;
+        nextTick(function () {
+            var bindData = !isEmpty(_this.data) && _this.canSelectLength < 2;
+            _this.date = isUndefined(_this.startDate) ? new Date() : _this.startDate;
+            _this.initDisabled(bindData);
+            if (bindData) {
+                var data = _this.data;
+                _this.endDate = _this.parse(getPeek(Object.keys(data)), _this.dateFormat);
+                var gap = diff(_this.startDate, _this.endDate, "days", true);
+                for (var i = 0; i < gap; i++) {
+                    var date = setDate(_this.startDate, i);
+                    var formatted = _this.format(date, _this.dateFormat);
+                    if (isUndefined(data[formatted])) {
+                        _this.disables[formatted] = formatted;
+                    }
+                    else if (!isUndefined(_this.disables[formatted])) {
+                        delete data[formatted];
+                    }
+                }
+                _this.data = data;
+            }
+            var front = getFront(_this.selected);
+            var peek = getPeek(_this.selected);
+            var initRange = _this.getRange(_this.selected);
+            if (initRange.invalidDates.length > 0 ||
+                initRange.outOfRange ||
+                (_this.doubleSelect && front && front === peek && peek)) {
+                if (initRange.outOfRange) {
+                    warn('setDates', "[" + _this.selected + "] out of limit:" + _this.limit);
+                }
+                else {
+                    warn("setDates", "Illegal dates [" + _this.selected + "]");
+                }
+                _this.selected = [];
+            }
+            if (_this.views === "auto") {
+                if (!isEmpty(_this.selected)) {
+                    _this.date = _this.parse(getFront(_this.selected), _this.dateFormat);
+                }
+                if (isUndefined(_this.startDate)) {
+                    _this.startDate = _this.date;
+                }
+                if (isUndefined(_this.endDate)) {
+                    _this.endDate = setDate(_this.date, 6, "month");
+                }
+            }
+            if (_this.views === 1) {
+                if (_this.doubleSelect && _this.selected.length >= 2) {
+                    if (front === peek) {
+                        _this.selected.pop();
+                    }
+                }
+            }
+            Observer.$emit("render", { type: "init" });
+        });
+    };
+    DatePicker.prototype.beforeInit = function (option) {
+        if (!option || !parseEl(option.el)) {
+            return false;
+        }
+        this.element = parseEl(option.el);
+        this.views = getViews(option.views);
+        this.element.className = getClassName(this.element.className, this.views);
+        this.doubleSelect =
+            isBoolean(option.doubleSelect) && option.doubleSelect === true;
+        var selection = parseToInt(option.selection);
+        var isMultiSelect = false;
+        if (option.selection && !isNaN(selection) && selection >= 2) {
+            this.canSelectLength = selection;
+            isMultiSelect = true;
+        }
+        if (this.canSelectLength >= 2) {
+            this.doubleSelect = false;
+        }
+        this.dateFormat = option.format;
+        if (!isUndefined(option.startDate) && isDate(option.startDate)) {
+            this.startDate = option.startDate;
+        }
+        if (!isUndefined(option.endDate) && isDate(option.endDate)) {
+            this.endDate = option.endDate;
+        }
+        this.limit = this.doubleSelect
+            ? !isNaN(option.limit) ? option.limit : 2
+            : 1;
+        if (isMultiSelect) {
+            this.limit = this.canSelectLength;
+        }
+        return true;
+    };
+    
+    DatePicker.prototype.bindListener = function () {
+        var _this = this;
+        Observer.$on("select", function (result) {
+            var type = result.type, value = result.value;
+            if (type === "disabled") {
+                return false;
+            }
+            if (type === "selected") {
+                _this.selected = value;
+            }
+            if (type !== "switch") {
+                Observer.$emit("update", result);
+            }
+            var currRange = _this.getRange(value);
+            setNodeRangeState(_this.element, currRange.validDates, _this.doubleSelect);
+            setNodeActiveState(_this.element, value, _this.doubleSelect);
+        });
+        Observer.$on("render", function (result) {
+            var type = result.type;
+            if (type !== 'init') {
+                _this.initDisabled(!isEmpty(_this.data));
+            }
+            if (type === "switch") {
+                _this.date = setDate(_this.date, result.size, "month");
+            }
+            _this.render(_this.createMonths(_this.date), _this.views === "auto");
+            Observer.$emit("select", {
+                type: type,
+                value: _this.selected
+            });
+            Observer.$emit("rendered");
+        });
+        Observer.$on("renderYearPanel", function (result) { return _this.renderYearPanel(result); });
+        Observer.$on("renderMonthPanel", function (result) { return _this.renderMonthPanel(result); });
+        Observer.$on("rendered", function () {
+            var bindData = !isEmpty(_this.data) && _this.canSelectLength < 2;
+            var isDoubleSelect = _this.doubleSelect;
+            var cache = _this.selected;
+            var isDisabled = function (date) { return !!_this.disables[date]; };
+            var selected = _this.selected;
+            var pickDate = function (date) {
+                var type = "selected";
+                if (!date) {
+                    return {
+                        type: "disabled",
+                        value: []
+                    };
+                }
+                var index = selected.indexOf(date);
+                var isDisabledDate = isDisabled(date);
+                var now = _this.parse(date, _this.dateFormat);
+                var prevDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+                var prevDateIsInValid = isDisabled(_this.format(prevDate, _this.dateFormat));
+                if ((bindData && selected.length <= 0 && isDisabledDate) ||
+                    (isDoubleSelect && prevDateIsInValid && isDisabledDate) ||
+                    (index >= 0 && isDisabledDate)) {
+                    return {
+                        type: "disabled",
+                        value: []
+                    };
+                }
+                if (index >= 0) {
+                    var peek = getPeek(selected);
+                    var front = getFront(selected);
+                    selected = isUndefined(_this.disables[peek]) ? [peek] : [front];
+                }
+                if ((isDoubleSelect && selected.length >= 2) || !isDoubleSelect) {
+                    selected = [];
+                }
+                selected.push(date);
+                if (!isDoubleSelect) {
+                    selected = isDisabledDate ? cache : selected;
+                    type = isDisabledDate ? "disabled" : "selected";
+                }
+                else {
+                    if (selected.length >= 2) {
+                        var front = getFront(selected);
+                        var peek = getPeek(selected);
+                        var diffed = diff(_this.parse(peek, _this.dateFormat), _this.parse(front, _this.dateFormat), "days", false);
+                        if (diffed === 0) {
+                            selected = [front];
+                        }
+                        else if (diffed < 0) {
+                            peek = getPeek(selected);
+                            if (isDisabled(peek)) {
+                                selected.pop();
+                            }
+                            else {
+                                selected.shift();
+                            }
+                        }
+                        else {
+                            var range = _this.getRange(selected);
+                            if (range.invalidDates.length > 0 || diffed > _this.limit) {
+                                selected.shift();
+                            }
+                        }
+                    }
+                    if (selected.length <= 1) {
+                        if (isDisabled(getFront(selected))) {
+                            type = "disabled";
+                            selected = cache;
+                        }
+                    }
+                }
+                return {
+                    type: type,
+                    value: selected
+                };
+            };
+            var multiPick = function (date) {
+                var index = selected.indexOf(date);
+                var isDisabledDate = isDisabled(date);
+                if (!date || isDisabledDate) {
+                    return {
+                        type: "disabled",
+                        value: selected
+                    };
+                }
+                if (index >= 0) {
+                    var temp = [];
+                    for (var i = 0; i < selected.length; i++) {
+                        if (selected[i] !== date) {
+                            temp.push(selected[i]);
+                        }
+                    }
+                    selected = temp;
+                }
+                else {
+                    selected.push(date);
+                }
+                if (selected.length > _this.limit) {
+                    selected = [date];
+                }
+                return {
+                    type: "selected",
+                    value: selected
+                };
+            };
+            var nodeList = _this.element.querySelectorAll(".calendar-cell");
+            if (!isEmpty(_this.disables)) {
+                Observer.$emit("disabled", {
+                    nodeList: nodeList,
+                    dateList: _this.disables
+                });
+            }
+            if (bindData) {
+                Observer.$emit("data", {
+                    data: _this.data,
+                    nodeList: nodeList
+                });
+            }
+            var _loop_3 = function (i) {
+                var node = nodeList[i];
+                node.addEventListener("click", function () {
+                    var date = attr(node, "data-date");
+                    Observer.$emit("select", _this.canSelectLength > 2 ? multiPick(date) : pickDate(date));
+                });
+            };
+            for (var i = 0; i < nodeList.length; i++) {
+                _loop_3(i);
+            }
+        });
     };
     return DatePicker;
 }());

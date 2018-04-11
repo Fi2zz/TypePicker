@@ -220,17 +220,60 @@ export function isEmpty(listOrObject: any) {
 
 
 export function listToMap(list: Array<any>) {
-
-
     let map = {};
-
     for (let it of list) {
-
         map[it] = it
+    }
+    return map
+}
+
+
+export function display(el: HTMLElement, state: string) {
+
+
+    let display = getComputedStyle(el, null).getPropertyValue("display");
+
+    if (state === display) {
+        return false;
     }
 
 
-    return map
+    el.style.display = state;
+    return el
+}
+
+export function position(el: HTMLElement, type: string, positions?: any) {
 
 
+    let currPositionType = getComputedStyle(el, null).getPropertyValue("position");
+
+    if (currPositionType !== type) {
+        el.style.position = type;
+    }
+
+
+    for (let key in positions) {
+        el.style[key] = positions[key]
+    }
+
+    return el
+
+}
+
+export function css(el: any, styles: any) {
+
+    if (typeof el === 'string') {
+        el = document.querySelector(el);
+    }
+
+    for (let key in styles) {
+        let value = styles[key];
+        let curr = getComputedStyle(el, null).getPropertyValue(key);
+
+
+        if (!curr || curr && curr !== value) {
+            el.style[key] = value
+        }
+    }
+    return el
 }

@@ -311,13 +311,17 @@ function createDateFormatVaildator(formate: string) {
 
 export function getDisabledDays(start: Date, end: Date, days: Array<number>, dateFormat: string) {
     let map = {};
+
     if (start && end) {
+
+        start = new Date(start.getFullYear(), start.getMonth(), 1)
+        end = new Date(end.getFullYear(), end.getMonth() + 1, getDates(end.getFullYear(), end.getMonth()));
         let gap = diff(start, end, "days", true);
         for (let i = 0; i < gap; i++) {
             let date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
-            let day = date.getDay()
+            let day = date.getDay();
             if (~days.indexOf(day)) {
-                let formatted = format(date, dateFormat)
+                let formatted = format(date, dateFormat);
                 map[formatted] = formatted
             }
         }
@@ -327,21 +331,15 @@ export function getDisabledDays(start: Date, end: Date, days: Array<number>, dat
 }
 
 export const setDate = (date: Date, size?: number, who?: string) => {
-
-
     if (!who) {
         who = 'date'
     }
-
     if (!size) {
         size = 0
     }
-
     let monthSize = 0;
     let yearSize = 0;
     let dateSize = size;
-
-
     if (who === 'year') {
         yearSize = size
     }

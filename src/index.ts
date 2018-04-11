@@ -37,9 +37,12 @@ import {
     removeClass,
     parseToInt,
     nextTick,
-    listToMap
+    listToMap,
+    display,
+    position,
+    css
 } from "./util";
-import HTML, {YearPanel} from "./datepicker.template";
+import HTML, {yearPanel, monthPanel} from "./datepicker.template";
 import {
     getClassName,
     getViews,
@@ -67,9 +70,9 @@ export default class DatePicker {
     private disables: any = {};
     private element: any = null;
     private doubleSelect: boolean = false;
-    // private disableDays: number[] = [];
     private language: any = DEFAULT_LANGUAGE;
     private canSelectLength: number = 1;
+
 
     public on(ev: string, cb: Function) {
         return Observer.$on(ev, cb);
@@ -315,17 +318,87 @@ export default class DatePicker {
         }
     }
 
-    private renderYearPanel(years: Array<number>) {
-        let title = `${years[0]}~${years[years.length - 1]}`;
-        let panel = new YearPanel({
-            years,
-            title
-        });
-        let yearPrevAction = this.element.querySelector(".year-prev")
-        let yearNextAction = this.element.querySelector(".year-next")
+    private renderYearPanel(visible: boolean) {
+
+
+        const createPanel = (years) => {
+            let title = `${years[0]}~${years[years.length - 1]}`;
+            yearPanelNode.innerHTML = yearPanel({
+                years,
+                title
+            });
+            let yearPrevAction = this.element.querySelector(".year-prev");
+            let yearNextAction = this.element.querySelector(".year-next");
+            yearPrevAction.addEventListener("click", () => {
+                let dateString = this.date.toString();
+                let startDate = years[0] - 11;
+                let date = new Date(dateString);
+                date.setFullYear(startDate);
+                createPanel(createYearsList(date))
+            });
+
+            yearNextAction.addEventListener("click", () => {
+                let dateString = this.date.toString();
+                let startDate = years[years.length - 1] + 11;
+                let date = new Date(dateString);
+                date.setFullYear(startDate);
+                createPanel(createYearsList(date))
+            });
+            let yearCell = this.element.querySelectorAll(".year-cell");
+            for (let i = 0; i < yearCell.length; i++) {
+                let cell = yearCell[i];
+                cell.addEventListener("click", () => {
+                    let year = parseInt(attr(cell, "data-year"));
+                    this.date.setFullYear(year);
+                    css('.year-panel', {display: 'none'});
+                    css('.month-panel', {display: 'block'})
+                    Observer.$emit("renderMonthPanel", true)
+                })
+            }
+        };
+
+
+        const createYearsList = (date: Date) => {
+            let year = date.getFullYear();
+            let start = year - 11;
+            let end = year;
+            let years = [];
+            for (let i = start; i <= end; i++) {
+                years.push(i)
+            }
+            return years;
+        };
+
+        let years = createYearsList(this.date);
+        let yearPanelNode = this.element.querySelector('.year-panel');
+
+        css('.extra-panel', {display: visible ? 'block' : 'none'});
+        css('.year-panel', {display: visible ? 'block' : 'none'})
+        createPanel(years);
     }
 
-    private renderMonthPanel() {
+    private renderMonthPanel(visible: any) {
+        let month = this.element.querySelector(".month-panel");
+
+        css('.extra-panel', {display: 'block'})
+        css('.year-panel', {display: 'none'})
+        month.style.display = visible ? 'block' : 'none';
+        month.innerHTML = monthPanel(this.date.getFullYear(), this.language.months);
+
+        let monthNodes = month.querySelectorAll('.month-cell');
+        for (let i = 0; i < monthNodes.length; i++) {
+            let cell = monthNodes[i];
+            cell.addEventListener("click", () => {
+                let month = parseInt(attr(cell, "data-month"));
+                css('.extra-panel', {
+                    display: 'none'
+                });
+                css('.month-panel', {display: 'none'})
+                this.date.setMonth(month)
+                Observer.$emit("render", {type: 'select-month'})
+
+            })
+        }
     }
 
     private getRange(data: Array<any>) {
@@ -374,11 +447,105 @@ export default class DatePicker {
         };
     }
 
+    private initDisabled(bindData: boolean) {
+        let disabledDays = [], disableDates: string[] = [];
+        if (!isUndefined(this["disabledTemp"])) {
+            let {dateList, disableBefore, disableAfter, dayList} = this["disabledTemp"];
+            if (disableBefore) {
+                this.startDate = disableBefore;
+            }
+            if (disableAfter) {
+                this.endDate = disableAfter;
+            }
+            disableDates = dateList;
+            disabledDays = dayList;
+        }
 
-    constructor(option: datePickerOptions) {
+        //无效日期
+        this.disables = merge(
+            getDisableDates(this.startDate, this.endDate, this.dateFormat, bindData),
+            getDisabledDays(this.startDate, this.endDate, disabledDays, this.dateFormat),
+            listToMap(disableDates)
+        );
+    }
 
+    private init() {
+        nextTick(() => {
+            const bindData = !isEmpty(this.data) && this.canSelectLength < 2;
+            //初始视图所在日期
+            this.date = isUndefined(this.startDate) ? new Date() : this.startDate;
+
+            this.initDisabled(bindData);
+            //去掉data里的无效日期
+            if (bindData) {
+                let data = this.data;
+                //此处未排序日期，直接取this.data的最后一个key
+                //排序在setData里做
+                this.endDate = this.parse(getPeek(Object.keys(data)), this.dateFormat);
+                let gap = diff(this.startDate, this.endDate, "days", true);
+                for (let i = 0; i < gap; i++) {
+                    let date = setDate(this.startDate, i);
+                    let formatted = this.format(date, this.dateFormat);
+                    if (isUndefined(data[formatted])) {
+                        this.disables[formatted] = formatted;
+                    }
+                    else if (!isUndefined(this.disables[formatted])) {
+                        delete data[formatted]
+                    }
+                }
+                this.data = data;
+            }
+
+
+            const front = getFront(this.selected);
+            const peek = getPeek(this.selected);
+
+            let initRange = this.getRange(this.selected);
+            if (
+                initRange.invalidDates.length > 0 ||
+                initRange.outOfRange ||
+                (this.doubleSelect && front && front === peek && peek)
+            ) {
+                if (initRange.outOfRange) {
+                    warn('setDates', `[${this.selected}] out of limit:${this.limit}`)
+                }
+                else {
+                    warn("setDates", "Illegal dates [" + this.selected + "]");
+                }
+
+                this.selected = [];
+            }
+            if (this.views === "auto") {
+                if (!isEmpty(this.selected)) {
+                    this.date = this.parse(getFront(this.selected), this.dateFormat);
+                }
+                //flat 视图情况下，
+                //自动限制endDate为半年后，startDate为当前日期
+                //避免因为dom过多导致界面卡顿
+                if (isUndefined(this.startDate)) {
+                    this.startDate = this.date;
+                }
+                if (isUndefined(this.endDate)) {
+                    this.endDate = setDate(this.date, 6, "month");
+                }
+            }
+            if (this.views === 1) {
+                if (this.doubleSelect && this.selected.length >= 2) {
+                    if (front === peek) {
+                        this.selected.pop();
+                    }
+                }
+            }
+
+
+            Observer.$emit("render", {type: "init"});
+
+        });
+    }
+
+    private beforeInit(option: datePickerOptions) {
         if (!option || !parseEl(option.el)) {
-            return;
+            return false;
         }
         this.element = parseEl(option.el);
         this.views = getViews(option.views);
@@ -411,7 +578,10 @@ export default class DatePicker {
         if (isMultiSelect) {
             this.limit = this.canSelectLength;
         }
+        return true
+    };
 
+    private bindListener() {
         Observer.$on("select", (result: any) => {
             const {type, value} = result;
             if (type === "disabled") {
@@ -430,46 +600,27 @@ export default class DatePicker {
             setNodeActiveState(this.element, value, this.doubleSelect);
         });
         Observer.$on("render", (result: any) => {
-            const isMultiSelect = this.canSelectLength >= 2;
-            let bindData = !isEmpty(this.data);
-            if (isMultiSelect) {
-                bindData = false;
-            }
-
             let {type} = result;
+
+            if (type !== 'init') {
+                this.initDisabled(!isEmpty(this.data));
+            }
             if (type === "switch") {
-                const curr = {
-                    year: this.date.getFullYear(),
-                    month: this.date.getMonth(),
-                    date: this.date.getDate()
-                };
-                this.date = new Date(curr.year, curr.month + result.size, curr.date);
+                this.date = setDate(this.date, result.size, "month");
             }
             this.render(this.createMonths(this.date), this.views === "auto");
-            const nodeList = this.element.querySelectorAll(".calendar-cell");
-            const title = this.element.querySelector('.calendar-title');
-            const yearNameNode = this.element.querySelector(".calendar-title .year-name");
-            const monthNameNode = this.element.querySelector(".calendar-title .month-name");
+
             //初始化的时候的选中状态
             Observer.$emit("select", {
                 type,
                 value: this.selected
             });
-
-            if (!isEmpty(this.disables)) {
-                Observer.$emit("disabled", {
-                    nodeList,
-                    dateList: this.disables
-                });
-            }
-
-            if (bindData) {
-                Observer.$emit("data", {
-                    data: this.data,
-                    nodeList
-                });
-            }
-
+            Observer.$emit("rendered");
+        });
+        Observer.$on("renderYearPanel", (result: any) => this.renderYearPanel(result));
+        Observer.$on("renderMonthPanel", (result) => this.renderMonthPanel(result));
+        Observer.$on("rendered", () => {
+            const bindData = !isEmpty(this.data) && this.canSelectLength < 2;
             const isDoubleSelect = this.doubleSelect;
             const cache = this.selected;
             const isDisabled = (date: string) => !!this.disables[date];
@@ -595,7 +746,19 @@ export default class DatePicker {
                     value: selected
                 };
             };
-
+            const nodeList = this.element.querySelectorAll(".calendar-cell");
+            if (!isEmpty(this.disables)) {
+                Observer.$emit("disabled", {
+                    nodeList,
+                    dateList: this.disables
+                });
+            }
+            if (bindData) {
+                Observer.$emit("data", {
+                    data: this.data,
+                    nodeList
+                });
+            }
 
             for (let i = 0; i < nodeList.length; i++) {
                 let node = nodeList[i];
@@ -603,130 +766,30 @@ export default class DatePicker {
                     const date = attr(node, "data-date");
                     Observer.$emit(
                         "select",
-                        isMultiSelect ? multiPick(date) : pickDate(date)
+                        this.canSelectLength > 2 ? multiPick(date) : pickDate(date)
                     )
                 })
             }
 
-            if (this.views === 1) {
-                // yearNameNode.addEventListener("click", () => {
-                //     let year = this.date.getFullYear();
-                //     let start = parseInt(`${year.toString()[2]}0`);
-                //     let end = start + 9;
-                //
-                //     let years = [];
-                //     for (let i = start; i <= end; i++) {
-                //         years.push(parseInt(`${year.toString().slice(0, 2)}${i}`))
-                //     }
-                //     this.renderYearPanel(years);
-                // });
-                // monthNameNode.addEventListener("click", () => {
-                //     console.log(this.date)
-                // });
 
-
-            }
+            //打開年份列表
+            // this.element.querySelector(".year-name").addEventListener("click", () => Observer.$emit("renderYearPanel", true));
+            //打開月份列表
+            // this.element.querySelector(".month-name").addEventListener("click", () => Observer.$emit("renderMonthPanel", true));
         });
-        nextTick(() => {
-            const bindData = !isEmpty(this.data) && !isMultiSelect;
-            if (!isDate(option.startDate) || !isDate(option.endDate)) {
-                if (bindData) {
-                    warn(
-                        "init",
-                        "please provide [startDate] and [endDate] while binding data to datepicker"
-                    );
-                }
-            }
-            //初始视图所在日期
-            this.date = isUndefined(this.startDate) ? new Date() : this.startDate;
-            let disabledDays = [], disableDates: string[] = [];
+    }
 
-            if (!isUndefined(this["disabledTemp"])) {
+    constructor(option: datePickerOptions) {
 
-                let {dateList, disableBefore, disableAfter, dayList} = this["disabledTemp"];
-                if (disableBefore) {
-                    this.startDate = disableBefore;
-                }
-                if (disableAfter) {
-                    this.endDate = disableAfter;
-                }
-                disableDates = dateList;
-                disabledDays = dayList
-                delete this["disabledTemp"];
-
-            }
+        console.time("strt")
+        let canInit = this.beforeInit(option);
+        if (!canInit) {
+            return;
+        }
+        this.bindListener();
+        this.init();
 
 
-            //无效日期
-            this.disables = merge(
-                getDisableDates(this.startDate, this.endDate, this.dateFormat, bindData),
-                getDisabledDays(this.startDate, this.endDate, disabledDays, this.dateFormat),
-                listToMap(disableDates)
-            );
-
-
-            //去掉data里的无效日期
-            if (bindData) {
-                let data = this.data;
-                //此处未排序日期，直接取this.data的最后一个key
-                //排序在setData里做
-                this.endDate = this.parse(getPeek(Object.keys(data)), this.dateFormat);
-                let gap = diff(this.startDate, this.endDate, "days", true);
-                for (let i = 0; i < gap; i++) {
-                    let date = setDate(this.startDate, i);
-                    let formatted = this.format(date, this.dateFormat);
-                    if (isUndefined(data[formatted])) {
-                        this.disables[formatted] = formatted;
-                    }
-                    else if (!isUndefined(this.disables[formatted])) {
-                        delete data[formatted]
-                    }
-                }
-                this.data = data;
-            }
-
-
-            const front = getFront(this.selected);
-            const peek = getPeek(this.selected);
-
-            let initRange = this.getRange(this.selected);
-            if (
-                initRange.invalidDates.length > 0 ||
-                initRange.outOfRange ||
-                (this.doubleSelect && front && front === peek && peek)
-            ) {
-                if (initRange.outOfRange) {
-                    warn('setDates', `[${this.selected}] out of limit:${this.limit}`)
-                }
-                else {
-                    warn("setDates", "Illegal dates [" + this.selected + "]");
-                }
-
-                this.selected = [];
-            }
-            if (this.views === "auto") {
-                if (!isEmpty(this.selected)) {
-                    this.date = this.parse(getFront(this.selected), this.dateFormat);
-                }
-                //flat 视图情况下，
-                //自动限制endDate为半年后，startDate为当前日期
-                //避免因为dom过多导致界面卡顿
-                if (isUndefined(this.startDate)) {
-                    this.startDate = this.date;
-                }
-                if (isUndefined(this.endDate)) {
-                    this.endDate = setDate(this.date, 6, "month");
-                }
-            }
-            if (this.views === 1) {
-                if (this.doubleSelect && this.selected.length >= 2) {
-                    if (front === peek) {
-                        this.selected.pop();
-                    }
-                }
-            }
-            Observer.$emit("render", {type: "init"});
-        });
     }
 }
 
