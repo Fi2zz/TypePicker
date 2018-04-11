@@ -38,8 +38,6 @@ import {
     parseToInt,
     nextTick,
     listToMap,
-    display,
-    position,
     css
 } from "./util";
 import HTML, {yearPanel, monthPanel} from "./datepicker.template";
