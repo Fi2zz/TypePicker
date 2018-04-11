@@ -23,18 +23,18 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
     };
     const currDate = new Date(dist.year, dist.month, dist.date);
     const startDate = new Date(dist.year, dist.month, dist.date);
-    const endDate = new Date(dist.year, dist.month + 6, dist.date);
+    const endDate = new Date(dist.year+10, dist.month + 6, dist.date);
 
     let app: any = create
         ? new DatePicker({
-            el: document.getElementById("datepicker"),
+            el: "#datepicker",// document.getElementById("datepicker"),
             startDate,
             endDate,
             limit: 7,
             format: dateFormat,
-            doubleSelect: !false,
+            doubleSelect: true,
             // selection: 5,
-            views: 2 //"auto"
+            views: 1 //"auto"
         })
         : null;
 
@@ -95,11 +95,15 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
                     "2018-3-28",
                     "2018-3-22",
                     "2018-3-20",
-                    "2018-3-19"
-                ]
+                    "2018-4-19",
+                    "2018-4-18",
+                    "2018-4-20",
+                    "2018-4-29",
+                    "2018-4-30",
+                ],
                 // from: new Date(2018, 4, 1), //"2018-5-1",
                 // to: new Date(2018, 2, 15),
-                // days: [5]
+                days: [2]
             });
 
             const bindData = true;
@@ -145,7 +149,7 @@ function init(document: Document) {
     const date = new Date();
 
 
-    createDatePicker(true, [date, new Date(date.getTime() + (1000 * 3600 * 24 * 6))]);
+    createDatePicker(true, [date, new Date(date.getTime() + (1000 * 3600 * 24 * 10))]);
     document.addEventListener("click", e => {
 
         const target = <HTMLElement>e.target;

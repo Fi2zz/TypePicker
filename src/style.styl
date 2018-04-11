@@ -103,4 +103,71 @@ brand-disabled = #ccc
       line-height 44px
 
 .calendar-title
-  font-size: 14px
+  span
+    font-size: 14px
+.calendar-single-view
+
+  .calendar-title
+    position: absolute
+    top: 0
+    left: 50%
+    transform translateX(-50%)
+    z-index 90
+    span
+      cursor pointer
+      display: inline-block
+      padding 0 8px
+
+  .calendar-main
+    padding-top: 44px
+
+.calendar-year-panel
+  position: absolute
+  top: 0
+  left: 0
+  bottom: 0
+  background-color #fff
+  right: 0
+  z-index: 100
+  .year-panel
+    height: 100%
+  .year-title
+    text-align: center
+    font-size: 14px
+    height: 44px
+    line-height 44px
+    position: absolute
+    top: 0
+    left: 0
+    right: 0
+    .year-prev,.year-next
+      position: absolute
+      top: 0
+      bottom: 0
+      cursor pointer
+    .year-prev
+      left: 0
+      padding-left: 16px
+    .year-next
+      right: 0
+      padding-right: 16px
+
+  .year-list
+    height: 100%
+    padding-top: 44px
+    font-size: 0
+    .year-cell
+      width (100/4)*1%
+      display: inline-block
+      text-align: center
+      height (100/3)*1%
+      position: relative
+      cursor pointer
+      span
+        position: absolute
+        top: 50%
+        left: 50%
+        transform translate(-50%,-50%)
+        font-size: 14px
+      &:hover
+          background-color rgba(brand,.1)
