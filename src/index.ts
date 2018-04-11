@@ -1,3 +1,7 @@
+
+
+
+
 interface datePickerOptions {
     el: string | HTMLElement;
     limit?: number;
@@ -18,7 +22,6 @@ interface disable {
 
 import {
     attr,
-    diff,
     warn,
     merge,
     isDate,
@@ -32,15 +35,13 @@ import {
     toString,
     getPeek,
     getFront,
-    getDates,
     addClass,
     removeClass,
     parseToInt,
     nextTick,
-    listToMap,
-    css
+    simpleListToMap,
 } from "./util";
-import HTML, {yearPanel, monthPanel} from "./datepicker.template";
+import HTML from "./datepicker.template";
 import {
     getClassName,
     getViews,
@@ -52,7 +53,10 @@ import {
     DEFAULT_LANGUAGE,
     Observer,
     parse,
-    format, setDate
+    format,
+    setDate,
+    getDates,
+    diff,
 } from "./datepicker.helpers";
 
 
@@ -70,7 +74,6 @@ export default class DatePicker {
     private doubleSelect: boolean = false;
     private language: any = DEFAULT_LANGUAGE;
     private canSelectLength: number = 1;
-
 
     public on(ev: string, cb: Function) {
         return Observer.$on(ev, cb);
@@ -316,88 +319,6 @@ export default class DatePicker {
         }
     }
 
-    private renderYearPanel(visible: boolean) {
-
-
-        const createPanel = (years) => {
-            let title = `${years[0]}~${years[years.length - 1]}`;
-            yearPanelNode.innerHTML = yearPanel({
-                years,
-                title
-            });
-            let yearPrevAction = this.element.querySelector(".year-prev");
-            let yearNextAction = this.element.querySelector(".year-next");
-            yearPrevAction.addEventListener("click", () => {
-                let dateString = this.date.toString();
-                let startDate = years[0] - 11;
-                let date = new Date(dateString);
-                date.setFullYear(startDate);
-                createPanel(createYearsList(date))
-            });
-
-            yearNextAction.addEventListener("click", () => {
-                let dateString = this.date.toString();
-                let startDate = years[years.length - 1] + 11;
-                let date = new Date(dateString);
-                date.setFullYear(startDate);
-                createPanel(createYearsList(date))
-            });
-            let yearCell = this.element.querySelectorAll(".year-cell");
-            for (let i = 0; i < yearCell.length; i++) {
-                let cell = yearCell[i];
-                cell.addEventListener("click", () => {
-                    let year = parseInt(attr(cell, "data-year"));
-                    this.date.setFullYear(year);
-                    css('.year-panel', {display: 'none'});
-                    css('.month-panel', {display: 'block'})
-                    Observer.$emit("renderMonthPanel", true)
-                })
-            }
-        };
-
-
-        const createYearsList = (date: Date) => {
-            let year = date.getFullYear();
-            let start = year - 11;
-            let end = year;
-            let years = [];
-            for (let i = start; i <= end; i++) {
-                years.push(i)
-            }
-            return years;
-        };
-
-        let years = createYearsList(this.date);
-        let yearPanelNode = this.element.querySelector('.year-panel');
-
-        css('.extra-panel', {display: visible ? 'block' : 'none'});
-        css('.year-panel', {display: visible ? 'block' : 'none'})
-        createPanel(years);
-    }
-
-    private renderMonthPanel(visible: any) {
-        let month = this.element.querySelector(".month-panel");
-
-        css('.extra-panel', {display: 'block'})
-        css('.year-panel', {display: 'none'})
-        month.style.display = visible ? 'block' : 'none';
-        month.innerHTML = monthPanel(this.date.getFullYear(), this.language.months);
-
-        let monthNodes = month.querySelectorAll('.month-cell');
-        for (let i = 0; i < monthNodes.length; i++) {
-            let cell = monthNodes[i];
-            cell.addEventListener("click", () => {
-                let month = parseInt(attr(cell, "data-month"));
-                css('.extra-panel', {
-                    display: 'none'
-                });
-                css('.month-panel', {display: 'none'})
-                this.date.setMonth(month)
-                Observer.$emit("render", {type: 'select-month'})
-
-            })
-        }
-    }
 
     private getRange(data: Array<any>) {
         const startDate = getFront(data);
@@ -463,7 +384,7 @@ export default class DatePicker {
         this.disables = merge(
             getDisableDates(this.startDate, this.endDate, this.dateFormat, bindData),
             getDisabledDays(this.startDate, this.endDate, disabledDays, this.dateFormat),
-            listToMap(disableDates)
+            simpleListToMap(disableDates)
         );
     }
 
@@ -615,8 +536,6 @@ export default class DatePicker {
             });
             Observer.$emit("rendered");
         });
-        Observer.$on("renderYearPanel", (result: any) => this.renderYearPanel(result));
-        Observer.$on("renderMonthPanel", (result) => this.renderMonthPanel(result));
         Observer.$on("rendered", () => {
             const bindData = !isEmpty(this.data) && this.canSelectLength < 2;
             const isDoubleSelect = this.doubleSelect;
@@ -768,26 +687,16 @@ export default class DatePicker {
                     )
                 })
             }
-
-
-            //打開年份列表
-            // this.element.querySelector(".year-name").addEventListener("click", () => Observer.$emit("renderYearPanel", true));
-            //打開月份列表
-            // this.element.querySelector(".month-name").addEventListener("click", () => Observer.$emit("renderMonthPanel", true));
         });
     }
 
     constructor(option: datePickerOptions) {
-
-        console.time("strt")
         let canInit = this.beforeInit(option);
         if (!canInit) {
             return;
         }
         this.bindListener();
         this.init();
-
-
     }
 }
 

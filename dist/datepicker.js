@@ -19,11 +19,6 @@ var attrSelector = function (attr, value) {
 function parseToInt(string) {
     return parseInt(string, 10);
 }
-function getDates(year, month) {
-    var d = new Date(year, month, 1);
-    var utc = Date.UTC(d.getFullYear(), d.getMonth() + 1, 0);
-    return new Date(utc).getUTCDate();
-}
 function attr(el, attr, attrvalue) {
     if (attrvalue === void 0) { attrvalue = undefined; }
     if (!el) {
@@ -34,25 +29,6 @@ function attr(el, attr, attrvalue) {
         attrvalue = "";
     }
     return value ? value : el.setAttribute(attr, attrvalue);
-}
-function diff(start, end, type, isAbsolute) {
-    if (type === void 0) { type = "month"; }
-    var result;
-    if (!isDate(start) || !isDate(end)) {
-        return 0;
-    }
-    if (type === "month") {
-        result =
-            Math.abs(start.getFullYear() * 12 + start.getMonth()) -
-                (end.getFullYear() * 12 + end.getMonth());
-    }
-    else if (type === "days") {
-        var startTime = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-        var endTime = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-        var calcu = Math.ceil(startTime - endTime) / (1000 * 60 * 60 * 24);
-        result = isAbsolute ? Math.abs(calcu) : calcu;
-    }
-    return result;
 }
 var padding = function (n) { return "" + (n > 9 ? n : "0" + n); };
 function _toString(object) {
@@ -89,27 +65,15 @@ function isFunction(object) {
     return _toString(object) === "[object Function]";
 }
 function hasClass(ele, className) {
-    if (!ele ||
-        !className ||
-        !ele.className ||
-        ele.className.search(new RegExp("\\b" + className + "\\b")) == -1) {
-        return false;
-    }
-    return true;
+    return new RegExp('(\\s|^)' + className + '(\\s|$)').test(ele.className);
 }
 function addClass(ele, className) {
-    if (!ele ||
-        !className ||
-        (ele.className &&
-            ele.className.search(new RegExp("\\b" + className + "\\b")) != -1))
+    if (hasClass(ele, className))
         return;
     ele.className += (ele.className ? " " : "") + className;
 }
 function removeClass(ele, className) {
-    if (!ele ||
-        !className ||
-        (ele.className &&
-            ele.className.search(new RegExp("\\b" + className + "\\b")) == -1))
+    if (!hasClass(ele, className))
         return;
     ele.className = ele.className.replace(new RegExp("\\s*\\b" + className + "\\b", "g"), "");
 }
@@ -192,28 +156,13 @@ function isEmpty(listOrObject) {
         return Object.keys(listOrObject).length <= 0;
     }
 }
-function listToMap(list) {
+function simpleListToMap(list) {
     var map = {};
     for (var _i = 0, list_1 = list; _i < list_1.length; _i++) {
         var it = list_1[_i];
         map[it] = it;
     }
     return map;
-}
-
-
-function css(el, styles) {
-    if (typeof el === 'string') {
-        el = document.querySelector(el);
-    }
-    for (var key in styles) {
-        var value = styles[key];
-        var curr = getComputedStyle(el, null).getPropertyValue(key);
-        if (!curr || curr && curr !== value) {
-            el.style[key] = value;
-        }
-    }
-    return el;
 }
 
 var HTML = (function () {
@@ -283,15 +232,26 @@ var HTML = (function () {
     };
     return HTML;
 }());
-function yearPanel(data) {
-    return "\n                \n                <div class=\"year-title\">\n                    <span class=\"year-prev\">prev</span>\n                    " + data.title + "\n                    <span class=\"year-next\">next</span>\n                </div>\n                <div class=\"year-list\">\n                    " + data.years.map(function (item) { return '<div class="year-cell" data-year=' + item + '><span>' + item + '</span></div>'; }).join("") + "            </div>";
-}
-function monthPanel(year, months) {
-    var tem = months.map(function (item, index) { return "<div class=\"month-cell\" data-year=\"" + year + "\" data-month=\"" + index + "\"><span>" + item + "</span></div>"; }).join("");
-    var yearTitle = "<div class=\"year-title\"><span>prev</span>" + year + "<span class=\"prev\">next</span></div>";
-    return yearTitle + "<div class=\"month-list\">" + tem + "</div>";
-}
 
+function diff(start, end, type, isAbsolute) {
+    if (type === void 0) { type = "month"; }
+    var result;
+    if (!isDate(start) || !isDate(end)) {
+        return 0;
+    }
+    if (type === "month") {
+        result =
+            Math.abs(start.getFullYear() * 12 + start.getMonth()) -
+                (end.getFullYear() * 12 + end.getMonth());
+    }
+    else if (type === "days") {
+        var startTime = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+        var endTime = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+        var calcu = Math.ceil(startTime - endTime) / (1000 * 60 * 60 * 24);
+        result = isAbsolute ? Math.abs(calcu) : calcu;
+    }
+    return result;
+}
 var getDisableDates = function (startDate, endDate, dateFormat, should) {
     var temp = {};
     if (should) {
@@ -610,6 +570,11 @@ var Observer = (function () {
         $remove: $remove
     };
 })();
+function getDates(year, month) {
+    var d = new Date(year, month, 1);
+    var utc = Date.UTC(d.getFullYear(), d.getMonth() + 1, 0);
+    return new Date(utc).getUTCDate();
+}
 
 var DatePicker = (function () {
     function DatePicker(option) {
@@ -627,7 +592,6 @@ var DatePicker = (function () {
         this.canSelectLength = 1;
         this.format = format;
         this.parse = parse;
-        console.time("strt");
         var canInit = this.beforeInit(option);
         if (!canInit) {
             return;
@@ -860,85 +824,6 @@ var DatePicker = (function () {
             }
         }
     };
-    DatePicker.prototype.renderYearPanel = function (visible) {
-        var _this = this;
-        var createPanel = function (years) {
-            var title = years[0] + "~" + years[years.length - 1];
-            yearPanelNode.innerHTML = yearPanel({
-                years: years,
-                title: title
-            });
-            var yearPrevAction = _this.element.querySelector(".year-prev");
-            var yearNextAction = _this.element.querySelector(".year-next");
-            yearPrevAction.addEventListener("click", function () {
-                var dateString = _this.date.toString();
-                var startDate = years[0] - 11;
-                var date = new Date(dateString);
-                date.setFullYear(startDate);
-                createPanel(createYearsList(date));
-            });
-            yearNextAction.addEventListener("click", function () {
-                var dateString = _this.date.toString();
-                var startDate = years[years.length - 1] + 11;
-                var date = new Date(dateString);
-                date.setFullYear(startDate);
-                createPanel(createYearsList(date));
-            });
-            var yearCell = _this.element.querySelectorAll(".year-cell");
-            var _loop_1 = function (i) {
-                var cell = yearCell[i];
-                cell.addEventListener("click", function () {
-                    var year = parseInt(attr(cell, "data-year"));
-                    _this.date.setFullYear(year);
-                    css('.year-panel', { display: 'none' });
-                    css('.month-panel', { display: 'block' });
-                    Observer.$emit("renderMonthPanel", true);
-                });
-            };
-            for (var i = 0; i < yearCell.length; i++) {
-                _loop_1(i);
-            }
-        };
-        var createYearsList = function (date) {
-            var year = date.getFullYear();
-            var start = year - 11;
-            var end = year;
-            var years = [];
-            for (var i = start; i <= end; i++) {
-                years.push(i);
-            }
-            return years;
-        };
-        var years = createYearsList(this.date);
-        var yearPanelNode = this.element.querySelector('.year-panel');
-        css('.extra-panel', { display: visible ? 'block' : 'none' });
-        css('.year-panel', { display: visible ? 'block' : 'none' });
-        createPanel(years);
-    };
-    DatePicker.prototype.renderMonthPanel = function (visible) {
-        var _this = this;
-        var month = this.element.querySelector(".month-panel");
-        css('.extra-panel', { display: 'block' });
-        css('.year-panel', { display: 'none' });
-        month.style.display = visible ? 'block' : 'none';
-        month.innerHTML = monthPanel(this.date.getFullYear(), this.language.months);
-        var monthNodes = month.querySelectorAll('.month-cell');
-        var _loop_2 = function (i) {
-            var cell = monthNodes[i];
-            cell.addEventListener("click", function () {
-                var month = parseInt(attr(cell, "data-month"));
-                css('.extra-panel', {
-                    display: 'none'
-                });
-                css('.month-panel', { display: 'none' });
-                _this.date.setMonth(month);
-                Observer.$emit("render", { type: 'select-month' });
-            });
-        };
-        for (var i = 0; i < monthNodes.length; i++) {
-            _loop_2(i);
-        }
-    };
     DatePicker.prototype.getRange = function (data) {
         var startDate = getFront(data);
         var endDate = getPeek(data);
@@ -997,7 +882,7 @@ var DatePicker = (function () {
             disableDates = dateList;
             disabledDays = dayList;
         }
-        this.disables = merge(getDisableDates(this.startDate, this.endDate, this.dateFormat, bindData), getDisabledDays(this.startDate, this.endDate, disabledDays, this.dateFormat), listToMap(disableDates));
+        this.disables = merge(getDisableDates(this.startDate, this.endDate, this.dateFormat, bindData), getDisabledDays(this.startDate, this.endDate, disabledDays, this.dateFormat), simpleListToMap(disableDates));
     };
     DatePicker.prototype.init = function () {
         var _this = this;
@@ -1122,8 +1007,6 @@ var DatePicker = (function () {
             });
             Observer.$emit("rendered");
         });
-        Observer.$on("renderYearPanel", function (result) { return _this.renderYearPanel(result); });
-        Observer.$on("renderMonthPanel", function (result) { return _this.renderMonthPanel(result); });
         Observer.$on("rendered", function () {
             var bindData = !isEmpty(_this.data) && _this.canSelectLength < 2;
             var isDoubleSelect = _this.doubleSelect;
@@ -1242,7 +1125,7 @@ var DatePicker = (function () {
                     nodeList: nodeList
                 });
             }
-            var _loop_3 = function (i) {
+            var _loop_1 = function (i) {
                 var node = nodeList[i];
                 node.addEventListener("click", function () {
                     var date = attr(node, "data-date");
@@ -1250,7 +1133,7 @@ var DatePicker = (function () {
                 });
             };
             for (var i = 0; i < nodeList.length; i++) {
-                _loop_3(i);
+                _loop_1(i);
             }
         });
     };

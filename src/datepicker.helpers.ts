@@ -1,14 +1,42 @@
 import {
     addClass,
     attrSelector,
-    getDates,
     hasClass,
     isDate,
     parseToInt,
     removeClass,
     padding,
-    diff
 } from "./util";
+
+export function diff(start: Date,
+                     end: Date,
+                     type: string = "month",
+                     isAbsolute?: boolean) {
+    let result: number;
+    if (!isDate(start) || !isDate(end)) {
+        return 0;
+    }
+    if (type === "month") {
+        result =
+            Math.abs(start.getFullYear() * 12 + start.getMonth()) -
+            (end.getFullYear() * 12 + end.getMonth());
+    } else if (type === "days") {
+        const startTime = <any>new Date(
+            start.getFullYear(),
+            start.getMonth(),
+            start.getDate()
+        );
+        const endTime = <any>new Date(
+            end.getFullYear(),
+            end.getMonth(),
+            end.getDate()
+        );
+        const calcu = Math.ceil(startTime - endTime) / (1000 * 60 * 60 * 24);
+        result = isAbsolute ? Math.abs(calcu) : calcu;
+    }
+
+    return result;
+}
 
 export const getDisableDates = (startDate: Date,
                                 endDate: Date,
@@ -394,3 +422,9 @@ export const Observer = (function () {
     };
 })();
 
+
+export function getDates(year: number, month: number): number {
+    let d = new Date(year, month, 1);
+    let utc = Date.UTC(d.getFullYear(), d.getMonth() + 1, 0);
+    return new Date(utc).getUTCDate();
+}

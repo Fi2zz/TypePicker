@@ -3,7 +3,8 @@ import "./test.styl";
 
 import DatePicker from "../src/index";
 import {source, languages as language} from "./mock";
-import {addClass, diff} from "../src/util";
+import {addClass} from "../src/util";
+import { diff} from "../src/datepicker.helpers";
 
 const date = new Date();
 

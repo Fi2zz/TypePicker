@@ -5,12 +5,6 @@ export function parseToInt(string: any) {
     return parseInt(string, 10);
 }
 
-export function getDates(year: number, month: number): number {
-    let d = new Date(year, month, 1);
-    let utc = Date.UTC(d.getFullYear(), d.getMonth() + 1, 0);
-    return new Date(utc).getUTCDate();
-}
-
 export function attr(el: any,
                      attr: any,
                      attrvalue: any | undefined = undefined) {
@@ -24,35 +18,6 @@ export function attr(el: any,
     return value ? value : el.setAttribute(attr, attrvalue);
 }
 
-export function diff(start: Date,
-                     end: Date,
-                     type: string = "month",
-                     isAbsolute?: boolean) {
-    let result: number;
-    if (!isDate(start) || !isDate(end)) {
-        return 0;
-    }
-    if (type === "month") {
-        result =
-            Math.abs(start.getFullYear() * 12 + start.getMonth()) -
-            (end.getFullYear() * 12 + end.getMonth());
-    } else if (type === "days") {
-        const startTime = <any>new Date(
-            start.getFullYear(),
-            start.getMonth(),
-            start.getDate()
-        );
-        const endTime = <any>new Date(
-            end.getFullYear(),
-            end.getMonth(),
-            end.getDate()
-        );
-        const calcu = Math.ceil(startTime - endTime) / (1000 * 60 * 60 * 24);
-        result = isAbsolute ? Math.abs(calcu) : calcu;
-    }
-
-    return result;
-}
 
 export const padding = (n: Number) => `${n > 9 ? n : "0" + n}`;
 
@@ -103,36 +68,16 @@ export function isFunction(object: any) {
 }
 
 export function hasClass(ele: any, className: string) {
-    if (
-        !ele ||
-        !className ||
-        !ele.className ||
-        ele.className.search(new RegExp("\\b" + className + "\\b")) == -1
-    ) {
-        return false;
-    }
-    return true;
+    return new RegExp('(\\s|^)' + className + '(\\s|$)').test(ele.className);
 }
 
 export function addClass(ele: any, className: string) {
-    if (
-        !ele ||
-        !className ||
-        (ele.className &&
-            ele.className.search(new RegExp("\\b" + className + "\\b")) != -1)
-    )
-        return;
+    if (hasClass(ele, className)) return;
     ele.className += (ele.className ? " " : "") + className;
 }
 
 export function removeClass(ele: any, className: string) {
-    if (
-        !ele ||
-        !className ||
-        (ele.className &&
-            ele.className.search(new RegExp("\\b" + className + "\\b")) == -1)
-    )
-        return;
+    if (!hasClass(ele, className)) return;
     ele.className = ele.className.replace(
         new RegExp("\\s*\\b" + className + "\\b", "g"),
         ""
@@ -219,7 +164,7 @@ export function isEmpty(listOrObject: any) {
 }
 
 
-export function listToMap(list: Array<any>) {
+export function simpleListToMap(list: Array<any>) {
     let map = {};
     for (let it of list) {
         map[it] = it
@@ -227,53 +172,3 @@ export function listToMap(list: Array<any>) {
     return map
 }
 
-
-export function display(el: HTMLElement, state: string) {
-
-
-    let display = getComputedStyle(el, null).getPropertyValue("display");
-
-    if (state === display) {
-        return false;
-    }
-
-
-    el.style.display = state;
-    return el
-}
-
-export function position(el: HTMLElement, type: string, positions?: any) {
-
-
-    let currPositionType = getComputedStyle(el, null).getPropertyValue("position");
-
-    if (currPositionType !== type) {
-        el.style.position = type;
-    }
-
-
-    for (let key in positions) {
-        el.style[key] = positions[key]
-    }
-
-    return el
-
-}
-
-export function css(el: any, styles: any) {
-
-    if (typeof el === 'string') {
-        el = document.querySelector(el);
-    }
-
-    for (let key in styles) {
-        let value = styles[key];
-        let curr = getComputedStyle(el, null).getPropertyValue(key);
-
-
-        if (!curr || curr && curr !== value) {
-            el.style[key] = value
-        }
-    }
-    return el
-}
