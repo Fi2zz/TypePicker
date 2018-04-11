@@ -283,7 +283,6 @@ export default class DatePicker {
             };
         });
     }
-
     private render(data: Array<any>, renderWeekOnTop: boolean) {
         const template = new HTML({
             renderWeekOnTop,
