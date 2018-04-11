@@ -238,3 +238,7 @@ DatePicker build with typescript
        };
        app.setLanguage(language)
 ```
+
+## TODO
+1. year list panel
+2. month list panel
