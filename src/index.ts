@@ -1,7 +1,3 @@
-
-
-
-
 interface datePickerOptions {
     el: string | HTMLElement;
     limit?: number;
@@ -13,12 +9,14 @@ interface datePickerOptions {
     selection?: number;
 }
 
+
 interface disable {
     dates?: Array<any>;
     days?: Array<number>;
     to?: Date | string;
     from?: Date | string;
 }
+
 
 import {
     attr,
@@ -27,7 +25,6 @@ import {
     isDate,
     isEmpty,
     isArray,
-    isNumber,
     isUndefined,
     isPlainObject,
     isBoolean,
@@ -79,8 +76,8 @@ export default class DatePicker {
         return Observer.$on(ev, cb);
     }
 
-    public format = format;
-    public parse = parse
+    public format: Function = format;
+    public parse: Function = parse;
 
     private setDates(dates: Array<any>) {
         if (!isArray(dates)) return;
@@ -192,6 +189,9 @@ export default class DatePicker {
                 return !isNaN(parsed) && parsed >= 0 && parsed <= 6;
             })
             : [];
+
+        console.log("setDisabled", this)
+
         Object.defineProperty(this, "disabledTemp", {
             configurable: true,
             writable: true,

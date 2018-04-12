@@ -4,7 +4,7 @@ import "./test.styl";
 import DatePicker from "../src/index";
 import {source, languages as language} from "./mock";
 import {addClass} from "../src/util";
-import { diff} from "../src/datepicker.helpers";
+import {diff} from "../src/datepicker.helpers";
 
 const date = new Date();
 
@@ -12,12 +12,11 @@ function getUTC(date: Date) {
     return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
 }
 
-console.log(DatePicker)
-// DatePicker();
 
 const dateFormat = "YYYY-M-D";
 const activeLanguageCode: string = "en-us";
 const formControl = <HTMLInputElement>document.getElementById("date-value");
+
 
 function createDatePicker(create: boolean = true, selected?: Array<any>) {
     const dist = {
@@ -27,7 +26,7 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
     };
     const currDate = new Date(dist.year, dist.month, dist.date);
     const startDate = new Date(dist.year, dist.month, dist.date);
-    const endDate = new Date(dist.year+10, dist.month + 6, dist.date);
+    const endDate = new Date(dist.year + 10, dist.month + 6, dist.date);
 
     let app: any = create
         ? new DatePicker({
