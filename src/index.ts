@@ -79,7 +79,7 @@ export default class DatePicker {
     public format: Function = format;
     public parse: Function = parse;
 
-    private setDates(dates: Array<any>) {
+    public setDates(dates: Array<any>) {
         if (!isArray(dates)) return;
         let datesList: Array<any> = [];
         let start: string = "",
@@ -103,7 +103,7 @@ export default class DatePicker {
         this.selected = datesList;
     }
 
-    private setLanguage(pack?: any) {
+    public setLanguage(pack?: any) {
         if (isArray(pack.days) && isArray(pack.months)) {
             this.language = {
                 days: pack.days,
@@ -113,7 +113,7 @@ export default class DatePicker {
         }
     }
 
-    private setDisabled(param: disable) {
+    public setDisabled(param: disable) {
         const result = toString({
             dates: `[optional]Expect an array of string or Date got ${toString(
                 param.dates
@@ -189,9 +189,6 @@ export default class DatePicker {
                 return !isNaN(parsed) && parsed >= 0 && parsed <= 6;
             })
             : [];
-
-        console.log("setDisabled", this)
-
         Object.defineProperty(this, "disabledTemp", {
             configurable: true,
             writable: true,
