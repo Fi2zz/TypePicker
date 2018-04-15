@@ -47,6 +47,9 @@ DatePicker build with typescript
 | limit        | NO       | number             | Limitation between two dates while `doubleSelect` is on      |                       |
 | views        | NO       | number,string      | Display views of DatePicker                                  | auto,1,2              |
 | selection    | NO       | number             | Size of dates can be picked ,value must be not less than `2` | 1                     |
+| months       | NO       | array<string>      | Month's name array                                           |                       |
+| week         | NO       | array<string>      | Week's name array                                            |      
+     |
 
 
 

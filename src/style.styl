@@ -8,22 +8,15 @@ brand-disabled = #ccc
   margin auto
   *
     box-sizing border-box
-  &-main
+  .calendar-main
     position: relative
-  &-action
-
-    &-bar
-      height: 44px
-      position: absolute
-      top: 0
-      left: 0
-      right: 0
-      z-index: 9
+  .calendar-action
     width: 44px
     height: 44px
     text-align: center
     background #fff
     border: none
+
     &:focus
       outline: none
     &.disabled
@@ -32,21 +25,28 @@ brand-disabled = #ccc
       float: left
     &-next
       float: right
-  &-body, &-day
+  .calendar-action-bar
+    height: 44px
+    position: absolute
+    top: 0
+    left: 0
+    right: 0
+    z-index: 9
+  .calendar-body, .calendar-day
     font-size: 0
-  &-day
+  .calendar-day
     text-align: center
     position: relative
     height: 44px
     &-cell
       height: 44px
       line-height 44px
-  &-cell
+  .calendar-cell
     font-size: 14px
     width (100 / 7) * 1%
     display: inline-block
     vertical-align: top
-  &-date-cell
+  .calendar-date-cell
     min-height: 64px
     height 2rem
     text-align: center
@@ -69,10 +69,10 @@ brand-disabled = #ccc
 
     &:not(:empty)
       cursor pointer
-    &~&.disabled
+    & ~ &.disabled
       cursor pointer
     &.disabled
-      color lighten(brand-disabled,20%)
+      color lighten(brand-disabled, 20%)
       cursor default
     &.in-range
       background #eee
@@ -81,7 +81,7 @@ brand-disabled = #ccc
       color brand-default
       background brand
 
-  &-double-views
+  .calendar-double-views
     width: 100%
     max-width none
     font-size: 0
@@ -94,9 +94,9 @@ brand-disabled = #ccc
       position: relative
       line-height 44px
       text-align: center
-  &-flat-view,&-single-view
+  .calendar-flat-view, .calendar-single-view
     max-width 768px
-  &-flat-view, &-single-view
+  .calendar-flat-view, .calendar-single-view
     .calendar-title
       height: 44px
       text-align: center
@@ -105,8 +105,8 @@ brand-disabled = #ccc
 .calendar-title
   span
     font-size: 14px
-.calendar-single-view
 
+.calendar-single-view
   .calendar-title
     position: absolute
     top: 0
@@ -117,7 +117,6 @@ brand-disabled = #ccc
       cursor pointer
       display: inline-block
       padding 0 8px
-
   .calendar-main
     padding-top: 44px
 
@@ -131,6 +130,7 @@ brand-disabled = #ccc
   z-index: 100
   .year-panel
     height: 100%
+    display: none
   .year-title
     text-align: center
     font-size: 14px
@@ -140,7 +140,7 @@ brand-disabled = #ccc
     top: 0
     left: 0
     right: 0
-    .year-prev,.year-next
+    .year-prev, .year-next
       position: absolute
       top: 0
       bottom: 0
@@ -157,35 +157,54 @@ brand-disabled = #ccc
     padding-top: 44px
     font-size: 0
     .year-cell
-      width (100/4)*1%
+      width (100 / 4) * 1%
       display: inline-block
       text-align: center
-      height (100/3)*1%
+      height (100 / 3) * 1%
       position: relative
       cursor pointer
+      &.active
+        background-color brand
+        color brand-default
       span
         position: absolute
         top: 50%
         left: 50%
-        transform translate(-50%,-50%)
+        transform translate(-50%, -50%)
         font-size: 14px
       &:hover
-          background-color rgba(brand,.1)
+        background-color rgba(brand, .1)
   .month-panel
     height: 100%
     padding-top: 44px
+    display: none
+    .year-title
+      span
+        position: absolute
+        left: 0
+        top: 0
+        bottom: 0
+        padding-left: 16px
+        cursor pointer
   .month-list
     height: 100%
     .month-cell
       display: inline-block
       vertical-align: top
-      width (100/4)*1%
+      width (100 / 4) * 1%
       text-align: center
-      height (100/3)*1%
+      height (100 / 3) * 1%
       position: relative
       cursor pointer
+      &.active
+        background-color brand
+        color brand-default
       span
         position: absolute
-        transform translate(-50%,-50%)
+        transform translate(-50%, -50%)
         top: 50%
         left: 50%
+
+.no-data
+  .calendar-title
+    cursor pointer

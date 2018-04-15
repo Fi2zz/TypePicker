@@ -7,8 +7,10 @@ interface datePickerOptions {
     startDate?: Date;
     endDate?: Date;
     selection?: number;
+    title?: Function,
+    week?: Array<string>,
+    months?: Array<string>,
 }
-
 
 interface disable {
     dates?: Array<any>;
@@ -16,7 +18,6 @@ interface disable {
     to?: Date | string;
     from?: Date | string;
 }
-
 
 import {
     attr,
@@ -37,8 +38,9 @@ import {
     parseToInt,
     nextTick,
     simpleListToMap,
+    css
 } from "./util";
-import HTML from "./datepicker.template";
+import HTML, {yearPanel, monthPanel} from "./datepicker.template";
 import {
     getClassName,
     getViews,
@@ -47,13 +49,13 @@ import {
     parseEl,
     setNodeActiveState,
     setNodeRangeState,
-    DEFAULT_LANGUAGE,
     Observer,
     parse,
-    format,
-    setDate,
-    getDates,
+    format, setDate,
     diff,
+
+    getDates,
+
 } from "./datepicker.helpers";
 
 
@@ -69,15 +71,21 @@ export default class DatePicker {
     private disables: any = {};
     private element: any = null;
     private doubleSelect: boolean = false;
-    private language: any = DEFAULT_LANGUAGE;
     private canSelectLength: number = 1;
+    private title: Function = (year, month) => `${year}年 ${month}月`;
+    private week: Array<string> = ["日", "一", "二", "三", "四", "五", "六"];
+    private months: Array<string> = ["01月", "02月", "03月", "04月", "05月", "06月", "07月", "08月", "09月", "10月", "11月", "12月"];
 
     public on(ev: string, cb: Function) {
         return Observer.$on(ev, cb);
     }
 
-    public format: Function = format;
-    public parse: Function = parse;
+    public emit(ev: string, arg: any) {
+        return Observer.$emit(ev, arg);
+    }
+
+    public format = format;
+    public parse = parse
 
     public setDates(dates: Array<any>) {
         if (!isArray(dates)) return;
@@ -101,16 +109,6 @@ export default class DatePicker {
             datesList = [isDate(d) ? this.format(d, this.dateFormat) : d];
         }
         this.selected = datesList;
-    }
-
-    public setLanguage(pack?: any) {
-        if (isArray(pack.days) && isArray(pack.months)) {
-            this.language = {
-                days: pack.days,
-                months: pack.months,
-                year: pack.year
-            };
-        }
     }
 
     public setDisabled(param: disable) {
@@ -231,21 +229,6 @@ export default class DatePicker {
             this.views == 2
                 ? 1
                 : this.views === "auto" ? diff(this.endDate, this.startDate) : 0;
-        const heading = function (pack, year, month) {
-            if (pack.year) {
-                return {
-                    year: `${year}${pack.year}`,
-                    month: `${pack.months[month]}`,
-
-                };
-            } else {
-                return {
-                    year: `${year}`,
-                    month: `${pack.months[month]}`,
-
-                };
-            }
-        };
         const template = [];
         for (let i = 0; i <= monthSize; i++) {
             let dat = new Date(date.getFullYear(), date.getMonth() + i, 1);
@@ -256,6 +239,7 @@ export default class DatePicker {
                 month: dat.getMonth()
             });
         }
+
         return template.map((item: any) => {
             let dates = {};
             let firstDay = new Date(item.year, item.month, 1);
@@ -278,7 +262,7 @@ export default class DatePicker {
                 };
             }
             return {
-                heading: heading(this.language, item.year, item.month),
+                heading: this.title(item.year, item.month),
                 dates
             };
         });
@@ -288,7 +272,7 @@ export default class DatePicker {
         const template = new HTML({
             renderWeekOnTop,
             data,
-            week: this.language.days
+            week: this.week
         });
         this.element.innerHTML = template[0];
         //日期切换
@@ -316,6 +300,88 @@ export default class DatePicker {
         }
     }
 
+    private renderYearPanel(visible: boolean) {
+        const createPanel = (years) => {
+            let title = `${years[0]} - ${years[years.length - 1]}`;
+            yearPanelNode.innerHTML = yearPanel({
+                    years,
+                    title,
+                },
+            );
+            let yearPrevAction = this.element.querySelector(".year-prev");
+            let yearNextAction = this.element.querySelector(".year-next");
+            yearPrevAction.addEventListener("click", () => {
+                let dateString = this.date.toString();
+                let startDate = years[0] - 11;
+                let date = new Date(dateString);
+                date.setFullYear(startDate);
+                createPanel(createYearsList(date))
+            });
+
+            yearNextAction.addEventListener("click", () => {
+                let dateString = this.date.toString();
+                let startDate = years[years.length - 1] + 11;
+                let date = new Date(dateString);
+                date.setFullYear(startDate);
+                createPanel(createYearsList(date))
+            });
+            let yearCell = this.element.querySelectorAll(".year-cell");
+            for (let i = 0; i < yearCell.length; i++) {
+                let cell = yearCell[i];
+                cell.addEventListener("click", () => {
+                    let year = parseInt(attr(cell, "data-year"));
+                    this.date.setFullYear(year);
+                    css('.year-panel', {display: 'none'});
+                    css('.month-panel', {display: 'block'});
+                    this.renderMonthPanel(true)
+                    // Observer.$emit("renderMonthPanel", true)
+                })
+            }
+        };
+        const createYearsList = (date: Date) => {
+            let year = date.getFullYear();
+            let start = year - 11;
+            let end = year;
+            let years = [];
+            for (let i = start; i <= end; i++) {
+                years.push(i)
+            }
+            return years;
+        };
+        let years = createYearsList(this.date);
+        let yearPanelNode = this.element.querySelector('.year-panel');
+        css('.extra-panel', {display: visible ? 'block' : 'none'});
+        css('.year-panel', {display: visible ? 'block' : 'none'})
+        createPanel(years);
+    }
+
+    private renderMonthPanel(visible: any) {
+        let month = this.element.querySelector(".month-panel");
+        // css('.extra-panel', {display: 'block'});
+        css('.year-panel', {display: 'none'});
+        month.style.display = visible ? 'block' : 'none';
+        month.innerHTML = monthPanel(this.date.getFullYear(), this.months);
+        let monthNodes = month.querySelectorAll('.month-cell');
+        let back = month.querySelector(".year-title span");
+
+        back.addEventListener("click", () => {
+            css('.year-panel', {display: 'block'});
+            css('.month-panel', {display: 'none'});
+
+        });
+        for (let i = 0; i < monthNodes.length; i++) {
+            let cell = monthNodes[i];
+            cell.addEventListener("click", () => {
+                let month = parseInt(attr(cell, "data-month"));
+                css('.extra-panel', {display: 'none'});
+                css('.month-panel', {display: 'none'});
+                css('.year-panel', {display: 'none'});
+                this.date.setMonth(month);
+                Observer.$emit("render", {type: 'select-month'})
+
+            })
+        }
+    }
 
     private getRange(data: Array<any>) {
         const startDate = getFront(data);
@@ -355,7 +421,6 @@ export default class DatePicker {
                 }
             } else {
                 outOfRange = true;
-
             }
         }
         return {
@@ -392,7 +457,6 @@ export default class DatePicker {
             const bindData = !isEmpty(this.data) && this.canSelectLength < 2;
             //初始视图所在日期
             this.date = isUndefined(this.startDate) ? new Date() : this.startDate;
-
             this.initDisabled(bindData);
             //去掉data里的无效日期
             if (bindData) {
@@ -413,14 +477,17 @@ export default class DatePicker {
                 }
                 this.data = data;
             }
+
+            this.element.className = `${this.element.className} ${bindData ? 'with-data' : 'no-data'}`;
+
             const front = getFront(this.selected);
             const peek = getPeek(this.selected);
 
             let initRange = this.getRange(this.selected);
             if (
                 initRange.invalidDates.length > 0 ||
-                initRange.validDates.length <= 0 ||
-                initRange.outOfRange
+                initRange.outOfRange ||
+                initRange.validDates.length <= 0
             ) {
                 if (initRange.outOfRange) {
                     warn('setDates', `[${this.selected}] out of limit:${this.limit}`)
@@ -452,10 +519,8 @@ export default class DatePicker {
                     }
                 }
             }
-
-
             Observer.$emit("render", {type: "init"});
-
+            Observer.$emit("ready")
         });
     }
 
@@ -494,6 +559,15 @@ export default class DatePicker {
         if (isMultiSelect) {
             this.limit = this.canSelectLength;
         }
+        if (option.title && typeof option.title === 'function') {
+            this.title = option.title;
+        }
+        if (option.week instanceof Array && option.week.length === 7) {
+            this.week = option.week;
+        }
+        if (option.months instanceof Array && option.months.length === 12) {
+            this.months = option.months;
+        }
         return true
     };
 
@@ -517,15 +591,16 @@ export default class DatePicker {
         });
         Observer.$on("render", (result: any) => {
             let {type} = result;
-
             if (type !== 'init') {
                 this.initDisabled(!isEmpty(this.data));
             }
             if (type === "switch") {
                 this.date = setDate(this.date, result.size, "month");
             }
+            if (type === 'custom' && result.value) {
+                this.date = setDate(result.value)
+            }
             this.render(this.createMonths(this.date), this.views === "auto");
-
             //初始化的时候的选中状态
             Observer.$emit("select", {
                 type,
@@ -533,6 +608,8 @@ export default class DatePicker {
             });
             Observer.$emit("rendered");
         });
+        Observer.$on("renderYearPanel", (result: any) => this.renderYearPanel(result));
+        Observer.$on("renderMonthPanel", (result) => this.renderMonthPanel(result));
         Observer.$on("rendered", () => {
             const bindData = !isEmpty(this.data) && this.canSelectLength < 2;
             const isDoubleSelect = this.doubleSelect;
@@ -673,7 +750,6 @@ export default class DatePicker {
                     nodeList
                 });
             }
-
             for (let i = 0; i < nodeList.length; i++) {
                 let node = nodeList[i];
                 node.addEventListener("click", () => {
@@ -684,7 +760,20 @@ export default class DatePicker {
                     )
                 })
             }
+
+            //无开始和结束日期，则可以打开年份和月份面板
+            if (!this.startDate && !this.endDate) {
+                //打開年份列表
+                this.element.querySelector(".calendar-title").addEventListener("click", () => Observer.$emit("renderYearPanel", true));
+            }
         });
+        Observer.$on("custom", (result: any) => {
+            if (!result.value) {
+                Observer.$remove("custom")
+                return false;
+            }
+            Observer.$emit("render", result);
+        })
     }
 
     constructor(option: datePickerOptions) {
@@ -694,6 +783,8 @@ export default class DatePicker {
         }
         this.bindListener();
         this.init();
+
+
     }
 }
 

@@ -172,3 +172,21 @@ export function simpleListToMap(list: Array<any>) {
     return map
 }
 
+
+export function css(el: any, styles: any) {
+
+    if (typeof el === 'string') {
+        el = document.querySelector(el);
+    }
+
+    for (let key in styles) {
+        let value = styles[key];
+        let curr = getComputedStyle(el, null).getPropertyValue(key);
+
+
+        if (!curr || curr && curr !== value) {
+            el.style[key] = value
+        }
+    }
+    return el
+}
