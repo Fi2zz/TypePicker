@@ -197,7 +197,6 @@ export default class DatePicker {
             }
         })
     }
-
     public setData(cb: Function) {
         if (isFunction(cb) && this.canSelectLength <= 1) {
             const result = cb();
@@ -221,7 +220,6 @@ export default class DatePicker {
             }
         }
     }
-
     private createMonths(date: Date) {
         const monthSize =
             this.views == 2
@@ -265,7 +263,6 @@ export default class DatePicker {
             };
         });
     }
-
     private render(data: Array<any>, renderWeekOnTop: boolean) {
         const template = new HTML({
             renderWeekOnTop,
@@ -297,7 +294,6 @@ export default class DatePicker {
             }
         }
     }
-
     private renderYearPanel(visible: boolean) {
         const createPanel = (years) => {
             let title = `${years[0]} - ${years[years.length - 1]}`;
@@ -352,7 +348,6 @@ export default class DatePicker {
         css('.year-panel', {display: visible ? 'block' : 'none'})
         createPanel(years);
     }
-
     private renderMonthPanel(visible: any) {
         let month = this.element.querySelector(".month-panel");
         // css('.extra-panel', {display: 'block'});
@@ -366,8 +361,7 @@ export default class DatePicker {
             css('.year-panel', {display: 'block'});
             css('.month-panel', {display: 'none'});
 
-        })
-
+        });
         for (let i = 0; i < monthNodes.length; i++) {
             let cell = monthNodes[i];
             cell.addEventListener("click", () => {
