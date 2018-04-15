@@ -348,7 +348,9 @@ export default class DatePicker {
                     if (this.disables[formatted]) {
                         invalidDates.push(formatted);
                     } else {
-                        validDates.push(formatted);
+                        if (formatted !== startDate && formatted !== endDate) {
+                            validDates.push(formatted);
+                        }
                     }
                 }
             } else {
@@ -419,8 +421,8 @@ export default class DatePicker {
             let initRange = this.getRange(this.selected);
             if (
                 initRange.invalidDates.length > 0 ||
-                initRange.outOfRange ||
-                (this.doubleSelect && front && front === peek && peek)
+                initRange.validDates.length <= 0 ||
+                initRange.outOfRange
             ) {
                 if (initRange.outOfRange) {
                     warn('setDates', `[${this.selected}] out of limit:${this.limit}`)

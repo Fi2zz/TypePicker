@@ -855,7 +855,9 @@ var DatePicker = (function () {
                         invalidDates.push(formatted);
                     }
                     else {
-                        validDates.push(formatted);
+                        if (formatted !== startDate && formatted !== endDate) {
+                            validDates.push(formatted);
+                        }
                     }
                 }
             }
@@ -910,8 +912,8 @@ var DatePicker = (function () {
             var peek = getPeek(_this.selected);
             var initRange = _this.getRange(_this.selected);
             if (initRange.invalidDates.length > 0 ||
-                initRange.outOfRange ||
-                (_this.doubleSelect && front && front === peek && peek)) {
+                initRange.validDates.length <= 0 ||
+                initRange.outOfRange) {
                 if (initRange.outOfRange) {
                     warn('setDates', "[" + _this.selected + "] out of limit:" + _this.limit);
                 }

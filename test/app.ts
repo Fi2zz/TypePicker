@@ -14,9 +14,11 @@ const formControl = <HTMLInputElement>document.getElementById("date-value");
 const ONE_DATE = (1000 * 3600 * 24);
 
 let initDates = [format(new Date, dateFormat), "2018-4-14"];
+// let initDates = ["2018-4-16","2018-4-16"];
 
 formControl.value = initDates.join(",");
 
+// console.log(initDates)
 const dist = {
     year: date.getFullYear(),
     month: date.getMonth(),
@@ -144,6 +146,7 @@ Observer.$on("open", (result) => {
     pop.style.display = result === true ? "block" : "none";
 });
 
+createDatePicker(CONFIG);
 document.addEventListener("click", e => {
     const target = <HTMLElement>e.target;
     if (target) {
@@ -152,7 +155,7 @@ document.addEventListener("click", e => {
             if (target.tagName.toLowerCase() === "input") {
                 Observer.$emit("open", true);
                 if (!instance) {
-                    instance = createDatePicker(CONFIG);
+                    // instance = createDatePicker(CONFIG);
                     console.log("init")
                 }
             } else if (parent.tagName.toLowerCase() === "body") {
