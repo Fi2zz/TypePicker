@@ -413,8 +413,6 @@ export default class DatePicker {
                 }
                 this.data = data;
             }
-
-
             const front = getFront(this.selected);
             const peek = getPeek(this.selected);
 
