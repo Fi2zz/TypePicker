@@ -38,18 +38,18 @@ DatePicker build with typescript
 
 
 
-| OPTION       | RERUIRED | TYPE               | DESC | DEFAULT VALUE         | 
-|------------|------------ | ------------- |---------------|------------------|
-| el           | YES      | string,HTMLElement | Element or selector to mount DatePcker  |    |                                       
-| startDate    | NO       | Date               | Start date of DatePicker                                     | new Date              |
-| endDate      | NO       | Date               | End date of DatePicker                                       | new Date() + 6 months |
-| doubleSelect | NO       | boolean            | Enable pick two dates                                        | false                 |
-| limit        | NO       | number             | Limitation between two dates while `doubleSelect` is on      |                       |
-| views        | NO       | number,string      | Display views of DatePicker                                  | auto,1,2              |
-| selection    | NO       | number             | Size of dates can be picked ,value must be not less than `2` | 1                     |
-| months       | NO       | array<string>      | Month's name array                                           |                       |
-| week         | NO       | array<string>      | Week's name array                                            |      
-     |
+| OPTION       | RERUIRED | TYPE               | DESC                                     | DEFAULT VALUE                    |
+|--------------|----------|--------------------|------------------------------------------|----------------------------------|
+| el           | YES      | string,HTMLElement | Element or selector to mount DatePcker   |                                  |
+| startDate    | NO       | Date               | Start date of DatePicker                 | new Date                         |
+| endDate      | NO       | Date               | End date of DatePicker                   | new Date() + 6 months            |
+| doubleSelect | NO       | boolean            | Enable pick two dates                    | false                            |
+| limit        | NO       | number             | Limitation between two dates while `doubleSelect` is on |                                  |
+| views        | NO       | number,string      | Display views of DatePicker              | auto,1,2                         |
+| selection    | NO       | number             | Size of dates can be picked ,value must be not less than `2` | 1                                |
+| months       | NO       | array<string>      | Month's name array                       |                                  |
+| week         | NO       | array<string>      | Week's name array                        |                                  |
+| title        | NO       | function           | DatePicker title                         | (year,month)=>`${year} ${month}` |
 
 
 
@@ -140,9 +140,12 @@ DatePicker build with typescript
             format: 'YYYY-M-D',
             doubleSelect: true,
             views: 1,
-            selection:4 // if selection not less than 2, doubleSelect will be disabled,
+            title: (year, month) => `${activeLanguage["months"][month]} ${year}`,
+            week: activeLanguage.days,
+            months:activeLanguage.months,
+            selection:4, // if selection not less than 2, doubleSelect will be disabled,
                         //and `data` event and `setData` will not work
-    });
+        });
 
 
     //do something when datepicker is ready
