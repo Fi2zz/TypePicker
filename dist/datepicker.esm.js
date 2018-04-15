@@ -251,7 +251,7 @@ var HTML = (function () {
     };
     HTML.prototype.createView = function (data, week, renderWeekOnTop) {
         var _this = this;
-        var template = data.map(function (item) { return "\n                <div class=\"calendar-main\">\n                <div class=\"calendar-head\">\n                    <div class=\"calendar-title\"><span class=\"year-name\">" + item.heading.year + "</span> <span class=\"month-name\">" + item.heading.month + "</span></div>\n                </div>\n                " + (!renderWeekOnTop ? _this.createMonthWeek(week) : "") + "\n                <div class=\"calendar-body\">" + _this.createMonthDateTemplate(item.dates).join(" ") + "</div>\n                </div>\n            "; });
+        var template = data.map(function (item) { return "\n                <div class=\"calendar-main\">\n                <div class=\"calendar-head\">\n                    <div class=\"calendar-title\">" + item.heading + "\n                </div>\n                </div>\n                " + (!renderWeekOnTop ? _this.createMonthWeek(week) : "") + "\n                <div class=\"calendar-body\">" + _this.createMonthDateTemplate(item.dates).join(" ") + "</div>\n                </div>\n            "; });
         if (renderWeekOnTop) {
             template.unshift(this.createMonthWeek(week));
         }
@@ -278,11 +278,11 @@ var HTML = (function () {
     return HTML;
 }());
 function yearPanel(data) {
-    return "\n                \n                <div class=\"year-title\">\n                    <span class=\"year-prev\">prev</span>\n                    " + data.title + "\n                    <span class=\"year-next\">next</span>\n                </div>\n                <div class=\"year-list\">\n                    " + data.years.map(function (item) { return '<div class="year-cell" data-year=' + item + '><span>' + item + '</span></div>'; }).join("") + "            </div>";
+    return "\n                \n                <div class=\"year-title\">\n                    <span class=\"year-prev\">prev</span>\n                    " + data.title + "\n                    <span class=\"year-next\">next</span>\n                </div>\n                <div class=\"year-list\">\n                    " + data.years.map(function (item) { return '<div class="year-cell" data-year=' + item + ' ><span>' + item + '</span></div>'; }).join("") + "            </div>";
 }
 function monthPanel(year, months) {
     var tem = months.map(function (item, index) { return "<div class=\"month-cell\" data-year=\"" + year + "\" data-month=\"" + index + "\"><span>" + item + "</span></div>"; }).join("");
-    var yearTitle = "<div class=\"year-title\"><span>prev</span>" + year + "<span class=\"prev\">next</span></div>";
+    var yearTitle = "<div class=\"year-title\"><span>back</span>" + year + "</div>";
     return yearTitle + "<div class=\"month-list\">" + tem + "</div>";
 }
 
@@ -381,37 +381,6 @@ function setNodeActiveState(el, dates, isDouble) {
         }
     }
 }
-var DEFAULT_LANGUAGE = {
-    days: ["日", "一", "二", "三", "四", "五", "六"],
-    months: [
-        "01月",
-        "02月",
-        "03月",
-        "04月",
-        "05月",
-        "06月",
-        "07月",
-        "08月",
-        "09月",
-        "10月",
-        "11月",
-        "12月"
-    ],
-    year: "年"
-};
-
-function isZeroLeading(format) {
-    var splitFormat = format.split(/\W/, 3);
-    splitFormat.shift();
-    var temp = [];
-    for (var i = 0; i < splitFormat.length; i++) {
-        var item = splitFormat[i];
-        if (/\w\w/.test(item)) {
-            temp.push(item);
-        }
-    }
-    return splitFormat.length === temp.length;
-}
 function format(date, format) {
     if (!format) {
         format = "YYYY-MM-DD";
@@ -424,7 +393,6 @@ function format(date, format) {
         D: date.getDate(),
         M: date.getMonth() + 1
     };
-    var zeroLeading = isZeroLeading(format);
     return format.replace(/(?:\b|%)([dDMyY]+)(?:\b|%)/g, function (match, $1) {
         return parts[$1] === undefined ? $1 : parts[$1];
     });
@@ -601,7 +569,7 @@ var Observer = (function () {
     return {
         $on: $on,
         $emit: $emit,
-        $remove: $remove
+        $remove: $remove,
     };
 })();
 
@@ -617,11 +585,12 @@ var DatePicker = (function () {
         this.disables = {};
         this.element = null;
         this.doubleSelect = false;
-        this.language = DEFAULT_LANGUAGE;
         this.canSelectLength = 1;
+        this.title = function (year, month) { return year + "\u5E74 " + month + "\u6708"; };
+        this.week = ["日", "一", "二", "三", "四", "五", "六"];
+        this.months = ["01月", "02月", "03月", "04月", "05月", "06月", "07月", "08月", "09月", "10月", "11月", "12月"];
         this.format = format;
         this.parse = parse;
-        console.time("strt");
         var canInit = this.beforeInit(option);
         if (!canInit) {
             return;
@@ -631,6 +600,9 @@ var DatePicker = (function () {
     }
     DatePicker.prototype.on = function (ev, cb) {
         return Observer.$on(ev, cb);
+    };
+    DatePicker.prototype.emit = function (ev, arg) {
+        return Observer.$emit(ev, arg);
     };
     DatePicker.prototype.setDates = function (dates) {
         if (!isArray(dates))
@@ -655,15 +627,6 @@ var DatePicker = (function () {
             datesList = [isDate(d) ? this.format(d, this.dateFormat) : d];
         }
         this.selected = datesList;
-    };
-    DatePicker.prototype.setLanguage = function (pack) {
-        if (isArray(pack.days) && isArray(pack.months)) {
-            this.language = {
-                days: pack.days,
-                months: pack.months,
-                year: pack.year
-            };
-        }
     };
     DatePicker.prototype.setDisabled = function (param) {
         var _this = this;
@@ -775,20 +738,6 @@ var DatePicker = (function () {
         var monthSize = this.views == 2
             ? 1
             : this.views === "auto" ? diff(this.endDate, this.startDate) : 0;
-        var heading = function (pack, year, month) {
-            if (pack.year) {
-                return {
-                    year: "" + year + pack.year,
-                    month: "" + pack.months[month],
-                };
-            }
-            else {
-                return {
-                    year: "" + year,
-                    month: "" + pack.months[month],
-                };
-            }
-        };
         var template = [];
         for (var i = 0; i <= monthSize; i++) {
             var dat = new Date(date.getFullYear(), date.getMonth() + i, 1);
@@ -817,7 +766,7 @@ var DatePicker = (function () {
                 };
             }
             return {
-                heading: heading(_this.language, item.year, item.month),
+                heading: _this.title(item.year, item.month),
                 dates: dates
             };
         });
@@ -826,7 +775,7 @@ var DatePicker = (function () {
         var template = new HTML({
             renderWeekOnTop: renderWeekOnTop,
             data: data,
-            week: this.language.days
+            week: this.week
         });
         this.element.innerHTML = template[0];
         var prev = this.element.querySelector(".calendar-action-prev");
@@ -857,10 +806,10 @@ var DatePicker = (function () {
     DatePicker.prototype.renderYearPanel = function (visible) {
         var _this = this;
         var createPanel = function (years) {
-            var title = years[0] + "~" + years[years.length - 1];
+            var title = years[0] + " - " + years[years.length - 1];
             yearPanelNode.innerHTML = yearPanel({
                 years: years,
-                title: title
+                title: title,
             });
             var yearPrevAction = _this.element.querySelector(".year-prev");
             var yearNextAction = _this.element.querySelector(".year-next");
@@ -886,7 +835,7 @@ var DatePicker = (function () {
                     _this.date.setFullYear(year);
                     css('.year-panel', { display: 'none' });
                     css('.month-panel', { display: 'block' });
-                    Observer.$emit("renderMonthPanel", true);
+                    _this.renderMonthPanel(true);
                 });
             };
             for (var i = 0; i < yearCell.length; i++) {
@@ -912,19 +861,22 @@ var DatePicker = (function () {
     DatePicker.prototype.renderMonthPanel = function (visible) {
         var _this = this;
         var month = this.element.querySelector(".month-panel");
-        css('.extra-panel', { display: 'block' });
         css('.year-panel', { display: 'none' });
         month.style.display = visible ? 'block' : 'none';
-        month.innerHTML = monthPanel(this.date.getFullYear(), this.language.months);
+        month.innerHTML = monthPanel(this.date.getFullYear(), this.months);
         var monthNodes = month.querySelectorAll('.month-cell');
+        var back = month.querySelector(".year-title span");
+        back.addEventListener("click", function () {
+            css('.year-panel', { display: 'block' });
+            css('.month-panel', { display: 'none' });
+        });
         var _loop_2 = function (i) {
             var cell = monthNodes[i];
             cell.addEventListener("click", function () {
                 var month = parseInt(attr(cell, "data-month"));
-                css('.extra-panel', {
-                    display: 'none'
-                });
+                css('.extra-panel', { display: 'none' });
                 css('.month-panel', { display: 'none' });
+                css('.year-panel', { display: 'none' });
                 _this.date.setMonth(month);
                 Observer.$emit("render", { type: 'select-month' });
             });
@@ -964,7 +916,9 @@ var DatePicker = (function () {
                         invalidDates.push(formatted);
                     }
                     else {
-                        validDates.push(formatted);
+                        if (formatted !== startDate && formatted !== endDate) {
+                            validDates.push(formatted);
+                        }
                     }
                 }
             }
@@ -1015,6 +969,7 @@ var DatePicker = (function () {
                 }
                 _this.data = data;
             }
+            _this.element.className = _this.element.className + " " + (bindData ? 'with-data' : 'no-data');
             var front = getFront(_this.selected);
             var peek = getPeek(_this.selected);
             var initRange = _this.getRange(_this.selected);
@@ -1048,6 +1003,7 @@ var DatePicker = (function () {
                 }
             }
             Observer.$emit("render", { type: "init" });
+            Observer.$emit("ready");
         });
     };
     DatePicker.prototype.beforeInit = function (option) {
@@ -1081,6 +1037,15 @@ var DatePicker = (function () {
         if (isMultiSelect) {
             this.limit = this.canSelectLength;
         }
+        if (option.title && typeof option.title === 'function') {
+            this.title = option.title;
+        }
+        if (option.week instanceof Array && option.week.length === 7) {
+            this.week = option.week;
+        }
+        if (option.months instanceof Array && option.months.length === 12) {
+            this.months = option.months;
+        }
         return true;
     };
     
@@ -1108,6 +1073,9 @@ var DatePicker = (function () {
             }
             if (type === "switch") {
                 _this.date = setDate(_this.date, result.size, "month");
+            }
+            if (type === 'custom' && result.value) {
+                _this.date = setDate(result.value);
             }
             _this.render(_this.createMonths(_this.date), _this.views === "auto");
             Observer.$emit("select", {
@@ -1246,6 +1214,16 @@ var DatePicker = (function () {
             for (var i = 0; i < nodeList.length; i++) {
                 _loop_3(i);
             }
+            if (!_this.startDate && !_this.endDate) {
+                _this.element.querySelector(".calendar-title").addEventListener("click", function () { return Observer.$emit("renderYearPanel", true); });
+            }
+        });
+        Observer.$on("custom", function (result) {
+            if (!result.value) {
+                Observer.$remove("custom");
+                return false;
+            }
+            Observer.$emit("render", result);
         });
     };
     return DatePicker;

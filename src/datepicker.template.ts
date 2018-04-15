@@ -115,6 +115,8 @@ export default class HTML {
 
 
 export function yearPanel(data: any) {
+
+
     return `
                 
                 <div class="year-title">
@@ -123,14 +125,15 @@ export function yearPanel(data: any) {
                     <span class="year-next">next</span>
                 </div>
                 <div class="year-list">
-                    ${data.years.map(item => '<div class="year-cell" data-year=' + item + '><span>' + item + '</span></div>').join("")}            </div>`
+                    ${data.years.map(item => '<div class="year-cell" data-year=' + item + ' ><span>' + item + '</span></div>').join("")}            </div>`
 
 }
 
 
 export function monthPanel(year, months) {
+
     let tem = months.map((item, index) => `<div class="month-cell" data-year="${year}" data-month="${index}"><span>${item}</span></div>`).join("")
-    let yearTitle = `<div class="year-title"><span>prev</span>${year}<span class="prev">next</span></div>`
+    let yearTitle = `<div class="year-title"><span>back</span>${year}</div>`
     return `${yearTitle}<div class="month-list">${tem}</div>`
 }
 

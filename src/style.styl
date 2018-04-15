@@ -131,6 +131,7 @@ brand-disabled = #ccc
   z-index: 100
   .year-panel
     height: 100%
+    display: none
   .year-title
     text-align: center
     font-size: 14px
@@ -163,6 +164,9 @@ brand-disabled = #ccc
       height (100/3)*1%
       position: relative
       cursor pointer
+      &.active
+        background-color brand
+        color brand-default
       span
         position: absolute
         top: 50%
@@ -174,6 +178,15 @@ brand-disabled = #ccc
   .month-panel
     height: 100%
     padding-top: 44px
+    display: none
+    .year-title
+      span
+        position: absolute
+        left: 0
+        top: 0
+        bottom: 0
+        padding-left: 16px
+        cursor pointer
   .month-list
     height: 100%
     .month-cell
@@ -184,8 +197,14 @@ brand-disabled = #ccc
       height (100/3)*1%
       position: relative
       cursor pointer
+      &.active
+        background-color brand
+        color brand-default
       span
         position: absolute
         transform translate(-50%,-50%)
         top: 50%
         left: 50%
+.no-data
+  .calendar-title
+    cursor pointer

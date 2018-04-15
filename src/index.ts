@@ -109,7 +109,6 @@ export default class DatePicker {
         this.selected = datesList;
     }
 
-
     private setDisabled(param: disable) {
         const result = toString({
             dates: `[optional]Expect an array of string or Date got ${toString(
@@ -300,14 +299,13 @@ export default class DatePicker {
     }
 
     private renderYearPanel(visible: boolean) {
-
-
         const createPanel = (years) => {
-            let title = `${years[0]}~${years[years.length - 1]}`;
+            let title = `${years[0]} - ${years[years.length - 1]}`;
             yearPanelNode.innerHTML = yearPanel({
-                years,
-                title
-            });
+                    years,
+                    title,
+                },
+            );
             let yearPrevAction = this.element.querySelector(".year-prev");
             let yearNextAction = this.element.querySelector(".year-next");
             yearPrevAction.addEventListener("click", () => {
@@ -332,13 +330,12 @@ export default class DatePicker {
                     let year = parseInt(attr(cell, "data-year"));
                     this.date.setFullYear(year);
                     css('.year-panel', {display: 'none'});
-                    css('.month-panel', {display: 'block'})
-                    Observer.$emit("renderMonthPanel", true)
+                    css('.month-panel', {display: 'block'});
+                    this.renderMonthPanel(true)
+                    // Observer.$emit("renderMonthPanel", true)
                 })
             }
         };
-
-
         const createYearsList = (date: Date) => {
             let year = date.getFullYear();
             let start = year - 11;
@@ -349,10 +346,8 @@ export default class DatePicker {
             }
             return years;
         };
-
         let years = createYearsList(this.date);
         let yearPanelNode = this.element.querySelector('.year-panel');
-
         css('.extra-panel', {display: visible ? 'block' : 'none'});
         css('.year-panel', {display: visible ? 'block' : 'none'})
         createPanel(years);
@@ -360,19 +355,26 @@ export default class DatePicker {
 
     private renderMonthPanel(visible: any) {
         let month = this.element.querySelector(".month-panel");
-        css('.extra-panel', {display: 'block'});
+        // css('.extra-panel', {display: 'block'});
         css('.year-panel', {display: 'none'});
         month.style.display = visible ? 'block' : 'none';
         month.innerHTML = monthPanel(this.date.getFullYear(), this.months);
         let monthNodes = month.querySelectorAll('.month-cell');
+        let back = month.querySelector(".year-title span");
+
+        back.addEventListener("click", () => {
+            css('.year-panel', {display: 'block'});
+            css('.month-panel', {display: 'none'});
+
+        })
+
         for (let i = 0; i < monthNodes.length; i++) {
             let cell = monthNodes[i];
             cell.addEventListener("click", () => {
                 let month = parseInt(attr(cell, "data-month"));
-                css('.extra-panel', {
-                    display: 'none'
-                });
-                css('.month-panel', {display: 'none'})
+                css('.extra-panel', {display: 'none'});
+                css('.month-panel', {display: 'none'});
+                css('.year-panel', {display: 'none'});
                 this.date.setMonth(month);
                 Observer.$emit("render", {type: 'select-month'})
 
@@ -411,12 +413,13 @@ export default class DatePicker {
                     if (this.disables[formatted]) {
                         invalidDates.push(formatted);
                     } else {
-                        validDates.push(formatted);
+                        if (formatted !== startDate && formatted !== endDate) {
+                            validDates.push(formatted);
+                        }
                     }
                 }
             } else {
                 outOfRange = true;
-
             }
         }
         return {
@@ -475,7 +478,7 @@ export default class DatePicker {
                 this.data = data;
             }
 
-            this.element.className = `${this.element.className} ${bindData ? 'with-data' : 'data-free'}`;
+            this.element.className = `${this.element.className} ${bindData ? 'with-data' : 'no-data'}`;
 
             const front = getFront(this.selected);
             const peek = getPeek(this.selected);
@@ -747,7 +750,6 @@ export default class DatePicker {
                     nodeList
                 });
             }
-
             for (let i = 0; i < nodeList.length; i++) {
                 let node = nodeList[i];
                 node.addEventListener("click", () => {

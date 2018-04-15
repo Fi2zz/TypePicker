@@ -12,14 +12,16 @@ body
   height: 100%
   width: 100%
   background-color #ccc
+
 #app
   position: absolute
-  top:50px
+  top: 50px
   left: 50%
-  transform translate(-50%,0)
+  transform translate(-50%, 0)
   width: 100%
-  #datepicker,.toolbar
+  #datepicker, .toolbar
     background-color #fff
+
 .calendar-action
 
   &-prev, &-next
@@ -32,13 +34,13 @@ body
       width 32px
       height 32px
       border 2px primary solid
-      transform translate(-50%,-50%) rotate(45deg) scale(.5)
+      transform translate(-50%, -50%) rotate(45deg) scale(.5)
       position: absolute
       top: 50%
       left: 50%
     &:hover
       &:before
-        border-color darken(primary,30%)
+        border-color darken(primary, 30%)
   &-disabled
     &:before
       border-color disabled
@@ -64,10 +66,10 @@ body
 
 .start-date
 
-  background darken(darkslategrey,50%) !important
+  background darken(darkslategrey, 50%) !important
 
 .end-date
-  background darken(darkcyan,20%) !important
+  background darken(darkcyan, 20%) !important
 
 .popup
   display: none
@@ -80,7 +82,7 @@ body
   position: relative
   .form-control
     padding-top: 0
-    padding-bottom:0
+    padding-bottom: 0
     line-height 34px
 
   .input-group-addon
@@ -93,18 +95,55 @@ body
 
   .popup
     position: absolute
-    left:50%
+    left: 50%
     top: 36px
-    //border 1px #ccc solid
     border-radius 4px !important
     overflow: hidden
     width: 800px
     transform translateX(-50%)
-    box-shadow rgba(128,128,128,0.09) 0px 2px 10px
-    border-top 1px rgba(128,128,128,.09) solid
+    box-shadow rgba(128, 128, 128, 0.09) 0px 2px 10px
+    border-top 1px rgba(128, 128, 128, .09) solid
 
 .calendar
-  box-shadow rgba(128,128,128,0.09) 0px 2px 10px
-  border-top 1px rgba(128,128,128,.09) solid
-  width 100%
+  box-shadow rgba(128, 128, 128, 0.09) 0px 2px 10px
+  border-top 1px rgba(128, 128, 128, .09) solid
+  width: 100%
 
+.no-data
+  width 343px
+  .calendar-date-cell
+    height: 49px
+    min-height: 0
+    position: relative
+    background: none!important
+
+    .placeholder
+      display: none
+    .date
+      position: absolute
+      top: 50%
+      left: 50%
+      transform translate(-50%, -50%)
+      padding-left: 0
+      padding-top: 0
+      margin: 0
+      width: 40px
+      height: 40px
+      border-radius 50%
+      line-height 40px
+
+    :not(.disabled)
+      .date
+        &:hover
+          background-color #efefef
+
+    &.start-date
+      .date
+        background-color #06a2d0
+    &.end-date
+      .date
+        background-color lightseagreen
+    &.in-range
+      .date
+        background-color #efefef
+        color #999
