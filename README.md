@@ -145,7 +145,27 @@ DatePicker build with typescript
     });
 
 
-
+    //do something when datepicker is ready
+    app.on("ready",()=>{
+       
+        //currently,we support `custom` event 
+       
+       //`custom`event payload accepts `{type,value}`
+       // currently 
+       // `type` support string `custom`
+       // `value` support <Date>
+       //eg:render month name  outside datepicker
+       let calendarHeaderTd = document.querySelectorAll("#calendar-header td");
+        Array.prototype.slice.call(calendarHeaderTd).forEach(item => {
+                item.addEventListener("click", () => {
+                let data = item.dataset;
+                app.emit("custom", {
+                            type: "custom",
+                            value: new Date(parseInt(data.year), parseInt(data.month) - 1, currDate.getDate())
+                        })
+                })
+        })
+    });
 
     //`update` event fired by click on date cell and DatePicker init
     app.on("update", (result) => {
