@@ -70,7 +70,8 @@ export default class HTML {
             (item: any) => `
                 <div class="calendar-main">
                 <div class="calendar-head">
-                    <div class="calendar-title"><span class="year-name">${item.heading.year}</span> <span class="month-name">${item.heading.month}</span></div>
+                    <div class="calendar-title">${item.heading}
+                </div>
                 </div>
                 ${!renderWeekOnTop ? this.createMonthWeek(week) : ""}
                 <div class="calendar-body">${this.createMonthDateTemplate(

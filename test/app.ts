@@ -11,13 +11,12 @@ function getUTC(date: Date) {
     return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
 }
 
-console.log(DatePicker)
 // DatePicker();
 
 const dateFormat = "YYYY-M-D";
 const activeLanguageCode: string = "en-us";
 const formControl = <HTMLInputElement>document.getElementById("date-value");
-
+const activeLanguage = language[activeLanguageCode]
 function createDatePicker(create: boolean = true, selected?: Array<any>) {
     const dist = {
         year: date.getFullYear(),
@@ -26,20 +25,23 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
     };
     const currDate = new Date(dist.year, dist.month, dist.date);
     const startDate = new Date(dist.year, dist.month, dist.date);
-    const endDate = new Date(dist.year+10, dist.month + 6, dist.date);
-
+    const endDate = new Date(dist.year + 10, dist.month + 6, dist.date);
     let app: any = create
         ? new DatePicker({
             el: "#datepicker",// document.getElementById("datepicker"),
-            startDate,
-            endDate,
+            // startDate,
+            // endDate,
             limit: 7,
             format: dateFormat,
             doubleSelect: true,
             // selection: 5,
-            views: 1 //"auto"
+            views: 1, //"auto",
+            title: (year, month) => `${activeLanguage["months"][month]} ${year}`,
+            week: activeLanguage.days,
+            months:activeLanguage.months
         })
-        : null;
+        :
+        null;
 
     if (app) {
         console.log(app);
@@ -82,10 +84,22 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
                     }
                 }
             });
+            app.on("ready", () => {
+
+                let calendarHeaderTd = document.querySelectorAll("#calendar-header td");
+                Array.prototype.slice.call(calendarHeaderTd).forEach(item => {
+                    item.addEventListener("click", () => {
+                        let data = item.dataset;
+                        app.emit("custom", {
+                            type: "custom",
+                            value: new Date(parseInt(data.year), parseInt(data.month) - 1, currDate.getDate())
+                        })
+                    })
+                })
+            });
             if (selected.length >= 2) {
                 app.setDates(selected);
             }
-
             app.setDisabled({
                 dates: [
                     "2018-2-18",
@@ -108,36 +122,17 @@ function createDatePicker(create: boolean = true, selected?: Array<any>) {
                 // to: new Date(2018, 2, 15),
                 days: [2]
             });
-
             const bindData = !true;
             if (bindData) {
                 app.setData(() => {
-                    let currDate = new Date();
                     Object.keys(source).forEach(date => {
-                        let item = app.parse(date);
-
-                        // console.log({
-                        //
-                        //
-                        //     date:app.parse(date),//,getUTC(app.parse(date)),
-                        //
-                        //     UTCNOW:getUTC(currDate)
-                        //
-                        // });
-
-                        // console.log(diff(app.parse(date), startDate, "days"),date,currDate)
-
                         if (diff(app.parse(date), startDate, "days") < 0) {
-                            // console.log(date,currDate.toDateString())
-
                             delete source[date];
                         }
                     });
                     return source;
                 });
             }
-
-            app.setLanguage(language[activeLanguageCode]);
         }
     }
     return app;
@@ -172,3 +167,5 @@ function init(document: Document) {
 }
 
 init(document);
+
+

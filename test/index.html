@@ -2,24 +2,50 @@
 <html>
 
 <head>
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,shrink-to-fit=no">
+    <meta name="viewport"
+          content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,shrink-to-fit=no">
     <meta charset="utf-8">
     <title>DatePicker</title>
 </head>
 
 <body>
-    <div id="app">
-        <div class="input-group toolbar" >
-            <span class="input-group-addon ">选择日期</span>
-            <input class="form-control" id="date-value" type="text" readonly>
-            <div class="popup">
+<style>
 
-            </div>
+    table {
+        width: 768px;
+        margin: auto;
+    }
+
+    table td {
+        height: 44px;
+        line-height: 44px;
+        text-align: center;
+        background-color: #fff;
+    }
+
+
+</style>
+
+
+<div id="app">
+    <div class="input-group toolbar">
+        <span class="input-group-addon ">选择日期</span>
+        <input class="form-control" id="date-value" type="text" readonly/>
+        <div class="popup">
+            <table id="calendar-header">
+                <tr>
+                    <!--<td data-year="2018" data-month="03">2018-03</td>-->
+                    <td data-year="2018" data-month="04">2018-04</td>
+                    <td data-year="2018" data-month="05">2018-05</td>
+                    <td data-year="2018" data-month="06">2018-06</td>
+                    <td data-year="2018" data-month="07">2018-07</td>
+                </tr>
+            </table>
+            <div id=datepicker class="calendar-container"></div>
+
         </div>
-
-        <div id=datepicker class="calendar-container" calendar></div>
-
-
-
     </div>
+
+
+</div>
 </body>

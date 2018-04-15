@@ -55,6 +55,8 @@ DatePicker build with typescript
 
     when `selection` is greater than 2, `bindData` and `doubleSelect` will be set to `false`,
     and `option.limit` will be set the same as `selection`
+    
+    if you need to display year panel or month panel by click year/month,please remove `setData`
 
 ## API
 
@@ -97,6 +99,12 @@ DatePicker build with typescript
    //eg: datePicker.on("event",(result)=>{
                 //your logic
    //    })
+   
+   emit(event:string,payload)
+   //Event listener
+   //eg: datePicker.emit("event",payload)
+   
+   
 ```
 
 ## USAGE
@@ -141,7 +149,27 @@ DatePicker build with typescript
                         //and `data` event and `setData` will not work
     });
 
-
+    //do something when datepicker is ready
+    app.on("ready",()=>{
+       
+        //currently,we support `custom` event 
+       
+       //`custom`event payload accepts `{type,value}`
+       // currently 
+       // `type` support string `custom`
+       // `value` support <Date>
+       //eg:render month name  outside datepicker
+       let calendarHeaderTd = document.querySelectorAll("#calendar-header td");
+        Array.prototype.slice.call(calendarHeaderTd).forEach(item => {
+                item.addEventListener("click", () => {
+                let data = item.dataset;
+                app.emit("custom", {
+                            type: "custom",
+                            value: new Date(parseInt(data.year), parseInt(data.month) - 1, currDate.getDate())
+                        })
+                })
+        })
+    });
 
 
     //`update` event fired by click on date cell and DatePicker init

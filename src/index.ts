@@ -7,6 +7,9 @@ interface datePickerOptions {
     startDate?: Date;
     endDate?: Date;
     selection?: number;
+    title?: Function,
+    week?: Array<string>,
+    months?: Array<string>,
 }
 
 interface disable {
@@ -24,7 +27,6 @@ import {
     isDate,
     isEmpty,
     isArray,
-    isNumber,
     isUndefined,
     isPlainObject,
     isBoolean,
@@ -49,7 +51,6 @@ import {
     parseEl,
     setNodeActiveState,
     setNodeRangeState,
-    DEFAULT_LANGUAGE,
     Observer,
     parse,
     format, setDate
@@ -68,12 +69,17 @@ export default class DatePicker {
     private disables: any = {};
     private element: any = null;
     private doubleSelect: boolean = false;
-    private language: any = DEFAULT_LANGUAGE;
     private canSelectLength: number = 1;
-
+    private title: Function = (year, month) => `${year}年 ${month}月`;
+    private week: Array<string> = ["日", "一", "二", "三", "四", "五", "六"];
+    private months: Array<string> = ["01月", "02月", "03月", "04月", "05月", "06月", "07月", "08月", "09月", "10月", "11月", "12月"];
 
     public on(ev: string, cb: Function) {
         return Observer.$on(ev, cb);
+    }
+
+    public emit(ev: string, arg: any) {
+        return Observer.$emit(ev, arg);
     }
 
     public format = format;
@@ -103,15 +109,6 @@ export default class DatePicker {
         this.selected = datesList;
     }
 
-    private setLanguage(pack?: any) {
-        if (isArray(pack.days) && isArray(pack.months)) {
-            this.language = {
-                days: pack.days,
-                months: pack.months,
-                year: pack.year
-            };
-        }
-    }
 
     private setDisabled(param: disable) {
         const result = toString({
@@ -231,21 +228,6 @@ export default class DatePicker {
             this.views == 2
                 ? 1
                 : this.views === "auto" ? diff(this.endDate, this.startDate) : 0;
-        const heading = function (pack, year, month) {
-            if (pack.year) {
-                return {
-                    year: `${year}${pack.year}`,
-                    month: `${pack.months[month]}`,
-
-                };
-            } else {
-                return {
-                    year: `${year}`,
-                    month: `${pack.months[month]}`,
-
-                };
-            }
-        };
         const template = [];
         for (let i = 0; i <= monthSize; i++) {
             let dat = new Date(date.getFullYear(), date.getMonth() + i, 1);
@@ -256,6 +238,7 @@ export default class DatePicker {
                 month: dat.getMonth()
             });
         }
+
         return template.map((item: any) => {
             let dates = {};
             let firstDay = new Date(item.year, item.month, 1);
@@ -278,16 +261,17 @@ export default class DatePicker {
                 };
             }
             return {
-                heading: heading(this.language, item.year, item.month),
+                heading: this.title(item.year, item.month),
                 dates
             };
         });
     }
+
     private render(data: Array<any>, renderWeekOnTop: boolean) {
         const template = new HTML({
             renderWeekOnTop,
             data,
-            week: this.language.days
+            week: this.week
         });
         this.element.innerHTML = template[0];
         //日期切换
@@ -376,12 +360,10 @@ export default class DatePicker {
 
     private renderMonthPanel(visible: any) {
         let month = this.element.querySelector(".month-panel");
-
-        css('.extra-panel', {display: 'block'})
-        css('.year-panel', {display: 'none'})
+        css('.extra-panel', {display: 'block'});
+        css('.year-panel', {display: 'none'});
         month.style.display = visible ? 'block' : 'none';
-        month.innerHTML = monthPanel(this.date.getFullYear(), this.language.months);
-
+        month.innerHTML = monthPanel(this.date.getFullYear(), this.months);
         let monthNodes = month.querySelectorAll('.month-cell');
         for (let i = 0; i < monthNodes.length; i++) {
             let cell = monthNodes[i];
@@ -391,7 +373,7 @@ export default class DatePicker {
                     display: 'none'
                 });
                 css('.month-panel', {display: 'none'})
-                this.date.setMonth(month)
+                this.date.setMonth(month);
                 Observer.$emit("render", {type: 'select-month'})
 
             })
@@ -493,6 +475,7 @@ export default class DatePicker {
                 this.data = data;
             }
 
+            this.element.className = `${this.element.className} ${bindData ? 'with-data' : 'data-free'}`;
 
             const front = getFront(this.selected);
             const peek = getPeek(this.selected);
@@ -533,10 +516,8 @@ export default class DatePicker {
                     }
                 }
             }
-
-
             Observer.$emit("render", {type: "init"});
-
+            Observer.$emit("ready")
         });
     }
 
@@ -575,6 +556,15 @@ export default class DatePicker {
         if (isMultiSelect) {
             this.limit = this.canSelectLength;
         }
+        if (option.title && typeof option.title === 'function') {
+            this.title = option.title;
+        }
+        if (option.week instanceof Array && option.week.length === 7) {
+            this.week = option.week;
+        }
+        if (option.months instanceof Array && option.months.length === 12) {
+            this.months = option.months;
+        }
         return true
     };
 
@@ -598,15 +588,16 @@ export default class DatePicker {
         });
         Observer.$on("render", (result: any) => {
             let {type} = result;
-
             if (type !== 'init') {
                 this.initDisabled(!isEmpty(this.data));
             }
             if (type === "switch") {
                 this.date = setDate(this.date, result.size, "month");
             }
+            if (type === 'custom' && result.value) {
+                this.date = setDate(result.value)
+            }
             this.render(this.createMonths(this.date), this.views === "auto");
-
             //初始化的时候的选中状态
             Observer.$emit("select", {
                 type,
@@ -768,17 +759,22 @@ export default class DatePicker {
                 })
             }
 
-
-            //打開年份列表
-            // this.element.querySelector(".year-name").addEventListener("click", () => Observer.$emit("renderYearPanel", true));
-            //打開月份列表
-            // this.element.querySelector(".month-name").addEventListener("click", () => Observer.$emit("renderMonthPanel", true));
+            //无开始和结束日期，则可以打开年份和月份面板
+            if (!this.startDate && !this.endDate) {
+                //打開年份列表
+                this.element.querySelector(".calendar-title").addEventListener("click", () => Observer.$emit("renderYearPanel", true));
+            }
         });
+        Observer.$on("custom", (result: any) => {
+            if (!result.value) {
+                Observer.$remove("custom")
+                return false;
+            }
+            Observer.$emit("render", result);
+        })
     }
 
     constructor(option: datePickerOptions) {
-
-        console.time("strt")
         let canInit = this.beforeInit(option);
         if (!canInit) {
             return;
