@@ -7,9 +7,6 @@ interface datePickerOptions {
     startDate?: Date;
     endDate?: Date;
     selection?: number;
-    title?: Function,
-    week?: Array<string>,
-    months?: Array<string>,
 }
 
 interface disable {
@@ -53,7 +50,6 @@ import {
     parse,
     format, setDate,
     diff,
-
     getDates,
 
 } from "./datepicker.helpers";
@@ -72,9 +68,12 @@ export default class DatePicker {
     private element: any = null;
     private doubleSelect: boolean = false;
     private canSelectLength: number = 1;
-    private title: Function = (year, month) => `${year}年 ${month}月`;
-    private week: Array<string> = ["日", "一", "二", "三", "四", "五", "六"];
-    private months: Array<string> = ["01月", "02月", "03月", "04月", "05月", "06月", "07月", "08月", "09月", "10月", "11月", "12月"];
+
+    private language: any = {
+        title: <Function>(year, month) => `${year}年 ${month}月`,
+        week: <Array<string>>  ["日", "一", "二", "三", "四", "五", "六"],
+        months: <Array<string>>  ["01月", "02月", "03月", "04月", "05月", "06月", "07月", "08月", "09月", "10月", "11月", "12月"]
+    };
 
     public on(ev: string, cb: Function) {
         return Observer.$on(ev, cb);
@@ -85,7 +84,7 @@ export default class DatePicker {
     }
 
     public format = format;
-    public parse = parse
+    public parse = parse;
 
     public setDates(dates: Array<any>) {
         if (!isArray(dates)) return;
@@ -200,6 +199,18 @@ export default class DatePicker {
         })
     }
 
+    public setLanguage(pack: any) {
+
+
+        if (isArray(pack.days) && isArray(pack.months) && typeof pack.title === 'function') {
+            this.language = {
+                week: pack.days,
+                months: pack.months,
+                title: pack.title
+            }
+        }
+    }
+
     public setData(cb: Function) {
         if (isFunction(cb) && this.canSelectLength <= 1) {
             const result = cb();
@@ -262,7 +273,7 @@ export default class DatePicker {
                 };
             }
             return {
-                heading: this.title(item.year, item.month),
+                heading: this.language.title(item.year, item.month),
                 dates
             };
         });
@@ -272,7 +283,7 @@ export default class DatePicker {
         const template = new HTML({
             renderWeekOnTop,
             data,
-            week: this.week
+            week: this.language.week
         });
         this.element.innerHTML = template[0];
         //日期切换
@@ -360,7 +371,7 @@ export default class DatePicker {
         // css('.extra-panel', {display: 'block'});
         css('.year-panel', {display: 'none'});
         month.style.display = visible ? 'block' : 'none';
-        month.innerHTML = monthPanel(this.date.getFullYear(), this.months);
+        month.innerHTML = monthPanel(this.date.getFullYear(), this.language.months);
         let monthNodes = month.querySelectorAll('.month-cell');
         let back = month.querySelector(".year-title span");
 
@@ -378,7 +389,6 @@ export default class DatePicker {
                 css('.year-panel', {display: 'none'});
                 this.date.setMonth(month);
                 Observer.$emit("render", {type: 'select-month'})
-
             })
         }
     }
@@ -484,11 +494,16 @@ export default class DatePicker {
             const peek = getPeek(this.selected);
 
             let initRange = this.getRange(this.selected);
-            if (
-                initRange.invalidDates.length > 0 ||
-                initRange.outOfRange ||
-                initRange.validDates.length <= 0
-            ) {
+
+            let canInitWithSelectedDatesWhenDataBinding = (range: any, bindData) => {
+                return (
+                    range.invalidDates.length > 0 ||
+                    range.outOfRange ||
+                    range.validDates.length <= 0
+                ) && bindData
+            };
+
+            if (canInitWithSelectedDatesWhenDataBinding(initRange, bindData) || initRange.outOfRange) {
                 if (initRange.outOfRange) {
                     warn('setDates', `[${this.selected}] out of limit:${this.limit}`)
                 }
@@ -559,15 +574,8 @@ export default class DatePicker {
         if (isMultiSelect) {
             this.limit = this.canSelectLength;
         }
-        if (option.title && typeof option.title === 'function') {
-            this.title = option.title;
-        }
-        if (option.week instanceof Array && option.week.length === 7) {
-            this.week = option.week;
-        }
-        if (option.months instanceof Array && option.months.length === 12) {
-            this.months = option.months;
-        }
+
+
         return true
     };
 
@@ -783,8 +791,6 @@ export default class DatePicker {
         }
         this.bindListener();
         this.init();
-
-
     }
 }
 
