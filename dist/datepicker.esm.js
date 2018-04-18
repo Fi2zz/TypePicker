@@ -1,5 +1,5 @@
   /*
-   *  TypePicker v1.6.9
+   *  TypePicker v1.7.1
    *  Fi2zz / wenjingbiao@outlook.com
    *  https://github.com/Fi2zz/datepicker
    *  (c) 2017-2018, wenjingbiao@outlook.com
@@ -31,7 +31,9 @@ function _toString(object) {
 function toString(val) {
     return val == null
         ? ""
-        : typeof val === "object" ? JSON.stringify(val, null, 2) : String(val);
+        : typeof val === "object"
+            ? JSON.stringify(val, null, 2)
+            : String(val);
 }
 function isUndefined(v) {
     return v === undefined || v === null;
@@ -59,7 +61,10 @@ function isFunction(object) {
     return _toString(object) === "[object Function]";
 }
 function hasClass(ele, className) {
-    return new RegExp('(\\s|^)' + className + '(\\s|$)').test(ele.className);
+    if (!ele) {
+        return false;
+    }
+    return new RegExp("(\\s|^)" + className + "(\\s|$)").test(ele.className);
 }
 function addClass(ele, className) {
     if (hasClass(ele, className))
@@ -159,13 +164,13 @@ function simpleListToMap(list) {
     return map;
 }
 function css(el, styles) {
-    if (typeof el === 'string') {
+    if (typeof el === "string") {
         el = document.querySelector(el);
     }
     for (var key in styles) {
         var value = styles[key];
         var curr = getComputedStyle(el, null).getPropertyValue(key);
-        if (!curr || curr && curr !== value) {
+        if (!curr || (curr && curr !== value)) {
             el.style[key] = value;
         }
     }
@@ -576,6 +581,7 @@ function getDates(year, month) {
 
 var DatePicker = (function () {
     function DatePicker(option) {
+        this.dateFormat = null;
         this.limit = 1;
         this.views = 1;
         this.date = new Date();
@@ -590,7 +596,20 @@ var DatePicker = (function () {
         this.language = {
             title: function (year, month) { return year + "\u5E74 " + month + "\u6708"; },
             week: ["日", "一", "二", "三", "四", "五", "六"],
-            months: ["01月", "02月", "03月", "04月", "05月", "06月", "07月", "08月", "09月", "10月", "11月", "12月"]
+            months: [
+                "01月",
+                "02月",
+                "03月",
+                "04月",
+                "05月",
+                "06月",
+                "07月",
+                "08月",
+                "09月",
+                "10月",
+                "11月",
+                "12月"
+            ]
         };
         this.format = format;
         this.parse = parse;
@@ -618,7 +637,9 @@ var DatePicker = (function () {
             }
             start = dates[0];
             end = dates[dates.length - 1];
-            var startDate = isDate(start) ? start : this.parse(start, this.dateFormat);
+            var startDate = isDate(start)
+                ? start
+                : this.parse(start, this.dateFormat);
             var endDate = isDate(end) ? end : this.parse(end, this.dateFormat);
             datesList = [this.format(startDate, this.dateFormat)];
             if (start !== end) {
@@ -718,7 +739,9 @@ var DatePicker = (function () {
         });
     };
     DatePicker.prototype.setLanguage = function (pack) {
-        if (isArray(pack.days) && isArray(pack.months) && typeof pack.title === 'function') {
+        if (isArray(pack.days) &&
+            isArray(pack.months) &&
+            typeof pack.title === "function") {
             this.language = {
                 week: pack.days,
                 months: pack.months,
@@ -749,7 +772,9 @@ var DatePicker = (function () {
         var _this = this;
         var monthSize = this.views == 2
             ? 1
-            : this.views === "auto" ? diff(this.endDate, this.startDate) : 0;
+            : this.views === "auto"
+                ? diff(this.endDate, this.startDate)
+                : 0;
         var template = [];
         for (var i = 0; i <= monthSize; i++) {
             var dat = new Date(date.getFullYear(), date.getMonth() + i, 1);
@@ -821,7 +846,7 @@ var DatePicker = (function () {
             var title = years[0] + " - " + years[years.length - 1];
             yearPanelNode.innerHTML = yearPanel({
                 years: years,
-                title: title,
+                title: title
             });
             var yearPrevAction = _this.element.querySelector(".year-prev");
             var yearNextAction = _this.element.querySelector(".year-next");
@@ -845,8 +870,8 @@ var DatePicker = (function () {
                 cell.addEventListener("click", function () {
                     var year = parseInt(attr(cell, "data-year"));
                     _this.date.setFullYear(year);
-                    css('.year-panel', { display: 'none' });
-                    css('.month-panel', { display: 'block' });
+                    css(".year-panel", { display: "none" });
+                    css(".month-panel", { display: "block" });
                     _this.renderMonthPanel(true);
                 });
             };
@@ -865,32 +890,32 @@ var DatePicker = (function () {
             return years;
         };
         var years = createYearsList(this.date);
-        var yearPanelNode = this.element.querySelector('.year-panel');
-        css('.extra-panel', { display: visible ? 'block' : 'none' });
-        css('.year-panel', { display: visible ? 'block' : 'none' });
+        var yearPanelNode = this.element.querySelector(".year-panel");
+        css(".extra-panel", { display: visible ? "block" : "none" });
+        css(".year-panel", { display: visible ? "block" : "none" });
         createPanel(years);
     };
     DatePicker.prototype.renderMonthPanel = function (visible) {
         var _this = this;
         var month = this.element.querySelector(".month-panel");
-        css('.year-panel', { display: 'none' });
-        month.style.display = visible ? 'block' : 'none';
+        css(".year-panel", { display: "none" });
+        month.style.display = visible ? "block" : "none";
         month.innerHTML = monthPanel(this.date.getFullYear(), this.language.months);
-        var monthNodes = month.querySelectorAll('.month-cell');
+        var monthNodes = month.querySelectorAll(".month-cell");
         var back = month.querySelector(".year-title span");
         back.addEventListener("click", function () {
-            css('.year-panel', { display: 'block' });
-            css('.month-panel', { display: 'none' });
+            css(".year-panel", { display: "block" });
+            css(".month-panel", { display: "none" });
         });
         var _loop_2 = function (i) {
             var cell = monthNodes[i];
             cell.addEventListener("click", function () {
                 var month = parseInt(attr(cell, "data-month"));
-                css('.extra-panel', { display: 'none' });
-                css('.month-panel', { display: 'none' });
-                css('.year-panel', { display: 'none' });
+                css(".extra-panel", { display: "none" });
+                css(".month-panel", { display: "none" });
+                css(".year-panel", { display: "none" });
                 _this.date.setMonth(month);
-                Observer.$emit("render", { type: 'select-month' });
+                Observer.$emit("render", { type: "select-month" });
             });
         };
         for (var i = 0; i < monthNodes.length; i++) {
@@ -981,18 +1006,20 @@ var DatePicker = (function () {
                 }
                 _this.data = data;
             }
-            _this.element.className = _this.element.className + " " + (bindData ? 'with-data' : 'no-data');
+            _this.element.className = _this.element.className + " " + (bindData ? "with-data" : "no-data");
             var front = getFront(_this.selected);
             var peek = getPeek(_this.selected);
             var initRange = _this.getRange(_this.selected);
             var canInitWithSelectedDatesWhenDataBinding = function (range, bindData) {
-                return (range.invalidDates.length > 0 ||
+                return ((range.invalidDates.length > 0 ||
                     range.outOfRange ||
-                    range.validDates.length <= 0) && bindData;
+                    range.validDates.length <= 0) &&
+                    bindData);
             };
-            if (canInitWithSelectedDatesWhenDataBinding(initRange, bindData) || initRange.outOfRange) {
+            if (canInitWithSelectedDatesWhenDataBinding(initRange, bindData) ||
+                initRange.outOfRange) {
                 if (initRange.outOfRange) {
-                    warn('setDates', "[" + _this.selected + "] out of limit:" + _this.limit);
+                    warn("setDates", "[" + _this.selected + "] out of limit:" + _this.limit);
                 }
                 else {
                     warn("setDates", "Illegal dates [" + _this.selected + "]");
@@ -1047,14 +1074,15 @@ var DatePicker = (function () {
             this.endDate = option.endDate;
         }
         this.limit = this.doubleSelect
-            ? !isNaN(option.limit) ? option.limit : 2
+            ? !isNaN(option.limit)
+                ? option.limit
+                : 2
             : 1;
         if (isMultiSelect) {
             this.limit = this.canSelectLength;
         }
         return true;
     };
-    
     DatePicker.prototype.bindListener = function () {
         var _this = this;
         Observer.$on("select", function (result) {
@@ -1074,13 +1102,13 @@ var DatePicker = (function () {
         });
         Observer.$on("render", function (result) {
             var type = result.type;
-            if (type !== 'init') {
+            if (type !== "init") {
                 _this.initDisabled(!isEmpty(_this.data));
             }
             if (type === "switch") {
                 _this.date = setDate(_this.date, result.size, "month");
             }
-            if (type === 'custom' && result.value) {
+            if (type === "custom" && result.value) {
                 _this.date = setDate(result.value);
             }
             _this.render(_this.createMonths(_this.date), _this.views === "auto");
@@ -1090,7 +1118,9 @@ var DatePicker = (function () {
             });
             Observer.$emit("rendered");
         });
-        Observer.$on("renderYearPanel", function (result) { return _this.renderYearPanel(result); });
+        Observer.$on("renderYearPanel", function (result) {
+            return _this.renderYearPanel(result);
+        });
         Observer.$on("renderMonthPanel", function (result) { return _this.renderMonthPanel(result); });
         Observer.$on("rendered", function () {
             var bindData = !isEmpty(_this.data) && _this.canSelectLength < 2;
@@ -1221,7 +1251,11 @@ var DatePicker = (function () {
                 _loop_3(i);
             }
             if (!_this.startDate && !_this.endDate) {
-                _this.element.querySelector(".calendar-title").addEventListener("click", function () { return Observer.$emit("renderYearPanel", true); });
+                _this.element
+                    .querySelector(".calendar-title")
+                    .addEventListener("click", function () {
+                    return Observer.$emit("renderYearPanel", true);
+                });
             }
         });
         Observer.$on("custom", function (result) {

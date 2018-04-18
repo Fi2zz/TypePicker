@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,shrink-to-fit=no">
+    <meta charset="utf-8">
+    <title>DatePicker</title>
+    <link rel="stylesheet" type="text/css" href="../dist/style.css">
+</head>
+
+<body>
+    <div id="app">
+        <div class="input-group toolbar">
+            <span class="input-group-addon ">选择日期</span>
+            <input class="form-control" id="date-value" type="text" readonly>
+            <div class="popup">
+                <div id=datepicker class="calendar-container" calendar></div>
+
+            </div>
+        </div>
+
+    </div>
+
+
+    <script type="text/javascript" src="../dist/datepicker.js"></script>
+
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+
+            new DatePicker({
+                el: "#datepicker",
+                format: "YYYY-M-D",
+                doubleSelect: true
+            })
+
+
+
+        })
+    </script>
+
+</body>
