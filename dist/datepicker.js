@@ -1,5 +1,5 @@
   /*
-   *  TypePicker v1.7.1
+   *  TypePicker v1.7.2
    *  Fi2zz / wenjingbiao@outlook.com
    *  https://github.com/Fi2zz/datepicker
    *  (c) 2017-2018, wenjingbiao@outlook.com
@@ -73,12 +73,12 @@ function hasClass(ele, className) {
     return new RegExp("(\\s|^)" + className + "(\\s|$)").test(ele.className);
 }
 function addClass(ele, className) {
-    if (hasClass(ele, className))
+    if (!ele || hasClass(ele, className))
         return;
     ele.className += (ele.className ? " " : "") + className;
 }
 function removeClass(ele, className) {
-    if (!hasClass(ele, className))
+    if (!ele || !hasClass(ele, className))
         return;
     ele.className = ele.className.replace(new RegExp("\\s*\\b" + className + "\\b", "g"), "");
 }
@@ -1089,6 +1089,17 @@ var DatePicker = (function () {
         }
         return true;
     };
+    DatePicker.prototype.giveMeTheWheel = function (callback) {
+        if (callback && typeof callback === 'function') {
+            Object.defineProperty(this, "driver", {
+                configurable: true,
+                enumerable: true,
+                writable: true,
+                value: callback
+            });
+        }
+    };
+    
     DatePicker.prototype.bindListener = function () {
         var _this = this;
         Observer.$on("select", function (result) {
@@ -1103,6 +1114,7 @@ var DatePicker = (function () {
                 Observer.$emit("update", result);
             }
             var currRange = _this.getRange(value);
+            console.log(currRange);
             setNodeRangeState(_this.element, currRange.validDates, _this.doubleSelect);
             setNodeActiveState(_this.element, value, _this.doubleSelect);
         });
@@ -1246,15 +1258,20 @@ var DatePicker = (function () {
                     nodeList: nodeList
                 });
             }
-            var _loop_3 = function (i) {
-                var node = nodeList[i];
-                node.addEventListener("click", function () {
-                    var date = attr(node, "data-date");
-                    Observer.$emit("select", _this.canSelectLength > 2 ? multiPick(date) : pickDate(date));
-                });
-            };
-            for (var i = 0; i < nodeList.length; i++) {
-                _loop_3(i);
+            if (isUndefined(_this["driver"])) {
+                var _loop_3 = function (i) {
+                    var node = nodeList[i];
+                    node.addEventListener("click", function () {
+                        var date = attr(node, "data-date");
+                        Observer.$emit("select", _this.canSelectLength > 2 ? multiPick(date) : pickDate(date));
+                    });
+                };
+                for (var i = 0; i < nodeList.length; i++) {
+                    _loop_3(i);
+                }
+            }
+            else {
+                _this["driver"](nodeList, _this);
             }
             if (!_this.startDate && !_this.endDate) {
                 _this.element

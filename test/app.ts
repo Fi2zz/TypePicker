@@ -121,7 +121,23 @@ function createDatePicker(selected?: Array<any>) {
         // to: new Date(2018, 2, 15),
         days: [2]
     });
-    const bindData = !true;
+    app.giveMeTheWheel((nodeList, app) => {
+
+        Array.prototype.slice.call(nodeList).forEach(item => {
+
+            item.addEventListener("click", function () {
+                let value = item.getAttribute("data-date");
+
+                if (app.selected.length < 2) {
+                    app.selected.push(value);
+                    app.emit("select", {type: "selected", value: app.selected})
+
+                }
+
+            })
+        });
+    });
+    const bindData = true;
     if (bindData) {
         app.setData(() => {
             Object.keys(source).forEach(date => {
