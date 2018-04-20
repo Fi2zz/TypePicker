@@ -41,6 +41,7 @@ DatePicker build with typescript
 | OPTION       | RERUIRED | TYPE               | DESC                                     | DEFAULT VALUE                    |
 |--------------|----------|--------------------|------------------------------------------|----------------------------------|
 | el           | YES      | string,HTMLElement | Element or selector to mount DatePcker   |                                  |
+| format       | YES      | string             | Date string format                       | null                 |
 | startDate    | NO       | Date               | Start date of DatePicker                 | new Date                         |
 | endDate      | NO       | Date               | End date of DatePicker                   | new Date() + 6 months            |
 | doubleSelect | NO       | boolean            | Enable pick two dates                    | false                            |
