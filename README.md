@@ -24,7 +24,7 @@ DatePicker build with typescript
 
 ## FEATURES
 
-1.  Base on event
+1.  Base on observer
 2.  Easy to display data on html element by using `data` event
 3.  Support double views,flat view and single view
 4.  Disabled date can be selected as end date while using `setData` function
@@ -138,9 +138,6 @@ DatePicker build with typescript
             format: 'YYYY-M-D',
             doubleSelect: true,
             views: 1,
-            title: (year, month) => `${activeLanguage["months"][month]} ${year}`,
-            week: activeLanguage.days,
-            months:activeLanguage.months,
             selection:4, // if selection not less than 2, doubleSelect will be disabled,
                         //and `data` event and `setData` will not work
         });
@@ -254,12 +251,6 @@ DatePicker build with typescript
         });
 
        //set DatePicker's language
-       //language options
-       const language={
-                 days: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
-                 months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-                 year: ""
-       };
        app.setLanguage({
             week:["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
             months:["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],

@@ -633,12 +633,14 @@ export default class DatePicker {
             if (type !== "switch") {
                 Observer.$emit("update", result);
             }
-            const currRange: any = this.getRange(value);
-            console.log(currRange)
-            //设置日期区间范围状态
-            setNodeRangeState(this.element, currRange.validDates, this.doubleSelect);
-            //设置激活的日期，开始日期和结束日期的状态
-            setNodeActiveState(this.element, value, this.doubleSelect);
+            //外部不能设置html node的 state
+            if (isUndefined(this["driver"])) {
+                const currRange: any = this.getRange(value);
+                //设置日期区间范围状态
+                setNodeRangeState(this.element, currRange.validDates, this.doubleSelect);
+                //设置激活的日期，开始日期和结束日期的状态
+                setNodeActiveState(this.element, value, this.doubleSelect);
+            }
         });
         Observer.$on("render", (result: any) => {
             let {type} = result;
@@ -821,7 +823,22 @@ export default class DatePicker {
 
             }
             else {
-                this["driver"](nodeList, this);
+
+
+                const emitData = {
+                    disables: this.disables,
+                    data: this.data,
+                    element: this.element,
+                    date: this.date,
+                    startDate: this.startDate,
+                    endDate: this.endDate,
+                    limit: this.limit,
+                    doubleSelect: this.doubleSelect,
+                    dateFormat: this.dateFormat,
+                    selected: this.selected,
+                    emit: this.emit
+                };
+                this["driver"](nodeList, emitData);
             }
 
             //无开始和结束日期，则可以打开年份和月份面板

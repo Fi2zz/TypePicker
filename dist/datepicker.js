@@ -1,5 +1,5 @@
   /*
-   *  TypePicker v1.7.2
+   *  TypePicker v1.7.3
    *  Fi2zz / wenjingbiao@outlook.com
    *  https://github.com/Fi2zz/datepicker
    *  (c) 2017-2018, wenjingbiao@outlook.com
@@ -1113,10 +1113,11 @@ var DatePicker = (function () {
             if (type !== "switch") {
                 Observer.$emit("update", result);
             }
-            var currRange = _this.getRange(value);
-            console.log(currRange);
-            setNodeRangeState(_this.element, currRange.validDates, _this.doubleSelect);
-            setNodeActiveState(_this.element, value, _this.doubleSelect);
+            if (isUndefined(_this["driver"])) {
+                var currRange = _this.getRange(value);
+                setNodeRangeState(_this.element, currRange.validDates, _this.doubleSelect);
+                setNodeActiveState(_this.element, value, _this.doubleSelect);
+            }
         });
         Observer.$on("render", function (result) {
             var type = result.type;
@@ -1271,7 +1272,20 @@ var DatePicker = (function () {
                 }
             }
             else {
-                _this["driver"](nodeList, _this);
+                var emitData = {
+                    disables: _this.disables,
+                    data: _this.data,
+                    element: _this.element,
+                    date: _this.date,
+                    startDate: _this.startDate,
+                    endDate: _this.endDate,
+                    limit: _this.limit,
+                    doubleSelect: _this.doubleSelect,
+                    dateFormat: _this.dateFormat,
+                    selected: _this.selected,
+                    emit: _this.emit
+                };
+                _this["driver"](nodeList, emitData);
             }
             if (!_this.startDate && !_this.endDate) {
                 _this.element

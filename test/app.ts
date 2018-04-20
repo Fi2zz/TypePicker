@@ -41,6 +41,7 @@ function createDatePicker(selected?: Array<any>) {
 
     console.log(app);
 
+
     app.on("update", (result: any) => {
         if (result.type === "selected" && result.value.length === 2) {
             popupHandler(false);
@@ -127,12 +128,9 @@ function createDatePicker(selected?: Array<any>) {
 
             item.addEventListener("click", function () {
                 let value = item.getAttribute("data-date");
-
-                if (app.selected.length < 2) {
-                    app.selected.push(value);
-                    app.emit("select", {type: "selected", value: app.selected})
-
-                }
+                app.selected.push(value);
+                console.log(app)
+                app.emit("select", {type: "selected", value: app.selected})
 
             })
         });

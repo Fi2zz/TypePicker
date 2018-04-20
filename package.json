@@ -1,6 +1,6 @@
 {
     "name": "datepicker",
-    "version": "1.7.2",
+    "version": "1.7.3",
     "description": "A Typescript Datepicker",
     "author": "Fitzzz <wenjingbiao@outlook.com>",
     "private": true,
