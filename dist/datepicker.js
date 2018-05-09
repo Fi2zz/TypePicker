@@ -1,5 +1,5 @@
   /*
-   *  TypePicker v1.7.3
+   *  TypePicker v1.7.4
    *  Fi2zz / wenjingbiao@outlook.com
    *  https://github.com/Fi2zz/datepicker
    *  (c) 2017-2018, wenjingbiao@outlook.com
@@ -587,6 +587,7 @@ function getDates(year, month) {
 
 var DatePicker = (function () {
     function DatePicker(option) {
+        var _this = this;
         this.dateFormat = null;
         this.limit = 1;
         this.views = 1;
@@ -600,21 +601,23 @@ var DatePicker = (function () {
         this.doubleSelect = false;
         this.canSelectLength = 1;
         this.language = {
-            title: function (year, month) { return year + "\u5E74 " + month + "\u6708"; },
+            title: function (year, month) {
+                return year + "\u5E74 " + _this.language.months[month] + "\u6708";
+            },
             week: ["日", "一", "二", "三", "四", "五", "六"],
             months: [
-                "01月",
-                "02月",
-                "03月",
-                "04月",
-                "05月",
-                "06月",
-                "07月",
-                "08月",
-                "09月",
-                "10月",
-                "11月",
-                "12月"
+                "01",
+                "02",
+                "03",
+                "04",
+                "05",
+                "06",
+                "07",
+                "08",
+                "09",
+                "10",
+                "11",
+                "12"
             ]
         };
         this.format = format;
@@ -1090,7 +1093,7 @@ var DatePicker = (function () {
         return true;
     };
     DatePicker.prototype.giveMeTheWheel = function (callback) {
-        if (callback && typeof callback === 'function') {
+        if (callback && typeof callback === "function") {
             Object.defineProperty(this, "driver", {
                 configurable: true,
                 enumerable: true,
@@ -1099,7 +1102,6 @@ var DatePicker = (function () {
             });
         }
     };
-    
     DatePicker.prototype.bindListener = function () {
         var _this = this;
         Observer.$on("select", function (result) {
