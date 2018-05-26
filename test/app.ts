@@ -1,7 +1,7 @@
 import "../src/style.styl";
 import "./test.styl";
 
-import DatePicker, {tyePicker} from "../src/index";
+import tyePicker from "../src/index";
 import {source, languages as language} from "./mock";
 import {addClass} from "../src/util";
 import {diff} from "../src/datepicker.helpers";
