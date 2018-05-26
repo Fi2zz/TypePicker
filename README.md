@@ -250,7 +250,6 @@ DatePicker build with typescript
                     //return data when your logic done
                     return data
         });
-
        //set DatePicker's language
        app.setLanguage({
             week:["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
