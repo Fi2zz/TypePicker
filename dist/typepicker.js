@@ -7,6 +7,12 @@
   */
   
   
+(function (global, factory) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+	typeof define === 'function' && define.amd ? define(factory) :
+	(global.TypePicker = factory());
+}(this, (function () { 'use strict';
+
 var attrSelector = function (attr, value) {
     return "[" + attr + "=\"" + value + "\"]";
 };
@@ -1273,7 +1279,7 @@ var TypePicker = (function () {
     };
     return TypePicker;
 }());
-function tyePicker(option) {
+function typePicker(option) {
     var instance;
     if (!instance) {
         instance = new TypePicker(option);
@@ -1281,6 +1287,8 @@ function tyePicker(option) {
     return instance;
 }
 
-export default tyePicker;
+return typePicker;
+
+})));
 
   

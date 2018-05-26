@@ -859,7 +859,7 @@ import {
         this.init();
     }
 }
-export default function tyePicker(option) {
+export default function typePicker(option) {
     let instance;
     if (!instance) {
         instance = new TypePicker(option)

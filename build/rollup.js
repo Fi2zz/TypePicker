@@ -9,7 +9,7 @@ const commonJs = require("rollup-plugin-commonjs");
 const typescript = require("rollup-plugin-typescript");
 const config = {
     dest: "./dist",
-    filename: "datepicker",
+    filename: "typepicker",
     build: {
         input: "./src/index.ts",
         output: dest => bundleTypes("TypePicker", dest),

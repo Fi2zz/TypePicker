@@ -1,7 +1,6 @@
 import "../src/style.styl";
 import "./test.styl";
-
-import tyePicker from "../src/index";
+import typePicker from "../dist/typepicker.esm";
 import {source, languages as language} from "./mock";
 import {addClass} from "../src/util";
 import {diff} from "../src/datepicker.helpers";
@@ -156,7 +155,7 @@ function popupHandler(visible: boolean) {
 }
 
 
-let app = tyePicker(options);
+let app = typePicker(options);
 
 function init(document: Document) {
     const date = new Date();
