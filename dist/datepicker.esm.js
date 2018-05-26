@@ -1,5 +1,5 @@
   /*
-   *  TypePicker v1.7.4
+   *  TypePicker v1.7.5
    *  Fi2zz / wenjingbiao@outlook.com
    *  https://github.com/Fi2zz/datepicker
    *  (c) 2017-2018, wenjingbiao@outlook.com
@@ -41,7 +41,6 @@ function isUndefined(v) {
 function isString(object) {
     return _toString(object) === "[object String]";
 }
-
 function isArray(object) {
     return _toString(object) === "[object Array]";
 }
@@ -177,73 +176,62 @@ function css(el, styles) {
     return el;
 }
 
-var HTML = (function () {
-    function HTML(options) {
-        var renderWeekOnTop = options.renderWeekOnTop, data = options.data, week = options.week;
-        return [
-            this.createActionBar(!renderWeekOnTop) + "  \n             " + this.createView(data, week, renderWeekOnTop) + "\n             <div class=\"extra-panel\" style=\"display: none;\">\n                        <div class=\"year-panel\"></div>\n                        <div class=\"month-panel\"></div>\n                </div>"
-        ];
+function createActionBar(create) {
+    if (!create) {
+        return "";
     }
-    HTML.prototype.createActionBar = function (create) {
-        if (!create) {
-            return "";
+    return "<div class=\"calendar-action-bar\">\n            <button class='calendar-action calendar-action-prev'><span>prev</span></button>\n            <button class='calendar-action calendar-action-next'><span>next</span></button>\n         </div>\n    ";
+}
+function createMonthDateTemplate(dates) {
+    return Object.keys(dates).map(function (item) {
+        var result = dates[item];
+        var day = result.day;
+        var date = result.date;
+        var data = {
+            key: day ? item : "",
+            text: "<div class=\"date\">" + (date ? date : "") + "</div><div class=\"placeholder\"></div>",
+            day: day ? day : ""
+        };
+        var classNames = ["calendar-cell", "calendar-date-cell"];
+        if (!day) {
+            classNames.push("disabled", "empty");
         }
-        return "<div class=\"calendar-action-bar\">\n            <button class='calendar-action calendar-action-prev'><span>prev</span></button>\n            <button class='calendar-action calendar-action-next'><span>next</span></button>\n         </div>\n    ";
-    };
-    HTML.prototype.createMonthDateTemplate = function (dates) {
-        var _this = this;
-        return Object.keys(dates).map(function (item) {
-            var result = dates[item];
-            var day = result.day;
-            var date = result.date;
-            var data = {
-                key: day ? item : "",
-                text: "<div class=\"date\">" + (date ? date : "") + "</div><div class=\"placeholder\"></div>",
-                day: day ? day : ""
-            };
-            var classNames = ["calendar-cell", "calendar-date-cell"];
-            if (!day) {
-                classNames.push("disabled", "empty");
+        else {
+            if (day === 0) {
+                classNames.push("calendar-cell-weekend");
             }
-            else {
-                if (day === 0) {
-                    classNames.push("calendar-cell-weekend");
-                }
-                if (day === 6) {
-                    classNames.push("calendar-cell-weekday");
-                }
+            if (day === 6) {
+                classNames.push("calendar-cell-weekday");
             }
-            return _this.createNode(classNames.join(" "), data.key, data.text, data.day);
-        });
-    };
-    HTML.prototype.createView = function (data, week, renderWeekOnTop) {
-        var _this = this;
-        var template = data.map(function (item) { return "\n                <div class=\"calendar-main\">\n                <div class=\"calendar-head\">\n                    <div class=\"calendar-title\">" + item.heading + "\n                </div>\n                </div>\n                " + (!renderWeekOnTop ? _this.createMonthWeek(week) : "") + "\n                <div class=\"calendar-body\">" + _this.createMonthDateTemplate(item.dates).join(" ") + "</div>\n                </div>\n            "; });
-        if (renderWeekOnTop) {
-            template.unshift(this.createMonthWeek(week));
         }
-        return template.join("").trim();
-    };
-    HTML.prototype.createMonthWeek = function (language) {
-        var template = language
-            .map(function (day, index) {
-            var className = [
-                "calendar-cell",
-                "calendar-day-cell",
-                index === 0
-                    ? "calendar-cell-weekday"
-                    : index === 6 ? "calendar-cell-weekend" : ""
-            ];
-            return "<div class=\"" + className.join(" ") + "\">" + day + "</div>";
-        })
-            .join("");
-        return "  <div class=\"calendar-day\">" + template + "</div>";
-    };
-    HTML.prototype.createNode = function (className, key, text, day) {
-        return "<div class=\"" + className + "\"  " + (day >= 0 ? "data-day=" + day : "") + " " + (key ? "data-date=" + key : "") + ">" + text + "</div>";
-    };
-    return HTML;
-}());
+        return createNode(classNames.join(" "), data.key, data.text, data.day);
+    });
+}
+function createView(data, week, renderWeekOnTop) {
+    var template = data.map(function (item) { return "\n                <div class=\"calendar-main\">\n                <div class=\"calendar-head\">\n                    <div class=\"calendar-title\">" + item.heading + "\n                </div>\n                </div>\n                " + (!renderWeekOnTop ? createMonthWeek(week) : "") + "\n                <div class=\"calendar-body\">" + createMonthDateTemplate(item.dates).join(" ") + "</div>\n                </div>\n            "; });
+    if (renderWeekOnTop) {
+        template.unshift(this.createMonthWeek(week));
+    }
+    return template.join("").trim();
+}
+function createMonthWeek(language) {
+    var template = language
+        .map(function (day, index) {
+        var className = [
+            "calendar-cell",
+            "calendar-day-cell",
+            index === 0
+                ? "calendar-cell-weekday"
+                : index === 6 ? "calendar-cell-weekend" : ""
+        ];
+        return "<div class=\"" + className.join(" ") + "\">" + day + "</div>";
+    })
+        .join("");
+    return "  <div class=\"calendar-day\">" + template + "</div>";
+}
+function createNode(className, key, text, day) {
+    return "<div class=\"" + className + "\"  " + (day >= 0 ? "data-day=" + day : "") + " " + (key ? "data-date=" + key : "") + ">" + text + "</div>";
+}
 function yearPanel(data) {
     return "\n                \n                <div class=\"year-title\">\n                    <span class=\"year-prev\">prev</span>\n                    " + data.title + "\n                    <span class=\"year-next\">next</span>\n                </div>\n                <div class=\"year-list\">\n                    " + data.years.map(function (item) { return '<div class="year-cell" data-year=' + item + ' ><span>' + item + '</span></div>'; }).join("") + "            </div>";
 }
@@ -251,6 +239,10 @@ function monthPanel(year, months) {
     var tem = months.map(function (item, index) { return "<div class=\"month-cell\" data-year=\"" + year + "\" data-month=\"" + index + "\"><span>" + item + "</span></div>"; }).join("");
     var yearTitle = "<div class=\"year-title\"><span>back</span>" + year + "</div>";
     return yearTitle + "<div class=\"month-list\">" + tem + "</div>";
+}
+function createTemplate(options) {
+    var renderWeekOnTop = options.renderWeekOnTop, data = options.data, week = options.week;
+    return createActionBar(!renderWeekOnTop) + "  \n             " + createView(data, week, renderWeekOnTop) + "\n             <div class=\"extra-panel\" style=\"display: none;\">\n                        <div class=\"year-panel\"></div>\n                        <div class=\"month-panel\"></div>\n                </div>";
 }
 
 function diff(start, end, type, isAbsolute) {
@@ -367,20 +359,6 @@ function setNodeActiveState(el, dates, isDouble) {
         }
     }
 }
-
-
-function isZeroLeading(format) {
-    var splitFormat = format.split(/\W/, 3);
-    splitFormat.shift();
-    var temp = [];
-    for (var i = 0; i < splitFormat.length; i++) {
-        var item = splitFormat[i];
-        if (/\w\w/.test(item)) {
-            temp.push(item);
-        }
-    }
-    return splitFormat.length === temp.length;
-}
 function format(date, format) {
     if (!format) {
         format = "YYYY-MM-DD";
@@ -393,7 +371,6 @@ function format(date, format) {
         D: date.getDate(),
         M: date.getMonth() + 1
     };
-    var zeroLeading = isZeroLeading(format);
     return format.replace(/(?:\b|%)([dDMyY]+)(?:\b|%)/g, function (match, $1) {
         return parts[$1] === undefined ? $1 : parts[$1];
     });
@@ -579,8 +556,8 @@ function getDates(year, month) {
     return new Date(utc).getUTCDate();
 }
 
-var DatePicker = (function () {
-    function DatePicker(option) {
+var TypePicker = (function () {
+    function TypePicker(option) {
         var _this = this;
         this.dateFormat = null;
         this.limit = 1;
@@ -594,6 +571,8 @@ var DatePicker = (function () {
         this.element = null;
         this.doubleSelect = false;
         this.canSelectLength = 1;
+        this.template = [];
+        this.renderType = '';
         this.language = {
             title: function (year, month) {
                 return year + "\u5E74 " + _this.language.months[month] + "\u6708";
@@ -620,16 +599,16 @@ var DatePicker = (function () {
         if (!canInit) {
             return;
         }
-        this.bindListener();
+        this.willInit();
         this.init();
     }
-    DatePicker.prototype.on = function (ev, cb) {
+    TypePicker.prototype.on = function (ev, cb) {
         return Observer.$on(ev, cb);
     };
-    DatePicker.prototype.emit = function (ev, arg) {
+    TypePicker.prototype.emit = function (ev, arg) {
         return Observer.$emit(ev, arg);
     };
-    DatePicker.prototype.setDates = function (dates) {
+    TypePicker.prototype.setDates = function (dates) {
         if (!isArray(dates))
             return;
         var datesList = [];
@@ -655,7 +634,7 @@ var DatePicker = (function () {
         }
         this.selected = datesList;
     };
-    DatePicker.prototype.setDisabled = function (param) {
+    TypePicker.prototype.setDisabled = function (param) {
         var _this = this;
         var result = toString({
             dates: "[optional]Expect an array of string or Date got " + toString(param.dates) + " ",
@@ -741,7 +720,7 @@ var DatePicker = (function () {
             }
         });
     };
-    DatePicker.prototype.setLanguage = function (pack) {
+    TypePicker.prototype.setLanguage = function (pack) {
         if (isArray(pack.days) &&
             isArray(pack.months) &&
             typeof pack.title === "function") {
@@ -752,7 +731,7 @@ var DatePicker = (function () {
             };
         }
     };
-    DatePicker.prototype.setData = function (cb) {
+    TypePicker.prototype.setData = function (cb) {
         if (isFunction(cb) && this.canSelectLength <= 1) {
             var result = cb();
             if (isPlainObject(result) && Object.keys(result).length > 0) {
@@ -767,11 +746,11 @@ var DatePicker = (function () {
             }
             else {
                 var key = this.format(new Date(), this.dateFormat);
-                warn("setData", "you are passing wrong type of data to DatePicker,data should be like :\n          \n                    {" + key + ":\"value\"}");
+                warn("setData", "you are passing wrong type of data to TypePicker,data should be like :\n          \n                    {" + key + ":\"value\"}");
             }
         }
     };
-    DatePicker.prototype.createMonths = function (date) {
+    TypePicker.prototype.createMonths = function (date) {
         var _this = this;
         var monthSize = this.views == 2
             ? 1
@@ -811,13 +790,12 @@ var DatePicker = (function () {
             };
         });
     };
-    DatePicker.prototype.render = function (data, renderWeekOnTop) {
-        var template = new HTML({
-            renderWeekOnTop: renderWeekOnTop,
-            data: data,
+    TypePicker.prototype.render = function () {
+        this.element.innerHTML = createTemplate({
+            renderWeekOnTop: this.views === 'auto',
+            data: this.template,
             week: this.language.week
         });
-        this.element.innerHTML = template[0];
         var prev = this.element.querySelector(".calendar-action-prev");
         var next = this.element.querySelector(".calendar-action-next");
         if (prev && next) {
@@ -843,7 +821,7 @@ var DatePicker = (function () {
             }
         }
     };
-    DatePicker.prototype.renderYearPanel = function (visible) {
+    TypePicker.prototype.renderYearPanel = function (visible) {
         var _this = this;
         var createPanel = function (years) {
             var title = years[0] + " - " + years[years.length - 1];
@@ -898,7 +876,7 @@ var DatePicker = (function () {
         css(".year-panel", { display: visible ? "block" : "none" });
         createPanel(years);
     };
-    DatePicker.prototype.renderMonthPanel = function (visible) {
+    TypePicker.prototype.renderMonthPanel = function (visible) {
         var _this = this;
         var month = this.element.querySelector(".month-panel");
         css(".year-panel", { display: "none" });
@@ -925,7 +903,7 @@ var DatePicker = (function () {
             _loop_2(i);
         }
     };
-    DatePicker.prototype.getRange = function (data) {
+    TypePicker.prototype.getRange = function (data) {
         var startDate = getFront(data);
         var endDate = getPeek(data);
         var invalidDates = [];
@@ -972,7 +950,7 @@ var DatePicker = (function () {
             outOfRange: outOfRange
         };
     };
-    DatePicker.prototype.initDisabled = function (bindData) {
+    TypePicker.prototype.createDisabled = function (bindData) {
         var disabledDays = [], disableDates = [];
         if (!isUndefined(this["disabledTemp"])) {
             var _a = this["disabledTemp"], dateList = _a.dateList, disableBefore = _a.disableBefore, disableAfter = _a.disableAfter, dayList = _a.dayList;
@@ -987,71 +965,17 @@ var DatePicker = (function () {
         }
         this.disables = merge(getDisableDates(this.startDate, this.endDate, this.dateFormat, bindData), getDisabledDays(this.startDate, this.endDate, disabledDays, this.dateFormat), simpleListToMap(disableDates));
     };
-    DatePicker.prototype.init = function () {
-        var _this = this;
-        nextTick(function () {
-            var bindData = !isEmpty(_this.data) && _this.canSelectLength < 2;
-            _this.date = isUndefined(_this.startDate) ? new Date() : _this.startDate;
-            _this.initDisabled(bindData);
-            if (bindData) {
-                var data = _this.data;
-                _this.endDate = _this.parse(getPeek(Object.keys(data)), _this.dateFormat);
-                var gap = diff(_this.startDate, _this.endDate, "days", true);
-                for (var i = 0; i < gap; i++) {
-                    var date = setDate(_this.startDate, i);
-                    var formatted = _this.format(date, _this.dateFormat);
-                    if (isUndefined(data[formatted])) {
-                        _this.disables[formatted] = formatted;
-                    }
-                    else if (!isUndefined(_this.disables[formatted])) {
-                        delete data[formatted];
-                    }
-                }
-                _this.data = data;
-            }
-            _this.element.className = _this.element.className + " " + (bindData ? "with-data" : "no-data");
-            var front = getFront(_this.selected);
-            var peek = getPeek(_this.selected);
-            var initRange = _this.getRange(_this.selected);
-            var canInitWithSelectedDatesWhenDataBinding = function (range, bindData) {
-                return ((range.invalidDates.length > 0 ||
-                    range.outOfRange ||
-                    range.validDates.length <= 0) &&
-                    bindData);
-            };
-            if (canInitWithSelectedDatesWhenDataBinding(initRange, bindData) ||
-                initRange.outOfRange) {
-                if (initRange.outOfRange) {
-                    warn("setDates", "[" + _this.selected + "] out of limit:" + _this.limit);
-                }
-                else {
-                    warn("setDates", "Illegal dates [" + _this.selected + "]");
-                }
-                _this.selected = [];
-            }
-            if (_this.views === "auto") {
-                if (!isEmpty(_this.selected)) {
-                    _this.date = _this.parse(getFront(_this.selected), _this.dateFormat);
-                }
-                if (isUndefined(_this.startDate)) {
-                    _this.startDate = _this.date;
-                }
-                if (isUndefined(_this.endDate)) {
-                    _this.endDate = setDate(_this.date, 6, "month");
-                }
-            }
-            if (_this.views === 1) {
-                if (_this.doubleSelect && _this.selected.length >= 2) {
-                    if (front === peek) {
-                        _this.selected.pop();
-                    }
-                }
-            }
-            Observer.$emit("render", { type: "init" });
-            Observer.$emit("ready");
-        });
+    TypePicker.prototype.giveMeTheWheel = function (callback) {
+        if (callback && typeof callback === "function") {
+            Object.defineProperty(this, "driver", {
+                configurable: true,
+                enumerable: true,
+                writable: true,
+                value: callback
+            });
+        }
     };
-    DatePicker.prototype.beforeInit = function (option) {
+    TypePicker.prototype.beforeInit = function (option) {
         if (!option || !parseEl(option.el)) {
             return false;
         }
@@ -1086,17 +1010,7 @@ var DatePicker = (function () {
         }
         return true;
     };
-    DatePicker.prototype.giveMeTheWheel = function (callback) {
-        if (callback && typeof callback === "function") {
-            Object.defineProperty(this, "driver", {
-                configurable: true,
-                enumerable: true,
-                writable: true,
-                value: callback
-            });
-        }
-    };
-    DatePicker.prototype.bindListener = function () {
+    TypePicker.prototype.willInit = function () {
         var _this = this;
         Observer.$on("select", function (result) {
             var type = result.type, value = result.value;
@@ -1118,7 +1032,7 @@ var DatePicker = (function () {
         Observer.$on("render", function (result) {
             var type = result.type;
             if (type !== "init") {
-                _this.initDisabled(!isEmpty(_this.data));
+                _this.createDisabled(!isEmpty(_this.data));
             }
             if (type === "switch") {
                 _this.date = setDate(_this.date, result.size, "month");
@@ -1126,7 +1040,9 @@ var DatePicker = (function () {
             if (type === "custom" && result.value) {
                 _this.date = setDate(result.value);
             }
-            _this.render(_this.createMonths(_this.date), _this.views === "auto");
+            _this.template = _this.createMonths(_this.date);
+            _this.renderType = type;
+            _this.render();
             Observer.$emit("select", {
                 type: type,
                 value: _this.selected
@@ -1291,17 +1207,80 @@ var DatePicker = (function () {
                 });
             }
         });
-        Observer.$on("custom", function (result) {
-            if (!result.value) {
-                Observer.$remove("custom");
-                return false;
-            }
-            Observer.$emit("render", result);
-        });
     };
-    return DatePicker;
+    TypePicker.prototype.init = function () {
+        var _this = this;
+        var fn = function () {
+            var bindData = !isEmpty(_this.data) && _this.canSelectLength < 2;
+            _this.date = isUndefined(_this.startDate) ? new Date() : _this.startDate;
+            _this.createDisabled(bindData);
+            if (bindData) {
+                var data = _this.data;
+                _this.endDate = _this.parse(getPeek(Object.keys(data)), _this.dateFormat);
+                var gap = diff(_this.startDate, _this.endDate, "days", true);
+                for (var i = 0; i < gap; i++) {
+                    var date = setDate(_this.startDate, i);
+                    var formatted = _this.format(date, _this.dateFormat);
+                    if (isUndefined(data[formatted])) {
+                        _this.disables[formatted] = formatted;
+                    }
+                    else if (!isUndefined(_this.disables[formatted])) {
+                        delete data[formatted];
+                    }
+                }
+                _this.data = data;
+            }
+            _this.element.className = _this.element.className + " " + (bindData ? "with-data" : "no-data");
+            var front = getFront(_this.selected);
+            var peek = getPeek(_this.selected);
+            var initRange = _this.getRange(_this.selected);
+            var canInitWithSelectedDatesWhenDataBinding = function (range, bindData) {
+                return ((range.invalidDates.length > 0 || range.outOfRange) &&
+                    bindData);
+            };
+            if (canInitWithSelectedDatesWhenDataBinding(initRange, bindData) ||
+                initRange.outOfRange) {
+                if (initRange.outOfRange) {
+                    warn("setDates", "[" + _this.selected + "] out of limit:" + _this.limit);
+                }
+                else {
+                    warn("setDates", "Illegal dates [" + _this.selected + "]");
+                }
+                _this.selected = [];
+            }
+            if (_this.views === "auto") {
+                if (!isEmpty(_this.selected)) {
+                    _this.date = _this.parse(getFront(_this.selected), _this.dateFormat);
+                }
+                if (isUndefined(_this.startDate)) {
+                    _this.startDate = _this.date;
+                }
+                if (isUndefined(_this.endDate)) {
+                    _this.endDate = setDate(_this.date, 6, "month");
+                }
+            }
+            if (_this.views === 1) {
+                if (_this.doubleSelect && _this.selected.length >= 2) {
+                    if (front === peek) {
+                        _this.selected.pop();
+                    }
+                }
+            }
+            Observer.$emit("render", { type: "init" });
+            Observer.$emit("ready");
+        };
+        nextTick(fn);
+    };
+    return TypePicker;
 }());
+function tyePicker(option) {
+    var instance;
+    if (!instance) {
+        instance = new TypePicker(option);
+    }
+    return instance;
+}
 
-export default DatePicker;
+export default tyePicker;
 
   

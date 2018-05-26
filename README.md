@@ -1,4 +1,4 @@
-# DatePicker
+# typePicker
 
 DatePicker build with typescript
 
@@ -105,11 +105,11 @@ DatePicker build with typescript
 
 ```typescript
     //es module
-    import DatePicker from '/dist/datepicker.esm.js'
+    import typePicker from '/dist/datepicker.esm.js'
     import '/dist/style.css'
 
     //cjs
-    const DatePicker =require("/dist/datepicker.js");
+    const typePicker =require("/dist/datepicker.js");
     require("/dist/style.css");
 
 
@@ -130,8 +130,8 @@ DatePicker build with typescript
     const to = new Date(dist.year, dist.month + 9, 0);
     const currDate = new Date(dist.year, dist.month, dist.date);
 
-    //setup DatePicker instance
-    const app = new DatePicker({
+    //setup typePicker instance
+    const app = typePicker({
             el: document.getElementById("datepicker"),
             endDate:to,
             startDate:from,
@@ -259,6 +259,3 @@ DatePicker build with typescript
        })
 ```
 
-## TODO
-1. year list panel
-2. month list panel

@@ -4,7 +4,6 @@ export const attrSelector = (attr: string, value: string) =>
 export function parseToInt(string: any) {
     return parseInt(string, 10);
 }
-
 export function attr(el: any,
                      attr: any,
                      attrvalue: any | undefined = undefined) {
@@ -38,10 +37,6 @@ export function isUndefined(v) {
 
 export function isString(object: any) {
     return _toString(object) === "[object String]";
-}
-
-export function isObject(object: any) {
-    return object !== null && typeof object === "object";
 }
 
 export function isArray(object: any) {

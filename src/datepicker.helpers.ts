@@ -163,46 +163,6 @@ export function setNodeActiveState(el: HTMLElement, dates: Array<string>, isDoub
 }
 
 
-export const DEFAULT_LANGUAGE = {
-    days: ["日", "一", "二", "三", "四", "五", "六"],
-    months: [
-        "01月",
-        "02月",
-        "03月",
-        "04月",
-        "05月",
-        "06月",
-        "07月",
-        "08月",
-        "09月",
-        "10月",
-        "11月",
-        "12月"
-    ],
-    year: "年"
-};
-export const standardDate = (date?: Date, size?: number) => {
-    if (!size) {
-        size = 0;
-    }
-    const curr: Date = isDate(date) ? date : new Date();
-    return new Date(curr.getFullYear(), curr.getMonth(), curr.getDate() + size);
-};
-
-
-function isZeroLeading(format: string) {
-    const splitFormat: Array<string> = format.split(/\W/, 3);
-    splitFormat.shift();
-
-    const temp = [];
-    for (let i = 0; i < splitFormat.length; i++) {
-        let item = splitFormat[i];
-        if (/\w\w/.test(item)) {
-            temp.push(item);
-        }
-    }
-    return splitFormat.length === temp.length;
-}
 
 export function format(date: Date, format?: string) {
     if (!format) {
@@ -216,20 +176,6 @@ export function format(date: Date, format?: string) {
         D: date.getDate(),
         M: date.getMonth() + 1
     };
-    const zeroLeading = isZeroLeading(format);
-    // return {
-    //     origin: date,
-    //     date: zeroLeading ? parts["DD"] : parts["D"],
-    //     month: zeroLeading ? parts["MM"] : parts["M"],
-    //     year: parts["YYYY"],
-    //     day: date.getDay(),
-    //     value:
-    //         format.replace(/(?:\b|%)([dDMyY]+)(?:\b|%)/g, (match, $1) => {
-    //         noop(match);
-    //         return parts[$1] === undefined ? $1 : parts[$1];
-    //     })
-    // };
-
     return format.replace(/(?:\b|%)([dDMyY]+)(?:\b|%)/g, (match, $1) => {
         noop(match);
         return parts[$1] === undefined ? $1 : parts[$1];

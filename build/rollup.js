@@ -12,17 +12,17 @@ const config = {
     filename: "datepicker",
     build: {
         input: "./src/index.ts",
-        output: dest => bundleTypes("DatePicker", dest),
-        plugins: [commonJs(), typescript({ typescript: require("typescript") })]
+        output: dest => bundleTypes("TypePicker", dest),
+        plugins: [commonJs(), typescript({typescript: require("typescript")})]
     },
     style: "./src/style.styl"
 };
 
 function bundleTypes(name) {
     const types = [{
-            format: "umd",
-            compress: false
-        },
+        format: "umd",
+        compress: false
+    },
         {
             format: "es",
             compress: false
@@ -60,7 +60,7 @@ function stylusCompiler(config, dest, resolve) {
         fs.readFile(config, "utf-8", (err, data) => {
             stylus(data)
                 .set("compress", true)
-                .render(function(err, css) {
+                .render(function (err, css) {
                     if (err) return reject(err);
                     resolve(css);
                 });
@@ -108,15 +108,16 @@ function log(msg, color) {
     console.log(colorful[color](msg));
 }
 
-function noop() {}
+function noop() {
+}
 
 function work(config) {
-    const { dest, build, style, filename } = config;
-    const { output } = build;
-    output(dest).forEach((item, index, { length }) => {
+    const {dest, build, style, filename} = config;
+    const {output} = build;
+    output(dest).forEach((item, index, {length}) => {
         rollup(build)
             .then(bundle => bundle.generate(item))
-            .then(({ code }) => {
+            .then(({code}) => {
                 let filepath = "",
                     codes = code;
                 if (item.compress) {
