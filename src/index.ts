@@ -54,7 +54,6 @@ import {
     getDates
 } from "./datepicker.helpers";
 
-import {unstable_nextTick} from './nexttick'
 
 class TypePicker {
     private dateFormat: string = null;
@@ -828,9 +827,6 @@ class TypePicker {
                 this.selected = [];
             }
             if (this.views === "auto") {
-                if (!isEmpty(this.selected)) {
-                    this.date = this.parse(getFront(this.selected), this.dateFormat);
-                }
                 //flat 视图情况下，
                 //自动限制endDate为半年后，startDate为当前日期
                 //避免因为dom过多导致界面卡顿
@@ -843,23 +839,18 @@ class TypePicker {
             }
             if (this.views === 1) {
                 if (this.doubleSelect && this.selected.length >= 2) {
-
                     if (front === peek) {
                         this.selected.pop();
                     }
-                    else {
-
-
-                        let initDate = this.selected[0];
-                        this.date = typeof initDate === "string" ? this.parse(initDate, this.dateFormat) : initDate
-                    }
                 }
+            }
+            if (this.selected.length > 0) {
+                let initDate =getFront(this.selected);
+                this.date = typeof initDate === "string" ? this.parse(initDate, this.dateFormat) : initDate
             }
             Observer.$emit("render", {type: "init"});
             Observer.$emit("ready");
         };
-
-
         nextTick(fn)
     }
 

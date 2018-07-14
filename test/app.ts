@@ -31,7 +31,7 @@ let options = {
     format: dateFormat,
     doubleSelect: true,
     // selection: 5,
-    views: 1 //"auto",
+    views: "auto",
 }
 
 

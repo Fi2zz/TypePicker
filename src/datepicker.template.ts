@@ -67,7 +67,7 @@ function createView(data: Array<any>,
     );
 
     if (renderWeekOnTop) {
-        template.unshift(this.createMonthWeek(week));
+        template.unshift(createMonthWeek(week));
     }
     return template.join("").trim();
 }

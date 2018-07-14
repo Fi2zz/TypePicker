@@ -75,20 +75,28 @@ function removeClass(ele, className) {
         return;
     ele.className = ele.className.replace(new RegExp("\\s*\\b" + className + "\\b", "g"), "");
 }
-function nextTick(fn, autoReset) {
-    if (autoReset === void 0) { autoReset = true; }
-    var timer = window.setTimeout(function () {
-        if (!isFunction(fn)) {
-            warn("nextTick", "Except a function,but got " + _toString(fn));
-            clearTimeout(timer);
-        }
-        else {
-            fn();
-            if (autoReset) {
-                clearTimeout(timer);
-            }
-        }
-    }, 0);
+var callbacks = [];
+var pending = false;
+var timer = null;
+function flushCallbacks() {
+    pending = false;
+    var copies = callbacks.slice(0);
+    callbacks = [];
+    if (timer) {
+        clearTimeout(timer);
+    }
+    for (var i = 0; i < copies.length; i++) {
+        copies[i]();
+    }
+}
+function nextTick(cb) {
+    callbacks.push(function () {
+        cb();
+    });
+    if (!pending) {
+        pending = true;
+        timer = setTimeout(flushCallbacks, 0);
+    }
 }
 function warn(where, msg) {
     var message = msg;
@@ -210,7 +218,7 @@ function createMonthDateTemplate(dates) {
 function createView(data, week, renderWeekOnTop) {
     var template = data.map(function (item) { return "\n                <div class=\"calendar-main\">\n                <div class=\"calendar-head\">\n                    <div class=\"calendar-title\">" + item.heading + "\n                </div>\n                </div>\n                " + (!renderWeekOnTop ? createMonthWeek(week) : "") + "\n                <div class=\"calendar-body\">" + createMonthDateTemplate(item.dates).join(" ") + "</div>\n                </div>\n            "; });
     if (renderWeekOnTop) {
-        template.unshift(this.createMonthWeek(week));
+        template.unshift(createMonthWeek(week));
     }
     return template.join("").trim();
 }
@@ -1252,9 +1260,6 @@ var TypePicker = (function () {
                 _this.selected = [];
             }
             if (_this.views === "auto") {
-                if (!isEmpty(_this.selected)) {
-                    _this.date = _this.parse(getFront(_this.selected), _this.dateFormat);
-                }
                 if (isUndefined(_this.startDate)) {
                     _this.startDate = _this.date;
                 }
@@ -1267,11 +1272,11 @@ var TypePicker = (function () {
                     if (front === peek) {
                         _this.selected.pop();
                     }
-                    else {
-                        var initDate = _this.selected[0];
-                        _this.date = typeof initDate === "string" ? _this.parse(initDate, _this.dateFormat) : initDate;
-                    }
                 }
+            }
+            if (_this.selected.length > 0) {
+                var initDate = getFront(_this.selected);
+                _this.date = typeof initDate === "string" ? _this.parse(initDate, _this.dateFormat) : initDate;
             }
             Observer.$emit("render", { type: "init" });
             Observer.$emit("ready");
