@@ -105,11 +105,11 @@ DatePicker build with typescript
 
 ```typescript
     //es module
-    import typePicker from '/dist/datepicker.esm.js'
+    import TypePicker from '/dist/datepicker.esm.js'
     import '/dist/style.css'
 
     //cjs
-    const typePicker =require("/dist/datepicker.js");
+    const TypePicker =require("/dist/datepicker.js");
     require("/dist/style.css");
 
 
@@ -131,7 +131,7 @@ DatePicker build with typescript
     const currDate = new Date(dist.year, dist.month, dist.date);
 
     //setup typePicker instance
-    const app = typePicker({
+    const app = new TypePicker({
             el: document.getElementById("datepicker"),
             endDate:to,
             startDate:from,
