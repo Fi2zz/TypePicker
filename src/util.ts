@@ -82,23 +82,32 @@ export function removeClass(ele: any, className: string) {
         ""
     );
 }
+let callbacks = [];
+let pending = false;
+let timer = null;
+function flushCallbacks() {
+    pending = false;
+    let copies = callbacks.slice(0);
+    callbacks=[];
+    if (timer) {
+        clearTimeout(timer)
+    }
+    for (let i = 0; i < copies.length; i++) {
+        copies[i]();
+    }
 
-
-
-
-export function nextTick(fn: Function, autoReset: boolean = true) {
-    const timer = window.setTimeout(() => {
-        if (!isFunction(fn)) {
-            warn("nextTick", `Except a function,but got ${_toString(fn)}`);
-            clearTimeout(timer);
-        } else {
-            fn();
-            if (autoReset) {
-                clearTimeout(timer);
-            }
-        }
-    }, 0);
 }
+export function nextTick(cb) {
+    callbacks.push(function () {
+        cb();
+    });
+    if (!pending) {
+        pending = true;
+        timer = setTimeout(flushCallbacks, 0);
+    }
+}
+
+
 
 export function warn(where: string, msg: any) {
     let message = msg;
