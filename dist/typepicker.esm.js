@@ -607,8 +607,8 @@ var TypePicker = (function () {
         if (!canInit) {
             return;
         }
-        this.willInit();
-        this.init();
+        this.bindListener();
+        this.renderDOM();
     }
     TypePicker.prototype.on = function (ev, cb) {
         return Observer.$on(ev, cb);
@@ -1021,7 +1021,7 @@ var TypePicker = (function () {
         }
         return true;
     };
-    TypePicker.prototype.willInit = function () {
+    TypePicker.prototype.bindListener = function () {
         var _this = this;
         Observer.$on("select", function (result) {
             var type = result.type, value = result.value;
@@ -1219,37 +1219,38 @@ var TypePicker = (function () {
             }
         });
     };
-    TypePicker.prototype.init = function () {
+    TypePicker.prototype.create = function () {
         var _this = this;
-        var fn = function () {
-            var bindData = !isEmpty(_this.data) && _this.canSelectLength < 2;
-            _this.date = isUndefined(_this.startDate) ? new Date() : _this.startDate;
-            _this.createDisabled(bindData);
-            if (bindData) {
-                var data = _this.data;
-                _this.endDate = _this.parse(getPeek(Object.keys(data)), _this.dateFormat);
-                var gap = diff(_this.startDate, _this.endDate, "days", true);
-                for (var i = 0; i < gap; i++) {
-                    var date = setDate(_this.startDate, i);
-                    var formatted = _this.format(date, _this.dateFormat);
-                    if (isUndefined(data[formatted])) {
-                        _this.disables[formatted] = formatted;
-                    }
-                    else if (!isUndefined(_this.disables[formatted])) {
-                        delete data[formatted];
-                    }
-                }
-                _this.data = data;
+        var bindData = !isEmpty(this.data) && this.canSelectLength < 2;
+        this.createDisabled(bindData);
+        var validateData = function () {
+            if (!bindData) {
+                return false;
             }
-            _this.element.className = _this.element.className + " " + (bindData ? "with-data" : "no-data");
+            var data = _this.data;
+            _this.endDate = _this.parse(getPeek(Object.keys(data)), _this.dateFormat);
+            var gap = diff(_this.startDate, _this.endDate, "days", true);
+            for (var i = 0; i < gap; i++) {
+                var date = setDate(_this.startDate, i);
+                var formatted = _this.format(date, _this.dateFormat);
+                if (isUndefined(data[formatted])) {
+                    _this.disables[formatted] = formatted;
+                }
+                else if (!isUndefined(_this.disables[formatted])) {
+                    delete data[formatted];
+                }
+            }
+            _this.data = data;
+        };
+        var validateInitDates = function () {
             var front = getFront(_this.selected);
             var peek = getPeek(_this.selected);
             var initRange = _this.getRange(_this.selected);
-            var canInitWithSelectedDatesWhenDataBinding = function (range, bindData) {
-                return ((range.invalidDates.length > 0 || range.outOfRange) &&
+            var canInitWithSelectedDatesWhenDataBinding = function () {
+                return ((initRange.invalidDates.length > 0 || initRange.outOfRange) &&
                     bindData);
             };
-            if (canInitWithSelectedDatesWhenDataBinding(initRange, bindData) ||
+            if (canInitWithSelectedDatesWhenDataBinding() ||
                 initRange.outOfRange) {
                 if (initRange.outOfRange) {
                     warn("setDates", "[" + _this.selected + "] out of limit:" + _this.limit);
@@ -1274,14 +1275,32 @@ var TypePicker = (function () {
                     }
                 }
             }
+        };
+        var setInitDate = function () {
+            var date;
             if (_this.selected.length > 0) {
                 var initDate = getFront(_this.selected);
-                _this.date = typeof initDate === "string" ? _this.parse(initDate, _this.dateFormat) : initDate;
+                date = typeof initDate === "string" ? _this.parse(initDate, _this.dateFormat) : initDate;
             }
+            else {
+                date = isUndefined(_this.startDate) ? new Date() : _this.startDate;
+            }
+            _this.date = date;
+        };
+        validateData();
+        validateInitDates();
+        setInitDate();
+        return bindData;
+    };
+    TypePicker.prototype.renderDOM = function () {
+        var _this = this;
+        nextTick(function () {
+            var bindData = _this.create();
+            var containerClassName = "" + (bindData ? "with-data" : "no-data");
+            _this.element.className = _this.element.className + " " + containerClassName;
             Observer.$emit("render", { type: "init" });
             Observer.$emit("ready");
-        };
-        nextTick(fn);
+        });
     };
     return TypePicker;
 }());

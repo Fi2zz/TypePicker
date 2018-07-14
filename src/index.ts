@@ -544,7 +544,7 @@ class TypePicker {
         return true;
     }
 
-    private willInit() {
+    private bindListener() {
         Observer.$on("select", (result: any) => {
             const {type, value} = result;
             if (type === "disabled") {
@@ -778,45 +778,45 @@ class TypePicker {
 
     }
 
-    private init() {
+    private create() {
 
-        let fn = () => {
-            const bindData = !isEmpty(this.data) && this.canSelectLength < 2;
-            //初始视图所在日期
-            this.date = isUndefined(this.startDate) ? new Date() : this.startDate;
-            this.createDisabled(bindData);
-            //去掉data里的无效日期
-            if (bindData) {
-                let data = this.data;
-                //此处未排序日期，直接取this.data的最后一个key
-                //排序在setData里做
-                this.endDate = this.parse(getPeek(Object.keys(data)), this.dateFormat);
-                let gap = diff(this.startDate, this.endDate, "days", true);
-                for (let i = 0; i < gap; i++) {
-                    let date = setDate(this.startDate, i);
-                    let formatted = this.format(date, this.dateFormat);
-                    if (isUndefined(data[formatted])) {
-                        this.disables[formatted] = formatted;
-                    } else if (!isUndefined(this.disables[formatted])) {
-                        delete data[formatted];
-                    }
-                }
-                this.data = data;
+        const bindData = !isEmpty(this.data) && this.canSelectLength < 2;
+        //初始视图所在日期
+        this.createDisabled(bindData);
+        //去掉data里的无效日期
+        const validateData = () => {
+            if (!bindData) {
+                return false;
             }
+            let data = this.data;
+            //此处未排序日期，直接取this.data的最后一个key
+            //排序在setData里做
+            this.endDate = this.parse(getPeek(Object.keys(data)), this.dateFormat);
+            let gap = diff(this.startDate, this.endDate, "days", true);
+            for (let i = 0; i < gap; i++) {
+                let date = setDate(this.startDate, i);
+                let formatted = this.format(date, this.dateFormat);
+                if (isUndefined(data[formatted])) {
+                    this.disables[formatted] = formatted;
+                } else if (!isUndefined(this.disables[formatted])) {
+                    delete data[formatted];
+                }
+            }
+            this.data = data;
+        };
+        //校验初始selected
+        const validateInitDates = () => {
 
-            this.element.className = `${this.element.className} ${
-                bindData ? "with-data" : "no-data"
-                }`;
             const front = getFront(this.selected);
             const peek = getPeek(this.selected);
             let initRange = this.getRange(this.selected);
-            let canInitWithSelectedDatesWhenDataBinding = (range: any, bindData) => {
-                return ((range.invalidDates.length > 0 || range.outOfRange) &&
+            let canInitWithSelectedDatesWhenDataBinding = () => {
+                return ((initRange.invalidDates.length > 0 || initRange.outOfRange) &&
                     bindData
                 );
             };
             if (
-                canInitWithSelectedDatesWhenDataBinding(initRange, bindData) ||
+                canInitWithSelectedDatesWhenDataBinding() ||
                 initRange.outOfRange
             ) {
                 if (initRange.outOfRange) {
@@ -844,14 +844,32 @@ class TypePicker {
                     }
                 }
             }
+        }
+        const setInitDate = () => {
+            let date;
             if (this.selected.length > 0) {
-                let initDate =getFront(this.selected);
-                this.date = typeof initDate === "string" ? this.parse(initDate, this.dateFormat) : initDate
+                let initDate = getFront(this.selected);
+                date = typeof initDate === "string" ? this.parse(initDate, this.dateFormat) : initDate
             }
+            else {
+                date = isUndefined(this.startDate) ? new Date() : this.startDate;
+            }
+            this.date = date;
+        };
+        validateData();
+        validateInitDates();
+        setInitDate();
+        return bindData
+    }
+
+    renderDOM() {
+        nextTick(() => {
+            let bindData = this.create();
+            let containerClassName = `${bindData ? "with-data" : "no-data"}`;
+            this.element.className = `${this.element.className} ${containerClassName}`;
             Observer.$emit("render", {type: "init"});
             Observer.$emit("ready");
-        };
-        nextTick(fn)
+        })
     }
 
     constructor(option: datePickerOptions) {
@@ -859,8 +877,8 @@ class TypePicker {
         if (!canInit) {
             return;
         }
-        this.willInit();
-        this.init();
+        this.bindListener();
+        this.renderDOM()
     }
 }
 export default TypePicker
