@@ -83,6 +83,9 @@ export function removeClass(ele: any, className: string) {
     );
 }
 
+
+
+
 export function nextTick(fn: Function, autoReset: boolean = true) {
     const timer = window.setTimeout(() => {
         if (!isFunction(fn)) {

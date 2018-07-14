@@ -54,7 +54,9 @@ import {
     getDates
 } from "./datepicker.helpers";
 
- class TypePicker {
+import {unstable_nextTick} from './nexttick'
+
+class TypePicker {
     private dateFormat: string = null;
     private limit: number = 1;
     private views: number | string = 1;
@@ -434,6 +436,7 @@ import {
             }
             let gap = diff(<Date>end, <Date>start, "days");
 
+
             if (gap <= limit) {
                 for (let i = 0; i < gap; i++) {
                     let date = setDate(start, i);
@@ -445,6 +448,9 @@ import {
                             validDates.push(formatted);
                         }
                     }
+                }
+                if (end < start) {
+                    outOfRange = true
                 }
             } else {
                 outOfRange = true;
@@ -837,8 +843,15 @@ import {
             }
             if (this.views === 1) {
                 if (this.doubleSelect && this.selected.length >= 2) {
+
                     if (front === peek) {
                         this.selected.pop();
+                    }
+                    else {
+
+
+                        let initDate = this.selected[0];
+                        this.date = typeof initDate === "string" ? this.parse(initDate, this.dateFormat) : initDate
                     }
                 }
             }
@@ -846,8 +859,8 @@ import {
             Observer.$emit("ready");
         };
 
-        nextTick(fn)
 
+        nextTick(fn)
     }
 
     constructor(option: datePickerOptions) {
@@ -859,10 +872,4 @@ import {
         this.init();
     }
 }
-export default function typePicker(option) {
-    let instance;
-    if (!instance) {
-        instance = new TypePicker(option)
-    }
-    return instance
-}
+export default TypePicker

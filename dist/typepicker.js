@@ -945,6 +945,9 @@ var TypePicker = (function () {
                         }
                     }
                 }
+                if (end < start) {
+                    outOfRange = true;
+                }
             }
             else {
                 outOfRange = true;
@@ -1270,6 +1273,10 @@ var TypePicker = (function () {
                     if (front === peek) {
                         _this.selected.pop();
                     }
+                    else {
+                        var initDate = _this.selected[0];
+                        _this.date = typeof initDate === "string" ? _this.parse(initDate, _this.dateFormat) : initDate;
+                    }
                 }
             }
             Observer.$emit("render", { type: "init" });
@@ -1279,15 +1286,8 @@ var TypePicker = (function () {
     };
     return TypePicker;
 }());
-function typePicker(option) {
-    var instance;
-    if (!instance) {
-        instance = new TypePicker(option);
-    }
-    return instance;
-}
 
-return typePicker;
+return TypePicker;
 
 })));
 
