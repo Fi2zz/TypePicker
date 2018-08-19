@@ -1,12 +1,11 @@
-  /*
-   *  TypePicker v1.7.5
-   *  Fi2zz / wenjingbiao@outlook.com
-   *  https://github.com/Fi2zz/datepicker
-   *  (c) 2017-2018, wenjingbiao@outlook.com
-   *  MIT License
-  */
   
-  
+/*
+*  TypePicker v1.8.3
+*  Fi2zz / wenjingbiao@outlook.com
+*  https://github.com/Fi2zz/datepicker
+*  (c) 2017-2018, wenjingbiao@outlook.com
+*  MIT License
+*/
 var attrSelector = function (attr, value) {
     return "[" + attr + "=\"" + value + "\"]";
 };
@@ -580,7 +579,7 @@ var TypePicker = (function () {
         this.doubleSelect = false;
         this.canSelectLength = 1;
         this.template = [];
-        this.renderType = '';
+        this.renderType = "";
         this.language = {
             title: function (year, month) {
                 return year + "\u5E74 " + _this.language.months[month] + "\u6708";
@@ -800,7 +799,7 @@ var TypePicker = (function () {
     };
     TypePicker.prototype.render = function () {
         this.element.innerHTML = createTemplate({
-            renderWeekOnTop: this.views === 'auto',
+            renderWeekOnTop: this.views === "auto",
             data: this.template,
             week: this.language.week
         });
@@ -1250,8 +1249,7 @@ var TypePicker = (function () {
                 return ((initRange.invalidDates.length > 0 || initRange.outOfRange) &&
                     bindData);
             };
-            if (canInitWithSelectedDatesWhenDataBinding() ||
-                initRange.outOfRange) {
+            if (canInitWithSelectedDatesWhenDataBinding() || initRange.outOfRange) {
                 if (initRange.outOfRange) {
                     warn("setDates", "[" + _this.selected + "] out of limit:" + _this.limit);
                 }
@@ -1280,7 +1278,10 @@ var TypePicker = (function () {
             var date;
             if (_this.selected.length > 0) {
                 var initDate = getFront(_this.selected);
-                date = typeof initDate === "string" ? _this.parse(initDate, _this.dateFormat) : initDate;
+                date =
+                    typeof initDate === "string"
+                        ? _this.parse(initDate, _this.dateFormat)
+                        : initDate;
             }
             else {
                 date = isUndefined(_this.startDate) ? new Date() : _this.startDate;
@@ -1302,6 +1303,7 @@ var TypePicker = (function () {
             Observer.$emit("ready");
         });
     };
+    TypePicker.diff = diff;
     return TypePicker;
 }());
 

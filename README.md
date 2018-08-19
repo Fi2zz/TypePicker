@@ -6,17 +6,17 @@ DatePicker build with typescript
     <tr>
     <td colspan="2">
             <h4>Double views</h4>
-            <img src="double.png">
+            <img src="assets/double.png">
         </td>
     </tr>
     <tr>
         <td valign="top">
             <h4>Single view</h4>
-            <img src="single.png">
+            <img src="assets/single.png">
         </td>
         <td>
             <h4>Flat view</h4>
-            <img src="auto.png">
+            <img src="assets/auto.png">
         </td>
     </tr>
     

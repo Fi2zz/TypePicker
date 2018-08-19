@@ -12,3 +12,4 @@ lib
 cloc.exe
 .vscode
 
+/yarn-error.log

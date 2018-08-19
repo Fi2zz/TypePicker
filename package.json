@@ -1,15 +1,25 @@
 {
   "name": "datepicker",
-  "version": "1.7.5",
+  "version": "1.8.3",
   "description": "A Typescript Datepicker",
   "author": "Fitzzz <wenjingbiao@outlook.com>",
   "private": true,
   "license": "MIT",
   "scripts": {
-    "dev": "node build/webpack.js --mode development",
-    "dev:docs": "node build/webpack.js --mode dev:docs",
-    "build:docs": "node build/webpack.js --mode build:docs",
-    "dist": "node build/rollup.js"
+    "start": "node scripts/webpack.js",
+    "build": "node scripts/rollup.js"
+  },
+  "config": {
+    "source": "./src/index.ts",
+    "target": "./dist/typepicker.js",
+    "bundleName": "TypePicker",
+    "bundleFileBaseName": "typepicker",
+    "style": "./src/style.styl",
+    "cssFilename": "style.css",
+    "dist": "./dist",
+    "test": "./test.ts",
+    "testBundleName": "Test",
+    "testBundleFilename": "./test.js"
   },
   "devDependencies": {
     "awesome-typescript-loader": "^3.1.3",
@@ -20,6 +30,7 @@
     "babel-preset-es2015-rollup": "^3.0.0",
     "colors": "^1.1.2",
     "css-loader": "^0.28.7",
+    "fs-extra": "^7.0.0",
     "html-webpack-plugin": "^2.30.1",
     "process-argv": "^1.0.0",
     "rollup": "^0.50.0",
@@ -32,5 +43,9 @@
     "uglify-js": "^3.1.5",
     "webpack": "^3.6.0",
     "webpack-dev-server": "^2.9.1"
+  },
+  "dependencies": {
+    "ejs-loader": "^0.3.1",
+    "html-loader": "^0.5.5"
   }
 }
