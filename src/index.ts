@@ -134,7 +134,6 @@ class TypePicker {
         warn("setDates", "selected dates are illegal");
         datesList = [];
       }
-      console.log(startDate, this);
     } else {
       const d = dates[dates.length - 1];
       datesList = [isDate(d) ? this.format(d, this.dateFormat) : d];

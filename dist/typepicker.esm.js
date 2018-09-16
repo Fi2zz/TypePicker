@@ -1,6 +1,6 @@
   
     /*
-    *  TypePicker v2.0.2
+    *  TypePicker v2.0.3
     *  Fi2zz / wenjingbiao@outlook.com
     *  https://github.com/Fi2zz/datepicker
     *  (c) 2017-2018, wenjingbiao@outlook.com
@@ -757,7 +757,6 @@ var TypePicker = (function () {
                 warn("setDates", "selected dates are illegal");
                 datesList = [];
             }
-            console.log(startDate, this);
         }
         else {
             var d = dates[dates.length - 1];
