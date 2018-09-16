@@ -1,12 +1,24 @@
   
     /*
-    *  TypePicker v2.0.0
+    *  TypePicker v2.0.2
     *  Fi2zz / wenjingbiao@outlook.com
     *  https://github.com/Fi2zz/datepicker
     *  (c) 2017-2018, wenjingbiao@outlook.com
     *  MIT License
     */
-    var attrSelector = function (attr, value) {
+    const __assign = Object.assign || function (target) {
+    for (var source, i = 1; i < arguments.length; i++) {
+        source = arguments[i];
+        for (var prop in source) {
+            if (Object.prototype.hasOwnProperty.call(source, prop)) {
+                target[prop] = source[prop];
+            }
+        }
+    }
+    return target;
+};
+
+var attrSelector = function (attr, value) {
     return "[" + attr + "=\"" + value + "\"]";
 };
 function parseToInt(string) {
@@ -169,88 +181,6 @@ function simpleListToMap(list) {
     }
     return map;
 }
-function css(el, styles) {
-    if (typeof el === "string") {
-        el = document.querySelector(el);
-    }
-    for (var key in styles) {
-        var value = styles[key];
-        var curr = getComputedStyle(el, null).getPropertyValue(key);
-        if (!curr || (curr && curr !== value)) {
-            el.style[key] = value;
-        }
-    }
-    return el;
-}
-
-function createActionBar(create) {
-    if (!create) {
-        return "";
-    }
-    return "<div class=\"calendar-action-bar\">\n            <button class='calendar-action calendar-action-prev'><span>prev</span></button>\n            <button class='calendar-action calendar-action-next'><span>next</span></button>\n         </div>\n    ";
-}
-function createMonthDateTemplate(dates) {
-    return Object.keys(dates).map(function (item) {
-        var result = dates[item];
-        var day = result.day;
-        var date = result.date;
-        var data = {
-            key: day ? item : "",
-            text: "<div class=\"date\">" + (date ? date : "") + "</div><div class=\"placeholder\"></div>",
-            day: day ? day : ""
-        };
-        var classNames = ["calendar-cell", "calendar-date-cell"];
-        if (!day) {
-            classNames.push("disabled", "empty");
-        }
-        else {
-            if (day === 0) {
-                classNames.push("calendar-cell-weekend");
-            }
-            if (day === 6) {
-                classNames.push("calendar-cell-weekday");
-            }
-        }
-        return createNode(classNames.join(" "), data.key, data.text, data.day);
-    });
-}
-function createView(data, week, renderWeekOnTop) {
-    var template = data.map(function (item) { return "\n                <div class=\"calendar-main\">\n                <div class=\"calendar-head\">\n                    <div class=\"calendar-title\">" + item.heading + "\n                </div>\n                </div>\n                " + (!renderWeekOnTop ? createMonthWeek(week) : "") + "\n                <div class=\"calendar-body\">" + createMonthDateTemplate(item.dates).join(" ") + "</div>\n                </div>\n            "; });
-    if (renderWeekOnTop) {
-        template.unshift(createMonthWeek(week));
-    }
-    return template.join("").trim();
-}
-function createMonthWeek(language) {
-    var template = language
-        .map(function (day, index) {
-        var className = [
-            "calendar-cell",
-            "calendar-day-cell",
-            index === 0
-                ? "calendar-cell-weekday"
-                : index === 6 ? "calendar-cell-weekend" : ""
-        ];
-        return "<div class=\"" + className.join(" ") + "\">" + day + "</div>";
-    })
-        .join("");
-    return "  <div class=\"calendar-day\">" + template + "</div>";
-}
-function createNode(className, key, text, day) {
-    return "<div class=\"" + className + "\"  " + (day >= 0 ? "data-day=" + day : "") + " " + (key ? "data-date=" + key : "") + ">" + text + "</div>";
-}
-function yearPanel(data) {
-    return "\n                \n                <div class=\"year-title\">\n                    <span class=\"year-prev\">prev</span>\n                    " + data.title + "\n                    <span class=\"year-next\">next</span>\n                </div>\n                <div class=\"year-list\">\n                    " + data.years.map(function (item) { return '<div class="year-cell" data-year=' + item + ' ><span>' + item + '</span></div>'; }).join("") + "            </div>";
-}
-function monthPanel(year, months) {
-    var tem = months.map(function (item, index) { return "<div class=\"month-cell\" data-year=\"" + year + "\" data-month=\"" + index + "\"><span>" + item + "</span></div>"; }).join("");
-    var yearTitle = "<div class=\"year-title\"><span>back</span>" + year + "</div>";
-    return yearTitle + "<div class=\"month-list\">" + tem + "</div>";
-}
-function createTemplate(options) {
-    var renderWeekOnTop = options.renderWeekOnTop, data = options.data, week = options.week;
-    return createActionBar(!renderWeekOnTop) + "  \n             " + createView(data, week, renderWeekOnTop) + "\n             <div class=\"extra-panel\" style=\"display: none;\">\n                        <div class=\"year-panel\"></div>\n                        <div class=\"month-panel\"></div>\n                </div>";
-}
 
 function diff(start, end, type, isAbsolute) {
     if (type === void 0) { type = "month"; }
@@ -264,8 +194,8 @@ function diff(start, end, type, isAbsolute) {
                 (end.getFullYear() * 12 + end.getMonth());
     }
     else if (type === "days") {
-        var startTime = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-        var endTime = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+        var startTime = (new Date(start.getFullYear(), start.getMonth(), start.getDate()));
+        var endTime = (new Date(end.getFullYear(), end.getMonth(), end.getDate()));
         var calcu = Math.ceil(startTime - endTime) / (1000 * 60 * 60 * 24);
         result = isAbsolute ? Math.abs(calcu) : calcu;
     }
@@ -318,15 +248,13 @@ function getViews(view) {
     }
 }
 var getClassName = function (baseClassName, views) {
-    return baseClassName + " calendar calendar-" + (views === 2
-        ? "double-views"
-        : views === 1 ? "single-view" : "flat-view");
+    return baseClassName + " calendar calendar-" + (views === 2 ? "double-views" : views === 1 ? "single-view" : "flat-view");
 };
 function parseEl(el) {
     if (!el) {
         return null;
     }
-    return typeof el === 'string' ? document.querySelector(el) : el;
+    return typeof el === "string" ? document.querySelector(el) : el;
 }
 function setNodeRangeState(el, data, should) {
     if (!should)
@@ -496,7 +424,7 @@ function getDisabledDays(start, end, days, dateFormat) {
 }
 var setDate = function (date, size, who) {
     if (!who) {
-        who = 'date';
+        who = "date";
     }
     if (!size) {
         size = 0;
@@ -504,10 +432,10 @@ var setDate = function (date, size, who) {
     var monthSize = 0;
     var yearSize = 0;
     var dateSize = size;
-    if (who === 'year') {
+    if (who === "year") {
         yearSize = size;
     }
-    else if (who === 'month') {
+    else if (who === "month") {
         monthSize = size;
     }
     return new Date(date.getFullYear() + yearSize, date.getMonth() + monthSize, date.getDate() + dateSize);
@@ -562,6 +490,192 @@ function getDates(year, month) {
     var utc = Date.UTC(d.getFullYear(), d.getMonth() + 1, 0);
     return new Date(utc).getUTCDate();
 }
+function createNode(_a) {
+    var tag = _a.tag, _b = _a.props, props = _b === void 0 ? {} : _b, _c = _a.children, children = _c === void 0 ? "" : _c, _d = _a.render, render = _d === void 0 ? true : _d;
+    if (!tag || !render) {
+        return "";
+    }
+    var attributes = [];
+    for (var key in props) {
+        var value = props[key];
+        if (value) {
+            attributes.push(key + "=\"" + value + "\"");
+        }
+    }
+    children = Array.isArray(children)
+        ? children.filter(function (item) { return !!item; }).join("")
+        : children;
+    return "<" + tag + " " + attributes.join("") + ">" + children + "</" + tag + ">";
+}
+function calendarCellClassName(type, index) {
+    if (type == "disabled") {
+        return ["disabled", "empty"].join(" ");
+    }
+    return [
+        "calendar-cell",
+        "calendar-" + type + "-cell",
+        index === 0
+            ? "calendar-cell-weekday"
+            : index === 6
+                ? "calendar-cell-weekend"
+                : ""
+    ].join(" ");
+}
+function join(list, spliter) {
+    if (!spliter) {
+        spliter = "";
+    }
+    return list.join(spliter);
+}
+
+function createActionBar(create) {
+    var actionNode = function (type) {
+        return createNode({
+            tag: "button",
+            props: {
+                class: "calendar-action calendar-action-" + type
+            },
+            children: createNode({ tag: "span", children: type })
+        });
+    };
+    if (!create) {
+        return "";
+    }
+    return [actionNode("prev"), actionNode("next")].join("");
+}
+function createDateNode(_a, item) {
+    var date = _a.date, day = _a.day;
+    var placeholder = createNode({
+        tag: "div",
+        props: {
+            class: "placeholder"
+        }
+    });
+    var dateNode = createNode({
+        tag: "div",
+        props: {
+            class: "date"
+        },
+        children: date
+    });
+    return createNode({
+        tag: "div",
+        props: {
+            class: calendarCellClassName("date", day),
+            "data-day": day,
+            "data-date": day ? item : ""
+        },
+        children: [dateNode, placeholder]
+    });
+}
+function createView(data, week, renderWeekOnTop) {
+    var head = function (title, year, month) {
+        return createNode({
+            tag: "div",
+            props: { class: "calendar-head" },
+            children: [
+                createNode({
+                    tag: "div",
+                    props: {
+                        class: "calendar-title"
+                    },
+                    children: createNode({
+                        tag: "span",
+                        props: {
+                            "data-year": year,
+                            "data-month": month
+                        },
+                        children: title
+                    })
+                })
+            ]
+        });
+    };
+    var weekMapper = function (day, index) {
+        return createNode({
+            tag: "div",
+            props: { class: calendarCellClassName("day", index) },
+            children: day
+        });
+    };
+    var weeker = createNode({
+        tag: "div",
+        props: { class: "calendar-day" },
+        children: week.map(weekMapper)
+    });
+    var mainNode = function (children) {
+        return createNode({
+            tag: "div",
+            props: {
+                class: "calendar-main"
+            },
+            children: children
+        });
+    };
+    var dateNodes = function (dates) {
+        return Object.keys(dates).map(function (item) { return createDateNode(dates[item], item); });
+    };
+    var template = data.map(function (item) {
+        return mainNode([
+            head(item.heading, item.year, item.month),
+            !renderWeekOnTop ? weeker : "",
+            createNode({
+                tag: "div",
+                props: {
+                    class: "calendar-body"
+                },
+                children: dateNodes(item.dates)
+            })
+        ]);
+    });
+    if (renderWeekOnTop) {
+        template.unshift(weeker);
+    }
+    template = template.filter(function (item) { return !!item; });
+    return template.join("").trim();
+}
+function template(_a) {
+    var renderWeekOnTop = _a.renderWeekOnTop, data = _a.data, week = _a.week, extraPanel = _a.extraPanel;
+    var nodes = [
+        createActionBar(!renderWeekOnTop),
+        createView(data, week, renderWeekOnTop)
+    ];
+    if (extraPanel.type) {
+        var heading = function (type) {
+            if (type !== "month") {
+                return "";
+            }
+            var item = extraPanel.list.filter(function (item) { return item.active; }).pop();
+            return createNode({
+                tag: "h3",
+                children: item.year
+            });
+        };
+        var extraPanelList = extraPanel.list.map(function (item) {
+            return createNode({
+                tag: "div",
+                props: {
+                    class: "extra-item" + (item.active ? " active" : "")
+                },
+                children: createNode({ tag: "span", children: item.displayName })
+            });
+        });
+        nodes.push(createNode({
+            tag: "div",
+            props: {
+                class: "extra-panel extra-panel-" + extraPanel.type
+            },
+            children: [
+                heading(extraPanel.type),
+                createNode({
+                    tag: "div",
+                    children: extraPanelList
+                })
+            ]
+        }));
+    }
+    return join(nodes);
+}
 
 var TypePicker = (function () {
     function TypePicker(option) {
@@ -579,11 +693,12 @@ var TypePicker = (function () {
         this.doubleSelect = false;
         this.canSelectLength = 1;
         this.template = [];
-        this.renderType = '';
+        this.extraPanel = {
+            type: null,
+            list: []
+        };
         this.language = {
-            title: function (year, month) {
-                return year + "\u5E74 " + _this.language.months[month] + "\u6708";
-            },
+            title: function (year, month) { return year + "\u5E74 " + _this.language.months[month] + "\u6708"; },
             week: ["日", "一", "二", "三", "四", "五", "六"],
             months: [
                 "01",
@@ -634,6 +749,15 @@ var TypePicker = (function () {
             if (start !== end) {
                 datesList.push(this.format(endDate, this.dateFormat));
             }
+            var currDate = new Date();
+            if (startDate < currDate ||
+                endDate < currDate ||
+                startDate > this.endDate ||
+                endDate > this.endDate) {
+                warn("setDates", "selected dates are illegal");
+                datesList = [];
+            }
+            console.log(startDate, this);
         }
         else {
             var d = dates[dates.length - 1];
@@ -764,17 +888,17 @@ var TypePicker = (function () {
             : this.views === "auto"
                 ? diff(this.endDate, this.startDate)
                 : 0;
-        var template = [];
+        var template$$1 = [];
         for (var i = 0; i <= monthSize; i++) {
             var dat = new Date(date.getFullYear(), date.getMonth() + i, 1);
             var dates = getDates(dat.getFullYear(), dat.getMonth());
-            template.push({
+            template$$1.push({
                 dates: dates,
                 year: dat.getFullYear(),
                 month: dat.getMonth()
             });
         }
-        return template.map(function (item) {
+        return template$$1.map(function (item) {
             var dates = {};
             var firstDay = new Date(item.year, item.month, 1);
             var lastMonthDates = new Date(item.year, item.month, 0).getDate();
@@ -793,16 +917,13 @@ var TypePicker = (function () {
             }
             return {
                 heading: _this.language.title(item.year, item.month),
+                year: item.year,
+                month: item.month,
                 dates: dates
             };
         });
     };
-    TypePicker.prototype.render = function () {
-        this.element.innerHTML = createTemplate({
-            renderWeekOnTop: this.views === 'auto',
-            data: this.template,
-            week: this.language.week
-        });
+    TypePicker.prototype.didMount = function () {
         var prev = this.element.querySelector(".calendar-action-prev");
         var next = this.element.querySelector(".calendar-action-next");
         if (prev && next) {
@@ -828,87 +949,20 @@ var TypePicker = (function () {
             }
         }
     };
-    TypePicker.prototype.renderYearPanel = function (visible) {
+    TypePicker.prototype.render = function () {
         var _this = this;
-        var createPanel = function (years) {
-            var title = years[0] + " - " + years[years.length - 1];
-            yearPanelNode.innerHTML = yearPanel({
-                years: years,
-                title: title
-            });
-            var yearPrevAction = _this.element.querySelector(".year-prev");
-            var yearNextAction = _this.element.querySelector(".year-next");
-            yearPrevAction.addEventListener("click", function () {
-                var dateString = _this.date.toString();
-                var startDate = years[0] - 11;
-                var date = new Date(dateString);
-                date.setFullYear(startDate);
-                createPanel(createYearsList(date));
-            });
-            yearNextAction.addEventListener("click", function () {
-                var dateString = _this.date.toString();
-                var startDate = years[years.length - 1] + 11;
-                var date = new Date(dateString);
-                date.setFullYear(startDate);
-                createPanel(createYearsList(date));
-            });
-            var yearCell = _this.element.querySelectorAll(".year-cell");
-            var _loop_1 = function (i) {
-                var cell = yearCell[i];
-                cell.addEventListener("click", function () {
-                    var year = parseInt(attr(cell, "data-year"));
-                    _this.date.setFullYear(year);
-                    css(".year-panel", { display: "none" });
-                    css(".month-panel", { display: "block" });
-                    _this.renderMonthPanel(true);
-                });
-            };
-            for (var i = 0; i < yearCell.length; i++) {
-                _loop_1(i);
+        if (!isEmpty(this.extraPanel)) {
+            if (this.extraPanel.type === "month") {
+                this.extraPanel.list = this.extraPanel.list.map(function (item, index) { return (__assign({}, item, { displayName: _this.language.months[index] })); });
             }
-        };
-        var createYearsList = function (date) {
-            var year = date.getFullYear();
-            var start = year - 11;
-            var end = year;
-            var years = [];
-            for (var i = start; i <= end; i++) {
-                years.push(i);
-            }
-            return years;
-        };
-        var years = createYearsList(this.date);
-        var yearPanelNode = this.element.querySelector(".year-panel");
-        css(".extra-panel", { display: visible ? "block" : "none" });
-        css(".year-panel", { display: visible ? "block" : "none" });
-        createPanel(years);
-    };
-    TypePicker.prototype.renderMonthPanel = function (visible) {
-        var _this = this;
-        var month = this.element.querySelector(".month-panel");
-        css(".year-panel", { display: "none" });
-        month.style.display = visible ? "block" : "none";
-        month.innerHTML = monthPanel(this.date.getFullYear(), this.language.months);
-        var monthNodes = month.querySelectorAll(".month-cell");
-        var back = month.querySelector(".year-title span");
-        back.addEventListener("click", function () {
-            css(".year-panel", { display: "block" });
-            css(".month-panel", { display: "none" });
-        });
-        var _loop_2 = function (i) {
-            var cell = monthNodes[i];
-            cell.addEventListener("click", function () {
-                var month = parseInt(attr(cell, "data-month"));
-                css(".extra-panel", { display: "none" });
-                css(".month-panel", { display: "none" });
-                css(".year-panel", { display: "none" });
-                _this.date.setMonth(month);
-                Observer.$emit("render", { type: "select-month" });
-            });
-        };
-        for (var i = 0; i < monthNodes.length; i++) {
-            _loop_2(i);
         }
+        this.element.innerHTML = template({
+            renderWeekOnTop: this.views === "auto",
+            data: this.template,
+            week: this.language.week,
+            extraPanel: this.extraPanel
+        });
+        this.didMount();
     };
     TypePicker.prototype.getRange = function (data) {
         var startDate = getFront(data);
@@ -1051,7 +1105,6 @@ var TypePicker = (function () {
                 _this.date = setDate(result.value);
             }
             _this.template = _this.createMonths(_this.date);
-            _this.renderType = type;
             _this.render();
             Observer.$emit("select", {
                 type: type,
@@ -1059,10 +1112,6 @@ var TypePicker = (function () {
             });
             Observer.$emit("rendered");
         });
-        Observer.$on("renderYearPanel", function (result) {
-            return _this.renderYearPanel(result);
-        });
-        Observer.$on("renderMonthPanel", function (result) { return _this.renderMonthPanel(result); });
         Observer.$on("rendered", function () {
             var bindData = !isEmpty(_this.data) && _this.canSelectLength < 2;
             var isDoubleSelect = _this.doubleSelect;
@@ -1182,7 +1231,7 @@ var TypePicker = (function () {
                 });
             }
             if (isUndefined(_this["driver"])) {
-                var _loop_3 = function (i) {
+                var _loop_1 = function (i) {
                     var node = nodeList[i];
                     node.addEventListener("click", function () {
                         var date = attr(node, "data-date");
@@ -1190,7 +1239,7 @@ var TypePicker = (function () {
                     });
                 };
                 for (var i = 0; i < nodeList.length; i++) {
-                    _loop_3(i);
+                    _loop_1(i);
                 }
             }
             else {
@@ -1249,8 +1298,7 @@ var TypePicker = (function () {
                 return ((initRange.invalidDates.length > 0 || initRange.outOfRange) &&
                     bindData);
             };
-            if (canInitWithSelectedDatesWhenDataBinding() ||
-                initRange.outOfRange) {
+            if (canInitWithSelectedDatesWhenDataBinding() || initRange.outOfRange) {
                 if (initRange.outOfRange) {
                     warn("setDates", "[" + _this.selected + "] out of limit:" + _this.limit);
                 }
@@ -1279,7 +1327,10 @@ var TypePicker = (function () {
             var date;
             if (_this.selected.length > 0) {
                 var initDate = getFront(_this.selected);
-                date = typeof initDate === "string" ? _this.parse(initDate, _this.dateFormat) : initDate;
+                date =
+                    typeof initDate === "string"
+                        ? _this.parse(initDate, _this.dateFormat)
+                        : initDate;
             }
             else {
                 date = isUndefined(_this.startDate) ? new Date() : _this.startDate;

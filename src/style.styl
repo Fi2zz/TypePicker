@@ -16,14 +16,19 @@ brand-disabled = #ccc
     text-align: center
     background #fff
     border: none
-
+    position absolute
+    top 0
+    z-index 100
+    
     &:focus
       outline: none
     &.disabled
       color brand-disabled
     &-prev
+      left 0
       float: left
     &-next
+      right 0
       float: right
   .calendar-action-bar
     height: 44px
@@ -112,7 +117,7 @@ brand-disabled = #ccc
     top: 0
     left: 50%
     transform translateX(-50%)
-    z-index 90
+    z-index 1000
     span
       cursor pointer
       display: inline-block
@@ -128,67 +133,10 @@ brand-disabled = #ccc
   background-color #fff
   right: 0
   z-index: 100
-  .year-panel
-    height: 100%
-    display: none
-  .year-title
-    text-align: center
-    font-size: 14px
-    height: 44px
-    line-height 44px
-    position: absolute
-    top: 0
-    left: 0
-    right: 0
-    .year-prev, .year-next
-      position: absolute
-      top: 0
-      bottom: 0
-      cursor pointer
-    .year-prev
-      left: 0
+  h3
       padding-left: 16px
-    .year-next
-      right: 0
-      padding-right: 16px
-
-  .year-list
-    height: 100%
-    padding-top: 44px
-    font-size: 0
-    .year-cell
-      width (100 / 4) * 1%
-      display: inline-block
-      text-align: center
-      height (100 / 3) * 1%
-      position: relative
       cursor pointer
-      &.active
-        background-color brand
-        color brand-default
-      span
-        position: absolute
-        top: 50%
-        left: 50%
-        transform translate(-50%, -50%)
-        font-size: 14px
-      &:hover
-        background-color rgba(brand, .1)
-  .month-panel
-    height: 100%
-    padding-top: 44px
-    display: none
-    .year-title
-      span
-        position: absolute
-        left: 0
-        top: 0
-        bottom: 0
-        padding-left: 16px
-        cursor pointer
-  .month-list
-    height: 100%
-    .month-cell
+  .extra-item
       display: inline-block
       vertical-align: top
       width (100 / 4) * 1%
@@ -196,6 +144,7 @@ brand-disabled = #ccc
       height (100 / 3) * 1%
       position: relative
       cursor pointer
+      font-size 16px
       &.active
         background-color brand
         color brand-default

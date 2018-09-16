@@ -2,24 +2,19 @@
 <html>
 
 <head>
-    <meta name="viewport"
-          content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,shrink-to-fit=no">
     <meta charset="utf-8">
-    <%if(process.env.NODE_ENV !=="development") {%>
-    <link rel="stylesheet" href="./dist/typepicker.css">
-    <script src="test.min.js"></script>
-    <% } %>
     <title>DatePicker</title>
 </head>
+
 <body>
-<div id="app">
-    <div class="input-group toolbar">
-        <span class="input-group-addon ">选择日期</span>
-        <input class="form-control" id="date-value" type="text" readonly>
-        <div class="popup">
-            <div id=datepicker class="calendar-container" calendar></div>
+    <div id="app">
+        <div class="input-group toolbar">
+            <span class="input-group-addon ">选择日期</span>
+            <input class="form-control" id="date-value" type="text" readonly>
+            <div class="popup">
+                <div id=datepicker class="calendar-container" calendar></div>
+            </div>
         </div>
     </div>
-</div>
-
 </body>

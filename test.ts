@@ -28,7 +28,7 @@ let options = {
   format: dateFormat,
   doubleSelect: true,
   // selection: 5,
-  views: "auto"
+  views: 2
 };
 
 function createDatePicker(selected: Array<any>, options) {
@@ -159,6 +159,11 @@ function init(document: Document) {
     const target = <HTMLElement>e.target;
     if (target) {
       const parent = <HTMLElement>target.parentNode;
+
+      if (!parent) {
+        return null;
+      }
+
       if (parent.nodeType === 1) {
         if (target.tagName.toLowerCase() === "input") {
           popupHandler(true);

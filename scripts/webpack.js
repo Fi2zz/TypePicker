@@ -3,6 +3,7 @@ const webpack = require("webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const WebpackDevServer = require("webpack-dev-server");
 const config = {
+  mode: "development",
   entry: {
     app: ["./test.ts", "./src/style.styl", "./test/test.styl"]
   },
@@ -25,8 +26,7 @@ const config = {
       {
         test: /\.tsx?$/,
         use: ["awesome-typescript-loader"]
-      },
-      { test: /\.html$/, use: ["ejs-loader"] }
+      }
     ]
   },
   resolve: {
