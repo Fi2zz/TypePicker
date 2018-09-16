@@ -1,6 +1,6 @@
 {
   "name": "datepicker",
-  "version": "1.8.3",
+  "version": "2.0.0",
   "description": "A Typescript Datepicker",
   "author": "Fitzzz <wenjingbiao@outlook.com>",
   "private": true,
@@ -9,17 +9,18 @@
     "start": "node scripts/webpack.js",
     "build": "node scripts/rollup.js"
   },
-  "config": {
-    "source": "./src/index.ts",
-    "target": "./dist/typepicker.js",
-    "bundleName": "TypePicker",
-    "bundleFileBaseName": "typepicker",
-    "style": "./src/style.styl",
-    "cssFilename": "style.css",
+  "build": {
+    "entry": {
+      "ts": "./src/index.ts",
+      "style": "./src/style.styl"
+    },
+    "bundle": {
+      "es": "typepicker.esm.js",
+      "umd": "typepicker.min.js"
+    },
+    "css": "style.css",
     "dist": "./dist",
-    "test": "./test.ts",
-    "testBundleName": "Test",
-    "testBundleFilename": "./test.js"
+    "name": "TypePicker"
   },
   "devDependencies": {
     "awesome-typescript-loader": "^3.1.3",

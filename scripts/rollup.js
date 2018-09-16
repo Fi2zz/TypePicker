@@ -1,87 +1,18 @@
 const rollup = require("rollup").rollup;
 const fs = require("fs");
 const path = require("path");
-const stylusApp = require("stylus");
 const colorful = require("colors/safe");
 const uglify = require("uglify-js");
-const pkg = require("../package.json");
+
 const commonJs = require("rollup-plugin-commonjs");
 const typescript = require("rollup-plugin-typescript");
 const fse = require("fs-extra");
-const WORK_TYPES = {
-  TS: "ts",
-  CSS: "css"
-};
-const ROLLUP_PLUGINS = [
-  commonJs(),
-  typescript({ typescript: require("typescript") })
-];
-const PKG_CONFIG = pkg.config;
-const BUNDLE_TO = PKG_CONFIG.target;
-const BUNDLE_NAME = PKG_CONFIG.bundleName;
-const BUNDLE_SOURCE = PKG_CONFIG.source;
-const BUNDLE_STYLE_FILE = PKG_CONFIG.style;
-const BUNDLE_TYPES = {
-  UMD: {
-    name: "umd",
-    suffix: ".min.js"
-  },
-  ESM: {
-    name: "es",
-    suffix: ".esm.js"
-  },
-  CSS: {
-    name: "css",
-    suffix: ".css"
-  }
-};
-const BUILD_CONFIG = [
-  {
-    file: PKG_CONFIG.testBundleFilename,
-    input: PKG_CONFIG.test,
-    name: PKG_CONFIG.testBundleName,
-    format: BUNDLE_TYPES.UMD.name,
-    suffix: BUNDLE_TYPES.UMD.suffix,
-    plugins: ROLLUP_PLUGINS,
-    uglify: false,
-    type: WORK_TYPES.TS
-  },
-  {
-    file: BUNDLE_TO,
-    input: BUNDLE_SOURCE,
-    name: BUNDLE_NAME,
-    format: BUNDLE_TYPES.ESM.name,
-    suffix: BUNDLE_TYPES.ESM.suffix,
-    plugins: ROLLUP_PLUGINS,
-    uglify: false,
-    type: WORK_TYPES.TS
-  },
 
-  {
-    file: BUNDLE_TO,
-    input: BUNDLE_SOURCE,
-    name: BUNDLE_NAME,
-    format: BUNDLE_TYPES.UMD.name,
-    suffix: BUNDLE_TYPES.UMD.suffix,
-    plugins: ROLLUP_PLUGINS,
-    uglify: true,
-    type: WORK_TYPES.TS
-  },
-  {
-    file: BUNDLE_TO,
-    input: BUNDLE_STYLE_FILE,
-    name: PKG_CONFIG.cssFilename,
-    type: WORK_TYPES.CSS,
-    suffix: BUNDLE_TYPES.CSS.suffix
-  }
-];
-const log = (msg, color) => {
-  console.log(colorful[color](msg));
-};
+const log = (msg, color) => console.log(colorful[color](msg));
 function stylus(source) {
   return new Promise((resolve, reject) => {
     const data = fs.readFileSync(source, "utf-8");
-    stylusApp(data)
+    require("stylus")(data)
       .set("compress", true)
       .render(function(err, css) {
         if (err) {
@@ -92,20 +23,22 @@ function stylus(source) {
       });
   });
 }
-function banner(code) {
-  const pkg = require("../package.json");
-  return `  
-/*
-*  TypePicker v${pkg.version}
-*  Fi2zz / wenjingbiao@outlook.com
-*  https://github.com/Fi2zz/datepicker
-*  (c) 2017-${new Date().getFullYear()}, wenjingbiao@outlook.com
-*  ${pkg.license} License
-*/
-${code}
-  `;
+function banner(version, license) {
+  log("> Create banner", "green");
+  return function(code) {
+    return `  
+    /*
+    *  TypePicker v${version}
+    *  Fi2zz / wenjingbiao@outlook.com
+    *  https://github.com/Fi2zz/datepicker
+    *  (c) 2017-${new Date().getFullYear()}, wenjingbiao@outlook.com
+    *  ${license} License
+    */
+    ${code}
+      `;
+  };
 }
-function updatePackageVersion(pkg) {
+async function versioner(pkg) {
   let version = pkg.version;
   version = version.split(".").map(item => parseInt(item));
   let main = version[0];
@@ -121,29 +54,20 @@ function updatePackageVersion(pkg) {
     main += 1;
   }
   pkg.version = `${main}.${min}.${patch}`;
-  let newVersion = pkg.version;
-  log("> Updating package veresion", "green");
-  return write({
-    filename: "./package.json",
-    data: JSON.stringify(pkg, null, 2),
-    bannered: false
-  }).then(() => {
-    log(`> Package version updated ,new version: ${newVersion}`, "green");
-  });
+  return pkg;
 }
-function write({ filename: file, data: code, bannered = true }) {
-  if (bannered) {
-    code = banner(code);
-  }
 
-  return new Promise((resolve, reject) => {
-    fs.writeFile(file, code, err => {
-      if (err) {
-        return reject(err);
-      }
-      resolve();
+function write(file) {
+  return function(code) {
+    return new Promise((resolve, reject) => {
+      fs.writeFile(file, code, err => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(path.basename(file));
+      });
     });
-  });
+  };
 }
 function ugly(code) {
   return uglify.minify(code, {
@@ -155,38 +79,46 @@ function ugly(code) {
     }
   }).code;
 }
-function emptyDir(dir) {
-  log("> Clean up last build", "green");
-  fse.emptyDirSync(dir);
-}
-function build(build) {
+async function create({ entry, bundle, css, dist, name }, plugins, banner) {
   log("> Start bundling...", "green");
-  build.forEach(item => {
-    const { type, file, suffix } = item;
-    let filename = file.replace(".js", suffix).trim();
-    if (type === WORK_TYPES.TS) {
-      delete item.suffix;
-      delete item.type;
-      delete item.uglify;
-      rollup(item)
-        .then(bundle => bundle.generate(item))
-        .then(gen => gen.code)
-        .then(code => ({
-          filename,
-          data: item.uglify ? ugly(code) : code
-        }))
-        .then(write);
-    } else if (type === WORK_TYPES.CSS) {
-      stylus(item.input)
-        .then(css => ({ filename, data: css }))
-        .then(write)
-        .then(() => {
-          log("> Build complete", "green");
-        });
-    }
-  });
+
+  fse.emptyDirSync(dist);
+  let build = {
+    input: entry.ts,
+    name,
+    plugins
+  };
+  for (let key in bundle) {
+    build.file = path.resolve(dist, bundle[key]);
+    build.format = key;
+    let roll = await rollup(build);
+    let { code } = await roll.generate(build);
+    code = banner(key === "umd" ? ugly(code) : code);
+    await write(build.file)(code);
+  }
+  let csscodes = await stylus(entry.style);
+  let cssfilename = path.resolve(dist, css);
+  await write(cssfilename)(banner(csscodes));
+  return true;
 }
 
-updatePackageVersion(pkg)
-  .then(() => emptyDir(PKG_CONFIG.dist))
-  .then(() => build(BUILD_CONFIG));
+function build(pkg) {
+  return function(plugins) {
+    return function(banner) {
+      return function(versioner) {
+        return async function(bundler) {
+          pkg = await versioner(pkg);
+          await bundler(pkg.build, plugins, banner(pkg.version, pkg.license));
+          log("> Updating package version", "green");
+          await write("./package.json")(JSON.stringify(pkg, null, 2));
+          log("> Build complete", "green");
+        };
+      };
+    };
+  };
+}
+
+build(require("../package.json"))([
+  commonJs(),
+  typescript({ typescript: require("typescript") })
+])(banner)(versioner)(create);
