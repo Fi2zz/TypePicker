@@ -1,6 +1,3 @@
-export const attrSelector = (attr: string, value: string) =>
-  `[${attr}="${value}"]`;
-
 export function parseToInt(string: any) {
   return parseInt(string, 10);
 }
@@ -45,10 +42,6 @@ export function isArray(object: any) {
   return _toString(object) === "[object Array]";
 }
 
-export function isBoolean(object: any) {
-  return _toString(object) === "[object Boolean]";
-}
-
 export function isPlainObject(object: any) {
   return _toString(object) === "[object Object]";
 }
@@ -65,25 +58,6 @@ export function isFunction(object: any) {
   return _toString(object) === "[object Function]";
 }
 
-export function hasClass(ele: any, className: string) {
-  if (!ele) {
-    return false;
-  }
-  return new RegExp("(\\s|^)" + className + "(\\s|$)").test(ele.className);
-}
-
-export function addClass(ele: any, className: string) {
-  if (!ele || hasClass(ele, className)) return;
-  ele.className += (ele.className ? " " : "") + className;
-}
-
-export function removeClass(ele: any, className: string) {
-  if (!ele || !hasClass(ele, className)) return;
-  ele.className = ele.className.replace(
-    new RegExp("\\s*\\b" + className + "\\b", "g"),
-    ""
-  );
-}
 let callbacks = [];
 let pending = false;
 let timer = null;
@@ -181,18 +155,4 @@ export function simpleListToMap(list: Array<any>) {
   return map;
 }
 
-export function css(el: any, styles: any) {
-  if (typeof el === "string") {
-    el = document.querySelector(el);
-  }
-
-  for (let key in styles) {
-    let value = styles[key];
-    let curr = getComputedStyle(el, null).getPropertyValue(key);
-
-    if (!curr || (curr && curr !== value)) {
-      el.style[key] = value;
-    }
-  }
-  return el;
-}
+export function noop(): void {}

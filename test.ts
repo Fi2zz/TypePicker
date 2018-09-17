@@ -1,6 +1,21 @@
 import TypePicker from "./src/index";
 import { source, languages as language } from "./test/mock";
-import { addClass } from "./src/util";
+
+export function hasClass(ele: any, className: string) {
+  if (!ele) {
+    return false;
+  }
+  return new RegExp("(\\s|^)" + className + "(\\s|$)").test(ele.className);
+}
+
+
+
+export function addClass(ele: any, className: string) {
+  if (!ele || hasClass(ele, className)) return;
+  ele.className += (ele.className ? " " : "") + className;
+}
+
+
 
 const date = new Date();
 const diff = TypePicker.diff;
