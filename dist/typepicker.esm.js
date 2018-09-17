@@ -1,6 +1,6 @@
   
     /*
-    *  TypePicker v2.0.3
+    *  TypePicker v2.0.4
     *  Fi2zz / wenjingbiao@outlook.com
     *  https://github.com/Fi2zz/datepicker
     *  (c) 2017-2018, wenjingbiao@outlook.com
@@ -749,7 +749,8 @@ var TypePicker = (function () {
             if (start !== end) {
                 datesList.push(this.format(endDate, this.dateFormat));
             }
-            var currDate = new Date();
+            var d = new Date();
+            var currDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
             if (startDate < currDate ||
                 endDate < currDate ||
                 startDate > this.endDate ||

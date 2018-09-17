@@ -1,6 +1,6 @@
   
     /*
-    *  TypePicker v2.0.3
+    *  TypePicker v2.0.4
     *  Fi2zz / wenjingbiao@outlook.com
     *  https://github.com/Fi2zz/datepicker
     *  (c) 2017-2018, wenjingbiao@outlook.com
