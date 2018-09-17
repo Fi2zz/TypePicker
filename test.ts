@@ -1,12 +1,9 @@
-// import "../src/style.styl";
-// import "./test.styl";
 import TypePicker from "./src/index";
 import { source, languages as language } from "./test/mock";
 import { addClass } from "./src/util";
-import { diff } from "./src/datepicker.helpers";
 
 const date = new Date();
-
+const diff = TypePicker.diff;
 const dateFormat = "YYYY-M-D";
 const activeLanguageCode: string = "en-us";
 const formControl = <HTMLInputElement>document.getElementById("date-value");
@@ -26,8 +23,7 @@ let options = {
   endDate,
   limit: 7,
   format: dateFormat,
-  doubleSelect: true,
-  // selection: 5,
+  selection: 2,
   views: 2
 };
 
@@ -153,7 +149,7 @@ function popupHandler(visible: boolean) {
 function init(document: Document) {
   const date = new Date();
 
-  createDatePicker(["2018-8-25", "2018-8-26"], options);
+  createDatePicker(["2018-9-17", "2018-9-18"], options);
 
   document.addEventListener("click", e => {
     const target = <HTMLElement>e.target;

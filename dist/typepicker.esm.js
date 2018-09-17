@@ -1,6 +1,6 @@
   
     /*
-    *  TypePicker v2.0.5
+    *  TypePicker v2.0.6
     *  Fi2zz / wenjingbiao@outlook.com
     *  https://github.com/Fi2zz/datepicker
     *  (c) 2017-2018, wenjingbiao@outlook.com
@@ -55,9 +55,7 @@ function isString(object) {
 function isArray(object) {
     return _toString(object) === "[object Array]";
 }
-function isBoolean(object) {
-    return _toString(object) === "[object Boolean]";
-}
+
 function isPlainObject(object) {
     return _toString(object) === "[object Object]";
 }
@@ -502,9 +500,12 @@ function createNode(_a) {
             attributes.push(key + "=\"" + value + "\"");
         }
     }
-    children = Array.isArray(children)
-        ? children.filter(function (item) { return !!item; }).join("")
-        : children;
+    if (children === false || children === undefined || children === null) {
+        children = "";
+    }
+    else if (Array.isArray(children)) {
+        children = children.filter(function (item) { return !!item; }).join("");
+    }
     return "<" + tag + " " + attributes.join("") + ">" + children + "</" + tag + ">";
 }
 function calendarCellClassName(type, index) {
@@ -528,20 +529,24 @@ function join(list, spliter) {
     return list.join(spliter);
 }
 
-function createActionBar(create) {
-    var actionNode = function (type) {
+function createActionBar(create, reachStart, reachEnd) {
+    if (!create) {
+        return [];
+    }
+    var actionNode = function (type, disabled) {
+        var className = ["calendar-action", "calendar-action-" + type];
+        if (disabled) {
+            className.push("disabled", "calendar-action-disabled");
+        }
         return createNode({
             tag: "button",
             props: {
-                class: "calendar-action calendar-action-" + type
+                class: className.join(" ")
             },
             children: createNode({ tag: "span", children: type })
         });
     };
-    if (!create) {
-        return "";
-    }
-    return [actionNode("prev"), actionNode("next")].join("");
+    return [actionNode("prev", reachStart), actionNode("next", reachEnd)];
 }
 function createDateNode(_a, item) {
     var date = _a.date, day = _a.day;
@@ -635,11 +640,10 @@ function createView(data, week, renderWeekOnTop) {
     return template.join("").trim();
 }
 function template(_a) {
-    var renderWeekOnTop = _a.renderWeekOnTop, data = _a.data, week = _a.week, extraPanel = _a.extraPanel;
-    var nodes = [
-        createActionBar(!renderWeekOnTop),
+    var renderWeekOnTop = _a.renderWeekOnTop, data = _a.data, week = _a.week, extraPanel = _a.extraPanel, reachEnd = _a.reachEnd, reachStart = _a.reachStart;
+    var nodes = createActionBar(!renderWeekOnTop, reachStart, reachEnd).concat([
         createView(data, week, renderWeekOnTop)
-    ];
+    ]);
     if (extraPanel.type) {
         var heading = function (type) {
             if (type !== "month") {
@@ -680,6 +684,7 @@ function template(_a) {
 var TypePicker = (function () {
     function TypePicker(option) {
         var _this = this;
+        this.selection = 1;
         this.dateFormat = null;
         this.limit = 1;
         this.views = 1;
@@ -697,6 +702,8 @@ var TypePicker = (function () {
             type: null,
             list: []
         };
+        this.reachStart = false;
+        this.reachEnd = false;
         this.language = {
             title: function (year, month) { return year + "\u5E74 " + _this.language.months[month] + "\u6708"; },
             week: ["日", "一", "二", "三", "四", "五", "六"],
@@ -722,7 +729,10 @@ var TypePicker = (function () {
             return;
         }
         this.bindListener();
-        this.renderDOM();
+        nextTick(function () {
+            _this.update();
+            Observer.$emit("render", { type: "init" });
+        });
     }
     TypePicker.prototype.on = function (ev, cb) {
         return Observer.$on(ev, cb);
@@ -923,34 +933,28 @@ var TypePicker = (function () {
             };
         });
     };
-    TypePicker.prototype.didMount = function () {
+    TypePicker.prototype.afterRender = function () {
         var prev = this.element.querySelector(".calendar-action-prev");
         var next = this.element.querySelector(".calendar-action-next");
         if (prev && next) {
-            var endGap = this.endDate ? diff(this.endDate, this.date) : 1;
-            var startGap = this.endDate ? diff(this.date, this.startDate) : 2;
-            if (startGap >= 1) {
+            if (!this.reachStart) {
                 prev.addEventListener("click", function () {
                     Observer.$emit("render", { type: "switch", size: -1 });
-                    removeClass(next, "disabled calendar-action-disabled");
                 });
             }
-            else {
-                addClass(prev, "disabled calendar-action-disabled");
-            }
-            if (endGap >= 1) {
+            if (!this.reachEnd) {
                 next.addEventListener("click", function () {
                     Observer.$emit("render", { type: "switch", size: 1 });
-                    removeClass(prev, "disabled calendar-action-disabled");
                 });
-            }
-            else {
-                addClass(next, "disabled calendar-action-disabled");
             }
         }
     };
     TypePicker.prototype.render = function () {
         var _this = this;
+        var endGap = this.endDate ? diff(this.endDate, this.date) : 1;
+        var startGap = this.endDate ? diff(this.date, this.startDate) : 2;
+        this.reachStart = startGap < 1 && endGap >= 1;
+        this.reachEnd = startGap >= 1 && endGap < 1;
         if (!isEmpty(this.extraPanel)) {
             if (this.extraPanel.type === "month") {
                 this.extraPanel.list = this.extraPanel.list.map(function (item, index) { return (__assign({}, item, { displayName: _this.language.months[index] })); });
@@ -960,9 +964,12 @@ var TypePicker = (function () {
             renderWeekOnTop: this.views === "auto",
             data: this.template,
             week: this.language.week,
-            extraPanel: this.extraPanel
+            extraPanel: this.extraPanel,
+            reachStart: this.reachStart,
+            reachEnd: this.reachEnd
         });
-        this.didMount();
+        this.afterRender();
+        Observer.$emit("rendered");
     };
     TypePicker.prototype.getRange = function (data) {
         var startDate = getFront(data);
@@ -1014,21 +1021,6 @@ var TypePicker = (function () {
             outOfRange: outOfRange
         };
     };
-    TypePicker.prototype.createDisabled = function (bindData) {
-        var disabledDays = [], disableDates = [];
-        if (!isUndefined(this["disabledTemp"])) {
-            var _a = this["disabledTemp"], dateList = _a.dateList, disableBefore = _a.disableBefore, disableAfter = _a.disableAfter, dayList = _a.dayList;
-            if (disableBefore) {
-                this.startDate = disableBefore;
-            }
-            if (disableAfter) {
-                this.endDate = disableAfter;
-            }
-            disableDates = dateList;
-            disabledDays = dayList;
-        }
-        this.disables = merge(getDisableDates(this.startDate, this.endDate, this.dateFormat, bindData), getDisabledDays(this.startDate, this.endDate, disabledDays, this.dateFormat), simpleListToMap(disableDates));
-    };
     TypePicker.prototype.giveMeTheWheel = function (callback) {
         if (callback && typeof callback === "function") {
             Object.defineProperty(this, "driver", {
@@ -1046,32 +1038,27 @@ var TypePicker = (function () {
         this.element = parseEl(option.el);
         this.views = getViews(option.views);
         this.element.className = getClassName(this.element.className, this.views);
-        this.doubleSelect =
-            isBoolean(option.doubleSelect) && option.doubleSelect === true;
-        var selection = parseToInt(option.selection);
         var isMultiSelect = false;
-        if (option.selection && !isNaN(selection) && selection >= 2) {
-            this.canSelectLength = selection;
+        if (option.selection > 2) {
+            this.doubleSelect = false;
             isMultiSelect = true;
         }
-        if (this.canSelectLength >= 2) {
-            this.doubleSelect = false;
+        else if (option.selection === 2) {
+            this.doubleSelect = true;
         }
+        this.selection = option.selection || 1;
         this.dateFormat = option.format;
-        if (!isUndefined(option.startDate) && isDate(option.startDate)) {
+        if (isDate(option.startDate)) {
             this.startDate = option.startDate;
         }
-        if (!isUndefined(option.endDate) && isDate(option.endDate)) {
+        if (isDate(option.endDate)) {
             this.endDate = option.endDate;
         }
-        this.limit = this.doubleSelect
-            ? !isNaN(option.limit)
+        this.limit = isMultiSelect
+            ? option.selection
+            : option.limit
                 ? option.limit
-                : 2
-            : 1;
-        if (isMultiSelect) {
-            this.limit = this.canSelectLength;
-        }
+                : 1;
         return true;
     };
     TypePicker.prototype.bindListener = function () {
@@ -1094,10 +1081,8 @@ var TypePicker = (function () {
             }
         });
         Observer.$on("render", function (result) {
+            _this.update();
             var type = result.type;
-            if (type !== "init") {
-                _this.createDisabled(!isEmpty(_this.data));
-            }
             if (type === "switch") {
                 _this.date = setDate(_this.date, result.size, "month");
             }
@@ -1110,10 +1095,9 @@ var TypePicker = (function () {
                 type: type,
                 value: _this.selected
             });
-            Observer.$emit("rendered");
         });
         Observer.$on("rendered", function () {
-            var bindData = !isEmpty(_this.data) && _this.canSelectLength < 2;
+            var bindData = !isEmpty(_this.data) && _this.selection <= 2;
             var isDoubleSelect = _this.doubleSelect;
             var cache = _this.selected;
             var isDisabled = function (date) { return !!_this.disables[date]; };
@@ -1130,9 +1114,16 @@ var TypePicker = (function () {
                 var isDisabledDate = isDisabled(date);
                 var now = _this.parse(date, _this.dateFormat);
                 var prevDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
-                var prevDateIsInValid = isDisabled(_this.format(prevDate, _this.dateFormat));
+                var prev = _this.format(prevDate, _this.dateFormat);
+                var prevDateIsInValid = isDisabled(prev);
+                var nextDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+                var next = _this.format(nextDate, _this.dateFormat);
+                var nextDateIsInValid = isDisabled(next);
                 if ((bindData && selected.length <= 0 && isDisabledDate) ||
-                    (isDoubleSelect && prevDateIsInValid && isDisabledDate) ||
+                    (isDoubleSelect &&
+                        prevDateIsInValid &&
+                        isDisabledDate &&
+                        nextDateIsInValid) ||
                     (index >= 0 && isDisabledDate)) {
                     return {
                         type: "disabled",
@@ -1235,7 +1226,7 @@ var TypePicker = (function () {
                     var node = nodeList[i];
                     node.addEventListener("click", function () {
                         var date = attr(node, "data-date");
-                        Observer.$emit("select", _this.canSelectLength > 2 ? multiPick(date) : pickDate(date));
+                        Observer.$emit("select", _this.selection > 2 ? multiPick(date) : pickDate(date));
                     });
                 };
                 for (var i = 0; i < nodeList.length; i++) {
@@ -1267,13 +1258,26 @@ var TypePicker = (function () {
             }
         });
     };
-    TypePicker.prototype.create = function () {
+    TypePicker.prototype.update = function () {
         var _this = this;
-        var bindData = !isEmpty(this.data) && this.canSelectLength < 2;
-        this.createDisabled(bindData);
-        var validateData = function () {
+        var bindData = !isEmpty(this.data) && this.selection <= 2;
+        var disabledDays = [], disableDates = [];
+        if (!isUndefined(this["disabledTemp"])) {
+            var _a = this["disabledTemp"], dateList = _a.dateList, disableBefore = _a.disableBefore, disableAfter = _a.disableAfter, dayList = _a.dayList;
+            if (disableBefore) {
+                this.startDate = disableBefore;
+            }
+            if (disableAfter) {
+                this.endDate = disableAfter;
+            }
+            disableDates = dateList;
+            disabledDays = dayList;
+        }
+        var merged = merge(getDisableDates(this.startDate, this.endDate, this.dateFormat, bindData), getDisabledDays(this.startDate, this.endDate, disabledDays, this.dateFormat), simpleListToMap(disableDates));
+        var validateData = function (disables) {
+            var result = {};
             if (!bindData) {
-                return false;
+                return {};
             }
             var data = _this.data;
             _this.endDate = _this.parse(getPeek(Object.keys(data)), _this.dateFormat);
@@ -1282,30 +1286,31 @@ var TypePicker = (function () {
                 var date = setDate(_this.startDate, i);
                 var formatted = _this.format(date, _this.dateFormat);
                 if (isUndefined(data[formatted])) {
-                    _this.disables[formatted] = formatted;
+                    result[formatted] = formatted;
                 }
-                else if (!isUndefined(_this.disables[formatted])) {
+                else if (!isUndefined(disables[formatted])) {
                     delete data[formatted];
                 }
             }
             _this.data = data;
+            return result;
         };
-        var validateInitDates = function () {
-            var front = getFront(_this.selected);
-            var peek = getPeek(_this.selected);
-            var initRange = _this.getRange(_this.selected);
+        var validateInitDates = function (selected) {
+            var front = getFront(selected);
+            var peek = getPeek(selected);
+            var initRange = _this.getRange(selected);
             var canInitWithSelectedDatesWhenDataBinding = function () {
                 return ((initRange.invalidDates.length > 0 || initRange.outOfRange) &&
                     bindData);
             };
             if (canInitWithSelectedDatesWhenDataBinding() || initRange.outOfRange) {
                 if (initRange.outOfRange) {
-                    warn("setDates", "[" + _this.selected + "] out of limit:" + _this.limit);
+                    warn("setDates", "[" + selected + "] out of limit:" + _this.limit);
                 }
                 else {
-                    warn("setDates", "Illegal dates [" + _this.selected + "]");
+                    warn("setDates", "Illegal dates [" + selected + "]");
                 }
-                _this.selected = [];
+                selected = [];
             }
             if (_this.views === "auto") {
                 if (isUndefined(_this.startDate)) {
@@ -1316,12 +1321,13 @@ var TypePicker = (function () {
                 }
             }
             if (_this.views === 1) {
-                if (_this.doubleSelect && _this.selected.length >= 2) {
+                if (_this.doubleSelect && selected.length >= 2) {
                     if (front === peek) {
-                        _this.selected.pop();
+                        selected.pop();
                     }
                 }
             }
+            return selected;
         };
         var setInitDate = function () {
             var date;
@@ -1335,23 +1341,13 @@ var TypePicker = (function () {
             else {
                 date = isUndefined(_this.startDate) ? new Date() : _this.startDate;
             }
-            _this.date = date;
+            return date;
         };
-        validateData();
-        validateInitDates();
-        setInitDate();
-        return bindData;
+        this.disables = merge(merged, validateData(merged));
+        this.selected = validateInitDates(this.selected);
+        this.date = setInitDate();
     };
-    TypePicker.prototype.renderDOM = function () {
-        var _this = this;
-        nextTick(function () {
-            var bindData = _this.create();
-            var containerClassName = "" + (bindData ? "with-data" : "no-data");
-            _this.element.className = _this.element.className + " " + containerClassName;
-            Observer.$emit("render", { type: "init" });
-            Observer.$emit("ready");
-        });
-    };
+    TypePicker.diff = diff;
     return TypePicker;
 }());
 

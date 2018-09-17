@@ -408,9 +408,11 @@ export function createNode({
       attributes.push(`${key}="${value}"`);
     }
   }
-  children = Array.isArray(children)
-    ? children.filter(item => !!item).join("")
-    : children;
+  if (children === false || children === undefined || children === null) {
+    children = "";
+  } else if (Array.isArray(children)) {
+    children = children.filter(item => !!item).join("");
+  }
   return `<${tag} ${attributes.join("")}>${children}</${tag}>`;
 }
 

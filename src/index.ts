@@ -2,7 +2,6 @@ interface datePickerOptions {
   el: string | HTMLElement;
   limit?: number;
   format?: string;
-  doubleSelect?: boolean;
   views?: number | string;
   startDate?: Date;
   endDate?: Date;
@@ -25,17 +24,13 @@ import {
   isArray,
   isUndefined,
   isPlainObject,
-  isBoolean,
   isFunction,
   toString,
   getPeek,
   getFront,
-  addClass,
-  removeClass,
   parseToInt,
   nextTick,
-  simpleListToMap,
-  css
+  simpleListToMap
 } from "./util";
 import template from "./datepicker.template";
 import {
@@ -57,6 +52,8 @@ import {
 } from "./datepicker.helpers";
 
 class TypePicker {
+  static diff = diff;
+  private selection: number = 1;
   private dateFormat: string = null;
   private limit: number = 1;
   private views: number | string = 1;
@@ -74,6 +71,10 @@ class TypePicker {
     type: null,
     list: []
   };
+
+  private reachStart: boolean = false;
+  private reachEnd: boolean = false;
+
   private language: any = {
     title: (year, month) => `${year}年 ${this.language.months[month]}月`,
     week: <Array<string>>["日", "一", "二", "三", "四", "五", "六"],
@@ -124,7 +125,8 @@ class TypePicker {
         datesList.push(this.format(endDate, this.dateFormat));
       }
 
-      let currDate = new Date();
+      let d = new Date();
+      let currDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
       if (
         startDate < currDate ||
         endDate < currDate ||
@@ -316,10 +318,11 @@ class TypePicker {
     });
   }
 
-  didMount() {
+  afterRender() {
     //日期切换
     const prev = this.element.querySelector(".calendar-action-prev");
     const next = this.element.querySelector(".calendar-action-next");
+
     const headingAction = () => {
       let titleSpanNode = Array.prototype.slice.call(
         this.element.querySelectorAll(".calendar-title span")
@@ -341,28 +344,25 @@ class TypePicker {
     };
 
     if (prev && next) {
-      const endGap = this.endDate ? diff(this.endDate, this.date) : 1;
-      const startGap = this.endDate ? diff(this.date, this.startDate) : 2;
-      if (startGap >= 1) {
+      if (!this.reachStart) {
         prev.addEventListener("click", () => {
           Observer.$emit("render", { type: "switch", size: -1 });
-          removeClass(next, "disabled calendar-action-disabled");
         });
-      } else {
-        addClass(prev, "disabled calendar-action-disabled");
       }
-      if (endGap >= 1) {
+      if (!this.reachEnd) {
         next.addEventListener("click", () => {
           Observer.$emit("render", { type: "switch", size: 1 });
-          removeClass(prev, "disabled calendar-action-disabled");
         });
-      } else {
-        addClass(next, "disabled calendar-action-disabled");
       }
     }
   }
 
   private render() {
+    const endGap = this.endDate ? diff(this.endDate, this.date) : 1;
+    const startGap = this.endDate ? diff(this.date, this.startDate) : 2;
+    this.reachStart = startGap < 1 && endGap >= 1;
+    this.reachEnd = startGap >= 1 && endGap < 1;
+
     if (!isEmpty(this.extraPanel)) {
       if (this.extraPanel.type === "month") {
         this.extraPanel.list = this.extraPanel.list.map((item, index) => ({
@@ -371,13 +371,17 @@ class TypePicker {
         }));
       }
     }
+
     this.element.innerHTML = template({
       renderWeekOnTop: this.views === "auto",
       data: this.template,
       week: this.language.week,
-      extraPanel: this.extraPanel
+      extraPanel: this.extraPanel,
+      reachStart: this.reachStart,
+      reachEnd: this.reachEnd
     });
-    this.didMount();
+    this.afterRender();
+    Observer.$emit("rendered");
   }
 
   private getRange(data: Array<any>) {
@@ -429,36 +433,6 @@ class TypePicker {
     };
   }
 
-  private createDisabled(bindData: boolean) {
-    let disabledDays = [],
-      disableDates: string[] = [];
-    if (!isUndefined(this["disabledTemp"])) {
-      let { dateList, disableBefore, disableAfter, dayList } = this[
-        "disabledTemp"
-      ];
-      if (disableBefore) {
-        this.startDate = disableBefore;
-      }
-      if (disableAfter) {
-        this.endDate = disableAfter;
-      }
-      disableDates = dateList;
-      disabledDays = dayList;
-    }
-
-    //无效日期
-    this.disables = merge(
-      getDisableDates(this.startDate, this.endDate, this.dateFormat, bindData),
-      getDisabledDays(
-        this.startDate,
-        this.endDate,
-        disabledDays,
-        this.dateFormat
-      ),
-      simpleListToMap(disableDates)
-    );
-  }
-
   public giveMeTheWheel(callback: Function) {
     if (callback && typeof callback === "function") {
       Object.defineProperty(this, "driver", {
@@ -477,36 +451,30 @@ class TypePicker {
     this.element = parseEl(option.el);
     this.views = getViews(option.views);
     this.element.className = getClassName(this.element.className, this.views);
-    this.doubleSelect =
-      isBoolean(option.doubleSelect) && option.doubleSelect === true;
-    const selection = parseToInt(option.selection);
+
     let isMultiSelect = false;
 
-    if (option.selection && !isNaN(selection) && selection >= 2) {
-      this.canSelectLength = selection;
-      isMultiSelect = true;
-    }
-    if (this.canSelectLength >= 2) {
+    if (option.selection > 2) {
       this.doubleSelect = false;
+      isMultiSelect = true;
+    } else if (option.selection === 2) {
+      this.doubleSelect = true;
     }
 
+    this.selection = option.selection || 1;
     this.dateFormat = option.format;
-    if (!isUndefined(option.startDate) && isDate(option.startDate)) {
+    if (isDate(option.startDate)) {
       this.startDate = option.startDate;
     }
-    if (!isUndefined(option.endDate) && isDate(option.endDate)) {
+    if (isDate(option.endDate)) {
       this.endDate = option.endDate;
     }
     //選擇日期區間最大限制
-    this.limit = this.doubleSelect
-      ? !isNaN(option.limit)
+    this.limit = isMultiSelect
+      ? option.selection
+      : option.limit
         ? option.limit
-        : 2
-      : 1;
-
-    if (isMultiSelect) {
-      this.limit = this.canSelectLength;
-    }
+        : 1;
 
     return true;
   }
@@ -537,9 +505,9 @@ class TypePicker {
       }
     });
     Observer.$on("render", (result: any) => {
+      this.update();
       let { type } = result;
       if (type !== "init") {
-        this.createDisabled(!isEmpty(this.data));
       }
       if (type === "switch") {
         this.date = setDate(this.date, result.size, "month");
@@ -554,10 +522,9 @@ class TypePicker {
         type,
         value: this.selected
       });
-      Observer.$emit("rendered");
     });
     Observer.$on("rendered", () => {
-      const bindData = !isEmpty(this.data) && this.canSelectLength < 2;
+      const bindData = !isEmpty(this.data) && this.selection <= 2;
       const isDoubleSelect = this.doubleSelect;
       const cache = this.selected;
       const isDisabled = (date: string) => !!this.disables[date];
@@ -582,12 +549,22 @@ class TypePicker {
           now.getMonth(),
           now.getDate() - 1
         );
-        const prevDateIsInValid = isDisabled(
-          this.format(prevDate, this.dateFormat)
+        const prev = this.format(prevDate, this.dateFormat);
+        const prevDateIsInValid = isDisabled(prev);
+        const nextDate = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 1
         );
+
+        const next = this.format(nextDate, this.dateFormat);
+        const nextDateIsInValid = isDisabled(next);
         if (
           (bindData && selected.length <= 0 && isDisabledDate) ||
-          (isDoubleSelect && prevDateIsInValid && isDisabledDate) ||
+          (isDoubleSelect &&
+            prevDateIsInValid &&
+            isDisabledDate &&
+            nextDateIsInValid) ||
           (index >= 0 && isDisabledDate)
         ) {
           return {
@@ -706,7 +683,7 @@ class TypePicker {
             const date = attr(node, "data-date");
             Observer.$emit(
               "select",
-              this.canSelectLength > 2 ? multiPick(date) : pickDate(date)
+              this.selection > 2 ? multiPick(date) : pickDate(date)
             );
           });
         }
@@ -739,14 +716,42 @@ class TypePicker {
     });
   }
 
-  private create() {
-    const bindData = !isEmpty(this.data) && this.canSelectLength < 2;
-    //初始视图所在日期
-    this.createDisabled(bindData);
+  private update() {
+    const bindData = !isEmpty(this.data) && this.selection <= 2;
+
+    let disabledDays = [],
+      disableDates: string[] = [];
+    if (!isUndefined(this["disabledTemp"])) {
+      let { dateList, disableBefore, disableAfter, dayList } = this[
+        "disabledTemp"
+      ];
+      if (disableBefore) {
+        this.startDate = disableBefore;
+      }
+      if (disableAfter) {
+        this.endDate = disableAfter;
+      }
+      disableDates = dateList;
+      disabledDays = dayList;
+    }
+
+    //无效日期
+    let merged = merge(
+      getDisableDates(this.startDate, this.endDate, this.dateFormat, bindData),
+      getDisabledDays(
+        this.startDate,
+        this.endDate,
+        disabledDays,
+        this.dateFormat
+      ),
+      simpleListToMap(disableDates)
+    );
     //去掉data里的无效日期
-    const validateData = () => {
+    const validateData = disables => {
+      let result = {};
+
       if (!bindData) {
-        return false;
+        return {};
       }
       let data = this.data;
       //此处未排序日期，直接取this.data的最后一个key
@@ -757,18 +762,20 @@ class TypePicker {
         let date = setDate(this.startDate, i);
         let formatted = this.format(date, this.dateFormat);
         if (isUndefined(data[formatted])) {
-          this.disables[formatted] = formatted;
-        } else if (!isUndefined(this.disables[formatted])) {
+          result[formatted] = formatted;
+        } else if (!isUndefined(disables[formatted])) {
           delete data[formatted];
         }
       }
       this.data = data;
+
+      return result;
     };
     //校验初始selected
-    const validateInitDates = () => {
-      const front = getFront(this.selected);
-      const peek = getPeek(this.selected);
-      let initRange = this.getRange(this.selected);
+    const validateInitDates = selected => {
+      const front = getFront(selected);
+      const peek = getPeek(selected);
+      let initRange = this.getRange(selected);
       let canInitWithSelectedDatesWhenDataBinding = () => {
         return (
           (initRange.invalidDates.length > 0 || initRange.outOfRange) &&
@@ -777,11 +784,11 @@ class TypePicker {
       };
       if (canInitWithSelectedDatesWhenDataBinding() || initRange.outOfRange) {
         if (initRange.outOfRange) {
-          warn("setDates", `[${this.selected}] out of limit:${this.limit}`);
+          warn("setDates", `[${selected}] out of limit:${this.limit}`);
         } else {
-          warn("setDates", "Illegal dates [" + this.selected + "]");
+          warn("setDates", "Illegal dates [" + selected + "]");
         }
-        this.selected = [];
+        selected = [];
       }
       if (this.views === "auto") {
         //flat 视图情况下，
@@ -795,12 +802,13 @@ class TypePicker {
         }
       }
       if (this.views === 1) {
-        if (this.doubleSelect && this.selected.length >= 2) {
+        if (this.doubleSelect && selected.length >= 2) {
           if (front === peek) {
-            this.selected.pop();
+            selected.pop();
           }
         }
       }
+      return selected;
     };
     const setInitDate = () => {
       let date;
@@ -813,33 +821,24 @@ class TypePicker {
       } else {
         date = isUndefined(this.startDate) ? new Date() : this.startDate;
       }
-      this.date = date;
+      //   this.date = date;
+
+      return date;
     };
-    validateData();
-    validateInitDates();
-    setInitDate();
-    return bindData;
+    this.disables = merge(merged, validateData(merged));
+    this.selected = validateInitDates(this.selected);
+    this.date = setInitDate();
   }
-
-  renderDOM() {
-    nextTick(() => {
-      let bindData = this.create();
-      let containerClassName = `${bindData ? "with-data" : "no-data"}`;
-      this.element.className = `${
-        this.element.className
-      } ${containerClassName}`;
-      Observer.$emit("render", { type: "init" });
-      Observer.$emit("ready");
-    });
-  }
-
   constructor(option: datePickerOptions) {
     let canInit = this.beforeInit(option);
     if (!canInit) {
       return;
     }
     this.bindListener();
-    this.renderDOM();
+    nextTick(() => {
+      this.update();
+      Observer.$emit("render", { type: "init" });
+    });
   }
 }
 export default TypePicker;

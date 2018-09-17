@@ -6,20 +6,29 @@ interface classTemplate {
   extraYearsList?: any;
   data?: Array<any>;
   week: Array<any>;
+  reachStart: boolean;
+  reachEnd: boolean;
 }
-function createActionBar(create?: boolean) {
-  let actionNode = type =>
-    createNode({
+function createActionBar(create: boolean, reachStart, reachEnd) {
+  if (!create) {
+    return [];
+  }
+
+  let actionNode = (type, disabled) => {
+    let className = ["calendar-action", `calendar-action-${type}`];
+    if (disabled) {
+      className.push("disabled", "calendar-action-disabled");
+    }
+    return createNode({
       tag: "button",
       props: {
-        class: "calendar-action calendar-action-" + type
+        class: className.join(" ")
       },
       children: createNode({ tag: "span", children: type })
     });
-  if (!create) {
-    return "";
-  }
-  return [actionNode("prev"), actionNode("next")].join("");
+  };
+
+  return [actionNode("prev", reachStart), actionNode("next", reachEnd)];
 }
 
 function createDateNode({ date, day }, item) {
@@ -121,10 +130,12 @@ export default function template({
   renderWeekOnTop,
   data,
   week,
-  extraPanel
+  extraPanel,
+  reachEnd,
+  reachStart
 }: classTemplate) {
   let nodes = [
-    createActionBar(!renderWeekOnTop),
+    ...createActionBar(!renderWeekOnTop, reachStart, reachEnd),
     createView(data, week, renderWeekOnTop)
   ];
 
