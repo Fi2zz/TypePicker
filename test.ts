@@ -8,14 +8,10 @@ export function hasClass(ele: any, className: string) {
   return new RegExp("(\\s|^)" + className + "(\\s|$)").test(ele.className);
 }
 
-
-
 export function addClass(ele: any, className: string) {
   if (!ele || hasClass(ele, className)) return;
   ele.className += (ele.className ? " " : "") + className;
 }
-
-
 
 const date = new Date();
 const diff = TypePicker.diff;
@@ -31,7 +27,7 @@ const dist = {
 };
 const currDate = new Date(dist.year, dist.month, dist.date);
 const startDate = new Date(dist.year, dist.month, dist.date);
-const endDate = new Date(dist.year + 10, dist.month + 6, dist.date);
+const endDate = new Date(dist.year, dist.month + 6, dist.date);
 let options = {
   el: "#datepicker", // document.getElementById("datepicker"),
   startDate,
@@ -49,17 +45,16 @@ function createDatePicker(selected: Array<any>, options) {
 
   console.log(app);
 
-  app.on("update", (result: any) => {
-    if (result.type === "selected" && result.value.length === 2) {
-      popupHandler(false);
-    }
-    formControl.value = result.value;
+  app.on("update", ({ value }: any) => {
+    formControl.value = value;
   });
   app.on("disabled", (result: any) => {
     const { dateList, nodeList } = result;
     for (let n = 0; n < nodeList.length; n++) {
       let node = nodeList[n];
-      if (dateList[node.getAttribute("data-date")]) {
+      // console.log(node.getAttribute("data-date"));
+      let date = node.getAttribute("data-date");
+      if (dateList.indexOf(date) >= 0) {
         node.classList.add("disabled");
       }
     }
@@ -71,19 +66,18 @@ function createDatePicker(selected: Array<any>, options) {
     for (let i = 0; i < nodeList.length; i++) {
       let node = nodeList[i];
       let date = node.getAttribute("data-date");
-
       if (date in data) {
-        if (!node.classList.contains("disabled")) {
-          let itemData = source[date];
-          if (itemData.highlight) {
-            addClass(node, "highlight");
-          }
-          let placeholder: HTMLElement = node.querySelector(".placeholder");
-          placeholder.innerHTML = itemData.value;
+        // if (!hasClass(node, "disabled")) {
+        let itemData = source[date];
+        if (itemData.highlight) {
+          // addClass(node, "highlight");
         }
-      } else {
-        addClass(node, "disabled");
+        let placeholder: HTMLElement = node.querySelector(".placeholder");
+        placeholder.innerHTML = itemData.value;
       }
+      // } else {
+      // addClass(node, "disabled");
+      // }
     }
   });
   // app.on("ready", () => {
@@ -103,13 +97,13 @@ function createDatePicker(selected: Array<any>, options) {
   //     });
   // });
   if (selected.length >= 2) {
-    app.setDates(selected);
+    // app.setDates(selected);
   }
-  app.setLanguage({
-    title: (year, month) => `${activeLanguage["months"][month]} ${year}`,
-    days: activeLanguage.days,
-    months: activeLanguage.months
-  });
+  // app.setLanguage({
+  //   title: (year, month) => `${activeLanguage["months"][month]} ${year}`,
+  //   days: activeLanguage.days,
+  //   months: activeLanguage.months
+  // });
   app.setDisabled({
     dates: [
       "2018-2-18",
@@ -127,10 +121,10 @@ function createDatePicker(selected: Array<any>, options) {
       "2018-4-20",
       "2018-4-29",
       "2018-4-30"
-    ]
+    ],
     // from: new Date(2018, 4, 1), //"2018-5-1",
     // to: new Date(2018, 2, 15),
-    // days: [2]
+    days: [2, 3, 5]
   });
   // app.giveMeTheWheel((nodeList, app) => {
   //   Array.prototype.slice.call(nodeList).forEach(item => {
@@ -142,17 +136,17 @@ function createDatePicker(selected: Array<any>, options) {
   //     });
   //   });
   // });
-  const bindData = true;
-  if (bindData) {
-    app.setData(() => {
-      Object.keys(source).forEach(date => {
-        if (diff(app.parse(date), startDate, "days") < 0) {
-          delete source[date];
-        }
-      });
-      return source;
-    });
-  }
+  // const bindData = true;
+  // if (bindData) {
+  //   app.setData(() => {
+  //     Object.keys(source).forEach(date => {
+  //       if (diff(app.parse(date), startDate, "days") < 0) {
+  //         delete source[date];
+  //       }
+  //     });
+  //     return source;
+  //   });
+  // }
   return app;
 }
 
@@ -164,7 +158,7 @@ function popupHandler(visible: boolean) {
 function init(document: Document) {
   const date = new Date();
 
-  createDatePicker(["2018-9-17", "2018-9-18"], options);
+  createDatePicker(["2018-9-21", "2018-9-22"], options);
 
   document.addEventListener("click", e => {
     const target = <HTMLElement>e.target;

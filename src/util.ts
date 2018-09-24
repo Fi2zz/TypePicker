@@ -147,12 +147,44 @@ export function isEmpty(listOrObject: any) {
   }
 }
 
-export function simpleListToMap(list: Array<any>) {
+export function simpleListToMap(list: Array<any>, key?: string | number) {
   let map = {};
   for (let it of list) {
-    map[it] = it;
+    map[key ? it[key] : it] = it;
   }
   return map;
 }
 
 export function noop(): void {}
+
+export function $(selector: string | any, selector$2?: string): any {
+  const selectAll = (who, selector) => {
+    let nodes = who.querySelectorAll(selector);
+
+    let ArrayNodes = Array.prototype.slice.call(nodes);
+
+    if (ArrayNodes.length <= 0) {
+      return null;
+    } else if (ArrayNodes.length === 1) {
+      return nodes[0];
+    } else {
+      return nodes;
+    }
+  };
+
+  if (typeof selector === "string") {
+    if (selector.indexOf("#") === 0) {
+      selector = selector.substr(1);
+      return document.getElementById(selector);
+    } else if (selector.indexOf(".") == 0) {
+      return selectAll(document, selector);
+    }
+  } else {
+    return selectAll(selector, selector$2);
+  }
+
+  return null;
+}
+
+export const listHead = list => list[0];
+export const listTail = list => list[list.length - 1];

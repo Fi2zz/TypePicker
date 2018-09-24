@@ -25,12 +25,11 @@ import {
   isUndefined,
   isPlainObject,
   isFunction,
-  getPeek,
-  getFront,
   parseToInt,
-  nextTick,
-  simpleListToMap,
-  noop
+  noop,
+  listHead,
+  listTail,
+  $
 } from "./util";
 import template from "./datepicker.template";
 import {
@@ -46,22 +45,42 @@ import {
   diff,
   getDates,
   getMonthsByYear,
-  getYearsByDate
+  getYearsByDate,
+  createDate,
+  createFormatDate,
+  createParseDate,
+  createNodeClassName,
+  findDiableDates,
+  findDisableInQueue,
+  defaultLanguage,
+  containerClassName,
+  checkPickableDate
 } from "./datepicker.helpers";
+import { Queue } from "./datepicker.queue";
 
-class TypePicker {
-  private setState<Function>(state: any, next?: Function | any) {
-    this.state = {
-      ...this.state,
-      ...state
-    };
+const emitter = event => (type, value) =>
+  Observer.$emit(event, { type, value });
+
+let queue = null;
+
+export default class TypePicker {
+  protected setState<Function>(state: any | Function, next?: Function | any) {
+    if (typeof state === "function") {
+      this.state = state(this.state);
+    } else {
+      this.state = {
+        ...this.state,
+        ...state
+      };
+    }
+
     setTimeout(() => {
-      this.render(this.createMonths());
-      typeof next === "function" && next();
+      this.render(next);
     }, 0);
   }
 
-  state: any = {
+  private state: any = {
+    bindData: false,
     selection: <number>1,
     views: <number | string>1,
     date: <Date>new Date(),
@@ -72,82 +91,33 @@ class TypePicker {
     reachEnd: <boolean>false,
     reachStart: <boolean>false,
     dateFormat: <string>null,
-    doubleSelect: <boolean>false,
     limit: <number>1,
-    disables: <any>{},
-    language: <any>{
-      title: (year, month) =>
-        `${year}年 ${this.state.language.months[month]}月`,
-      week: <Array<string>>["日", "一", "二", "三", "四", "五", "六"],
-      months: <Array<string>>[
-        "01",
-        "02",
-        "03",
-        "04",
-        "05",
-        "06",
-        "07",
-        "08",
-        "09",
-        "10",
-        "11",
-        "12"
-      ]
-    }
+    disables: <any[]>[],
+    language: <any>defaultLanguage
   };
 
   static diff = diff;
   private element: any = null;
-  private language: any = {
-    title: (year, month) => `${year}年 ${this.language.months[month]}月`,
-    week: <Array<string>>["日", "一", "二", "三", "四", "五", "六"],
-    months: <Array<string>>[
-      "01",
-      "02",
-      "03",
-      "04",
-      "05",
-      "06",
-      "07",
-      "08",
-      "09",
-      "10",
-      "11",
-      "12"
-    ]
-  };
 
-  public on(ev: string, cb: Function) {
-    return Observer.$on(ev, cb);
-  }
-
-  public emit(ev: string, arg: any) {
-    return Observer.$emit(ev, arg);
-  }
-
-  public format = format;
-  public parse = parse;
-
+  public on = Observer.$on;
+  public format = (date: Date) => format(date, this.state.dateFormat);
+  public parse = (date: string | Date) => parse(date, this.state.dateFormat);
   public setDates(dates: Array<any>) {
     if (!isArray(dates)) return;
     let datesList: Array<any> = [];
     let start: string = "",
       end: string = "";
-    if (this.state.doubleSelect) {
+    if (this.state.selection === 2) {
       if (dates.length > 2) {
         dates = dates.slice(0, 2);
       }
       start = <any>dates[0];
       end = <any>dates[dates.length - 1];
-      const startDate = isDate(start)
-        ? start
-        : this.parse(start, this.state.dateFormat);
-      const endDate = isDate(end)
-        ? end
-        : this.parse(end, this.state.dateFormat);
-      datesList = [this.format(startDate, this.state.dateFormat)];
+      const startDate = isDate(start) ? start : this.parse(start);
+      const endDate = isDate(end) ? end : this.parse(end);
+      datesList = [this.format(startDate)];
       if (start !== end) {
-        datesList.push(this.format(endDate, this.state.dateFormat));
+        datesList.push(this.format(endDate));
       }
 
       let d = new Date();
@@ -163,7 +133,7 @@ class TypePicker {
       }
     } else {
       const d = dates[dates.length - 1];
-      datesList = [isDate(d) ? this.format(d, this.state.dateFormat) : d];
+      datesList = [isDate(d) ? this.format(d) : d];
     }
 
     this.setState({
@@ -171,159 +141,20 @@ class TypePicker {
     });
   }
 
-  public setDisabled(param: disable) {
-    let state = <any>{};
+  private createTemplate() {
+    const {
+      date,
+      selected,
+      dateFormat,
+      views,
+      endDate,
+      startDate,
+      selection
+    } = this.state;
+    const format = this.format;
 
-    if (
-      !param ||
-      (isPlainObject(param) && Object.keys(param).length <= 0) ||
-      !isArray(param.dates) ||
-      !isArray(param.days)
-    ) {
-      return false;
-    }
-
-    let dateList = [];
-    let dayList = [];
-
-    if (isArray(param.dates)) {
-      dateList = param.dates
-        .map((date: any) => {
-          let parsed = this.parse(<any>date, this.state.dateFormat);
-          if (isDate(parsed)) {
-            return this.format(parsed, this.state);
-          }
-        })
-        .filter((item: string) => !!item);
-    }
-
-    let fromDate: any;
-    let toDate: any;
-    const to = param.to;
-    const from = param.from;
-
-    if (from) {
-      if (isDate(from)) {
-        fromDate = from;
-      } else {
-        const parsed = this.parse(<string>from, this.state.dateFormat);
-        if (isDate(parsed)) {
-          fromDate = parsed;
-        } else {
-          return false;
-        }
-      }
-      state.endDate = setDate(fromDate);
-    }
-    if (to) {
-      if (isDate(to)) {
-        toDate = to;
-      } else {
-        const parsed = this.parse(<string>to, this.state.dateFormat);
-        if (isDate(parsed)) {
-          toDate = parsed;
-        } else {
-          return false;
-        }
-      }
-      state.endDate = setDate(toDate);
-    }
-
-    if (isArray(param.days)) {
-      dayList = param.days.filter(item => {
-        let parsed = parseToInt(item);
-        return !isNaN(parsed) && parsed >= 0 && parsed <= 6;
-      });
-    }
-
-    this.setState({
-      ...state,
-      disables: merge(
-        getDisableDates(
-          this.state.startDate,
-          this.state.endDate,
-          this.state.dateFormat,
-          this.state.data && this.state.selection <= 2
-        ),
-        getDisabledDays(
-          this.state.startDate,
-          this.state.endDate,
-          dayList,
-          this.state.dateFormat
-        ),
-        simpleListToMap(dateList)
-      )
-    });
-  }
-
-  public setLanguage(pack: any) {
-    if (
-      isArray(pack.days) &&
-      isArray(pack.months) &&
-      typeof pack.title === "function"
-    ) {
-      this.language = {
-        week: pack.days,
-        months: pack.months,
-        title: pack.title
-      };
-    }
-  }
-
-  public setData(cb: Function) {
-    if (isFunction(cb) && this.state.selection <= 2) {
-      const result = cb();
-      if (isPlainObject(result)) {
-        const map = {};
-        for (let key in result) {
-          let date = this.parse(key, this.state.dateFormat);
-          if (date instanceof Date) {
-            map[key] = result[key];
-          }
-        }
-        this.setState({ data: map });
-      }
-    }
-  }
-
-  private createMonths() {
-    const { date, selected, dateFormat } = this.state;
-    let ranger = selected => {
-      let start = selected[0];
-      let end = selected[selected.length - 1];
-      let startDate = this.parse(start, dateFormat);
-      let endDate = this.parse(end, dateFormat);
-      let days = diff(endDate, startDate, "days");
-      let dates = [];
-      for (let i = 0; i <= days; i++) {
-        let date = new Date(
-          startDate.getFullYear(),
-          startDate.getMonth(),
-          startDate.getDate() + i
-        );
-        dates.push(this.format(date, dateFormat));
-      }
-      return function(date) {
-        if (dates.indexOf(date) === 0) {
-          return "active start-date";
-        } else if (dates.indexOf(date) === dates.length - 1) {
-          return "active end-date";
-        } else if (
-          dates.indexOf(date) > 0 &&
-          dates.indexOf(date) < dates.length - 1
-        ) {
-          return "in-range";
-        } else {
-          return "";
-        }
-      };
-    };
     const monthSize =
-      this.state.views == 2
-        ? 1
-        : this.state.views === "auto"
-          ? diff(this.state.endDate, this.state.startDate)
-          : 0;
+      views == 2 ? 1 : views === "auto" ? diff(endDate, startDate) : 0;
     const template = [];
     for (let i = 0; i <= monthSize; i++) {
       let dat = new Date(date.getFullYear(), date.getMonth() + i, 1);
@@ -335,18 +166,36 @@ class TypePicker {
       });
     }
 
+    const range = ((selected, selection) => {
+      if (!selected || selected.length <= 0) {
+        return [];
+      }
+      if (selection > 2) {
+        return selected;
+      }
+      let start = this.parse(selected[0]);
+      let end = this.parse(selected[selected.length - 1]);
+      return createDate({
+        date: start,
+        days: diff(end, start, "days"),
+        dateFormat: dateFormat
+      });
+    })(selected, selection);
+
     return template.map((item: any) => {
+      let heading = this.state.language.title(item.year, item.month);
+
       let dates = {};
       let firstDay = new Date(item.year, item.month, 1);
       let lastMonthDates = new Date(item.year, item.month, 0).getDate();
+
       for (let i = 0; i < firstDay.getDay(); i++) {
-        let lateMonthDate: any = new Date(
+        let lateMonthDate: Date = new Date(
           item.year,
           item.month - 1,
           lastMonthDates - i
         );
-        let formatted: any = this.format(lateMonthDate, this.state.dateFormat);
-        dates[formatted] = {
+        dates[format(lateMonthDate)] = {
           date: false,
           day: false,
           className: "disabled empty"
@@ -354,15 +203,19 @@ class TypePicker {
       }
       for (let i = 0; i < item.dates; i++) {
         let date = new Date(item.year, item.month, i + 1);
-        let formatted = this.format(date, this.state.dateFormat);
+        let formatted = format(date);
         dates[formatted] = {
-          date: `${date.getDate()}`,
-          day: `${date.getDay()}`,
-          className: ranger(selected)(formatted)
+          date: date.getDate(),
+          day: date.getDay(),
+          className: createNodeClassName({
+            date: formatted,
+            dates: range,
+            onlyActive: selection !== 2
+          })
         };
       }
       return {
-        heading: this.language.title(item.year, item.month),
+        heading,
         year: item.year,
         month: item.month,
         dates
@@ -370,396 +223,228 @@ class TypePicker {
     });
   }
 
-  private beforeRender(option: datePickerOptions) {
-    if (!option || !parseEl(option.el)) {
-      return false;
-    }
-
-    this.element = parseEl(option.el);
-    let isMultiSelect = false;
-    let states: any = {
-      selection: option.selection || 1,
-      dateFormat: option.format
-    };
-    if (option.selection > 2) {
-      isMultiSelect = true;
-    }
-    if (isDate(option.startDate)) {
-      states.startDate = option.startDate;
-    }
-    if (isDate(option.endDate)) {
-      states.endDate = option.endDate;
-    }
-
-    this.setState(
-      {
-        views: getViews(option.views),
-        limit: isMultiSelect
-          ? option.selection
-          : option.limit
-            ? option.limit
-            : 1,
-        doubleSelect: option.selection && option.selection === 2,
-        ...states
-      },
-      () => {
-        this.element.className = getClassName(
-          this.element.className,
-          this.state.views
-        );
-      }
-    );
-    return true;
-  }
-
-  private render(data) {
-    const { views, reachStart, reachEnd } = this.state;
+  private render(next: Function | undefined) {
+    const {
+      views,
+      reachStart,
+      reachEnd,
+      language: { week }
+    } = this.state;
 
     this.element.innerHTML = template({
-      renderWeekOnTop: views === "auto",
-      data,
-      week: this.language.week,
+      data: this.createTemplate(),
+      week,
       extraPanel: null,
       reachStart: reachStart,
-      reachEnd: reachEnd
+      reachEnd: reachEnd,
+      renderWeekOnTop: views === "auto"
     });
-    this.afterRender();
+
+    this.afterRender(next);
   }
 
-  private afterRender() {
-    //日期切换
-    const prev = this.element.querySelector(".calendar-action-prev");
-    const next = this.element.querySelector(".calendar-action-next");
+  private inDisable(date: string) {
+    return this.state.disables.indexOf(date) >= 0;
+  }
+  private afterRender(after: Function | undefined) {
+    const {
+      dateFormat,
+      selected,
+      selection,
+      date,
+      reachStart,
+      reachEnd,
+      endDate,
+      disables,
+      startDate,
+      bindData
+    } = this.state;
 
-    const updater = (size: number, reachEnd: boolean, reachStart: boolean) => {
-      this.setState(
-        {
-          reachEnd,
-          reachStart,
-          date: setDate(this.state.date, size, "month")
-        },
-        () => {
-          Observer.$emit("select", {
-            type: "switch",
-            value: this.state.selected
-          });
-        }
-      );
+    typeof after === "function" && after(this.state);
+    //日期切换
+    const dom = selector => $(this.element, selector);
+
+    const nodeList = dom(".calendar-cell");
+    const prev = dom(".calendar-action-prev");
+    const next = dom(".calendar-action-next");
+
+    const updater = (size: number) => {
+      const now = setDate(date, size, "month");
+      const endGap = endDate ? diff(endDate, now) : 1;
+      const startGap = endDate ? diff(now, startDate) : 2;
+      let reachStart = startGap < 1 && endGap >= 1;
+      let reachEnd = startGap >= 1 && endGap < 1;
+      this.setState({
+        reachEnd,
+        reachStart,
+        date: now
+      });
     };
 
     if (prev && next) {
-      let { endDate, startDate, date } = this.state;
-      const endGap = endDate ? diff(endDate, date) : 1;
-      const startGap = endDate ? diff(date, startDate) : 2;
-
-      let reachStart = startGap < 1 && endGap >= 1;
-      let reachEnd = startGap >= 1 && endGap < 1;
-
-      if (!this.state.reachStart) {
-        prev.addEventListener("click", () => updater(-1, reachEnd, reachStart));
-      }
-      if (!this.state.reachEnd) {
-        next.addEventListener("click", () => updater(1, reachEnd, reachStart));
-      }
-    }
-
-    const bindData = !isEmpty(this.state.data) && this.state.selection <= 2;
-    const isDoubleSelect = this.state.doubleSelect;
-    const cache = this.state.selected;
-    const isDisabled = (date: string) => !!this.state.disables[date];
-    let selected = this.state.selected;
-
-    const pickDate = (date: string) => {
-      let type = "selected";
-      //没有日期，直接返回
-      if (!date) {
-        return {
-          type: "disabled",
-          value: []
-        };
-      }
-      const index = selected.indexOf(date);
-      //bindData 状态下，且selected的length为0，点击不可选日期，返回
-      //无效日期可以当作结束日期，但不能当作开始日期，故选择的日期的前一天是无效日期，返回
-      // 如  2018-02-23，2018-02-24 为无效日期，则点击2018-02-24返回无效日期
-      const isDisabledDate = isDisabled(date);
-      const now = this.parse(date, this.state.dateFormat);
-      const prevDate = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate() - 1
-      );
-      const prev = this.format(prevDate, this.state.dateFormat);
-      const prevDateIsInValid = isDisabled(prev);
-      const nextDate = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate() + 1
-      );
-
-      const next = this.format(nextDate, this.state.dateFormat);
-      const nextDateIsInValid = isDisabled(next);
-      if (
-        (bindData && selected.length <= 0 && isDisabledDate) ||
-        (isDoubleSelect &&
-          prevDateIsInValid &&
-          isDisabledDate &&
-          nextDateIsInValid) ||
-        (index >= 0 && isDisabledDate)
-      ) {
-        return {
-          type: "disabled",
-          value: []
-        };
-      }
-      //重复选择
-      //如选择了 2018-02-04 ~ 2018-02-06
-      //但是用户实际想选择的是 2018-02-04~2018-02-05，
-      //此时 用户再次选择 2018-02-04，其他日期将被删除
-      if (index >= 0) {
-        let peek = getPeek(selected);
-        let front = getFront(selected);
-        //如果选择的最后一个日期不是无效日期
-        //则把最后一个日期保留，其他删除
-        selected = isUndefined(this.state.disables[peek]) ? [peek] : [front];
-      }
-      //选择的日期数量超出了范围，置空selected
-      if ((isDoubleSelect && selected.length >= 2) || !isDoubleSelect) {
-        selected = [];
-      }
-      selected.push(date);
-      if (!isDoubleSelect) {
-        selected = isDisabledDate ? cache : selected;
-        type = isDisabledDate ? "disabled" : "selected";
-      } else {
-        if (selected.length >= 2) {
-          //两次选择的日期相同，选择
-          let front = getFront(selected);
-          let peek = getPeek(selected);
-          const diffed = diff(
-            this.parse(peek, this.state.dateFormat),
-            this.parse(front, this.state.dateFormat),
-            "days",
-            false
-          );
-          if (diffed === 0) {
-            selected = [front];
-          } else if (diffed < 0) {
-            peek = getPeek(selected);
-            if (isDisabled(peek)) {
-              selected.pop();
-            } else {
-              selected.shift();
-            }
-          } else {
-            let range = this.getRange(selected);
-            if (range.invalidDates.length > 0 || diffed > this.state.limit) {
-              selected.shift();
-            }
-          }
+      prev.addEventListener("click", () => {
+        if (reachStart) {
+          return;
         }
-        // selected 长度为1 且 唯一的元素还是无效日期，则读取缓存
-        if (selected.length <= 1) {
-          if (isDisabled(getFront(selected))) {
-            type = "disabled";
-            selected = cache;
-          }
+        updater(-1);
+      });
+      next.addEventListener("click", () => {
+        if (reachEnd) {
+          return;
         }
-      }
-
-      return {
-        type,
-        value: selected
-      };
-    };
-    const multiPick = (date: string) => {
-      const index = selected.indexOf(date);
-      const isDisabledDate = isDisabled(date);
-      if (!date || isDisabledDate) {
-        return {
-          type: "disabled",
-          value: selected
-        };
-      }
-
-      if (index >= 0) {
-        let temp = [];
-
-        for (let i = 0; i < selected.length; i++) {
-          if (selected[i] !== date) {
-            temp.push(selected[i]);
-          }
-        }
-        selected = temp;
-      } else {
-        selected.push(date);
-      }
-      if (selected.length > this.state.limit) {
-        selected = [date];
-      }
-      return {
-        type: "selected",
-        value: selected
-      };
-    };
-    const nodeList = this.element.querySelectorAll(".calendar-cell");
-    if (!isEmpty(this.state.disables)) {
-      Observer.$emit("disabled", {
-        nodeList,
-        dateList: this.state.disables
+        updater(1);
       });
     }
-    if (bindData) {
-      Observer.$emit("data", {
-        data: this.state.data,
-        nodeList
-      });
-    }
+    Observer.$emit("disabled", {
+      nodeList,
+      dateList: disables
+    });
 
+    const inDisable = date => this.inDisable(date);
     for (let i = 0; i < nodeList.length; i++) {
-      let node = nodeList[i];
-      node.addEventListener("click", () => {
-        const date = attr(node, "data-date");
-        Observer.$emit(
-          "select",
-          this.state.selection > 2 ? multiPick(date) : pickDate(date)
-        );
+      nodeList[i].addEventListener("click", () => {
+        const date = attr(nodeList[i], "data-date");
+
+        const pickable = checkPickableDate({
+          date,
+          queue: queue.list,
+          dateFormat,
+          selected,
+          selection,
+          inDisable,
+          limit: this.state.limit
+        });
+        if (pickable) this.enqueue(date);
       });
     }
   }
 
-  private getRange(data: Array<any>) {
-    const startDate = getFront(data);
-    const endDate = getPeek(data);
-    const invalidDates: Array<string> = [];
-    const validDates: Array<string> = [];
-    let limit = this.state.limit;
-    let outOfRange = false;
+  public setDisabled({ to, from, days, dates }: disable) {
+    let state = <any>{};
 
-    if (startDate && endDate) {
-      let start: Date;
-      let end: Date;
-      if (!isDate(startDate)) {
-        start = <Date>this.parse(<string>startDate, this.state.dateFormat);
-      } else {
-        start = <Date>startDate;
-      }
-      if (!isDate(endDate)) {
-        end = <Date>this.parse(<string>endDate, this.state.dateFormat);
-      } else {
-        end = <Date>endDate;
-      }
-      let gap = diff(<Date>end, <Date>start, "days");
+    const { endDate } = this.state;
+    let dateList = [];
 
-      if (gap <= limit) {
-        for (let i = 0; i < gap; i++) {
-          let date = setDate(start, i);
-          let formatted = this.format(date, this.state.dateFormat);
-          if (this.state.disables[formatted]) {
-            invalidDates.push(formatted);
-          } else {
-            if (formatted !== startDate && formatted !== endDate) {
-              validDates.push(formatted);
-            }
+    if (isArray(dates)) {
+      dateList = dates.map((date: any) => {
+        return this.format(this.parse(<any>date));
+      });
+    }
+
+    if (isArray(days)) {
+      let dayList = days.filter(item => {
+        let parsed = parseToInt(item);
+        return !isNaN(parsed) && parsed >= 0 && parsed <= 6;
+      });
+      let d = new Date();
+      let startDate = new Date(d.getFullYear(), 0, 0);
+      let dates = createDate({
+        date: startDate,
+        days: diff(endDate, startDate, "days")
+      });
+      if (isArray(dates)) {
+        dates = dates.map(item => {
+          if (dayList.indexOf(item.getDay()) >= 0) {
+            dateList.push(this.format(item));
           }
-        }
-        if (end < start) {
-          outOfRange = true;
-        }
-      } else {
-        outOfRange = true;
+        });
       }
     }
-    return {
-      invalidDates,
-      validDates,
-      outOfRange
-    };
+
+    if (isDate(from)) {
+      state.endDate = from;
+    } else {
+      const parsed = this.parse(<string>from);
+      if (isDate(parsed)) {
+        state.endDate = parsed;
+      }
+    }
+    if (isDate(to)) {
+      state.endDate = to;
+    } else {
+      const parsed = this.parse(<string>to);
+      if (isDate(parsed)) {
+        state.endDate = setDate(parsed);
+      }
+    }
+    this.setState({
+      ...state,
+      disables: dateList
+    });
   }
 
-  private update() {
+  private enqueue(value) {
+    const { selection, bindData } = this.state;
+
+    const next = queue.enqueue(value);
+
+    const afterEnqueue = () => {
+      const dateFormat = this.state.dateFormat;
+      const includeDisabled = findDisableInQueue(
+        queue.list,
+        dateFormat,
+        this.inDisable.bind(this)
+      );
+
+      if (includeDisabled && selection === 2) {
+        if (this.inDisable(value)) {
+          queue.pop();
+        } else {
+          queue.shift();
+        }
+      }
+      const setSelected = prevState => ({
+        ...prevState,
+        selected: queue.list
+      });
+      const createEmitter = state =>
+        emitter("update")("selected", state.selected);
+      this.setState(setSelected, createEmitter);
+    };
+
+    next(afterEnqueue);
+  }
+  private create() {
     let states: any = {
       disables: {},
       selected: this.state.selected
     };
-    const bindData = !isEmpty(this.state.data) && this.state.selection <= 2;
+    const bindData = this.state.bindData;
     //去掉data里的无效日期
-    const validateData = ({
-      disables,
-      data,
-      startDate,
-      endDate,
-      dateFormat
-    }) => {
-      if (!bindData) {
-        return {
-          disables
-        };
-      }
-      // let data = this.data;
-      //此处未排序日期，直接取this.data的最后一个key
-      //排序在setData里做
-
-      let gap = diff(startDate, endDate, "days", true);
-      for (let i = 0; i < gap; i++) {
-        let date = this.format(setDate(startDate, i), dateFormat);
-        if (isUndefined(data[date])) {
-          disables[date] = date;
-        } else {
-          delete data[date];
-        }
-      }
-
-      endDate = this.parse(getPeek(Object.keys(data)), dateFormat);
-
-      return {
+    const validateData = ({ disables, data, startDate, endDate }) => {
+      let output = {
         disables,
         data,
         endDate
       };
-    };
-    //校验初始selected
-    const validateSelected = selected => {
-      const front = getFront(selected);
-      const peek = getPeek(selected);
-      let initRange = this.getRange(selected);
-      let canInitWithSelectedDatesWhenDataBinding = () => {
-        return (
-          (initRange.invalidDates.length > 0 || initRange.outOfRange) &&
-          bindData
-        );
-      };
-      if (canInitWithSelectedDatesWhenDataBinding() || initRange.outOfRange) {
-        if (initRange.outOfRange) {
-          warn("setDates", `[${selected}] out of limit:${this.state.limit}`);
-        } else {
-          warn("setDates", "Illegal dates [" + selected + "]");
-        }
-        selected = [];
-      }
-      if (this.state.views === "auto") {
-        //flat 视图情况下，
-        //自动限制endDate为半年后，startDate为当前日期
-        //避免因为dom过多导致界面卡顿
-        if (isUndefined(this.state.startDate)) {
-          states.startDate = this.state.date;
-        }
-        if (isUndefined(this.state.endDate)) {
-          states.endDate = setDate(this.state.date, 6, "month");
-        }
-      }
-      if (this.state.views === 1) {
-        if (this.state.doubleSelect && selected.length >= 2) {
-          if (front === peek) {
-            selected.pop();
+
+      //此处未排序日期，直接取this.data的最后一个key
+      //排序在setData里做
+
+      if (bindData) {
+        let gap = diff(startDate, endDate, "days", true);
+
+        for (let i = 0; i < gap; i++) {
+          let date = this.format(setDate(startDate, i));
+          if (isUndefined(data[date])) {
+            disables[date] = date;
+          } else {
+            delete data[date];
           }
         }
+        endDate = this.parse(listTail(Object.keys(data)));
+        output.data = data;
+        output.endDate = endDate;
+      } else {
+        output.data = {};
       }
-      return selected;
+
+      return output;
     };
+
     const setViewDate = () => {
       if (this.state.selected.length > 0) {
-        return this.parse(getFront(this.state.selected), this.state.dateFormat);
+        return this.parse(listHead(this.state.selected));
       } else {
         return this.state.startDate ? new Date() : this.state.startDate;
       }
@@ -772,37 +457,50 @@ class TypePicker {
     }
     this.setState({
       ...states,
-      disables,
-      selected: validateSelected(this.state.selected),
-      date: setViewDate(),
-      data: data
+      date: setViewDate()
+      // data: data
     });
   }
 
   constructor(option: datePickerOptions) {
-    let canInit = this.beforeRender(option);
-    if (!canInit) {
+    if (!option || !parseEl(option.el)) {
       return;
     }
 
-    Observer.$on("select", (result: any) => {
-      const { type, value } = result;
-      if (type === "disabled") {
-        return false;
-      }
-      this.setState(
-        {
-          selected: value
-        },
-        () => {
-          if (type !== "switch") {
-            Observer.$emit("update", result);
-          }
-        }
-      );
-    });
+    this.element = parseEl(option.el);
+    let states: any = {
+      selection: option.selection || 1,
+      dateFormat: option.format,
+      views: getViews(option.views)
+    };
 
-    nextTick(this.update.bind(this));
+    if (isDate(option.startDate)) {
+      states.startDate = option.startDate;
+    }
+    if (isDate(option.endDate)) {
+      states.endDate = option.endDate;
+    }
+    if (option.limit) {
+      states.limit = option.limit ? option.limit : 1;
+    }
+    if (states.startDate) {
+      states.reachStart = true;
+    }
+
+    this.element.className = containerClassName(
+      this.element.className,
+      states.views
+    );
+    this.state = {
+      ...this.state,
+      ...states
+    };
+    queue = new Queue({
+      size: this.state.selection,
+      limit: this.state.selection === 2 ? this.state.limit : false,
+      dateFormat: this.state.dateFormat
+    });
+    states.selected = queue.list;
+    this.create();
   }
 }
-export default TypePicker;

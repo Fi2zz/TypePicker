@@ -1,0 +1,30 @@
+  const multiPick = (date: string) => {
+      const index = selected.indexOf(date);
+      const isDisabledDate = isDisabled(date);
+      if (!date || isDisabledDate) {
+        return {
+          type: "disabled",
+          value: selected
+        };
+      }
+
+      if (index >= 0) {
+        let temp = [];
+
+        for (let i = 0; i < selected.length; i++) {
+          if (selected[i] !== date) {
+            temp.push(selected[i]);
+          }
+        }
+        selected = temp;
+      } else {
+        selected.push(date);
+      }
+      if (selected.length > this.state.limit) {
+        selected = [date];
+      }
+      return {
+        type: "selected",
+        value: selected
+      };
+    };
