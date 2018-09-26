@@ -1,6 +1,7 @@
 export function parseToInt(string: any) {
   return parseInt(string, 10);
 }
+
 export function attr(
   el: any,
   attr: any,
@@ -61,6 +62,7 @@ export function isFunction(object: any) {
 let callbacks = [];
 let pending = false;
 let timer = null;
+
 function flushCallbacks() {
   pending = false;
   let copies = callbacks.slice(0);
@@ -72,6 +74,7 @@ function flushCallbacks() {
     copies[i]();
   }
 }
+
 export function nextTick(cb) {
   callbacks.push(function() {
     cb();
@@ -188,3 +191,28 @@ export function $(selector: string | any, selector$2?: string): any {
 
 export const listHead = list => list[0];
 export const listTail = list => list[list.length - 1];
+
+export const dedupList = (list: any[], condition?) => {
+  let map = {};
+
+  let result = [];
+
+  if (list.length <= 0) {
+    return [];
+  }
+
+  for (let item of list) {
+    if (!condition) {
+      map[item] = item;
+    } else {
+      map[condition] = item;
+    }
+  }
+
+  for (let key in map) {
+    let item = map[key];
+    result.push(item);
+  }
+
+  return result;
+};

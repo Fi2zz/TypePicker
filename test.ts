@@ -127,7 +127,13 @@ function createDatePicker(selected: Array<any>, options) {
     days: [2, 3, 5]
   });
 
-  app.setDates(["2018-10-7", "2018-10-8"]);
+  app.setDates([
+    "2018-9-27",
+    "2018-9-28",
+    "2018-10-1",
+    "2018-10-2",
+    "2018-10-3"
+  ]);
   // app.giveMeTheWheel((nodeList, app) => {
   //   Array.prototype.slice.call(nodeList).forEach(item => {
   //     item.addEventListener("click", function() {

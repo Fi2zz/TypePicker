@@ -17,26 +17,18 @@ interface disable {
 
 import {
   attr,
-  warn,
-  merge,
   isDate,
-  isEmpty,
   isArray,
   isUndefined,
-  isPlainObject,
-  isFunction,
   parseToInt,
-  noop,
   listHead,
   listTail,
-  $
+  $,
+  dedupList
 } from "./util";
 import template from "./datepicker.template";
 import {
-  getClassName,
   getViews,
-  getDisableDates,
-  getDisabledDays,
   parseEl,
   Observer,
   parse,
@@ -47,8 +39,6 @@ import {
   getMonthsByYear,
   getYearsByDate,
   createDate,
-  createFormatDate,
-  createParseDate,
   createNodeClassName,
   findDiableDates,
   findDisableInQueue,
@@ -60,7 +50,6 @@ import { Queue } from "./datepicker.queue";
 
 const emitter = event => (type, value) =>
   Observer.$emit(event, { type, value });
-
 let queue = null;
 
 export default class TypePicker {
@@ -101,38 +90,46 @@ export default class TypePicker {
   public on = Observer.$on;
   public format = (date: Date) => format(date, this.state.dateFormat);
   public parse = (date: string | Date) => parse(date, this.state.dateFormat);
+
   public setDates(dates: Array<any>) {
     if (!isArray(dates)) return;
     let datesList: Array<any> = [];
     let start: string = "",
       end: string = "";
-    if (this.state.selection === 2) {
-      if (dates.length > 2) {
-        dates = dates.slice(0, 2);
-      }
-      start = <any>dates[0];
-      end = <any>dates[dates.length - 1];
-      const startDate = isDate(start) ? start : this.parse(start);
-      const endDate = isDate(end) ? end : this.parse(end);
-      datesList = [this.format(startDate)];
-      if (start !== end) {
-        datesList.push(this.format(endDate));
-      }
 
-      let d = new Date();
-      let currDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-      if (
-        startDate < currDate ||
-        endDate < currDate ||
-        startDate > this.state.endDate ||
-        endDate > this.state.endDate
-      ) {
-        warn("setDates", "selected dates are illegal");
-        datesList = [];
+    const { selection, limit } = this.state;
+    if (selection !== 2) {
+      for (let item of dates) {
+        if (!this.inDisable(item)) {
+          datesList.push(item);
+        }
       }
     } else {
-      const d = dates[dates.length - 1];
-      datesList = [isDate(d) ? this.format(d) : d];
+      if (dates.length < selection) {
+        return;
+      } else if (dates.length > selection) {
+        dates = dates.slice(0, selection);
+      }
+      let [start, end] = dates;
+      if (!isDate(start)) {
+        start = this.parse(start);
+      }
+
+      if (!isDate(end)) {
+        end = this.parse(end);
+      }
+
+      let gap = diff(end, start, "days", true);
+
+      if (gap > limit || end < start) {
+        return;
+      }
+      start = this.format(start);
+      end = this.format(end);
+      if (this.inDisable(start)) {
+        return;
+      }
+      datesList = [start, end].filter(item => !!item);
     }
 
     for (let item of datesList) {
@@ -243,6 +240,7 @@ export default class TypePicker {
   private inDisable(date: string) {
     return this.state.disables.indexOf(date) >= 0;
   }
+
   private afterRender(after: Function | undefined) {
     const {
       dateFormat,
@@ -337,11 +335,15 @@ export default class TypePicker {
         days: diff(endDate, startDate, "days")
       });
       if (isArray(dates)) {
-        dates = dates.map(item => {
-          if (dayList.indexOf(item.getDay()) >= 0) {
-            dateList.push(this.format(item));
-          }
-        });
+        dates = dates
+          .map(item => {
+            if (dayList.indexOf(item.getDay()) >= 0) {
+              return this.format(item);
+            }
+            return null;
+          })
+          .filter(item => !!item);
+        dateList = [...dateList, ...dates];
       }
     }
 
@@ -361,10 +363,11 @@ export default class TypePicker {
         state.endDate = setDate(parsed);
       }
     }
+
     this.setState({
       ...state,
-      disables: dateList
-    });~~
+      disables: dedupList(dateList, false)
+    });
   }
 
   private enqueue(value) {
@@ -391,6 +394,7 @@ export default class TypePicker {
 
     next(afterEnqueue);
   }
+
   private create() {
     let states: any = {
       disables: {}
