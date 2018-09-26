@@ -559,7 +559,6 @@ export const findDisableInQueue = (list, dateFormat, inDisable) => {
 };
 
 export const checkPickableDate = ({
-  selected,
   selection,
   date,
   inDisable,
@@ -575,14 +574,13 @@ export const checkPickableDate = ({
     if (selection === 2) {
       let gap = diff(
         parse(date, dateFormat),
-        parse(listTail(selected), dateFormat),
+        parse(listTail(queue), dateFormat),
         "days"
       );
 
-      if (selected.length <= 0 || gap <= 0 || queue.length >= selection) {
+      if (queue.length <= 0 || gap <= 0 || queue.length >= selection) {
         return false;
       }
-
       if (queue.length === 1) {
         let item = queue[0];
 

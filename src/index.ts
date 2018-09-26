@@ -87,7 +87,6 @@ export default class TypePicker {
     startDate: <Date>null,
     endDate: <Date>null,
     data: <any>{},
-    selected: <string[]>[],
     reachEnd: <boolean>false,
     reachStart: <boolean>false,
     dateFormat: <string>null,
@@ -136,15 +135,14 @@ export default class TypePicker {
       datesList = [isDate(d) ? this.format(d) : d];
     }
 
-    this.setState({
-      selected: datesList
-    });
+    for (let item of datesList) {
+      this.enqueue(item);
+    }
   }
 
   private createTemplate() {
     const {
       date,
-      selected,
       dateFormat,
       views,
       endDate,
@@ -166,21 +164,21 @@ export default class TypePicker {
       });
     }
 
-    const range = ((selected, selection) => {
-      if (!selected || selected.length <= 0) {
+    const range = ((queue, selection) => {
+      if (!queue || queue.length <= 0) {
         return [];
       }
       if (selection > 2) {
-        return selected;
+        return queue;
       }
-      let start = this.parse(selected[0]);
-      let end = this.parse(selected[selected.length - 1]);
+      let start = this.parse(queue[0]);
+      let end = this.parse(queue[queue.length - 1]);
       return createDate({
         date: start,
         days: diff(end, start, "days"),
         dateFormat: dateFormat
       });
-    })(selected, selection);
+    })(queue.list, selection);
 
     return template.map((item: any) => {
       let heading = this.state.language.title(item.year, item.month);
@@ -239,7 +237,6 @@ export default class TypePicker {
       reachEnd: reachEnd,
       renderWeekOnTop: views === "auto"
     });
-
     this.afterRender(next);
   }
 
@@ -249,15 +246,14 @@ export default class TypePicker {
   private afterRender(after: Function | undefined) {
     const {
       dateFormat,
-      selected,
+
       selection,
       date,
       reachStart,
       reachEnd,
       endDate,
       disables,
-      startDate,
-      bindData
+      startDate
     } = this.state;
 
     typeof after === "function" && after(this.state);
@@ -304,12 +300,10 @@ export default class TypePicker {
     for (let i = 0; i < nodeList.length; i++) {
       nodeList[i].addEventListener("click", () => {
         const date = attr(nodeList[i], "data-date");
-
         const pickable = checkPickableDate({
           date,
           queue: queue.list,
           dateFormat,
-          selected,
           selection,
           inDisable,
           limit: this.state.limit
@@ -370,14 +364,12 @@ export default class TypePicker {
     this.setState({
       ...state,
       disables: dateList
-    });
+    });~~
   }
 
   private enqueue(value) {
     const { selection, bindData } = this.state;
-
     const next = queue.enqueue(value);
-
     const afterEnqueue = () => {
       const dateFormat = this.state.dateFormat;
       const includeDisabled = findDisableInQueue(
@@ -393,21 +385,15 @@ export default class TypePicker {
           queue.shift();
         }
       }
-      const setSelected = prevState => ({
-        ...prevState,
-        selected: queue.list
-      });
-      const createEmitter = state =>
-        emitter("update")("selected", state.selected);
-      this.setState(setSelected, createEmitter);
+      const createEmitter = () => emitter("update")("selected", queue.list);
+      this.render(createEmitter);
     };
 
     next(afterEnqueue);
   }
   private create() {
     let states: any = {
-      disables: {},
-      selected: this.state.selected
+      disables: {}
     };
     const bindData = this.state.bindData;
     //去掉data里的无效日期
@@ -443,13 +429,12 @@ export default class TypePicker {
     };
 
     const setViewDate = () => {
-      if (this.state.selected.length > 0) {
-        return this.parse(listHead(this.state.selected));
+      if (queue.list.length > 0) {
+        return this.parse(listHead(queue.list));
       } else {
         return this.state.startDate ? new Date() : this.state.startDate;
       }
     };
-
     const { disables, data, endDate } = validateData(this.state);
 
     if (endDate) {
@@ -500,7 +485,6 @@ export default class TypePicker {
       limit: this.state.selection === 2 ? this.state.limit : false,
       dateFormat: this.state.dateFormat
     });
-    states.selected = queue.list;
     this.create();
   }
 }
