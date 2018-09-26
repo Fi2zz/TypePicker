@@ -597,3 +597,8 @@ export const checkPickableDate = ({
   }
   return true;
 };
+
+export const parseAndFormat = parser => format => string =>
+  format(parser(string));
+
+export const formatParse = parse => format => date => format(parse(date));

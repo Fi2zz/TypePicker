@@ -24,7 +24,8 @@ import {
   listHead,
   listTail,
   $,
-  dedupList
+  dedupList,
+  isDef
 } from "./util";
 import template from "./datepicker.template";
 import {
@@ -44,7 +45,8 @@ import {
   findDisableInQueue,
   defaultLanguage,
   containerClassName,
-  checkPickableDate
+  checkPickableDate,
+  formatParse
 } from "./datepicker.helpers";
 import { Queue } from "./datepicker.queue";
 
@@ -129,7 +131,7 @@ export default class TypePicker {
       if (this.inDisable(start)) {
         return;
       }
-      datesList = [start, end].filter(item => !!item);
+      datesList = [start, end].filter(isDef);
     }
 
     for (let item of datesList) {
@@ -244,7 +246,6 @@ export default class TypePicker {
   private afterRender(after: Function | undefined) {
     const {
       dateFormat,
-
       selection,
       date,
       reachStart,
@@ -259,36 +260,33 @@ export default class TypePicker {
     const dom = selector => $(this.element, selector);
 
     const nodeList = dom(".calendar-cell");
-    const prev = dom(".calendar-action-prev");
-    const next = dom(".calendar-action-next");
+    const prevActionDOM = dom(".calendar-action-prev");
+    const nextActionDOM = dom(".calendar-action-next");
 
-    const updater = (size: number) => {
-      const now = setDate(date, size, "month");
-      const endGap = endDate ? diff(endDate, now) : 1;
-      const startGap = endDate ? diff(now, startDate) : 2;
-      let reachStart = startGap < 1 && endGap >= 1;
-      let reachEnd = startGap >= 1 && endGap < 1;
-      this.setState({
-        reachEnd,
-        reachStart,
-        date: now
-      });
+    const updater = (date: Date, start, end) => {
+      return setState => size => {
+        const now = setDate(date, size, "month");
+        const endGap = end ? diff(end, now) : 1;
+        const startGap = end ? diff(now, start) : 2;
+        const reachStart = startGap < 1 && endGap >= 0;
+        const reachEnd = startGap > 1 && endGap <= 1;
+        const states = {
+          reachEnd,
+          reachStart,
+          date: now
+        };
+
+        setState(states);
+      };
     };
 
-    if (prev && next) {
-      prev.addEventListener("click", () => {
-        if (reachStart) {
-          return;
-        }
-        updater(-1);
-      });
-      next.addEventListener("click", () => {
-        if (reachEnd) {
-          return;
-        }
-        updater(1);
-      });
+    const update = updater(date, startDate, endDate)(this.setState.bind(this));
+
+    if (prevActionDOM && nextActionDOM) {
+      prevActionDOM.addEventListener("click", () => !reachStart && update(-1));
+      nextActionDOM.addEventListener("click", () => !reachEnd && update(1));
     }
+
     Observer.$emit("disabled", {
       nodeList,
       dateList: disables
@@ -312,40 +310,19 @@ export default class TypePicker {
   }
 
   public setDisabled({ to, from, days, dates }: disable) {
-    let state = <any>{};
+    const { endDate, startDate } = this.state;
+    const { parse, format } = this;
 
-    const { endDate } = this.state;
+    const filterDay = day => {
+      day = parseInt(day);
+      return !isNaN(day) && day >= 0 && day <= 6;
+    };
+
+    let state = <any>{
+      startDate
+    };
+
     let dateList = [];
-
-    if (isArray(dates)) {
-      dateList = dates.map((date: any) => {
-        return this.format(this.parse(<any>date));
-      });
-    }
-
-    if (isArray(days)) {
-      let dayList = days.filter(item => {
-        let parsed = parseToInt(item);
-        return !isNaN(parsed) && parsed >= 0 && parsed <= 6;
-      });
-      let d = new Date();
-      let startDate = new Date(d.getFullYear(), 0, 0);
-      let dates = createDate({
-        date: startDate,
-        days: diff(endDate, startDate, "days")
-      });
-      if (isArray(dates)) {
-        dates = dates
-          .map(item => {
-            if (dayList.indexOf(item.getDay()) >= 0) {
-              return this.format(item);
-            }
-            return null;
-          })
-          .filter(item => !!item);
-        dateList = [...dateList, ...dates];
-      }
-    }
 
     if (isDate(from)) {
       state.endDate = from;
@@ -356,18 +333,48 @@ export default class TypePicker {
       }
     }
     if (isDate(to)) {
-      state.endDate = to;
+      state.startDate = to;
     } else {
       const parsed = this.parse(<string>to);
       if (isDate(parsed)) {
-        state.endDate = setDate(parsed);
+        state.startDate = setDate(parsed);
       }
     }
 
-    this.setState({
-      ...state,
-      disables: dedupList(dateList, false)
-    });
+    if (state.startDate) {
+      state.reachStart = true;
+      state.date = state.startDate;
+    }
+
+    if (isArray(dates)) {
+      dateList = dates.map(formatParse(parse)(format)).filter(isDef);
+    }
+
+    if (isArray(days)) {
+      const mapDateByDay = days => {
+        return date => {
+          if (days.indexOf(date.getDay()) >= 0) {
+            return this.format(date);
+          }
+          return null;
+        };
+      };
+      const startDateMonthFirstDate = new Date(
+        state.startDate.getFullYear(),
+        state.startDate.getMonth(),
+        1
+      );
+      let dates = createDate({
+        date: startDateMonthFirstDate,
+        days: diff(endDate, startDateMonthFirstDate, "days")
+      });
+      if (isArray(dates)) {
+        dates = dates.map(mapDateByDay(days.filter(filterDay))).filter(isDef);
+        dateList = [...dateList, ...dates];
+      }
+    }
+    state.disables = dedupList(dateList);
+    this.setState(state);
   }
 
   private enqueue(value) {
@@ -388,6 +395,7 @@ export default class TypePicker {
           queue.shift();
         }
       }
+
       const createEmitter = () => emitter("update")("selected", queue.list);
       this.render(createEmitter);
     };
@@ -465,15 +473,13 @@ export default class TypePicker {
 
     if (isDate(option.startDate)) {
       states.startDate = option.startDate;
+      states.reachStart = true;
     }
     if (isDate(option.endDate)) {
       states.endDate = option.endDate;
     }
     if (option.limit) {
       states.limit = option.limit ? option.limit : 1;
-    }
-    if (states.startDate) {
-      states.reachStart = true;
     }
 
     this.element.className = containerClassName(

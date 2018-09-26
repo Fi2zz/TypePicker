@@ -35,6 +35,10 @@ export function isUndefined(v) {
   return v === undefined || v === null;
 }
 
+export function isDef(v) {
+  return !isUndefined(v);
+}
+
 export function isString(object: any) {
   return _toString(object) === "[object String]";
 }

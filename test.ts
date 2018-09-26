@@ -123,7 +123,7 @@ function createDatePicker(selected: Array<any>, options) {
       "2018-4-30"
     ],
     // from: new Date(2018, 4, 1), //"2018-5-1",
-    // to: new Date(2018, 2, 15),
+    to: new Date(2018, 7, 15),
     days: [2, 3, 5]
   });
 
