@@ -602,3 +602,20 @@ export const parseAndFormat = parser => format => string =>
   format(parser(string));
 
 export const formatParse = parse => format => date => format(parse(date));
+
+export const monthSwitcher = (date: Date, start, end) => {
+  return setState => size => {
+    const now = setDate(date, size, "month");
+    const endGap = end ? diff(end, now) : 1;
+    const startGap = end ? diff(now, start) : 2;
+    const reachStart = startGap < 1 && endGap >= 0;
+    const reachEnd = startGap > 1 && endGap <= 1;
+    const states = {
+      reachEnd,
+      reachStart,
+      date: now
+    };
+
+    setState(states);
+  };
+};

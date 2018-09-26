@@ -46,7 +46,8 @@ import {
   defaultLanguage,
   containerClassName,
   checkPickableDate,
-  formatParse
+  formatParse,
+  monthSwitcher
 } from "./datepicker.helpers";
 import { Queue } from "./datepicker.queue";
 
@@ -262,25 +263,9 @@ export default class TypePicker {
     const nodeList = dom(".calendar-cell");
     const prevActionDOM = dom(".calendar-action-prev");
     const nextActionDOM = dom(".calendar-action-next");
-
-    const updater = (date: Date, start, end) => {
-      return setState => size => {
-        const now = setDate(date, size, "month");
-        const endGap = end ? diff(end, now) : 1;
-        const startGap = end ? diff(now, start) : 2;
-        const reachStart = startGap < 1 && endGap >= 0;
-        const reachEnd = startGap > 1 && endGap <= 1;
-        const states = {
-          reachEnd,
-          reachStart,
-          date: now
-        };
-
-        setState(states);
-      };
-    };
-
-    const update = updater(date, startDate, endDate)(this.setState.bind(this));
+    const update = monthSwitcher(date, startDate, endDate)(
+      this.setState.bind(this)
+    );
 
     if (prevActionDOM && nextActionDOM) {
       prevActionDOM.addEventListener("click", () => !reachStart && update(-1));
