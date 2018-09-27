@@ -30,7 +30,7 @@ DatePicker build with typescript
 
 ## RUN DEMO
 
-    yarn dev or npm run dev
+    yarn start or npm run start
 
 ## OPTIONS
 
