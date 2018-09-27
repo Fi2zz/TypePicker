@@ -44,10 +44,6 @@ DatePicker build with typescript
 | views     | NO       | number,string      | Display views of DatePicker             | auto,1,2      |
 | selection | NO       | number             | Size of dates can be picked             | 1             |
 
-#### NOTE
-
-    when `selection` is greater than 2, `bindData` and `doubleSelect` will be set to `false`,
-    and `option.limit` will be set the same as `selection`
 
 ## API
 
