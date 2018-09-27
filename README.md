@@ -24,27 +24,25 @@ DatePicker build with typescript
 
 ## FEATURES
 
-1.  Base on observer
-2.  Easy to display data on html element by using `data` event
-3.  Support double views,flat view and single view
-4.  Disabled date can be selected as end date while using `setData` function
-5.  Support Multi selection
+1.  Easy to display data on html element by using `render` event
+2.  Support double views,flat view and single view
+3.  Support Multi selection
 
 ## RUN DEMO
 
-    yarn dev or npm run dev
+    yarn start or npm run start
 
 ## OPTIONS
 
-| OPTION    | RERUIRED | TYPE               | DESC                                                         | DEFAULT VALUE |
-| --------- | -------- | ------------------ | ------------------------------------------------------------ | ------------- |
-| el        | YES      | string,HTMLElement | Element or selector to mount DatePcker                       |               |
-| format    | YES      | string             | Date string format                                           | null          |
-| startDate | NO       | Date               | Start date of DatePicker                                     | new Date      |
-| endDate   | NO       | Date               | End date of DatePicker                                       | null          |
-| limit     | NO       | number             | Limitation between two dates                                 |               |
-| views     | NO       | number,string      | Display views of DatePicker                                  | auto,1,2      |
-| selection | NO       | number             | Size of dates can be picked ,value must be not less than `2` | 1             |
+| OPTION    | RERUIRED | TYPE               | DESC                                    | Default Value/Possible Value |
+| --------- | -------- | ------------------ | ----------------------------------------| ------------- |
+| el        | YES      | string,HTMLElement | Element or selector to mount DatePcker  |               |
+| format    | YES      | string             | Date string format                      | null          |
+| startDate | NO       | Date               | Start date of DatePicker                | new Date      |
+| endDate   | NO       | Date               | End date of DatePicker                  | null          |
+| limit     | NO       | number             | Limitation between two dates            | 1             |
+| views     | NO       | number,string      | Display views of DatePicker             | auto,1,2      |
+| selection | NO       | number             | Size of dates can be picked             | 1             |
 
 #### NOTE
 
@@ -60,6 +58,13 @@ DatePicker build with typescript
    //the datepicker i18n
    public i18n(language:any);
 
+
+   disable({
+        days?:Array<number>[5],
+        dates?:Array<string|Date>,
+        from?:<Date|string>,
+        to?:<Date|string>
+    })
    //Set disabled dates to DataPicker
    //dates =>dates accept <string> and <Date>,  all dates in [dates] will be disabled
    //days => days accept number of [0~6],   all days in [days] will be disabled
@@ -80,6 +85,8 @@ DatePicker build with typescript
    public parse(formattedDate:string,dateFormat:string)
 
 
+
+   format(date:Date)
    //Transform date object into string,return string
    //eg: date =new Date(),format='YYYY-MM-DD' => 2018-03-04
    public  format(date:Date,format:string)
@@ -96,21 +103,18 @@ DatePicker build with typescript
 
    //Get all dates between start date and end date,return string[]
    static between(start:Date|string)(end:Date|string)(dateFormat:string)
+
+
 ```
 
 ## USAGE
 
 ```typescript
-    //es module
+
+    //use build tools
     import TypePicker from '/dist/datepicker.esm.js'
     import '/dist/style.css'
-
-    //cjs
-    const TypePicker =require("/dist/datepicker.js");
-    require("/dist/style.css");
-
-
-    //umd
+    //not use build tools
     <script src="/dist/datepicker.min.js"></script>
     <link  href="/dist/style.css" rel="stylesheet"/>
 
@@ -198,4 +202,6 @@ DatePicker build with typescript
 
     // if data changed ,you could use app.update() to rerender datepicker
     app.update()
+    
+    
 ```
