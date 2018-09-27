@@ -52,13 +52,11 @@ DatePicker build with typescript
 ## API
 
 ```typescript
-   setDates([dates]:tuple);
+   public setDates([dates]:tuple);
    //Set  dates to DatePicker
    //dates accept <string> and <Date>
-   
-   i18n(language:any);
    //the datepicker i18n
-   
+   public i18n(language:any);
 
 
    disable({
@@ -75,22 +73,38 @@ DatePicker build with typescript
    //to   => to accept <string> or <Date> all dates before [to] date will be disabled,
    //        eg: to =2018-3-4 => all dates before 2018-3-5 will be disabled
 
-   parse(formattedDate:string)
+   public disable({
+        days?:Array<number>[5],
+        dates?:Array<string|Date>,
+        from?:<Date|string>,
+        to?:<Date|string>
+    })
+
    //Transform date string into date object,return Date object
-   //eg: formattedDate ='2018-9-27', parse(fornattedDate) => Thu Sep 27 2018 13:55:19 GMT+0800 (中国标准时间)
+   //eg: formattedDate ='2018-3-4',format='YYYY-M-D" =>  new Date(2018,2,4)
+   public parse(formattedDate:string,dateFormat:string)
+
 
 
    format(date:Date)
    //Transform date object into string,return string
-   //eg: date =new Date() =>format(date) => 2018-09-27
+   //eg: date =new Date(),format='YYYY-MM-DD' => 2018-03-04
+   public  format(date:Date,format:string)
 
-   on(event:string,fn:Function)
+
    //Event listener
-   //eg: datePicker.on("event",handler:Function)
-   
-   //Rerender datepicker outside the instance
-   update()
-   
+   //eg: datePicker.on("event",(result)=>{
+                //your logic
+   //    })
+   public on(event:string,fn:Function)
+
+   // Diff two dates, type are days and month
+   static diff(d1:Date,d2:Date,type:string ,isAbsolute:boolean)
+
+   //Get all dates between start date and end date,return string[]
+   static between(start:Date|string)(end:Date|string)(dateFormat:string)
+
+
 ```
 
 ## USAGE

@@ -24,7 +24,6 @@ const dist = {
   month: date.getMonth(),
   date: date.getDate()
 };
-const currDate = new Date(dist.year, dist.month, dist.date);
 const startDate = new Date(dist.year, dist.month, dist.date);
 const endDate = new Date(dist.year, dist.month + 6, dist.date);
 let options = {
@@ -111,8 +110,6 @@ function popupHandler(visible: boolean) {
 }
 
 function init(document: Document) {
-  const date = new Date();
-
   createDatePicker(options);
 
   document.addEventListener("click", e => {

@@ -24,7 +24,8 @@ import {
   containerClassName,
   checkPickableDate,
   formatParse,
-  monthSwitcher
+  monthSwitcher,
+  between
 } from "./datepicker.helpers";
 import { Queue } from "./datepicker.queue";
 
@@ -32,6 +33,7 @@ const emitter = event => value => Observer.$emit(event, value);
 let queue = null;
 
 export default class TypePicker {
+
   constructor(option: datepicker) {
     if (!option || !parseEl(option.el)) {
       return;
@@ -289,8 +291,6 @@ export default class TypePicker {
   public setDates(dates: Array<any>) {
     if (!isArray(dates)) return;
     let datesList: Array<any> = [];
-    let start: string = "",
-      end: string = "";
 
     const { selection, limit } = this.state;
     if (selection !== 2) {
@@ -409,4 +409,6 @@ export default class TypePicker {
   }
 
   public update = () => this.render();
+  static between = between;
+  static diff = diff;
 }

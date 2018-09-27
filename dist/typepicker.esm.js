@@ -1,12 +1,11 @@
-  
-    /*
-    *  TypePicker v2.0.8
-    *  Fi2zz / wenjingbiao@outlook.com
-    *  https://github.com/Fi2zz/datepicker
-    *  (c) 2017-2018, wenjingbiao@outlook.com
-    *  MIT License
-    */
-    const __assign = Object.assign || function (target) {
+/*
+*  TypePicker v2.5
+*  Fi2zz / wenjingbiao@outlook.com
+*  https://github.com/Fi2zz/datepicker
+*  (c) 2017-2018, wenjingbiao@outlook.com
+*  MIT License
+*/
+const __assign = Object.assign || function (target) {
     for (var source, i = 1; i < arguments.length; i++) {
         source = arguments[i];
         for (var prop in source) {
@@ -514,6 +513,23 @@ var monthSwitcher = function (date, start, end) {
         setState(states);
     }; };
 };
+var between = function (start) { return function (end) { return function (dateFormat) {
+    start = parse(start, dateFormat);
+    end = parse(end, dateFormat);
+    if (!start || !end) {
+        return [];
+    }
+    var dates = createDate({
+        date: start,
+        days: diff(end, start, "days", true),
+        dateFormat: dateFormat,
+        direction: end > start ? 1 : -1
+    });
+    if (!isArray(dates)) {
+        return [dates];
+    }
+    return dates;
+}; }; };
 
 function createActionBar(create, reachStart, reachEnd) {
     if (!create) {
@@ -672,7 +688,7 @@ var Queue = (function () {
         this.list.shift();
     };
     Queue.prototype.slice = function (start, end) {
-        var l = this.list.slice(start, end);
+        this.list.slice(start, end);
     };
     Queue.prototype.dequeue = function () {
         this.list.shift();
@@ -912,23 +928,23 @@ var TypePicker = (function () {
             else if (dates.length > selection) {
                 dates = dates.slice(0, selection);
             }
-            var start_1 = dates[0], end_1 = dates[1];
-            if (!isDate(start_1)) {
-                start_1 = this.parse(start_1);
+            var start = dates[0], end = dates[1];
+            if (!isDate(start)) {
+                start = this.parse(start);
             }
-            if (!isDate(end_1)) {
-                end_1 = this.parse(end_1);
+            if (!isDate(end)) {
+                end = this.parse(end);
             }
-            var gap = diff(end_1, start_1, "days", true);
-            if (gap > limit || end_1 < start_1) {
+            var gap = diff(end, start, "days", true);
+            if (gap > limit || end < start) {
                 return;
             }
-            start_1 = this.format(start_1);
-            end_1 = this.format(end_1);
-            if (this.inDisable(start_1)) {
+            start = this.format(start);
+            end = this.format(end);
+            if (this.inDisable(start)) {
                 return;
             }
-            datesList = [start_1, end_1].filter(isDef);
+            datesList = [start, end].filter(isDef);
         }
         for (var _b = 0, datesList_1 = datesList; _b < datesList_1.length; _b++) {
             var item = datesList_1[_b];
@@ -994,9 +1010,8 @@ var TypePicker = (function () {
             });
         }
     };
+    TypePicker.between = between;
     return TypePicker;
 }());
 
 export default TypePicker;
-
-      
