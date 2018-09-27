@@ -55,9 +55,18 @@ DatePicker build with typescript
    setDates([dates]:tuple);
    //Set  dates to DatePicker
    //dates accept <string> and <Date>
-   //the datepicker i18n
+   
    i18n(language:any);
+   //the datepicker i18n
+   
 
+
+   disable({
+        days?:Array<number>[5],
+        dates?:Array<string|Date>,
+        from?:<Date|string>,
+        to?:<Date|string>
+    })
    //Set disabled dates to DataPicker
    //dates =>dates accept <string> and <Date>,  all dates in [dates] will be disabled
    //days => days accept number of [0~6],   all days in [days] will be disabled
@@ -66,41 +75,32 @@ DatePicker build with typescript
    //to   => to accept <string> or <Date> all dates before [to] date will be disabled,
    //        eg: to =2018-3-4 => all dates before 2018-3-5 will be disabled
 
-   disable({
-        days?:Array<number>[5],
-        dates?:Array<string|Date>,
-        from?:<Date|string>,
-        to?:<Date|string>
-    })
+   parse(formattedDate:string)
    //Transform date string into date object,return Date object
-   //eg: formattedDate ='2018-3-4',format='YYYY-M-D" =>  new Date(2018,2,4)
-   parse(formattedDate:string,dateFormat:string)
+   //eg: formattedDate ='2018-9-27', parse(fornattedDate) => Thu Sep 27 2018 13:55:19 GMT+0800 (中国标准时间)
 
 
+   format(date:Date)
    //Transform date object into string,return string
-   //eg: date =new Date(),format='YYYY-MM-DD' => 2018-03-04
-   format(date:Date,format:string)
+   //eg: date =new Date() =>format(date) => 2018-09-27
 
-   //Event listener
-   //eg: datePicker.on("event",(result)=>{
-                //your logic
-   //    })
    on(event:string,fn:Function)
+   //Event listener
+   //eg: datePicker.on("event",handler:Function)
+   
+   //Rerender datepicker outside the instance
+   update()
+   
 ```
 
 ## USAGE
 
 ```typescript
-    //es module
+
+    //use build tools
     import TypePicker from '/dist/datepicker.esm.js'
     import '/dist/style.css'
-
-    //cjs
-    const TypePicker =require("/dist/datepicker.js");
-    require("/dist/style.css");
-
-
-    //umd
+    //not use build tools
     <script src="/dist/datepicker.min.js"></script>
     <link  href="/dist/style.css" rel="stylesheet"/>
 
@@ -188,4 +188,6 @@ DatePicker build with typescript
 
     // if data changed ,you could use app.update() to rerender datepicker
     app.update()
+    
+    
 ```
