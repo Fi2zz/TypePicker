@@ -34,13 +34,13 @@ DatePicker build with typescript
 
 ## OPTIONS
 
-| OPTION    | RERUIRED | TYPE               | DESC                                    | DEFAULT VALUE/Possible Value |
+| OPTION    | RERUIRED | TYPE               | DESC                                    | Default Value/Possible Value |
 | --------- | -------- | ------------------ | ----------------------------------------| ------------- |
 | el        | YES      | string,HTMLElement | Element or selector to mount DatePcker  |               |
 | format    | YES      | string             | Date string format                      | null          |
 | startDate | NO       | Date               | Start date of DatePicker                | new Date      |
 | endDate   | NO       | Date               | End date of DatePicker                  | null          |
-| limit     | NO       | number             | Limitation between two dates            |               |
+| limit     | NO       | number             | Limitation between two dates            | 1             |
 | views     | NO       | number,string      | Display views of DatePicker             | auto,1,2      |
 | selection | NO       | number             | Size of dates can be picked             | 1             |
 
