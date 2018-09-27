@@ -24,11 +24,9 @@ DatePicker build with typescript
 
 ## FEATURES
 
-1.  Base on observer
-2.  Easy to display data on html element by using `data` event
-3.  Support double views,flat view and single view
-4.  Disabled date can be selected as end date while using `setData` function
-5.  Support Multi selection
+1.  Easy to display data on html element by using `render` event
+2.  Support double views,flat view and single view
+3.  Support Multi selection
 
 ## RUN DEMO
 
@@ -36,15 +34,15 @@ DatePicker build with typescript
 
 ## OPTIONS
 
-| OPTION    | RERUIRED | TYPE               | DESC                                                         | DEFAULT VALUE |
-| --------- | -------- | ------------------ | ------------------------------------------------------------ | ------------- |
-| el        | YES      | string,HTMLElement | Element or selector to mount DatePcker                       |               |
-| format    | YES      | string             | Date string format                                           | null          |
-| startDate | NO       | Date               | Start date of DatePicker                                     | new Date      |
-| endDate   | NO       | Date               | End date of DatePicker                                       | null          |
-| limit     | NO       | number             | Limitation between two dates                                 |               |
-| views     | NO       | number,string      | Display views of DatePicker                                  | auto,1,2      |
-| selection | NO       | number             | Size of dates can be picked ,value must be not less than `2` | 1             |
+| OPTION    | RERUIRED | TYPE               | DESC                                    | DEFAULT VALUE/Possible Value |
+| --------- | -------- | ------------------ | ----------------------------------------| ------------- |
+| el        | YES      | string,HTMLElement | Element or selector to mount DatePcker  |               |
+| format    | YES      | string             | Date string format                      | null          |
+| startDate | NO       | Date               | Start date of DatePicker                | new Date      |
+| endDate   | NO       | Date               | End date of DatePicker                  | null          |
+| limit     | NO       | number             | Limitation between two dates            |               |
+| views     | NO       | number,string      | Display views of DatePicker             | auto,1,2      |
+| selection | NO       | number             | Size of dates can be picked             | 1             |
 
 #### NOTE
 
