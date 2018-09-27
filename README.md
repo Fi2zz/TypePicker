@@ -54,11 +54,11 @@ DatePicker build with typescript
 ## API
 
 ```typescript
-   setDates([dates]:tuple);
+   public setDates([dates]:tuple);
    //Set  dates to DatePicker
    //dates accept <string> and <Date>
    //the datepicker i18n
-   i18n(language:any);
+   public i18n(language:any);
 
    //Set disabled dates to DataPicker
    //dates =>dates accept <string> and <Date>,  all dates in [dates] will be disabled
@@ -68,26 +68,34 @@ DatePicker build with typescript
    //to   => to accept <string> or <Date> all dates before [to] date will be disabled,
    //        eg: to =2018-3-4 => all dates before 2018-3-5 will be disabled
 
-   disable({
+   public disable({
         days?:Array<number>[5],
         dates?:Array<string|Date>,
         from?:<Date|string>,
         to?:<Date|string>
     })
+
    //Transform date string into date object,return Date object
    //eg: formattedDate ='2018-3-4',format='YYYY-M-D" =>  new Date(2018,2,4)
-   parse(formattedDate:string,dateFormat:string)
+   public parse(formattedDate:string,dateFormat:string)
 
 
    //Transform date object into string,return string
    //eg: date =new Date(),format='YYYY-MM-DD' => 2018-03-04
-   format(date:Date,format:string)
+   public  format(date:Date,format:string)
+
 
    //Event listener
    //eg: datePicker.on("event",(result)=>{
                 //your logic
    //    })
-   on(event:string,fn:Function)
+   public on(event:string,fn:Function)
+
+   // Diff two dates, type are days and month
+   static diff(d1:Date,d2:Date,type:string ,isAbsolute:boolean)
+
+   //Get all dates between start date and end date,return string[]
+   static between(start:Date|string)(end:Date|string)(dateFormat:string)
 ```
 
 ## USAGE

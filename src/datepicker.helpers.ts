@@ -1,6 +1,14 @@
 import { node, nodeClassName, generateDate } from "./datepicker.interface";
-import { isDate, padding, listHead, listTail } from "./util";
+import { isDate, padding, listHead, listTail, isArray } from "./util";
 
+/**
+ *
+ * @param start
+ * @param end
+ * @param type
+ * @param isAbsolute
+ * @returns {number}
+ */
 export function diff(
   start: Date,
   end: Date,
@@ -28,7 +36,11 @@ export function diff(
 
   return result;
 }
-
+/**
+ *
+ * @param view
+ * @returns {any}
+ */
 export function getViews(view: number | string) {
   if (!view) {
     return 1;
@@ -49,12 +61,22 @@ export function getViews(view: number | string) {
   }
 }
 
+/**
+ *
+ * @param base
+ * @param views
+ * @returns {string}
+ */
 export const containerClassName = (base, views) => {
   return `${base} calendar calendar-${
     views === 2 ? "double-views" : views === 1 ? "single-view" : "flat-view"
   }`;
 };
-
+/**
+ *
+ * @param el
+ * @returns {any}
+ */
 export function parseEl(el: any) {
   if (!el) {
     return null;
@@ -62,7 +84,12 @@ export function parseEl(el: any) {
 
   return typeof el === "string" ? document.querySelector(el) : el;
 }
-
+/**
+ *
+ * @param date
+ * @param format
+ * @returns {string}
+ */
 export function format(date: Date, format?: string) {
   if (!format) {
     format = "YYYY-MM-DD";
@@ -81,7 +108,12 @@ export function format(date: Date, format?: string) {
     $1 => (parts[$1] === undefined ? $1 : parts[$1])
   );
 }
-
+/**
+ *
+ * @param strDate
+ * @param format
+ * @returns {any}
+ */
 export function parse(strDate: string | Date, format: string) {
   if (isDate(strDate)) {
     return strDate;
@@ -154,7 +186,11 @@ export function parse(strDate: string | Date, format: string) {
 
   return ret(strDate, format);
 }
-
+/**
+ *
+ * @param formate
+ * @returns {RegExp}
+ */
 function createDateFormatValidator(formate: string) {
   const sepreator = formate.split(/\w/).filter(item => !!item);
   let result: any = formate.split(/\W/).map((string, index) => {
@@ -179,6 +215,13 @@ function createDateFormatValidator(formate: string) {
   return new RegExp(regexpString);
 }
 
+/**
+ *
+ * @param date
+ * @param size
+ * @param who
+ * @returns {Date}
+ */
 export const setDate = (date: Date, size?: number, who?: string) => {
   if (!who) {
     who = "date";
@@ -200,7 +243,10 @@ export const setDate = (date: Date, size?: number, who?: string) => {
     date.getDate() + dateSize
   );
 };
-
+/**
+ *
+ * @type {{$on: ((key:string, fn:Function)=>any); $emit: ((...args:any[])=>boolean); $remove: ((key:string, fn?:any)=>boolean)}}
+ */
 export const Observer = (function() {
   let clientList = <any>{};
   const $remove = function(key: string, fn?: any | undefined) {
@@ -245,13 +291,25 @@ export const Observer = (function() {
     $remove
   };
 })();
-
+/**
+ *
+ * @param year
+ * @param month
+ * @returns {number}
+ */
 export function getDates(year: number, month: number): number {
   let d = new Date(year, month, 1);
   let utc = Date.UTC(d.getFullYear(), d.getMonth() + 1, 0);
   return new Date(utc).getUTCDate();
 }
-
+/**
+ *
+ * @param tag
+ * @param props
+ * @param children
+ * @param render
+ * @returns {any}
+ */
 export function createNode({
   tag,
   props = {},
@@ -276,7 +334,12 @@ export function createNode({
   }
   return `<${tag} ${attributes.join("")}>${children}</${tag}>`;
 }
-
+/**
+ *
+ * @param type
+ * @param index
+ * @returns {string}
+ */
 export function calendarCellClassName(type: string, index?: number) {
   let name = `calendar-cell calendar-${type}-cell ${
     index === 0 ? "calendar-cell-weekday" : ""
@@ -285,14 +348,28 @@ export function calendarCellClassName(type: string, index?: number) {
 
   return name.replace(/\n/, "").trim();
 }
-
+/**
+ *
+ * @param list
+ * @param spliter
+ * @returns {string|Request}
+ */
 export function join(list, spliter?: string) {
   if (!spliter) {
     spliter = "";
   }
   return list.join(spliter);
 }
-
+/***
+ *
+ * @param date
+ * @param days
+ * @param dateFormat
+ * @param direction
+ * @param position
+ * @param index
+ * @returns {Array}
+ */
 export function createDate({
   date,
   days,
@@ -327,7 +404,13 @@ export function createDate({
   }
   return result;
 }
-
+/***
+ *
+ * @param date
+ * @param dates
+ * @param onlyActive
+ * @returns {any}
+ */
 export const createNodeClassName = ({
   date,
   dates,
@@ -354,7 +437,10 @@ export const createNodeClassName = ({
     return "";
   }
 };
-
+/**
+ *
+ * @type {{title: ((year, month)=>string); week: Array<string>; months: Array<string>}}
+ */
 export const defaultLanguage = {
   title: (year, month) => `${year}年 ${defaultLanguage.months[month]}月`,
   week: <Array<string>>["日", "一", "二", "三", "四", "五", "六"],
@@ -373,7 +459,13 @@ export const defaultLanguage = {
     "12"
   ]
 };
-
+/***
+ *
+ * @param list
+ * @param dateFormat
+ * @param inDisable
+ * @returns {any}
+ */
 export const findDisableInQueue = (list, dateFormat, inDisable) => {
   if (list.length <= 0) {
     return [];
@@ -403,7 +495,16 @@ export const findDisableInQueue = (list, dateFormat, inDisable) => {
     return false;
   }
 };
-
+/***
+ *
+ * @param selection
+ * @param date
+ * @param inDisable
+ * @param dateFormat
+ * @param queue
+ * @param limit
+ * @returns {boolean}
+ */
 export const checkPickableDate = ({
   selection,
   date,
@@ -443,9 +544,18 @@ export const checkPickableDate = ({
   }
   return true;
 };
-
+/**
+ *
+ * @param parse
+ */
 export const formatParse = parse => format => date => format(parse(date));
-
+/**
+ *
+ * @param date
+ * @param start
+ * @param end
+ * @returns {(setState:any)=>(size?:any)=>undefined}
+ */
 export const monthSwitcher = (date: Date, start, end) => {
   return setState => size => {
     const now = setDate(date, size, "month");
@@ -461,4 +571,27 @@ export const monthSwitcher = (date: Date, start, end) => {
 
     setState(states);
   };
+};
+/**
+ *
+ * @param start
+ */
+export const between = start => end => dateFormat => {
+  start = parse(start, dateFormat);
+  end = parse(end, dateFormat);
+
+  if (!start || !end) {
+    return [];
+  }
+  let dates = createDate({
+    date: start,
+    days: diff(end, start, "days", true),
+    dateFormat,
+    direction: end > start ? 1 : -1
+  });
+
+  if (!isArray(dates)) {
+    return [dates];
+  }
+  return dates;
 };

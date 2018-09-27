@@ -43,7 +43,7 @@ export class Queue {
   }
 
   slice(start, end) {
-    let l = this.list.slice(start, end);
+    this.list.slice(start, end);
   }
 
   dequeue() {
