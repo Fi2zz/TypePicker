@@ -1,14 +1,6 @@
+import { template } from "./datepicker.interface";
 import { createNode, calendarCellClassName, join } from "./datepicker.helpers";
 
-interface template {
-  renderWeekOnTop?: boolean;
-  extraPanel: { type: string; list?: any[] };
-  extraYearsList?: any;
-  data?: Array<any>;
-  week: Array<any>;
-  reachStart: boolean;
-  reachEnd: boolean;
-}
 function createActionBar(create: boolean, reachStart, reachEnd) {
   if (!create) {
     return [];
@@ -125,11 +117,11 @@ function createView(
   template = template.filter(item => !!item);
   return template.join("").trim();
 }
+
 export default function template({
   renderWeekOnTop,
   data,
   week,
-  extraPanel,
   reachEnd,
   reachStart
 }: template) {
@@ -137,45 +129,6 @@ export default function template({
     ...createActionBar(!renderWeekOnTop, reachStart, reachEnd),
     createView(data, week, renderWeekOnTop)
   ];
-
-  if (extraPanel) {
-    let heading = type => {
-      if (type !== "month") {
-        return "";
-      }
-      let item = extraPanel.list.filter(item => item.active).pop();
-      return createNode({
-        tag: "h3",
-        children: item.year
-      });
-    };
-
-    let extraPanelList = extraPanel.list.map(item =>
-      createNode({
-        tag: "div",
-        props: {
-          class: `extra-item${item.active ? " active" : ""}`
-        },
-        children: createNode({ tag: "span", children: item.displayName })
-      })
-    );
-
-    nodes.push(
-      createNode({
-        tag: "div",
-        props: {
-          class: "extra-panel extra-panel-" + extraPanel.type
-        },
-        children: [
-          heading(extraPanel.type),
-          createNode({
-            tag: "div",
-            children: extraPanelList
-          })
-        ]
-      })
-    );
-  }
 
   return join(nodes);
 }

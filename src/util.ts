@@ -1,7 +1,3 @@
-export function parseToInt(string: any) {
-  return parseInt(string, 10);
-}
-
 export function attr(
   el: any,
   attr: any,
@@ -19,10 +15,6 @@ export function attr(
 
 export const padding = (n: Number) => `${n > 9 ? n : "0" + n}`;
 
-function _toString(object: any) {
-  return Object.prototype.toString.call(object);
-}
-
 export function toString(val: any) {
   return val == null
     ? ""
@@ -39,130 +31,13 @@ export function isDef(v) {
   return !isUndefined(v);
 }
 
-export function isString(object: any) {
-  return _toString(object) === "[object String]";
-}
-
 export function isArray(object: any) {
-  return _toString(object) === "[object Array]";
-}
-
-export function isPlainObject(object: any) {
-  return _toString(object) === "[object Object]";
-}
-
-export function isNumber(object: any) {
-  return _toString(object) === "[object Number]";
+  return Object.prototype.toString.call(object) === "[object Array]";
 }
 
 export function isDate(object: any) {
-  return _toString(object) === "[object Date]";
+  return Object.prototype.toString.call(object) === "[object Date]";
 }
-
-export function isFunction(object: any) {
-  return _toString(object) === "[object Function]";
-}
-
-let callbacks = [];
-let pending = false;
-let timer = null;
-
-function flushCallbacks() {
-  pending = false;
-  let copies = callbacks.slice(0);
-  callbacks = [];
-  if (timer) {
-    clearTimeout(timer);
-  }
-  for (let i = 0; i < copies.length; i++) {
-    copies[i]();
-  }
-}
-
-export function nextTick(cb) {
-  callbacks.push(function() {
-    cb();
-  });
-  if (!pending) {
-    pending = true;
-    timer = setTimeout(flushCallbacks, 0);
-  }
-}
-
-export function warn(where: string, msg: any) {
-  let message = msg;
-  if (isPlainObject(msg) || isArray(msg)) {
-    message = JSON.stringify(msg);
-  }
-  console.error(`[${where}] ${message} `);
-}
-
-export function getFront(list: Array<any>) {
-  return list[0];
-}
-
-export function getPeek(list: Array<any>) {
-  return list[list.length - 1];
-}
-
-export function merge(...args: Array<any>) {
-  let merged: any = {};
-
-  function generateObject(target: any = {}, object: any) {
-    for (let key in object) {
-      if (object.hasOwnProperty(key)) {
-        target[key] = object[key];
-      }
-    }
-    return target;
-  }
-
-  for (let i = 0; i < args.length; i++) {
-    let arg = args[i];
-    if (arg) {
-      if (isArray(arg)) {
-        for (let i = 0; i < arg.length; i++) {
-          let argItem = arg[i];
-          if (isPlainObject(argItem)) {
-            merged = generateObject(merged, argItem);
-          } else if (!isDate(argItem)) {
-            merged[argItem] = argItem;
-          }
-        }
-      } else if (isPlainObject(arg)) {
-        merged = generateObject(merged, arg);
-      } else if (isString(arg) || isNumber(arg)) {
-        merged[arg] = arg;
-      }
-    }
-  }
-  return merged;
-}
-
-export function isEmpty(listOrObject: any) {
-  if (!isArray(listOrObject) && !isPlainObject(listOrObject)) {
-    warn(
-      "isEmpty",
-      "Expect an Object or an Array,but got " + _toString(listOrObject)
-    );
-    return false;
-  }
-  if (isArray(listOrObject)) {
-    return listOrObject.length <= 0;
-  } else if (isPlainObject(listOrObject)) {
-    return Object.keys(listOrObject).length <= 0;
-  }
-}
-
-export function simpleListToMap(list: Array<any>, key?: string | number) {
-  let map = {};
-  for (let it of list) {
-    map[key ? it[key] : it] = it;
-  }
-  return map;
-}
-
-export function noop(): void {}
 
 export function $(selector: string | any, selector$2?: string): any {
   const selectAll = (who, selector) => {
@@ -212,7 +87,6 @@ export const dedupList = (list: any[], condition?) => {
       map[condition] = item;
     }
   }
-
   for (let key in map) {
     let item = map[key];
     result.push(item);
@@ -220,3 +94,24 @@ export const dedupList = (list: any[], condition?) => {
 
   return result;
 };
+
+export function byCondition(condition: any, when?: Boolean) {
+  return (value?: any) => {
+    return (next?: Function) => {
+      if (isUndefined(when)) {
+        when = true;
+      }
+      let result;
+      if (typeof condition === "function") {
+        result = condition(value) === when;
+      } else {
+        result = condition === when;
+      }
+
+      if (next && typeof next === "function" && result) {
+        return next(value);
+      }
+      return result;
+    };
+  };
+}

@@ -1,4 +1,5 @@
-import { isDate, padding, isArray, listHead, listTail } from "./util";
+import { node, nodeClassName, generateDate } from "./datepicker.interface";
+import { isDate, padding, listHead, listTail } from "./util";
 
 export function diff(
   start: Date,
@@ -28,52 +29,6 @@ export function diff(
   return result;
 }
 
-export const getDisableDates = (
-  startDate: Date,
-  endDate: Date,
-  dateFormat: string,
-  should: boolean
-) => {
-  const temp: any = {};
-  if (should) {
-    //处理开始日期前的日期
-    if (startDate instanceof Date) {
-      const startDateIndex = <number>startDate.getDate();
-      for (let i = 1; i <= startDateIndex - 1; i++) {
-        let date = new Date(
-          startDate.getFullYear(),
-          startDate.getMonth(),
-          startDateIndex - i
-        );
-        let formatted = format(date, dateFormat);
-        temp[formatted] = formatted;
-      }
-    }
-
-    if (endDate instanceof Date) {
-      //处理结束日期后的日期
-      const endMonthDates = getDates(endDate.getFullYear(), endDate.getMonth());
-      //结束日期往后计算多一个月，避免在 views=2 的情况下出错
-      const endDateNextMonthDate = getDates(
-        endDate.getFullYear(),
-        endDate.getMonth() + 1
-      );
-      const diffs = endMonthDates - endDate.getDate() + endDateNextMonthDate;
-
-      for (let i = 1; i <= diffs; i++) {
-        let date = new Date(
-          endDate.getFullYear(),
-          endDate.getMonth(),
-          endDate.getDate() + i
-        );
-        let formatted = format(date, dateFormat);
-        temp[formatted] = formatted;
-      }
-    }
-  }
-  return temp;
-};
-
 export function getViews(view: number | string) {
   if (!view) {
     return 1;
@@ -93,12 +48,6 @@ export function getViews(view: number | string) {
     }
   }
 }
-
-export const getClassName = (baseClassName: string, views: number | string) => {
-  return `${baseClassName} calendar calendar-${
-    views === 2 ? "double-views" : views === 1 ? "single-view" : "flat-view"
-  }`;
-};
 
 export const containerClassName = (base, views) => {
   return `${base} calendar calendar-${
@@ -131,10 +80,6 @@ export function format(date: Date, format?: string) {
     /(?:\b|%)([dDMyY]+)(?:\b|%)/g,
     $1 => (parts[$1] === undefined ? $1 : parts[$1])
   );
-}
-
-function noop(a: any) {
-  return a;
 }
 
 export function parse(strDate: string | Date, format: string) {
@@ -234,38 +179,6 @@ function createDateFormatValidator(formate: string) {
   return new RegExp(regexpString);
 }
 
-export function getDisabledDays(
-  start: Date,
-  end: Date,
-  days: Array<number>,
-  dateFormat: string
-) {
-  let map = {};
-
-  if (start && end) {
-    start = new Date(start.getFullYear(), start.getMonth(), 1);
-    end = new Date(
-      end.getFullYear(),
-      end.getMonth() + 1,
-      getDates(end.getFullYear(), end.getMonth())
-    );
-    let gap = diff(start, end, "days", true);
-    for (let i = 0; i < gap; i++) {
-      let date = new Date(
-        start.getFullYear(),
-        start.getMonth(),
-        start.getDate() + i
-      );
-      let day = date.getDay();
-      if (~days.indexOf(day)) {
-        let formatted = format(date, dateFormat);
-        map[formatted] = formatted;
-      }
-    }
-  }
-  return map;
-}
-
 export const setDate = (date: Date, size?: number, who?: string) => {
   if (!who) {
     who = "date";
@@ -339,12 +252,6 @@ export function getDates(year: number, month: number): number {
   return new Date(utc).getUTCDate();
 }
 
-interface node {
-  tag: string;
-  props?: any;
-  children?: any;
-  render?: Boolean;
-}
 export function createNode({
   tag,
   props = {},
@@ -386,45 +293,6 @@ export function join(list, spliter?: string) {
   return list.join(spliter);
 }
 
-export function getYearsByDate(date) {
-  let year = date.getFullYear();
-
-  let years = [];
-  for (let i = 0; i < 12; i++) {
-    years.push({
-      displayName: i,
-      active: i === year,
-      value: i,
-      year: i
-    });
-  }
-  return years;
-}
-
-export function getMonthsByYear(date) {
-  let months = [];
-  let month = date.getMonth();
-  let year = date.getFullYear();
-
-  for (let i = 0; i < 12; i++) {
-    months.push({
-      year,
-      value: i,
-      active: i === month
-    });
-  }
-  return months;
-}
-
-interface generateDate {
-  date: Date;
-  days: number;
-  dateFormat?: string;
-  direction?: number;
-  position?: string;
-  index?: number;
-}
-
 export function createDate({
   date,
   days,
@@ -460,24 +328,6 @@ export function createDate({
   return result;
 }
 
-export function createFormatDate(dateFormat) {
-  return function(date) {
-    return format(date, dateFormat);
-  };
-}
-
-export function createParseDate(format) {
-  return function(date) {
-    return parse(date, format);
-  };
-}
-
-interface nodeClassName {
-  date: string;
-  dates: string[];
-  onlyActive: boolean;
-}
-
 export const createNodeClassName = ({
   date,
   dates,
@@ -504,10 +354,6 @@ export const createNodeClassName = ({
     return "";
   }
 };
-
-export function findDiableDates(start, end) {
-  return createDate({ date: start, days: diff(end, start, "days") });
-}
 
 export const defaultLanguage = {
   title: (year, month) => `${year}年 ${defaultLanguage.months[month]}月`,
@@ -597,9 +443,6 @@ export const checkPickableDate = ({
   }
   return true;
 };
-
-export const parseAndFormat = parser => format => string =>
-  format(parser(string));
 
 export const formatParse = parse => format => date => format(parse(date));
 

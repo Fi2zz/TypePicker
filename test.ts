@@ -14,7 +14,6 @@ export function addClass(ele: any, className: string) {
 }
 
 const date = new Date();
-const diff = TypePicker.diff;
 const dateFormat = "YYYY-M-D";
 const activeLanguageCode: string = "en-us";
 const formControl = <HTMLInputElement>document.getElementById("date-value");
@@ -38,73 +37,41 @@ let options = {
   views: 2
 };
 
-function createDatePicker(selected: Array<any>, options) {
-  let app = null;
-
-  app = new TypePicker(options);
+function createDatePicker(options) {
+  let app = new TypePicker(options);
 
   console.log(app);
-
-  app.on("update", ({ value }: any) => {
+  app.on("select", (value: any) => {
     formControl.value = value;
   });
-  app.on("disabled", (result: any) => {
-    const { dateList, nodeList } = result;
-    for (let n = 0; n < nodeList.length; n++) {
-      let node = nodeList[n];
-      // console.log(node.getAttribute("data-date"));
-      let date = node.getAttribute("data-date");
-      if (dateList.indexOf(date) >= 0) {
-        node.classList.add("disabled");
-      }
-    }
-  });
-  app.on("data", (result: any) => {
-    const data = result.data;
-    const nodeList = result.nodeList;
+
+  app.on("render", (result: any) => {
+    const { nodeList, disables } = result;
 
     for (let i = 0; i < nodeList.length; i++) {
       let node = nodeList[i];
       let date = node.getAttribute("data-date");
-      if (date in data) {
-        // if (!hasClass(node, "disabled")) {
-        let itemData = source[date];
-        if (itemData.highlight) {
-          // addClass(node, "highlight");
+
+      if (disables.indexOf(date) >= 0) {
+        node.classList.add("disabled");
+      } else {
+        let data = source[date];
+
+        if (data) {
+          if (data.highlight) node.classList.add("highlight");
+          let placeholder: HTMLElement = node.querySelector(".placeholder");
+          placeholder.innerText = data.value;
         }
-        let placeholder: HTMLElement = node.querySelector(".placeholder");
-        placeholder.innerHTML = itemData.value;
       }
-      // } else {
-      // addClass(node, "disabled");
-      // }
     }
   });
-  // app.on("ready", () => {
-  //     let calendarHeaderTd = document.querySelectorAll("#calendar-header td");
-  //     Array.prototype.slice.call(calendarHeaderTd).forEach(item => {
-  //         item.addEventListener("click", () => {
-  //             let data = item.dataset;
-  //             app.emit("custom", {
-  //                 type: "custom",
-  //                 value: new Date(
-  //                     parseInt(data.year),
-  //                     parseInt(data.month) - 1,
-  //                     currDate.getDate()
-  //                 )
-  //             });
-  //         });
-  //     });
-  // });
-  if (selected.length >= 2) {
-    // app.setDates(selected);
-  }
-  // app.setLanguage({
-  //   title: (year, month) => `${activeLanguage["months"][month]} ${year}`,
-  //   days: activeLanguage.days,
-  //   months: activeLanguage.months
-  // });
-  app.setDisabled({
+
+  app.i18n({
+    title: (year, month) => `${activeLanguage["months"][month]} ${year}`,
+    days: activeLanguage.days,
+    months: activeLanguage.months
+  });
+  app.disable({
     dates: [
       "2018-2-18",
       "2018-2-19",
@@ -122,11 +89,10 @@ function createDatePicker(selected: Array<any>, options) {
       "2018-4-29",
       "2018-4-30"
     ],
-    // from: new Date(2018, 4, 1), //"2018-5-1",
+    from: new Date(2018, 10, 1),
     to: new Date(2018, 7, 15),
     days: [2, 3, 5]
   });
-
   app.setDates([
     "2018-9-27",
     "2018-9-28",
@@ -134,27 +100,8 @@ function createDatePicker(selected: Array<any>, options) {
     "2018-10-2",
     "2018-10-3"
   ]);
-  // app.giveMeTheWheel((nodeList, app) => {
-  //   Array.prototype.slice.call(nodeList).forEach(item => {
-  //     item.addEventListener("click", function() {
-  //       let value = item.getAttribute("data-date");
-  //       app.selected.push(value);
-  //       console.log(app);
-  //       app.emit("select", { type: "selected", value: app.selected });
-  //     });
-  //   });
-  // });
-  // const bindData = true;
-  // if (bindData) {
-  //   app.setData(() => {
-  //     Object.keys(source).forEach(date => {
-  //       if (diff(app.parse(date), startDate, "days") < 0) {
-  //         delete source[date];
-  //       }
-  //     });
-  //     return source;
-  //   });
-  // }
+
+  // app.update();
   return app;
 }
 
@@ -166,7 +113,7 @@ function popupHandler(visible: boolean) {
 function init(document: Document) {
   const date = new Date();
 
-  createDatePicker(["2018-9-21", "2018-9-22"], options);
+  createDatePicker(options);
 
   document.addEventListener("click", e => {
     const target = <HTMLElement>e.target;
