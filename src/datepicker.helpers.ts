@@ -36,6 +36,7 @@ export function diff(
 
   return result;
 }
+
 /**
  *
  * @param view
@@ -72,6 +73,7 @@ export const containerClassName = (base, views) => {
     views === 2 ? "double-views" : views === 1 ? "single-view" : "flat-view"
   }`;
 };
+
 /**
  *
  * @param el
@@ -84,6 +86,7 @@ export function parseEl(el: any) {
 
   return typeof el === "string" ? document.querySelector(el) : el;
 }
+
 /**
  *
  * @param date
@@ -108,6 +111,7 @@ export function format(date: Date, format?: string) {
     $1 => (parts[$1] === undefined ? $1 : parts[$1])
   );
 }
+
 /**
  *
  * @param strDate
@@ -186,6 +190,7 @@ export function parse(strDate: string | Date, format: string) {
 
   return ret(strDate, format);
 }
+
 /**
  *
  * @param formate
@@ -243,6 +248,14 @@ export const setDate = (date: Date, size?: number, who?: string) => {
     date.getDate() + dateSize
   );
 };
+
+export const setSepecifiedDate = (date: Date, day?: number) =>
+  new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    day >= 0 ? day : date.getDate()
+  );
+
 /**
  *
  * @type {{$on: ((key:string, fn:Function)=>any); $emit: ((...args:any[])=>boolean); $remove: ((key:string, fn?:any)=>boolean)}}
@@ -291,6 +304,7 @@ export const Observer = (function() {
     $remove
   };
 })();
+
 /**
  *
  * @param year
@@ -302,6 +316,7 @@ export function getDates(year: number, month: number): number {
   let utc = Date.UTC(d.getFullYear(), d.getMonth() + 1, 0);
   return new Date(utc).getUTCDate();
 }
+
 /**
  *
  * @param tag
@@ -334,6 +349,7 @@ export function createNode({
   }
   return `<${tag} ${attributes.join("")}>${children}</${tag}>`;
 }
+
 /**
  *
  * @param type
@@ -348,6 +364,7 @@ export function calendarCellClassName(type: string, index?: number) {
 
   return name.replace(/\n/, "").trim();
 }
+
 /**
  *
  * @param list
@@ -360,6 +377,7 @@ export function join(list, spliter?: string) {
   }
   return list.join(spliter);
 }
+
 /***
  *
  * @param date
@@ -404,6 +422,7 @@ export function createDate({
   }
   return result;
 }
+
 /***
  *
  * @param date
@@ -576,7 +595,7 @@ export const monthSwitcher = (date: Date, start, end) => {
  *
  * @param start
  */
-export const between = start => end => dateFormat => {
+export const between = start => end => (dateFormat?: string) => {
   start = parse(start, dateFormat);
   end = parse(end, dateFormat);
 

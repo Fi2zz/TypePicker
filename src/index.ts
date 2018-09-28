@@ -6,7 +6,8 @@ import {
   byCondition,
   $,
   dedupList,
-  isDef
+  isDef,
+  or
 } from "./util";
 import template from "./datepicker.template";
 import {
@@ -25,7 +26,8 @@ import {
   checkPickableDate,
   formatParse,
   monthSwitcher,
-  between
+  between,
+  setSepecifiedDate
 } from "./datepicker.helpers";
 import { Queue } from "./datepicker.queue";
 
@@ -33,7 +35,6 @@ const emitter = event => value => Observer.$emit(event, value);
 let queue = null;
 
 export default class TypePicker {
-
   constructor(option: datepicker) {
     if (!option || !parseEl(option.el)) {
       return;
@@ -233,8 +234,16 @@ export default class TypePicker {
     );
 
     if (prevActionDOM && nextActionDOM) {
-      prevActionDOM.addEventListener("click", () => !reachStart && update(-1));
-      nextActionDOM.addEventListener("click", () => !reachEnd && update(1));
+      prevActionDOM.addEventListener("click", e => {
+        e.preventDefault();
+
+        !reachStart && update(-1);
+      });
+      nextActionDOM.addEventListener("click", e => {
+        e.preventDefault();
+
+        !reachEnd && update(1);
+      });
     }
 
     const createRenderEmitter = () =>
@@ -267,17 +276,20 @@ export default class TypePicker {
     const next = queue.enqueue(value);
     const afterEnqueue = () => {
       const dateFormat = this.state.dateFormat;
-      const includeDisabled = findDisableInQueue(
-        queue.list,
-        dateFormat,
-        this.inDisable.bind(this)
-      );
 
-      if (includeDisabled && selection === 2) {
-        if (this.inDisable(value)) {
-          queue.pop();
-        } else {
-          queue.shift();
+      if (selection === 2) {
+        const includeDisabled = findDisableInQueue(
+          queue.list,
+          dateFormat,
+          this.inDisable.bind(this)
+        );
+
+        if (includeDisabled) {
+          if (this.inDisable(value)) {
+            queue.pop();
+          } else {
+            queue.shift();
+          }
         }
       }
 
@@ -335,7 +347,6 @@ export default class TypePicker {
   public disable({ to, from, days, dates }: disable) {
     const { endDate, startDate } = this.state;
     let { parse, format } = this;
-    let dateList = [];
 
     const state = <any>{ disables: [], startDate, endDate };
 
@@ -347,7 +358,9 @@ export default class TypePicker {
       return !isNaN(day) && day >= 0 && day <= 6;
     };
 
-    const mapDateByDay = days => {
+    const dayFilter = days => days.filter(filterDay);
+
+    const filterDateByDay = days => {
       return date => {
         if (days.indexOf(date.getDay()) >= 0) {
           return this.format(date);
@@ -355,41 +368,48 @@ export default class TypePicker {
         return null;
       };
     };
-
-    byCondition(isDate, true)(parse(from))(date => (state.endDate = date));
-    byCondition(isDate, true)(parse(to))(date => (state.startDate = date));
-    byCondition(isArray)(dates)(
-      dates => (dateList = dates.map(formatParse(parse)(format)).filter(isDef))
+    state.endDate = or(byCondition(isDate)(parse(from))(date => date))(endDate);
+    state.startDate = or(byCondition(isDate)(parse(to))(date => date))(
+      startDate
     );
-    let unprocessable = byCondition(state.endDate < state.startDate)()();
-    if (unprocessable) {
-      return;
-    }
-
-    byCondition(isArray)(days)(days => {
-      const startDateMonthFirstDate = new Date(
-        state.startDate.getFullYear(),
-        state.startDate.getMonth(),
-        1
-      );
-      let dates = createDate({
-        date: startDateMonthFirstDate,
-        days: diff(state.endDate, startDateMonthFirstDate, "days")
-      });
-      if (isArray(dates)) {
-        dates = dates.map(mapDateByDay(days.filter(filterDay))).filter(isDef);
-        dateList = [...dateList, ...dates];
-      }
-    });
-
-    state.disables = dedupList(dateList);
 
     if (state.startDate) {
       state.reachStart = true;
       state.date = state.startDate;
     }
 
-    this.setState(state);
+    const mapFormattedDate = dates =>
+      dates.map(formatParse(parse)(format)).filter(isDef);
+
+    const mapDateListFromProps = dates =>
+      byCondition(isArray)(dates)(mapFormattedDate);
+
+    const checkCanGoNext = start => end => next => {
+      let result = !(isDate(start) && isDate(end) && end < start);
+      if (result) {
+        next(start, end);
+      }
+    };
+
+    checkCanGoNext(state.startDate)(state.endDate)((start, end) => {
+      start = setSepecifiedDate(start, 1);
+
+      const filteredDays = or(byCondition(isArray)(days)(dayFilter))([]);
+
+
+      const mapDateByDay = (dates, days) =>
+        dates.map(filterDateByDay(days)).filter(isDef);
+
+      const disables = [
+        //取出传进来的dates
+        ...or(mapDateListFromProps(dates))([]),
+        //取出start and end 之间的所有日期
+        ...or(mapDateByDay(between(start)(end)(), filteredDays))([])
+      ];
+
+      state.disables = dedupList(disables);
+      this.setState(state);
+    });
   }
 
   i18n(pack: any) {

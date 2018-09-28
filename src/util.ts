@@ -115,3 +115,5 @@ export function byCondition(condition: any, when?: Boolean) {
     };
   };
 }
+
+export const or = v1 => v2 => (v1 ? v1 : v2);

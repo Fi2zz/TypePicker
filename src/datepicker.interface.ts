@@ -6,6 +6,7 @@ export interface datepicker {
   startDate?: Date;
   endDate?: Date;
   selection?: number;
+  infinite?: boolean;
 }
 
 export interface disable {

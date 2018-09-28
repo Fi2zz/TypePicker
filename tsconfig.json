@@ -7,11 +7,11 @@
     "target": "es5",
     "noEmitOnError": false,
     "allowSyntheticDefaultImports": true,
-    "noUnusedParameters": true,
+    "noUnusedParameters": false,
     "pretty": true,
     "allowJs": true,
     "removeComments": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": false,
     "lib": ["dom", "es5", "es2015.promise"]
   },
   "include": ["./src/**/*"],
