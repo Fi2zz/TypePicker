@@ -396,7 +396,6 @@ export default class TypePicker {
 
       const filteredDays = or(byCondition(isArray)(days)(dayFilter))([]);
 
-
       const mapDateByDay = (dates, days) =>
         dates.map(filterDateByDay(days)).filter(isDef);
 
