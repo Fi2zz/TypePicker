@@ -32,7 +32,7 @@ let options = {
   // endDate,
   limit: 7,
   format: dateFormat,
-  selection: 1,
+  selection: 2,
   views: 2,
   infinite: true
 };
@@ -48,6 +48,8 @@ function createDatePicker(options) {
   app.on("render", (result: any) => {
     const { nodeList, disables } = result;
 
+    console.log(app);
+
     for (let i = 0; i < nodeList.length; i++) {
       let node = nodeList[i];
       let date = node.getAttribute("data-date");
@@ -56,11 +58,12 @@ function createDatePicker(options) {
         node.classList.add("disabled");
       } else {
         let data = source[date];
-
         if (data) {
           if (data.highlight) node.classList.add("highlight");
           let placeholder: HTMLElement = node.querySelector(".placeholder");
-          placeholder.innerText = data.value;
+          if (placeholder) {
+            placeholder.innerText = data.value;
+          }
         }
       }
     }
@@ -90,13 +93,13 @@ function createDatePicker(options) {
       "2018-4-29",
       "2018-4-30"
     ],
-    from: new Date(2018, 10, 1),
-    to: new Date(2018, 7, 15),
+    // from: new Date(2018, 10, 1),
+    // to: new Date(2018, 7, 15),
     days: [2, 3, 5]
   });
   app.setDates([
-    "2018-9-27",
-    "2018-9-28",
+    // "2018-9-27",
+    // "2018-9-28",
     "2018-10-1",
     "2018-10-2",
     "2018-10-3"

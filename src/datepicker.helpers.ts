@@ -1,9 +1,4 @@
-import {
-  node,
-  nodeClassName,
-  generateDate,
-  tagData
-} from "./datepicker.interface";
+import { node, nodeClassName, generateDate } from "./datepicker.interface";
 import { isDate, padding, listHead, listTail, isArray } from "./util";
 
 /**
@@ -486,6 +481,7 @@ export function tagData(
   if (item) {
     day = item.getDay();
     date = item.getDate();
+
     className = tagClassName(index, isEnd, isStart);
   }
 
@@ -594,19 +590,24 @@ export const formatParse = parse => format => date => format(parse(date));
  * @returns {(setState:any)=>(size?:any)=>undefined}
  */
 export const monthSwitcher = (date: Date, start, end) => {
-  return setState => size => {
-    const now = setDate(date, size, "month");
-    const endGap = end ? diff(end, now) : 1;
-    const startGap = end ? diff(now, start) : 2;
-    const reachStart = startGap < 1 && endGap >= 0;
-    const reachEnd = startGap > 1 && endGap <= 1;
-    const states = {
-      reachEnd,
-      reachStart,
-      date: now
-    };
+  return size => {
+    return next => {
+      const now = setDate(date, size, "month");
+      const endGap = end ? diff(end, now) : 1;
+      const startGap = end ? diff(now, start) : 2;
+      let reachStart = startGap < 1 && endGap >= 0;
+      let reachEnd = startGap > 1 && endGap <= 1;
 
-    setState(states);
+      if (!start || !end) {
+        reachEnd = false;
+        reachStart = false;
+      }
+      next({
+        reachEnd,
+        reachStart,
+        date: now
+      });
+    };
   };
 };
 /**
@@ -632,3 +633,77 @@ export const between = start => end => (dateFormat?: string) => {
   }
   return dates;
 };
+
+export function mapRangeFromQueue(queue, dateFormat) {
+  return function(useDefault) {
+    if (queue.length <= 0) {
+      return [];
+    }
+
+    if (useDefault) {
+      return queue;
+    }
+
+    let start = parse(queue[0], dateFormat);
+    let end = parse(queue[queue.length - 1], dateFormat);
+    return createDate({
+      date: start,
+      days: diff(end, start, "days"),
+      dateFormat: dateFormat
+    });
+  };
+}
+
+export function mapMonths(date, size) {
+  const template = [];
+  for (let i = 0; i <= size; i++) {
+    let dat = new Date(date.getFullYear(), date.getMonth() + i, 1);
+    let dates = getDates(dat.getFullYear(), dat.getMonth());
+    template.push({
+      size: dates,
+      year: dat.getFullYear(),
+      month: dat.getMonth()
+    });
+  }
+
+  return template;
+}
+
+const mapDates = ({ year, month, size }, range, withRange, dateFormat) => {
+  const put = target => item => data =>
+    (target[format(item, dateFormat)] = data);
+
+  const dates = {};
+  const firstDateOfMonth = new Date(year, month, 1);
+
+  const lastMonthDates = new Date(year, month, 0).getDate();
+  const set = put(dates);
+
+  for (let i = 0; i < firstDateOfMonth.getDay(); i++) {
+    set(new Date(year, month - 1, lastMonthDates - i))(tagData());
+  }
+  for (let i = 0; i < size; i++) {
+    const date = new Date(year, month, i + 1);
+    const index = range.indexOf(format(date, dateFormat));
+    const isEnd = withRange && index === range.length - 1;
+    const isStart = withRange && index === 0;
+    set(date)(tagData(date, index, isEnd, isStart));
+  }
+  return { year, month, dates };
+};
+
+const mapItem = (queue, withRange, dateFormat) => item =>
+  mapDates(
+    item,
+    mapRangeFromQueue(queue, dateFormat)(withRange),
+    withRange,
+    dateFormat
+  );
+
+export class TemplateHelper {
+  constructor(date, size, queue, dateFormat, withRange) {
+    return <any[]>(
+      mapMonths(date, size).map(mapItem(queue, withRange, dateFormat))
+    );
+  }
+}

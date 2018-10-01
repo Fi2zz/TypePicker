@@ -46,6 +46,7 @@ export interface template {
   week: Array<any>;
   reachStart: boolean;
   reachEnd: boolean;
+  heading:Function
 }
 
 export interface tagData {
