@@ -1,5 +1,5 @@
 /*
-*  TypePicker v3.4.0
+*  TypePicker v3.5.0
 *  Fi2zz / wenjingbiao@outlook.com
 *  https://github.com/Fi2zz/datepicker
 *  (c) 2017-2018, wenjingbiao@outlook.com
@@ -611,54 +611,55 @@ function createDateTag(_a, item) {
         children: nodeChildren
     });
 }
+var headView = function (title, year, month, heading) {
+    return tag({
+        tag: "div",
+        props: { className: "calendar-head" },
+        children: [
+            tag({
+                tag: "div",
+                props: {
+                    className: "calendar-title"
+                },
+                children: tag({
+                    tag: "span",
+                    props: {
+                        "data-year": year,
+                        "data-month": month
+                    },
+                    children: heading(year, month)
+                })
+            })
+        ]
+    });
+};
+var dateListView = function (list, dates) {
+    return list.map(function (item) { return createDateTag(dates[item], item); });
+};
+var mainView = function (children) {
+    return tag({
+        tag: "div",
+        props: {
+            className: "calendar-main"
+        },
+        children: children
+    });
+};
+var bodyView = function (list, dates) {
+    return tag({
+        tag: "div",
+        props: {
+            className: "calendar-body"
+        },
+        children: dateListView(list, dates)
+    });
+};
 function createView(data, heading) {
     return function (week) {
-        var headView = function (title, year, month) {
-            return tag({
-                tag: "div",
-                props: { className: "calendar-head" },
-                children: [
-                    tag({
-                        tag: "div",
-                        props: {
-                            className: "calendar-title"
-                        },
-                        children: tag({
-                            tag: "span",
-                            props: {
-                                "data-year": year,
-                                "data-month": month
-                            },
-                            children: heading(year, month)
-                        })
-                    })
-                ]
-            });
-        };
-        var mainView = function (children) {
-            return tag({
-                tag: "div",
-                props: {
-                    className: "calendar-main"
-                },
-                children: children
-            });
-        };
-        var dateView = function (list, dates) {
-            return list.map(function (item) { return createDateTag(dates[item], item); });
-        };
-        var bodyView = function (list, dates) {
-            return tag({
-                tag: "div",
-                props: {
-                    className: "calendar-body"
-                },
-                children: dateView(list, dates)
-            });
-        };
-        var template = data.map(function (item) {
+        return data
+            .map(function (item) {
             return mainView([
-                headView(item.heading, item.year, item.month),
+                headView(item.heading, item.year, item.month, heading),
                 week,
                 tag({
                     tag: "div",
@@ -668,8 +669,8 @@ function createView(data, heading) {
                     children: bodyView(Object.keys(item.dates), item.dates)
                 })
             ]);
-        });
-        return template.filter(isDef);
+        })
+            .filter(isDef);
     };
 }
 var createWeekViewMapper = function (day, index) {
@@ -1041,7 +1042,7 @@ var TypePicker = (function () {
         var mapDateListFromProps = function (dates) {
             return byCondition(isArray)(dates)(mapFormattedDate);
         };
-        var checkCanGoNext = function (start) { return function (end) { return function (next) {
+        var checkStartDateAndEndDate = function (start) { return function (end) { return function (next) {
             var isDates = isDate(start) && isDate(end);
             if (isDates && start < end) {
                 next(start, end);
@@ -1054,8 +1055,7 @@ var TypePicker = (function () {
                 });
             }
         }; }; };
-        checkCanGoNext(state.startDate)(state.endDate)(function (start, end) {
-            console.log(start, end);
+        checkStartDateAndEndDate(state.startDate)(state.endDate)(function (start, end) {
             start = setSepecifiedDate(start, 1);
             var filteredDays = or(byCondition(isArray)(days)(dayFilter))([]);
             var mapDateByDay = function (dates, days) {

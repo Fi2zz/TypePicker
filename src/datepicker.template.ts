@@ -65,65 +65,65 @@ function createDateTag({ date, day, className }, item) {
   });
 }
 
-function createView(data: Array<any>, heading: Function) {
-  return function(week) {
-    const headView = (title, year, month) =>
+const headView = (title, year, month, heading) =>
+  tag({
+    tag: "div",
+    props: { className: "calendar-head" },
+    children: [
       tag({
         tag: "div",
-        props: { className: "calendar-head" },
-        children: [
+        props: {
+          className: "calendar-title"
+        },
+        children: tag({
+          tag: "span",
+          props: {
+            "data-year": year,
+            "data-month": month
+          },
+          children: heading(year, month)
+        })
+      })
+    ]
+  });
+
+const dateListView = (list, dates) =>
+  list.map(item => createDateTag(dates[item], item));
+
+const mainView = children =>
+  tag({
+    tag: "div",
+    props: {
+      className: "calendar-main"
+    },
+    children
+  });
+const bodyView = (list, dates) =>
+  tag({
+    tag: "div",
+    props: {
+      className: "calendar-body"
+    },
+    children: dateListView(list, dates)
+  });
+
+function createView(data: Array<any>, heading: Function) {
+  return week =>
+    data
+      .map((item: any) =>
+        mainView([
+          headView(item.heading, item.year, item.month, heading),
+          week,
           tag({
             tag: "div",
             props: {
-              className: "calendar-title"
+              className: "calendar-body"
             },
-            children: tag({
-              tag: "span",
-              props: {
-                "data-year": year,
-                "data-month": month
-              },
-              children: heading(year, month)
-            })
+            children: bodyView(Object.keys(item.dates), item.dates)
           })
-        ]
-      });
-
-    const mainView = children =>
-      tag({
-        tag: "div",
-        props: {
-          className: "calendar-main"
-        },
-        children
-      });
-    let dateView = (list, dates) =>
-      list.map(item => createDateTag(dates[item], item));
-
-    const bodyView = (list, dates) =>
-      tag({
-        tag: "div",
-        props: {
-          className: "calendar-body"
-        },
-        children: dateView(list, dates)
-      });
-
-    const template = data.map((item: any) =>
-      mainView([
-        headView(item.heading, item.year, item.month),
-        week,
-        tag({
-          tag: "div",
-          props: {
-            className: "calendar-body"
-          },
-          children: bodyView(Object.keys(item.dates), item.dates)
-        })
-      ])
-    );
-    return template.filter(isDef);
-  };
+        ])
+      )
+      .filter(isDef);
 }
 
 const createWeekViewMapper = (day, index) =>

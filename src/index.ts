@@ -329,7 +329,7 @@ export default class TypePicker {
       dates.map(formatParse(dateFormat)).filter(isDef);
     const mapDateListFromProps = dates =>
       byCondition(isArray)(dates)(mapFormattedDate);
-    const checkCanGoNext = start => end => next => {
+    const checkStartDateAndEndDate = start => end => next => {
       let isDates = isDate(start) && isDate(end);
       if (isDates && start < end) {
         next(start, end);
@@ -341,9 +341,7 @@ export default class TypePicker {
         });
       }
     };
-
-    checkCanGoNext(state.startDate)(state.endDate)((start, end) => {
-      console.log(start, end);
+    checkStartDateAndEndDate(state.startDate)(state.endDate)((start, end) => {
       start = setSepecifiedDate(start, 1);
       const filteredDays = or(byCondition(isArray)(days)(dayFilter))([]);
       const mapDateByDay = (dates, days) =>
