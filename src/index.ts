@@ -29,8 +29,6 @@ import {
 import { Observer } from "./datepicker.observer";
 import { Queue } from "./datepicker.queue";
 
-``;
-
 const emitter = event => value => Observer.$emit(event, value);
 let queue = null;
 

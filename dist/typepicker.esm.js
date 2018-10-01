@@ -1,5 +1,5 @@
 /*
-*  TypePicker v3.3.0
+*  TypePicker v3.4.0
 *  Fi2zz / wenjingbiao@outlook.com
 *  https://github.com/Fi2zz/datepicker
 *  (c) 2017-2018, wenjingbiao@outlook.com
@@ -802,7 +802,6 @@ var Queue = (function () {
     return Queue;
 }());
 
-"";
 var emitter = function (event) { return function (value) { return Observer.$emit(event, value); }; };
 var queue = null;
 var TypePicker = (function () {
