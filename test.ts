@@ -33,7 +33,7 @@ let options = {
   limit: 7,
   format: dateFormat,
   selection: 2,
-  views: 1,
+  views: 2,
   infinite: true
 };
 
@@ -48,7 +48,7 @@ function createDatePicker(options) {
   app.on("render", (result: any) => {
     const { nodeList, disables } = result;
 
-    console.log(app);
+    console.log(result);
 
     for (let i = 0; i < nodeList.length; i++) {
       let node = nodeList[i];

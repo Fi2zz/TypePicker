@@ -39,14 +39,11 @@ export interface nodeClassName {
 }
 
 export interface template {
-  renderWeekOnTop?: boolean;
-  extraPanel?: { type: string; list?: any[] };
-  extraYearsList?: any;
   data?: Array<any>;
+  i18n: any;
   week: Array<any>;
   reachStart: boolean;
   reachEnd: boolean;
-  heading:Function
 }
 
 export interface tagData {

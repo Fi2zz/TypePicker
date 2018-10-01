@@ -1,5 +1,5 @@
 /*
-*  TypePicker v3.2.0
+*  TypePicker v3.3.0
 *  Fi2zz / wenjingbiao@outlook.com
 *  https://github.com/Fi2zz/datepicker
 *  (c) 2017-2018, wenjingbiao@outlook.com
@@ -30,11 +30,9 @@ function attr(el, attr, attrvalue) {
 }
 var padding = function (n) { return "" + (n > 9 ? n : "0" + n); };
 
-function isUndefined(v) {
-    return v === undefined || v === null;
-}
 function isDef(v) {
-    return !isUndefined(v);
+    var isUndef = function (v) { return v === undefined || v === null; };
+    return !isUndef(v);
 }
 function isArray(object) {
     return Object.prototype.toString.call(object) === "[object Array]";
@@ -96,7 +94,7 @@ var dedupList = function (list, condition) {
 function byCondition(condition, when) {
     return function (value) {
         return function (next) {
-            if (isUndefined(when)) {
+            if (!isDef(when)) {
                 when = true;
             }
             var result;
@@ -298,6 +296,410 @@ var setDate = function (date, size, who) {
 var setSepecifiedDate = function (date, day) {
     return new Date(date.getFullYear(), date.getMonth(), day >= 0 ? day : date.getDate());
 };
+function getDates(year, month) {
+    var d = new Date(year, month, 1);
+    var utc = Date.UTC(d.getFullYear(), d.getMonth() + 1, 0);
+    return new Date(utc).getUTCDate();
+}
+function tag(_a) {
+    var tag = _a.tag, _b = _a.props, props = _b === void 0 ? {} : _b, _c = _a.children, children = _c === void 0 ? "" : _c, _d = _a.render, render = _d === void 0 ? true : _d;
+    if (!tag || !render) {
+        return "";
+    }
+    var attributes = [];
+    for (var key in props) {
+        var value = props[key];
+        if (key === "className") {
+            key = "class";
+        }
+        if (value) {
+            attributes.push(key + "=\"" + value + "\"");
+        }
+    }
+    if (children === false || children === undefined || children === null) {
+        children = "";
+    }
+    else if (Array.isArray(children)) {
+        children = children.filter(function (item) { return !!item; }).join("");
+    }
+    return "<" + tag + " " + attributes.join("") + ">" + children + "</" + tag + ">";
+}
+function join(list, spliter) {
+    if (!spliter) {
+        spliter = "";
+    }
+    return list.join(spliter);
+}
+function createDate(_a) {
+    var date = _a.date, days = _a.days, dateFormat = _a.dateFormat, _b = _a.direction, direction = _b === void 0 ? 1 : _b, _c = _a.position, position = _c === void 0 ? "date" : _c, index = _a.index;
+    var dir = function (v, size, dir) {
+        return dir > 0 ? v + size : v - size;
+    };
+    var result = [];
+    for (var i = 0; i <= days; i++) {
+        var currYear = date.getFullYear();
+        var currMonth = date.getMonth();
+        var currDate = date.getDate();
+        if (position === "year") {
+            currYear = dir(index ? index : currYear, i, direction);
+        }
+        else if (position === "month") {
+            currMonth = dir(index ? index : currMonth, i, direction);
+        }
+        else {
+            currDate = dir(index ? index : currDate, i, direction);
+        }
+        var dat = new Date(currYear, currMonth, currDate);
+        if (dateFormat) {
+            result.push(format(dat, dateFormat));
+        }
+        else {
+            result.push(dat);
+        }
+    }
+    return result;
+}
+function tagClassName(index, isEnd, isStart) {
+    var name = "";
+    if (index >= 0) {
+        name = "active";
+    }
+    if (isStart) {
+        name = name + " start-date";
+    }
+    else if (isEnd) {
+        name = name + " end-date";
+    }
+    else if (!isEnd && !isStart && index > 0) {
+        name = "in-range";
+    }
+    return name;
+}
+var defaultLanguage = {
+    title: function (year, month) {
+        return year + "\u5E74 " + defaultLanguage.months[month] + "\u6708";
+    },
+    week: ["日", "一", "二", "三", "四", "五", "六"],
+    months: [
+        "01",
+        "02",
+        "03",
+        "04",
+        "05",
+        "06",
+        "07",
+        "08",
+        "09",
+        "10",
+        "11",
+        "12"
+    ]
+};
+function tagData(item, index, isEnd, isStart, className) {
+    var day = "";
+    var date = "";
+    className = "empty disabled";
+    if (item) {
+        day = item.getDay();
+        date = item.getDate();
+        className = tagClassName(index, isEnd, isStart);
+    }
+    return {
+        date: date,
+        day: day,
+        className: className
+    };
+}
+function findDisableInQueue(list, dateFormat, inDisable) {
+    if (list.length <= 0) {
+        return [];
+    }
+    var head = listHead(list);
+    var tail = listTail(list);
+    var date = parse(head, dateFormat);
+    var end = parse(tail, dateFormat);
+    var size = diff(end, date, "days");
+    var dates = createDate({ date: date, days: size, dateFormat: dateFormat });
+    var disables = dates.filter(inDisable);
+    if (disables.length === 1) {
+        var disable = disables[0];
+        if (tail === disable) {
+            return false;
+        }
+        else {
+            return true;
+        }
+    }
+    else if (disables.length > 1) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+function checkPickableDate(_a) {
+    var selection = _a.selection, date = _a.date, inDisable = _a.inDisable, dateFormat = _a.dateFormat, queue = _a.queue, limit = _a.limit;
+    if (!date) {
+        return false;
+    }
+    if (inDisable(date)) {
+        if (selection === 2) {
+            var gap = diff(parse(date, dateFormat), parse(listTail(queue), dateFormat), "days");
+            if (queue.length <= 0 || gap <= 0 || queue.length >= selection) {
+                return false;
+            }
+            if (queue.length === 1) {
+                var item = queue[0];
+                var d = parse(item, dateFormat);
+                var now = parse(date, dateFormat);
+                var gap_1 = diff(now, d, "days");
+                if (gap_1 > limit) {
+                    return false;
+                }
+            }
+        }
+        else {
+            return false;
+        }
+    }
+    return true;
+}
+var formatParse = function (dateFormat) { return function (date) {
+    return format(parse(date, dateFormat), dateFormat);
+}; };
+var monthSwitcher = function (date, start, end) { return function (size) { return function (next) {
+    var now = setDate(date, size, "month");
+    var endGap = end ? diff(end, now) : 1;
+    var startGap = end ? diff(now, start) : 2;
+    var reachStart = startGap < 1 && endGap >= 0;
+    var reachEnd = startGap > 1 && endGap <= 1;
+    if (!start || !end) {
+        reachEnd = false;
+        reachStart = false;
+    }
+    next({
+        reachEnd: reachEnd,
+        reachStart: reachStart,
+        date: now
+    });
+}; }; };
+var between = function (start) { return function (end) { return function (dateFormat) {
+    start = parse(start, dateFormat);
+    end = parse(end, dateFormat);
+    if (!start || !end) {
+        return [];
+    }
+    var dates = createDate({
+        date: start,
+        days: diff(end, start, "days", true),
+        dateFormat: dateFormat,
+        direction: end > start ? 1 : -1
+    });
+    if (!isArray(dates)) {
+        return [dates];
+    }
+    return dates;
+}; }; };
+var TemplateData = (function () {
+    function TemplateData(date, size, queue, dateFormat, withRange) {
+        return (TemplateData.mapMonths(date, size).map(TemplateData.mapItem(queue, withRange, dateFormat)));
+    }
+    TemplateData.mapRangeFromQueue = function (queue, dateFormat) {
+        return function (useDefault) {
+            if (queue.length <= 0) {
+                return [];
+            }
+            if (useDefault) {
+                return queue;
+            }
+            var start = parse(queue[0], dateFormat);
+            var end = parse(queue[queue.length - 1], dateFormat);
+            return createDate({
+                date: start,
+                days: diff(end, start, "days"),
+                dateFormat: dateFormat
+            });
+        };
+    };
+    TemplateData.mapMonths = function (date, size) {
+        var template = [];
+        for (var i = 0; i <= size; i++) {
+            var dat = new Date(date.getFullYear(), date.getMonth() + i, 1);
+            var dates = getDates(dat.getFullYear(), dat.getMonth());
+            template.push({
+                size: dates,
+                year: dat.getFullYear(),
+                month: dat.getMonth()
+            });
+        }
+        return template;
+    };
+    TemplateData.mapItem = function (queue, withRange, dateFormat) { return function (item) {
+        return TemplateData.mapDates(item, TemplateData.mapRangeFromQueue(queue, dateFormat)(withRange), withRange, dateFormat);
+    }; };
+    TemplateData.mapDates = function (_a, range, withRange, dateFormat) {
+        var year = _a.year, month = _a.month, size = _a.size;
+        var put = function (target) { return function (item) { return function (data) {
+            return (target[format(item, dateFormat)] = data);
+        }; }; };
+        var dates = {};
+        var firstDateOfMonth = new Date(year, month, 1);
+        var lastMonthDates = new Date(year, month, 0).getDate();
+        var set = put(dates);
+        for (var i = 0; i < firstDateOfMonth.getDay(); i++) {
+            set(new Date(year, month - 1, lastMonthDates - i))(tagData());
+        }
+        for (var i = 0; i < size; i++) {
+            var date = new Date(year, month, i + 1);
+            var index = range.indexOf(format(date, dateFormat));
+            var isEnd = withRange && index === range.length - 1;
+            var isStart = withRange && index === 0;
+            set(date)(tagData(date, index, isEnd, isStart));
+        }
+        return { year: year, month: month, dates: dates };
+    };
+    return TemplateData;
+}());
+
+function cellClassName(type, index) {
+    var name = "calendar-cell calendar-" + type + "-cell " + (index === 0 ? "calendar-cell-weekday" : "") + " " + (index === 6 ? "calendar-cell-weekend" : "") + "\n ";
+    return name.replace(/\n/, "").trim();
+}
+function createActionView(reachStart, reachEnd) {
+    var node = function (type, disabled) {
+        var className = ["calendar-action", "calendar-action-" + type];
+        if (disabled) {
+            className.push("disabled", "calendar-action-disabled");
+        }
+        return tag({
+            tag: "a",
+            props: {
+                className: className.join(" "),
+                href: "javascripts:;"
+            },
+            children: tag({ tag: "span", children: type })
+        });
+    };
+    return [node("prev", reachStart), node("next", reachEnd)];
+}
+function createDateTag(_a, item) {
+    var date = _a.date, day = _a.day, className = _a.className;
+    var dateTag = tag({
+        tag: "div",
+        props: {
+            className: "date"
+        },
+        children: date
+    });
+    var nodeChildren = [dateTag];
+    if (date) {
+        var placeholderTag = tag({
+            tag: "div",
+            props: {
+                className: "placeholder"
+            }
+        });
+        nodeChildren.push(placeholderTag);
+    }
+    return tag({
+        tag: "div",
+        props: {
+            className: cellClassName("date", day) + " " + className,
+            "data-day": day,
+            "data-date": item ? item : ""
+        },
+        children: nodeChildren
+    });
+}
+function createView(data, heading) {
+    return function (week) {
+        var headView = function (title, year, month) {
+            return tag({
+                tag: "div",
+                props: { className: "calendar-head" },
+                children: [
+                    tag({
+                        tag: "div",
+                        props: {
+                            className: "calendar-title"
+                        },
+                        children: tag({
+                            tag: "span",
+                            props: {
+                                "data-year": year,
+                                "data-month": month
+                            },
+                            children: heading(year, month)
+                        })
+                    })
+                ]
+            });
+        };
+        var mainView = function (children) {
+            return tag({
+                tag: "div",
+                props: {
+                    className: "calendar-main"
+                },
+                children: children
+            });
+        };
+        var dateView = function (list, dates) {
+            return list.map(function (item) { return createDateTag(dates[item], item); });
+        };
+        var bodyView = function (list, dates) {
+            return tag({
+                tag: "div",
+                props: {
+                    className: "calendar-body"
+                },
+                children: dateView(list, dates)
+            });
+        };
+        var template = data.map(function (item) {
+            return mainView([
+                headView(item.heading, item.year, item.month),
+                week,
+                tag({
+                    tag: "div",
+                    props: {
+                        className: "calendar-body"
+                    },
+                    children: bodyView(Object.keys(item.dates), item.dates)
+                })
+            ]);
+        });
+        return template.filter(isDef);
+    };
+}
+var createWeekViewMapper = function (day, index) {
+    return tag({
+        tag: "div",
+        props: { className: cellClassName("day", index) },
+        children: day
+    });
+};
+var createWeekView = function (week) {
+    return tag({
+        tag: "div",
+        props: { className: "calendar-day" },
+        children: week.map(createWeekViewMapper)
+    });
+};
+function template(data, i18n) {
+    return function (reachEnd, reachStart, notRenderAction) {
+        var createdWeekView = createWeekView(i18n.week);
+        var createdView = createView(data, i18n.title);
+        var mainView = createdView(notRenderAction ? "" : createdWeekView);
+        var createdActionView = createActionView(reachStart, reachEnd);
+        if (notRenderAction) {
+            mainView.unshift(createdWeekView);
+            createdActionView = [];
+        }
+        return join(createdActionView.concat(mainView));
+    };
+}
+
 var Observer = (function () {
     var clientList = {};
     var $remove = function (key, fn) {
@@ -343,397 +745,6 @@ var Observer = (function () {
         $remove: $remove
     };
 })();
-function getDates(year, month) {
-    var d = new Date(year, month, 1);
-    var utc = Date.UTC(d.getFullYear(), d.getMonth() + 1, 0);
-    return new Date(utc).getUTCDate();
-}
-function tag(_a) {
-    var tag = _a.tag, _b = _a.props, props = _b === void 0 ? {} : _b, _c = _a.children, children = _c === void 0 ? "" : _c, _d = _a.render, render = _d === void 0 ? true : _d;
-    if (!tag || !render) {
-        return "";
-    }
-    var attributes = [];
-    for (var key in props) {
-        var value = props[key];
-        if (key === "className") {
-            key = "class";
-        }
-        if (value) {
-            attributes.push(key + "=\"" + value + "\"");
-        }
-    }
-    if (children === false || children === undefined || children === null) {
-        children = "";
-    }
-    else if (Array.isArray(children)) {
-        children = children.filter(function (item) { return !!item; }).join("");
-    }
-    return "<" + tag + " " + attributes.join("") + ">" + children + "</" + tag + ">";
-}
-function calendarCellClassName(type, index) {
-    var name = "calendar-cell calendar-" + type + "-cell " + (index === 0 ? "calendar-cell-weekday" : "") + " " + (index === 6 ? "calendar-cell-weekend" : "") + "\n ";
-    return name.replace(/\n/, "").trim();
-}
-function join(list, spliter) {
-    if (!spliter) {
-        spliter = "";
-    }
-    return list.join(spliter);
-}
-function createDate(_a) {
-    var date = _a.date, days = _a.days, dateFormat = _a.dateFormat, _b = _a.direction, direction = _b === void 0 ? 1 : _b, _c = _a.position, position = _c === void 0 ? "date" : _c, index = _a.index;
-    var dir = function (v, size, dir) {
-        return dir > 0 ? v + size : v - size;
-    };
-    var result = [];
-    for (var i = 0; i <= days; i++) {
-        var currYear = date.getFullYear();
-        var currMonth = date.getMonth();
-        var currDate = date.getDate();
-        if (position === "year") {
-            currYear = dir(index ? index : currYear, i, direction);
-        }
-        else if (position === "month") {
-            currMonth = dir(index ? index : currMonth, i, direction);
-        }
-        else {
-            currDate = dir(index ? index : currDate, i, direction);
-        }
-        var dat = new Date(currYear, currMonth, currDate);
-        if (dateFormat) {
-            result.push(format(dat, dateFormat));
-        }
-        else {
-            result.push(dat);
-        }
-    }
-    return result;
-}
-var tagClassName = function (index, isEnd, isStart) {
-    var name = "";
-    if (index >= 0) {
-        name = "active";
-    }
-    if (isStart) {
-        name = name + " start-date";
-    }
-    else if (isEnd) {
-        name = name + " end-date";
-    }
-    else if (!isEnd && !isStart && index > 0) {
-        name = "in-range";
-    }
-    return name;
-};
-var defaultLanguage = {
-    title: function (year, month) { return year + "\u5E74 " + defaultLanguage.months[month] + "\u6708"; },
-    week: ["日", "一", "二", "三", "四", "五", "六"],
-    months: [
-        "01",
-        "02",
-        "03",
-        "04",
-        "05",
-        "06",
-        "07",
-        "08",
-        "09",
-        "10",
-        "11",
-        "12"
-    ]
-};
-function tagData(item, index, isEnd, isStart, className) {
-    var day = "";
-    var date = "";
-    className = "empty disabled";
-    if (item) {
-        day = item.getDay();
-        date = item.getDate();
-        className = tagClassName(index, isEnd, isStart);
-    }
-    return {
-        date: date,
-        day: day,
-        className: className
-    };
-}
-var findDisableInQueue = function (list, dateFormat, inDisable) {
-    if (list.length <= 0) {
-        return [];
-    }
-    var head = listHead(list);
-    var tail = listTail(list);
-    var date = parse(head, dateFormat);
-    var end = parse(tail, dateFormat);
-    var size = diff(end, date, "days");
-    var dates = createDate({ date: date, days: size, dateFormat: dateFormat });
-    var disables = dates.filter(inDisable);
-    if (disables.length === 1) {
-        var disable = disables[0];
-        if (tail === disable) {
-            return false;
-        }
-        else {
-            return true;
-        }
-    }
-    else if (disables.length > 1) {
-        return true;
-    }
-    else {
-        return false;
-    }
-};
-var checkPickableDate = function (_a) {
-    var selection = _a.selection, date = _a.date, inDisable = _a.inDisable, dateFormat = _a.dateFormat, queue = _a.queue, limit = _a.limit;
-    if (!date) {
-        return false;
-    }
-    if (inDisable(date)) {
-        if (selection === 2) {
-            var gap = diff(parse(date, dateFormat), parse(listTail(queue), dateFormat), "days");
-            if (queue.length <= 0 || gap <= 0 || queue.length >= selection) {
-                return false;
-            }
-            if (queue.length === 1) {
-                var item = queue[0];
-                var d = parse(item, dateFormat);
-                var now = parse(date, dateFormat);
-                var gap_1 = diff(now, d, "days");
-                if (gap_1 > limit) {
-                    return false;
-                }
-            }
-        }
-        else {
-            return false;
-        }
-    }
-    return true;
-};
-var formatParse = function (parse) { return function (format) { return function (date) { return format(parse(date)); }; }; };
-var monthSwitcher = function (date, start, end) {
-    return function (size) {
-        return function (next) {
-            var now = setDate(date, size, "month");
-            var endGap = end ? diff(end, now) : 1;
-            var startGap = end ? diff(now, start) : 2;
-            var reachStart = startGap < 1 && endGap >= 0;
-            var reachEnd = startGap > 1 && endGap <= 1;
-            if (!start || !end) {
-                reachEnd = false;
-                reachStart = false;
-            }
-            next({
-                reachEnd: reachEnd,
-                reachStart: reachStart,
-                date: now
-            });
-        };
-    };
-};
-var between = function (start) { return function (end) { return function (dateFormat) {
-    start = parse(start, dateFormat);
-    end = parse(end, dateFormat);
-    if (!start || !end) {
-        return [];
-    }
-    var dates = createDate({
-        date: start,
-        days: diff(end, start, "days", true),
-        dateFormat: dateFormat,
-        direction: end > start ? 1 : -1
-    });
-    if (!isArray(dates)) {
-        return [dates];
-    }
-    return dates;
-}; }; };
-function mapRangeFromQueue(queue, dateFormat) {
-    return function (useDefault) {
-        if (queue.length <= 0) {
-            return [];
-        }
-        if (useDefault) {
-            return queue;
-        }
-        var start = parse(queue[0], dateFormat);
-        var end = parse(queue[queue.length - 1], dateFormat);
-        return createDate({
-            date: start,
-            days: diff(end, start, "days"),
-            dateFormat: dateFormat
-        });
-    };
-}
-function mapMonths(date, size) {
-    var template = [];
-    for (var i = 0; i <= size; i++) {
-        var dat = new Date(date.getFullYear(), date.getMonth() + i, 1);
-        var dates = getDates(dat.getFullYear(), dat.getMonth());
-        template.push({
-            size: dates,
-            year: dat.getFullYear(),
-            month: dat.getMonth()
-        });
-    }
-    return template;
-}
-var mapDates = function (_a, range, withRange, dateFormat) {
-    var year = _a.year, month = _a.month, size = _a.size;
-    var put = function (target) { return function (item) { return function (data) {
-        return (target[format(item, dateFormat)] = data);
-    }; }; };
-    var dates = {};
-    var firstDateOfMonth = new Date(year, month, 1);
-    var lastMonthDates = new Date(year, month, 0).getDate();
-    var set = put(dates);
-    for (var i = 0; i < firstDateOfMonth.getDay(); i++) {
-        set(new Date(year, month - 1, lastMonthDates - i))(tagData());
-    }
-    for (var i = 0; i < size; i++) {
-        var date = new Date(year, month, i + 1);
-        var index = range.indexOf(format(date, dateFormat));
-        var isEnd = withRange && index === range.length - 1;
-        var isStart = withRange && index === 0;
-        set(date)(tagData(date, index, isEnd, isStart));
-    }
-    return { year: year, month: month, dates: dates };
-};
-var mapItem = function (queue, withRange, dateFormat) { return function (item) {
-    return mapDates(item, mapRangeFromQueue(queue, dateFormat)(withRange), withRange, dateFormat);
-}; };
-var TemplateHelper = (function () {
-    function TemplateHelper(date, size, queue, dateFormat, withRange) {
-        return (mapMonths(date, size).map(mapItem(queue, withRange, dateFormat)));
-    }
-    return TemplateHelper;
-}());
-
-function createActionBar(create, reachStart, reachEnd) {
-    if (!create) {
-        return [];
-    }
-    var actionNode = function (type, disabled) {
-        var className = ["calendar-action", "calendar-action-" + type];
-        if (disabled) {
-            className.push("disabled", "calendar-action-disabled");
-        }
-        return tag({
-            tag: "a",
-            props: {
-                className: className.join(" "),
-                href: "javascripts:;"
-            },
-            children: tag({ tag: "span", children: type })
-        });
-    };
-    return [actionNode("prev", reachStart), actionNode("next", reachEnd)];
-}
-function createDateNode(_a, item) {
-    var date = _a.date, day = _a.day, className = _a.className;
-    var dateTag = tag({
-        tag: "div",
-        props: {
-            className: "date"
-        },
-        children: date
-    });
-    var nodeChildren = [dateTag];
-    if (date) {
-        var placeholderTag = tag({
-            tag: "div",
-            props: {
-                className: "placeholder"
-            }
-        });
-        nodeChildren.push(placeholderTag);
-    }
-    return tag({
-        tag: "div",
-        props: {
-            className: calendarCellClassName("date", day) + " " + className,
-            "data-day": day,
-            "data-date": item ? item : ""
-        },
-        children: nodeChildren
-    });
-}
-function createView(data, week, heading, renderWeekOnTop) {
-    var head = function (title, year, month) {
-        return tag({
-            tag: "div",
-            props: { className: "calendar-head" },
-            children: [
-                tag({
-                    tag: "div",
-                    props: {
-                        className: "calendar-title"
-                    },
-                    children: tag({
-                        tag: "span",
-                        props: {
-                            "data-year": year,
-                            "data-month": month
-                        },
-                        children: heading(year, month)
-                    })
-                })
-            ]
-        });
-    };
-    var weekMapper = function (day, index) {
-        return tag({
-            tag: "div",
-            props: { className: calendarCellClassName("day", index) },
-            children: day
-        });
-    };
-    var weeker = tag({
-        tag: "div",
-        props: { className: "calendar-day" },
-        children: week.map(weekMapper)
-    });
-    var mainNode = function (children) {
-        return tag({
-            tag: "div",
-            props: {
-                className: "calendar-main"
-            },
-            children: children
-        });
-    };
-    var dateNodes = function (dates) {
-        return Object.keys(dates).map(function (item) { return createDateNode(dates[item], item); });
-    };
-    var template = data.map(function (item) {
-        return mainNode([
-            head(item.heading, item.year, item.month),
-            !renderWeekOnTop ? weeker : "",
-            tag({
-                tag: "div",
-                props: {
-                    className: "calendar-body"
-                },
-                children: dateNodes(item.dates)
-            })
-        ]);
-    });
-    if (renderWeekOnTop) {
-        template.unshift(weeker);
-    }
-    template = template.filter(function (item) { return !!item; });
-    return template.join("").trim();
-}
-function template(_a) {
-    var renderWeekOnTop = _a.renderWeekOnTop, data = _a.data, week = _a.week, reachEnd = _a.reachEnd, reachStart = _a.reachStart, heading = _a.heading;
-    var nodes = createActionBar(!renderWeekOnTop, reachStart, reachEnd).concat([
-        createView(data, week, heading, renderWeekOnTop)
-    ]);
-    return join(nodes);
-}
 
 var Queue = (function () {
     function Queue(_a) {
@@ -791,6 +802,7 @@ var Queue = (function () {
     return Queue;
 }());
 
+"";
 var emitter = function (event) { return function (value) { return Observer.$emit(event, value); }; };
 var queue = null;
 var TypePicker = (function () {
@@ -875,18 +887,11 @@ var TypePicker = (function () {
         return this.state.disables.indexOf(date) >= 0;
     };
     TypePicker.prototype.render = function (next) {
-        var _a = this.state, reachStart = _a.reachStart, reachEnd = _a.reachEnd, views = _a.views, startDate = _a.startDate, endDate = _a.endDate, date = _a.date, dateFormat = _a.dateFormat, selection = _a.selection, _b = _a.i18n, week = _b.week, title = _b.title;
+        var _a = this.state, reachStart = _a.reachStart, reachEnd = _a.reachEnd, views = _a.views, startDate = _a.startDate, endDate = _a.endDate, date = _a.date, dateFormat = _a.dateFormat, selection = _a.selection, i18n = _a.i18n;
         var size = views == 2 ? 1 : views === "auto" ? diff(endDate, startDate) : 0;
         var withRange = selection === 2;
-        var data = (new TemplateHelper(date, size, queue.list, dateFormat, withRange));
-        this.element.innerHTML = template({
-            data: data,
-            week: week,
-            heading: title,
-            reachStart: reachStart,
-            reachEnd: reachEnd,
-            renderWeekOnTop: views === "auto"
-        });
+        var data = (new TemplateData(date, size, queue.list, dateFormat, withRange));
+        this.element.innerHTML = template(data, i18n)(reachStart, reachEnd, views === "auto");
         this.afterRender(next);
     };
     TypePicker.prototype.afterRender = function (after) {
@@ -1006,7 +1011,7 @@ var TypePicker = (function () {
     TypePicker.prototype.disable = function (_a) {
         var _this = this;
         var to = _a.to, from = _a.from, days = _a.days, dates = _a.dates;
-        var _b = this.state, endDate = _b.endDate, startDate = _b.startDate;
+        var _b = this.state, endDate = _b.endDate, startDate = _b.startDate, dateFormat = _b.dateFormat;
         var _c = this, parse$$1 = _c.parse, format$$1 = _c.format;
         var state = { disables: [], startDate: startDate, endDate: endDate };
         parse$$1 = parse$$1.bind(this);
@@ -1032,7 +1037,7 @@ var TypePicker = (function () {
             state.date = state.startDate;
         }
         var mapFormattedDate = function (dates) {
-            return dates.map(formatParse(parse$$1)(format$$1)).filter(isDef);
+            return dates.map(formatParse(dateFormat)).filter(isDef);
         };
         var mapDateListFromProps = function (dates) {
             return byCondition(isArray)(dates)(mapFormattedDate);

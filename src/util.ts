@@ -23,12 +23,10 @@ export function toString(val: any) {
       : String(val);
 }
 
-export function isUndefined(v) {
-  return v === undefined || v === null;
-}
-
 export function isDef(v) {
-  return !isUndefined(v);
+  const isUndef = v => v === undefined || v === null;
+
+  return !isUndef(v);
 }
 
 export function isArray(object: any) {
@@ -98,7 +96,7 @@ export const dedupList = (list: any[], condition?) => {
 export function byCondition(condition: any, when?: Boolean) {
   return (value?: any) => {
     return (next?: Function) => {
-      if (isUndefined(when)) {
+      if (!isDef(when)) {
         when = true;
       }
       let result;

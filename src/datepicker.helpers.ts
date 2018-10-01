@@ -1,4 +1,4 @@
-import { node, nodeClassName, generateDate } from "./datepicker.interface";
+import { node, generateDate } from "./datepicker.interface";
 import { isDate, padding, listHead, listTail, isArray } from "./util";
 
 /**
@@ -258,55 +258,6 @@ export const setSepecifiedDate = (date: Date, day?: number) =>
 
 /**
  *
- * @type {{$on: ((key:string, fn:Function)=>any); $emit: ((...args:any[])=>boolean); $remove: ((key:string, fn?:any)=>boolean)}}
- */
-export const Observer = (function() {
-  let clientList = <any>{};
-  const $remove = function(key: string, fn?: any | undefined) {
-    let fns = clientList[key];
-    // key对应的消息么有被人订阅
-    if (!fns) {
-      return false;
-    }
-    // 没有传入fn(具体的回调函数), 表示取消key对应的所有订阅
-    if (!fn) {
-      fns && (fns.length = 0);
-    } else {
-      // 反向遍历
-      for (let i = fns.length - 1; i >= 0; i--) {
-        let _fn = fns[i];
-        if (_fn === fn) {
-          // 删除订阅回调函数
-          fns.splice(i, 1);
-        }
-      }
-    }
-  };
-  const $on = function(key: string, fn: Function) {
-    if (!clientList[key]) {
-      clientList[key] = [];
-    }
-    clientList[key].push(fn);
-  };
-  const $emit = function(...args: Array<any>) {
-    let key = [].shift.call(args);
-    let fns = clientList[key];
-    if (!fns || fns.length === 0) {
-      return false;
-    }
-    for (let i = 0, fn; (fn = fns[i++]); ) {
-      fn.apply(this, args);
-    }
-  };
-  return {
-    $on,
-    $emit,
-    $remove
-  };
-})();
-
-/**
- *
  * @param year
  * @param month
  * @returns {number}
@@ -346,21 +297,6 @@ export function tag({ tag, props = {}, children = "", render = true }: node) {
     children = children.filter(item => !!item).join("");
   }
   return `<${tag} ${attributes.join("")}>${children}</${tag}>`;
-}
-
-/**
- *
- * @param type
- * @param index
- * @returns {string}
- */
-export function calendarCellClassName(type: string, index?: number) {
-  let name = `calendar-cell calendar-${type}-cell ${
-    index === 0 ? "calendar-cell-weekday" : ""
-  } ${index === 6 ? "calendar-cell-weekend" : ""}
- `;
-
-  return name.replace(/\n/, "").trim();
 }
 
 /**
@@ -421,14 +357,14 @@ export function createDate({
   return result;
 }
 
-/***
+/**
  *
- * @param date
- * @param dates
- * @param onlyActive
- * @returns {any}
+ * @param index
+ * @param isEnd
+ * @param isStart
+ * @returns {string}
  */
-export const tagClassName = (index, isEnd, isStart) => {
+export function tagClassName(index, isEnd, isStart) {
   let name = "";
 
   if (index >= 0) {
@@ -443,13 +379,15 @@ export const tagClassName = (index, isEnd, isStart) => {
   }
 
   return name;
-};
+}
+
 /**
  *
- * @type {{title: ((year, month)=>string); week: Array<string>; months: Array<string>}}
+ * @type {{title: (year, month) => string; week: Array<string>; months: Array<string>}}
  */
 export const defaultLanguage = {
-  title: (year, month) => `${year}年 ${defaultLanguage.months[month]}月`,
+  title: <Function>(year, month) =>
+    `${year}年 ${defaultLanguage.months[month]}月`,
   week: <Array<string>>["日", "一", "二", "三", "四", "五", "六"],
   months: <Array<string>>[
     "01",
@@ -467,6 +405,15 @@ export const defaultLanguage = {
   ]
 };
 
+/**
+ *
+ * @param {Date} item
+ * @param {number} index
+ * @param {boolean} isEnd
+ * @param {boolean} isStart
+ * @param {string} className
+ * @returns {{date: number | string; day: number | string; className: string}}
+ */
 export function tagData(
   item?: Date,
   index?: number,
@@ -499,7 +446,7 @@ export function tagData(
  * @param inDisable
  * @returns {any}
  */
-export const findDisableInQueue = (list, dateFormat, inDisable) => {
+export function findDisableInQueue(list, dateFormat, inDisable) {
   if (list.length <= 0) {
     return [];
   }
@@ -527,7 +474,8 @@ export const findDisableInQueue = (list, dateFormat, inDisable) => {
   } else {
     return false;
   }
-};
+}
+
 /***
  *
  * @param selection
@@ -538,14 +486,14 @@ export const findDisableInQueue = (list, dateFormat, inDisable) => {
  * @param limit
  * @returns {boolean}
  */
-export const checkPickableDate = ({
+export function checkPickableDate({
   selection,
   date,
   inDisable,
   dateFormat,
   queue,
   limit
-}) => {
+}) {
   if (!date) {
     return false;
   }
@@ -563,7 +511,6 @@ export const checkPickableDate = ({
       }
       if (queue.length === 1) {
         let item = queue[0];
-
         let d = parse(item, dateFormat);
         let now = parse(date, dateFormat);
         let gap = diff(now, d, "days");
@@ -576,12 +523,15 @@ export const checkPickableDate = ({
     }
   }
   return true;
-};
+}
+
 /**
  *
- * @param parse
+ * @param dateFormat
+ * @returns {(date) => string}
  */
-export const formatParse = parse => format => date => format(parse(date));
+export const formatParse = dateFormat => date =>
+  format(parse(date, dateFormat), dateFormat);
 /**
  *
  * @param date
@@ -589,30 +539,28 @@ export const formatParse = parse => format => date => format(parse(date));
  * @param end
  * @returns {(setState:any)=>(size?:any)=>undefined}
  */
-export const monthSwitcher = (date: Date, start, end) => {
-  return size => {
-    return next => {
-      const now = setDate(date, size, "month");
-      const endGap = end ? diff(end, now) : 1;
-      const startGap = end ? diff(now, start) : 2;
-      let reachStart = startGap < 1 && endGap >= 0;
-      let reachEnd = startGap > 1 && endGap <= 1;
+export const monthSwitcher = (date: Date, start, end) => size => next => {
+  const now = setDate(date, size, "month");
+  const endGap = end ? diff(end, now) : 1;
+  const startGap = end ? diff(now, start) : 2;
+  let reachStart = startGap < 1 && endGap >= 0;
+  let reachEnd = startGap > 1 && endGap <= 1;
 
-      if (!start || !end) {
-        reachEnd = false;
-        reachStart = false;
-      }
-      next({
-        reachEnd,
-        reachStart,
-        date: now
-      });
-    };
-  };
+  if (!start || !end) {
+    reachEnd = false;
+    reachStart = false;
+  }
+  next({
+    reachEnd,
+    reachStart,
+    date: now
+  });
 };
+
 /**
  *
  * @param start
+ * @returns {(end) => (dateFormat?: string) => (any)}
  */
 export const between = start => end => (dateFormat?: string) => {
   start = parse(start, dateFormat);
@@ -634,76 +582,77 @@ export const between = start => end => (dateFormat?: string) => {
   return dates;
 };
 
-export function mapRangeFromQueue(queue, dateFormat) {
-  return function(useDefault) {
-    if (queue.length <= 0) {
-      return [];
-    }
-
-    if (useDefault) {
-      return queue;
-    }
-
-    let start = parse(queue[0], dateFormat);
-    let end = parse(queue[queue.length - 1], dateFormat);
-    return createDate({
-      date: start,
-      days: diff(end, start, "days"),
-      dateFormat: dateFormat
-    });
-  };
-}
-
-export function mapMonths(date, size) {
-  const template = [];
-  for (let i = 0; i <= size; i++) {
-    let dat = new Date(date.getFullYear(), date.getMonth() + i, 1);
-    let dates = getDates(dat.getFullYear(), dat.getMonth());
-    template.push({
-      size: dates,
-      year: dat.getFullYear(),
-      month: dat.getMonth()
-    });
-  }
-
-  return template;
-}
-
-const mapDates = ({ year, month, size }, range, withRange, dateFormat) => {
-  const put = target => item => data =>
-    (target[format(item, dateFormat)] = data);
-
-  const dates = {};
-  const firstDateOfMonth = new Date(year, month, 1);
-
-  const lastMonthDates = new Date(year, month, 0).getDate();
-  const set = put(dates);
-
-  for (let i = 0; i < firstDateOfMonth.getDay(); i++) {
-    set(new Date(year, month - 1, lastMonthDates - i))(tagData());
-  }
-  for (let i = 0; i < size; i++) {
-    const date = new Date(year, month, i + 1);
-    const index = range.indexOf(format(date, dateFormat));
-    const isEnd = withRange && index === range.length - 1;
-    const isStart = withRange && index === 0;
-    set(date)(tagData(date, index, isEnd, isStart));
-  }
-  return { year, month, dates };
-};
-
-const mapItem = (queue, withRange, dateFormat) => item =>
-  mapDates(
-    item,
-    mapRangeFromQueue(queue, dateFormat)(withRange),
-    withRange,
-    dateFormat
-  );
-
-export class TemplateHelper {
+export class TemplateData {
   constructor(date, size, queue, dateFormat, withRange) {
     return <any[]>(
-      mapMonths(date, size).map(mapItem(queue, withRange, dateFormat))
+      TemplateData.mapMonths(date, size).map(
+        TemplateData.mapItem(queue, withRange, dateFormat)
+      )
     );
   }
+
+  static mapRangeFromQueue(queue, dateFormat) {
+    return function(useDefault) {
+      if (queue.length <= 0) {
+        return [];
+      }
+
+      if (useDefault) {
+        return queue;
+      }
+
+      let start = parse(queue[0], dateFormat);
+      let end = parse(queue[queue.length - 1], dateFormat);
+      return createDate({
+        date: start,
+        days: diff(end, start, "days"),
+        dateFormat: dateFormat
+      });
+    };
+  }
+
+  static mapMonths(date, size): any[] {
+    const template = <any[]>[];
+    for (let i = 0; i <= size; i++) {
+      let dat = new Date(date.getFullYear(), date.getMonth() + i, 1);
+      let dates = getDates(dat.getFullYear(), dat.getMonth());
+      template.push({
+        size: dates,
+        year: dat.getFullYear(),
+        month: dat.getMonth()
+      });
+    }
+
+    return template;
+  }
+
+  static mapItem = (queue, withRange, dateFormat) => item =>
+    TemplateData.mapDates(
+      item,
+      TemplateData.mapRangeFromQueue(queue, dateFormat)(withRange),
+      withRange,
+      dateFormat
+    );
+  static mapDates = ({ year, month, size }, range, withRange, dateFormat) => {
+    const put = target => item => data =>
+      (target[format(item, dateFormat)] = data);
+
+    const dates = {};
+    const firstDateOfMonth = new Date(year, month, 1);
+
+    const lastMonthDates = new Date(year, month, 0).getDate();
+    const set = put(dates);
+
+    for (let i = 0; i < firstDateOfMonth.getDay(); i++) {
+      set(new Date(year, month - 1, lastMonthDates - i))(tagData());
+    }
+    for (let i = 0; i < size; i++) {
+      const date = new Date(year, month, i + 1);
+      const index = range.indexOf(format(date, dateFormat));
+      const isEnd = withRange && index === range.length - 1;
+      const isStart = withRange && index === 0;
+      set(date)(tagData(date, index, isEnd, isStart));
+    }
+    return { year, month, dates };
+  };
 }

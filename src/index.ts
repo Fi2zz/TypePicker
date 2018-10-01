@@ -13,7 +13,6 @@ import template from "./datepicker.template";
 import {
   getViews,
   parseEl,
-  Observer,
   parse,
   format,
   diff,
@@ -25,9 +24,12 @@ import {
   monthSwitcher,
   between,
   setSepecifiedDate,
-  TemplateHelper
+  TemplateData
 } from "./datepicker.helpers";
+import { Observer } from "./datepicker.observer";
 import { Queue } from "./datepicker.queue";
+
+``;
 
 const emitter = event => value => Observer.$emit(event, value);
 let queue = null;
@@ -130,6 +132,7 @@ export default class TypePicker {
   public format = (date: Date) => format(date, this.state.dateFormat);
   public parse = (date: string | Date, dateFormat?: string) =>
     parse(date, dateFormat ? dateFormat : this.state.dateFormat);
+
   private inDisable(date: string) {
     return this.state.disables.indexOf(date) >= 0;
   }
@@ -144,7 +147,7 @@ export default class TypePicker {
       date,
       dateFormat,
       selection,
-      i18n: { week, title }
+      i18n
     } = this.state;
 
     const size =
@@ -153,16 +156,13 @@ export default class TypePicker {
     const withRange = selection === 2;
 
     const data = <any[]>(
-      new TemplateHelper(date, size, queue.list, dateFormat, withRange)
+      new TemplateData(date, size, queue.list, dateFormat, withRange)
     );
-    this.element.innerHTML = template({
-      data,
-      week,
-      heading: title,
+    this.element.innerHTML = template(data, i18n)(
       reachStart,
       reachEnd,
-      renderWeekOnTop: views === "auto"
-    });
+      views === "auto"
+    );
     this.afterRender(next);
   }
 
@@ -299,7 +299,7 @@ export default class TypePicker {
   }
 
   public disable({ to, from, days, dates }: disable) {
-    const { endDate, startDate } = this.state;
+    const { endDate, startDate, dateFormat } = this.state;
     let { parse, format } = this;
 
     const state = <any>{ disables: [], startDate, endDate };
@@ -328,7 +328,7 @@ export default class TypePicker {
     }
 
     const mapFormattedDate = dates =>
-      dates.map(formatParse(parse)(format)).filter(isDef);
+      dates.map(formatParse(dateFormat)).filter(isDef);
     const mapDateListFromProps = dates =>
       byCondition(isArray)(dates)(mapFormattedDate);
     const checkCanGoNext = start => end => next => {

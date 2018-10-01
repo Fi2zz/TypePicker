@@ -1,12 +1,23 @@
-import { template } from "./datepicker.interface";
-import { tag, calendarCellClassName, join } from "./datepicker.helpers";
+import { tag, join } from "./datepicker.helpers";
+import { isDef } from "./util";
 
-function createActionBar(create: boolean, reachStart, reachEnd) {
-  if (!create) {
-    return [];
-  }
+/**
+ *
+ * @param type
+ * @param index
+ * @returns {string}
+ */
+function cellClassName(type: string, index?: number) {
+  let name = `calendar-cell calendar-${type}-cell ${
+    index === 0 ? "calendar-cell-weekday" : ""
+  } ${index === 6 ? "calendar-cell-weekend" : ""}
+ `;
 
-  let actionNode = (type, disabled) => {
+  return name.replace(/\n/, "").trim();
+}
+
+function createActionView(reachStart, reachEnd) {
+  const node = (type, disabled) => {
     let className = ["calendar-action", `calendar-action-${type}`];
     if (disabled) {
       className.push("disabled", "calendar-action-disabled");
@@ -20,11 +31,10 @@ function createActionBar(create: boolean, reachStart, reachEnd) {
       children: tag({ tag: "span", children: type })
     });
   };
-
-  return [actionNode("prev", reachStart), actionNode("next", reachEnd)];
+  return [node("prev", reachStart), node("next", reachEnd)];
 }
 
-function createDateNode({ date, day, className }, item) {
+function createDateTag({ date, day, className }, item) {
   const dateTag = tag({
     tag: "div",
     props: {
@@ -47,7 +57,7 @@ function createDateNode({ date, day, className }, item) {
   return tag({
     tag: "div",
     props: {
-      className: `${calendarCellClassName("date", day)} ${className}`,
+      className: `${cellClassName("date", day)} ${className}`,
       "data-day": day,
       "data-date": item ? item : ""
     },
@@ -55,88 +65,90 @@ function createDateNode({ date, day, className }, item) {
   });
 }
 
-function createView(
-  data: Array<any>,
-  week: Array<any>,
-  heading: Function,
-  renderWeekOnTop: Boolean
-) {
-  const head = (title, year, month) =>
-    tag({
-      tag: "div",
-      props: { className: "calendar-head" },
-      children: [
-        tag({
-          tag: "div",
-          props: {
-            className: "calendar-title"
-          },
-          children: tag({
-            tag: "span",
+function createView(data: Array<any>, heading: Function) {
+  return function(week) {
+    const headView = (title, year, month) =>
+      tag({
+        tag: "div",
+        props: { className: "calendar-head" },
+        children: [
+          tag({
+            tag: "div",
             props: {
-              "data-year": year,
-              "data-month": month
+              className: "calendar-title"
             },
-            children: heading(year, month)
+            children: tag({
+              tag: "span",
+              props: {
+                "data-year": year,
+                "data-month": month
+              },
+              children: heading(year, month)
+            })
           })
-        })
-      ]
-    });
+        ]
+      });
 
-  const weekMapper = (day, index) =>
-    tag({
-      tag: "div",
-      props: { className: calendarCellClassName("day", index) },
-      children: day
-    });
-  const weeker = tag({
-    tag: "div",
-    props: { className: "calendar-day" },
-    children: week.map(weekMapper)
-  });
+    const mainView = children =>
+      tag({
+        tag: "div",
+        props: {
+          className: "calendar-main"
+        },
+        children
+      });
+    let dateView = (list, dates) =>
+      list.map(item => createDateTag(dates[item], item));
 
-  const mainNode = children =>
-    tag({
-      tag: "div",
-      props: {
-        className: "calendar-main"
-      },
-      children
-    });
-  let dateNodes = dates =>
-    Object.keys(dates).map(item => createDateNode(dates[item], item));
-  let template = data.map((item: any) =>
-    mainNode([
-      head(item.heading, item.year, item.month),
-      !renderWeekOnTop ? weeker : "",
+    const bodyView = (list, dates) =>
       tag({
         tag: "div",
         props: {
           className: "calendar-body"
         },
-        children: dateNodes(item.dates)
-      })
-    ])
-  );
-  if (renderWeekOnTop) {
-    template.unshift(weeker);
-  }
-  template = template.filter(item => !!item);
-  return template.join("").trim();
+        children: dateView(list, dates)
+      });
+
+    const template = data.map((item: any) =>
+      mainView([
+        headView(item.heading, item.year, item.month),
+        week,
+        tag({
+          tag: "div",
+          props: {
+            className: "calendar-body"
+          },
+          children: bodyView(Object.keys(item.dates), item.dates)
+        })
+      ])
+    );
+    return template.filter(isDef);
+  };
 }
 
-export default function template({
-  renderWeekOnTop,
-  data,
-  week,
-  reachEnd,
-  reachStart,
-  heading
-}: template) {
-  let nodes = [
-    ...createActionBar(!renderWeekOnTop, reachStart, reachEnd),
-    createView(data, week, heading, renderWeekOnTop)
-  ];
+const createWeekViewMapper = (day, index) =>
+  tag({
+    tag: "div",
+    props: { className: cellClassName("day", index) },
+    children: day
+  });
 
-  return join(nodes);
+const createWeekView = week =>
+  tag({
+    tag: "div",
+    props: { className: "calendar-day" },
+    children: week.map(createWeekViewMapper)
+  });
+export default function template(data, i18n) {
+  return function(reachEnd, reachStart, notRenderAction) {
+    const createdWeekView = createWeekView(i18n.week);
+    const createdView = createView(data, i18n.title);
+    const mainView = createdView(notRenderAction ? "" : createdWeekView);
+    let createdActionView = createActionView(reachStart, reachEnd);
+    if (notRenderAction) {
+      mainView.unshift(createdWeekView);
+      createdActionView = [];
+    }
+    return join([...createdActionView, ...mainView]);
+  };
 }
