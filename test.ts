@@ -13,27 +13,27 @@ export function addClass(ele: any, className: string) {
   ele.className += (ele.className ? " " : "") + className;
 }
 
-// const date = new Date();
+const date = new Date();
 const dateFormat = "YYYY-M-D";
 const activeLanguageCode: string = "en-us";
 const formControl = <HTMLInputElement>document.getElementById("date-value");
 const activeLanguage = language[activeLanguageCode];
 
-// const dist = {
-//   year: date.getFullYear(),
-//   month: date.getMonth(),
-//   date: date.getDate()
-// };
-// const startDate =  new Date(dist.year, dist.month, dist.date);
-// const endDate =  new Date(dist.year, dist.month + 6, dist.date);
+const dist = {
+  year: date.getFullYear(),
+  month: date.getMonth(),
+  date: date.getDate()
+};
+const startDate = new Date(dist.year, dist.month, dist.date);
+const endDate = new Date(dist.year, dist.month + 6, dist.date);
 let options = {
   el: "#datepicker", // document.getElementById("datepicker"),
-  // startDate,
-  // endDate,
+  startDate,
+  endDate,
   limit: 7,
   format: dateFormat,
   selection: 2,
-  views: 2,
+  views: 1,
   infinite: true
 };
 

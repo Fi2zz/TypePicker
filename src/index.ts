@@ -41,10 +41,6 @@ export default class TypePicker {
     this.element = parseEl(option.el);
     const states: any = { ...this.state };
 
-    byCondition(isDef)(option.views)(() => {
-      states.views = getViews(option.views);
-    });
-
     byCondition(isNaN, false)(option.selection)(() => {
       states.selection = option.selection;
     });
@@ -62,6 +58,31 @@ export default class TypePicker {
     });
     byCondition(isNaN, false)(option.limit)(() => {
       states.limit = option.limit;
+    });
+
+    byCondition(isDef)(option.views)(() => {
+      states.views = getViews(option.views);
+
+      if (states.views === "auto") {
+        if (!states.startDate) {
+          states.startDate = new Date();
+        }
+
+        if (!states.endDate) {
+          let start = states.startDate;
+
+          states.endDate = new Date(
+            start.getFullYear(),
+            start.getMonth() + 6,
+            start.getDate()
+          );
+        }
+      }
+
+      // if (!states.startDate|| !states.endDate )
+      // {
+
+      //  }
     });
 
     this.element.className = containerClassName(
