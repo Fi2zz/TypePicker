@@ -52,7 +52,7 @@ async function versioner(pkg) {
     min = 0;
     main += 1;
   }
-  pkg.version = `${main}.${min}`;
+  pkg.version = `${main}.${min}.0`;
   return pkg;
 }
 
@@ -68,16 +68,12 @@ function write(file) {
     });
   };
 }
-function ugly(code) {
-  return uglify.minify(code, {
-    output: {
-      ascii_only: true
-    },
-    compress: {
-      pure_funcs: ["makeMap"]
-    }
-  }).code;
-}
+
+
+
+
+
+
 async function create({ entry, bundle, css, dist, name }, plugins, banner) {
   log("> Start bundling...", "green");
 

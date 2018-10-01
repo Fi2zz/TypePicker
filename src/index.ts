@@ -19,7 +19,7 @@ import {
   diff,
   getDates,
   createDate,
-  createNodeClassName,
+  tagClassName,
   findDisableInQueue,
   defaultLanguage,
   containerClassName,
@@ -27,7 +27,8 @@ import {
   formatParse,
   monthSwitcher,
   between,
-  setSepecifiedDate
+  setSepecifiedDate,
+  tagData
 } from "./datepicker.helpers";
 import { Queue } from "./datepicker.queue";
 
@@ -156,40 +157,38 @@ export default class TypePicker {
       });
     })(queue.list, selection);
 
-    return template.map((item: any) => {
-      let heading = this.state.language.title(item.year, item.month);
+    const mapDates = ({ year, month, size }) => {
+      const dates = {};
+      const firstDateOfMonth = new Date(year, month, 1);
 
-      let dates = {};
-      let firstDay = new Date(item.year, item.month, 1);
-      let lastMonthDates = new Date(item.year, item.month, 0).getDate();
+      const lastMonthDates = new Date(year, month, 0).getDate();
+      const put = target => item => data => (target[format(item)] = data);
+      const set = put(dates);
 
-      for (let i = 0; i < firstDay.getDay(); i++) {
-        let lateMonthDate: Date = new Date(
-          item.year,
-          item.month - 1,
-          lastMonthDates - i
-        );
-        dates[format(lateMonthDate)] = {
-          date: false,
-          day: false,
-          className: "disabled empty"
-        };
+      for (let i = 0; i < firstDateOfMonth.getDay(); i++) {
+        set(new Date(year, month - 1, lastMonthDates - i))(tagData());
       }
-      for (let i = 0; i < item.dates; i++) {
-        let date = new Date(item.year, item.month, i + 1);
-        let formatted = format(date);
-        dates[formatted] = {
-          date: date.getDate(),
-          day: date.getDay(),
-          className: createNodeClassName({
-            date: formatted,
-            dates: range,
-            onlyActive: selection !== 2
-          })
-        };
+      for (let i = 0; i < size; i++) {
+        const date = new Date(year, month, i + 1);
+        const index = range.indexOf(format(date));
+        const isEnd = selection === 2 && index === range.length - 1;
+        const isStart = selection === 2 && index === 0;
+        set(date)(tagData(date, index, isEnd, isStart));
       }
-      return { heading, year: item.year, month: item.month, dates };
+
+      return dates;
+    };
+
+    const createMonthHeading = (year, month) =>
+      this.state.language.title(year, month);
+
+    const mapTemplateItem = ({ month, year, dates }) => ({
+      heading: createMonthHeading(year, month),
+      year,
+      month,
+      dates: mapDates({ year, month, size: dates })
     });
+    return template.map(mapTemplateItem);
   }
 
   private render(next?: Function | undefined) {

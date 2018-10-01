@@ -1,135 +1,133 @@
-import { template } from "./datepicker.interface";
-import { createNode, calendarCellClassName, join } from "./datepicker.helpers";
+import {template} from "./datepicker.interface";
+import {tag, calendarCellClassName, join} from "./datepicker.helpers";
 
 function createActionBar(create: boolean, reachStart, reachEnd) {
-  if (!create) {
-    return [];
-  }
-
-  let actionNode = (type, disabled) => {
-    let className = ["calendar-action", `calendar-action-${type}`];
-    if (disabled) {
-      className.push("disabled", "calendar-action-disabled");
+    if (!create) {
+        return [];
     }
-    return createNode({
-      tag: "a",
-      props: {
-        class: className.join(" "),
-        href: "javascripts:;"
-      },
-      children: createNode({ tag: "span", children: type })
-    });
-  };
 
-  return [actionNode("prev", reachStart), actionNode("next", reachEnd)];
-}
-
-function createDateNode({ date, day, className }, item) {
-  let placeholder = createNode({
-    tag: "div",
-    props: {
-      class: "placeholder"
-    }
-  });
-  let dateNode = createNode({
-    tag: "div",
-    props: {
-      class: "date"
-    },
-    children: date
-  });
-
-  return createNode({
-    tag: "div",
-    props: {
-      class: `${calendarCellClassName("date", day)} ${className}`,
-      "data-day": day,
-      "data-date": day !== false ? item : ""
-    },
-    children: [dateNode, placeholder]
-  });
-}
-
-function createView(
-  data: Array<any>,
-  week: Array<any>,
-  renderWeekOnTop: Boolean
-) {
-  const head = (title, year, month) =>
-    createNode({
-      tag: "div",
-      props: { class: "calendar-head" },
-      children: [
-        createNode({
-          tag: "div",
-          props: {
-            class: "calendar-title"
-          },
-          children: createNode({
-            tag: "span",
+    let actionNode = (type, disabled) => {
+        let className = ["calendar-action", `calendar-action-${type}`];
+        if (disabled) {
+            className.push("disabled", "calendar-action-disabled");
+        }
+        return tag({
+            tag: "a",
             props: {
-              "data-year": year,
-              "data-month": month
+                className: className.join(" "),
+                href: "javascripts:;"
             },
-            children: title
-          })
-        })
-      ]
-    });
+            children: tag({tag: "span", children: type})
+        });
+    };
 
-  const weekMapper = (day, index) =>
-    createNode({
-      tag: "div",
-      props: { class: calendarCellClassName("day", index) },
-      children: day
-    });
-  const weeker = createNode({
-    tag: "div",
-    props: { class: "calendar-day" },
-    children: week.map(weekMapper)
-  });
+    return [actionNode("prev", reachStart), actionNode("next", reachEnd)];
+}
 
-  const mainNode = children =>
-    createNode({
-      tag: "div",
-      props: {
-        class: "calendar-main"
-      },
-      children
-    });
-  let dateNodes = dates =>
-    Object.keys(dates).map(item => createDateNode(dates[item], item));
-  let template = data.map((item: any) =>
-    mainNode([
-      head(item.heading, item.year, item.month),
-      !renderWeekOnTop ? weeker : "",
-      createNode({
+function createDateNode({date, day, className}, item) {
+    let placeholder = tag({
         tag: "div",
         props: {
-          class: "calendar-body"
+            className: "placeholder"
+        }
+    });
+    let dateNode = tag({
+        tag: "div",
+        props: {
+            className: "date"
         },
-        children: dateNodes(item.dates)
-      })
-    ])
-  );
-  if (renderWeekOnTop) {
-    template.unshift(weeker);
-  }
-  template = template.filter(item => !!item);
-  return template.join("").trim();
+        children: date
+    });
+
+    return tag({
+        tag: "div",
+        props: {
+            className: `${calendarCellClassName("date", day)} ${className}`,
+            "data-day": day,
+            "data-date": day !== false ? item : ""
+        },
+        children: [dateNode, placeholder]
+    });
+}
+
+function createView(data: Array<any>,
+                    week: Array<any>,
+                    renderWeekOnTop: Boolean) {
+    const head = (title, year, month) =>
+        tag({
+            tag: "div",
+            props: {className: "calendar-head"},
+            children: [
+                tag({
+                    tag: "div",
+                    props: {
+                        className: "calendar-title"
+                    },
+                    children: tag({
+                        tag: "span",
+                        props: {
+                            "data-year": year,
+                            "data-month": month
+                        },
+                        children: title
+                    })
+                })
+            ]
+        });
+
+    const weekMapper = (day, index) =>
+        tag({
+            tag: "div",
+            props: {className: calendarCellClassName("day", index)},
+            children: day
+        });
+    const weeker = tag({
+        tag: "div",
+        props: {className: "calendar-day"},
+        children: week.map(weekMapper)
+    });
+
+    const mainNode = children =>
+        tag({
+            tag: "div",
+            props: {
+                className: "calendar-main"
+            },
+            children
+        });
+    let dateNodes = dates =>
+        Object.keys(dates).map(item => createDateNode(dates[item], item));
+    let template = data.map((item: any) =>
+        mainNode([
+            head(item.heading, item.year, item.month),
+            !renderWeekOnTop ? weeker : "",
+            tag({
+                tag: "div",
+                props: {
+                    className: "calendar-body"
+                },
+                children: dateNodes(item.dates)
+            })
+        ])
+    );
+    if (renderWeekOnTop) {
+        template.unshift(weeker);
+    }
+    template = template.filter(item => !!item);
+    return template.join("").trim();
 }
 
 export default function template({
-  renderWeekOnTop,
-  data,
-  week,
-  reachEnd,
-  reachStart
-}: template) {
-  let nodes = [
-    ...createActionBar(!renderWeekOnTop, reachStart, reachEnd),
-    createView(data, week, renderWeekOnTop)
-  ];
+                                     renderWeekOnTop,
+                                     data,
+                                     week,
+                                     reachEnd,
+                                     reachStart
+                                 }: template) {
+    let nodes = [
+        ...createActionBar(!renderWeekOnTop, reachStart, reachEnd),
+        createView(data, week, renderWeekOnTop)
+    ];
 
-  return join(nodes);
+    return join(nodes);
 }

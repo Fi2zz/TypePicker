@@ -33,9 +33,9 @@ export interface generateDate {
 }
 
 export interface nodeClassName {
-  date: string;
-  dates: string[];
-  onlyActive: boolean;
+  index: number;
+  isEnd: boolean;
+  isStart: boolean;
 }
 
 export interface template {
@@ -46,4 +46,10 @@ export interface template {
   week: Array<any>;
   reachStart: boolean;
   reachEnd: boolean;
+}
+
+export interface tagData {
+  date: string | number | undefined;
+  day: string | number | undefined;
+  className?: string | undefined;
 }

@@ -1,4 +1,9 @@
-import { node, nodeClassName, generateDate } from "./datepicker.interface";
+import {
+  node,
+  nodeClassName,
+  generateDate,
+  tagData
+} from "./datepicker.interface";
 import { isDate, padding, listHead, listTail, isArray } from "./util";
 
 /**
@@ -325,12 +330,7 @@ export function getDates(year: number, month: number): number {
  * @param render
  * @returns {any}
  */
-export function createNode({
-  tag,
-  props = {},
-  children = "",
-  render = true
-}: node) {
+export function tag({ tag, props = {}, children = "", render = true }: node) {
   if (!tag || !render) {
     return "";
   }
@@ -338,6 +338,9 @@ export function createNode({
   let attributes = [];
   for (let key in props) {
     let value = props[key];
+    if (key === "className") {
+      key = "class";
+    }
     if (value) {
       attributes.push(`${key}="${value}"`);
     }
@@ -430,31 +433,21 @@ export function createDate({
  * @param onlyActive
  * @returns {any}
  */
-export const createNodeClassName = ({
-  date,
-  dates,
-  onlyActive = false
-}: nodeClassName) => {
-  if (dates.length <= 0) {
-    return "";
+export const tagClassName = (index, isEnd, isStart) => {
+  let name = "";
+
+  if (index >= 0) {
+    name = "active";
+  }
+  if (isStart) {
+    name = `${name} start-date`;
+  } else if (isEnd) {
+    name = `${name} end-date`;
+  } else if (!isEnd && !isStart && index > 0) {
+    name = "in-range";
   }
 
-  if (onlyActive && dates.indexOf(date) >= 0) {
-    return "active";
-  }
-
-  if (dates.indexOf(date) === 0) {
-    return "active start-date";
-  } else if (dates.indexOf(date) === dates.length - 1) {
-    return "active end-date";
-  } else if (
-    dates.indexOf(date) > 0 &&
-    dates.indexOf(date) < dates.length - 1
-  ) {
-    return "in-range";
-  } else {
-    return "";
-  }
+  return name;
 };
 /**
  *
@@ -478,6 +471,31 @@ export const defaultLanguage = {
     "12"
   ]
 };
+
+export function tagData(
+  item?: Date,
+  index?: number,
+  isEnd?: boolean,
+  isStart?: boolean,
+  className?: string
+) {
+  let day = <number | string>"";
+  let date = <number | string>"";
+  className = "empty disabled";
+
+  if (item) {
+    day = item.getDay();
+    date = item.getDate();
+    className = tagClassName(index, isEnd, isStart);
+  }
+
+  return {
+    date,
+    day,
+    className
+  };
+}
+
 /***
  *
  * @param list
