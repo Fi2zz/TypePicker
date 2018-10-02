@@ -1,13 +1,6 @@
 import { tag, join, cellElementClassName } from "./datepicker.helpers";
 import { isDef, padding } from "./util";
 
-function formatMonthHeading(format, { year, month }) {
-  return format
-    .toLowerCase()
-    .replace(/y{1,}/g, padding(year))
-    .replace(/m{1,}/g, padding(month + 1));
-}
-
 function createActionView(reachStart, reachEnd) {
   const node = (type, disabled) => {
     let className = ["calendar-action", `calendar-action-${type}`];
@@ -55,10 +48,10 @@ function createDateTag(data) {
   });
 }
 
-const mapHeadView = (year, month, format) => ({
+const mapHeadView = (year, month, title) => ({
   year,
   month,
-  title: formatMonthHeading(format, { year, month })
+  title: title({ year, month })
 });
 
 const headView = ({ year, month, title }) =>
@@ -89,7 +82,7 @@ const mainView = children =>
   tag({
     tag: "div",
     props: {
-      className: "calendar-main",
+      className: "calendar-item",
       children
     }
   });
@@ -102,15 +95,15 @@ const bodyView = dates =>
     }
   });
 
-const mapView = (weekView, format) => item =>
+const mapView = (weekView, title) => item =>
   mainView([
-    headView(mapHeadView(item.year, item.month, format)),
+    headView(mapHeadView(item.year, item.month, title)),
     weekView(),
     bodyView(item.dates)
   ]);
 
-const createView = (data: Array<any>, format: string) => weekView =>
-  data.map(mapView(weekView, format)).filter(isDef);
+const createView = (data: Array<any>, title: string) => weekView =>
+  data.map(mapView(weekView, title)).filter(isDef);
 
 const createWeekViewMapper = (day, index) =>
   tag({
@@ -132,7 +125,7 @@ const createWeekView = week =>
 export default function template(data, i18n) {
   return function(reachStart, reachEnd, notRenderAction) {
     const createdWeekView = createWeekView(i18n.week);
-    const createdView = createView(data, i18n.title);
+    const createdView = createView(data, i18n.heading);
     const mainView = createdView(
       () => (notRenderAction ? "" : createdWeekView)
     );

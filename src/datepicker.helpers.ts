@@ -1,4 +1,4 @@
-import { node, generateDate } from "./datepicker.interface";
+import { node, generateDate, mapDates } from "./datepicker.interface";
 import { isDate, padding, listHead, listTail, isArray, isDef } from "./util";
 
 /**
@@ -240,36 +240,7 @@ function createDateFormatValidator(formate: string) {
   return new RegExp(regexpString);
 }
 
-/**
- *
- * @param date
- * @param size
- * @param who
- * @returns {Date}
- */
-export const setDate = (date: Date, size?: number, who?: string) => {
-  if (!who) {
-    who = "date";
-  }
-  if (!size) {
-    size = 0;
-  }
-  let monthSize = 0;
-  let yearSize = 0;
-  let dateSize = size;
-  if (who === "year") {
-    yearSize = size;
-  } else if (who === "month") {
-    monthSize = size;
-  }
-  return new Date(
-    date.getFullYear() + yearSize,
-    date.getMonth() + monthSize,
-    date.getDate() + dateSize
-  );
-};
-
-export const setSepecifiedDate = (date: Date, day?: number) =>
+export const setDate = (date: Date, day?: number) =>
   new Date(
     date.getFullYear(),
     date.getMonth(),
@@ -353,7 +324,7 @@ export function join(list, split?: string) {
  */
 export function createDate({
   date,
-  days,
+  size,
   dateFormat,
   direction = 1,
   position = "date",
@@ -364,7 +335,7 @@ export function createDate({
 
   let result = [];
 
-  for (let i = 0; i <= days; i++) {
+  for (let i = 0; i <= size; i++) {
     let currYear = date.getFullYear();
     let currMonth = date.getMonth();
     let currDate = date.getDate();
@@ -375,15 +346,20 @@ export function createDate({
     } else {
       currDate = dir(index ? index : currDate, i, direction);
     }
-    let dat = new Date(currYear, currMonth, currDate);
-
-    if (dateFormat) {
-      result.push(format(dat, dateFormat));
-    } else {
-      result.push(dat);
-    }
+    result.push(new Date(currYear, currMonth, currDate));
   }
   return result;
+}
+
+export function createFormatDate(dates) {
+  return dateFormat => {
+    const fmt = dateFormat => date => format(date, dateFormat);
+    if (isArray(dates)) {
+      return dates.map(fmt(dateFormat));
+    } else {
+      return [fmt(dateFormat)(dates)];
+    }
+  };
 }
 
 /**
@@ -403,7 +379,7 @@ export function tagClassName(index, isEnd, isStart) {
     name = `${name} start-date`;
   } else if (isEnd) {
     name = `${name} end-date`;
-  } else if (index > 0 ) {
+  } else if (index > 0) {
     name = "in-range";
   }
   return name;
@@ -488,9 +464,9 @@ export function findDisableInQueue(list, dateFormat, inDisable) {
   const end = parse(tail, dateFormat);
   const size = diff(end, date, "days");
 
-  const dates = createDate({ date, days: size, dateFormat });
-
-  const disables = dates.filter(inDisable);
+  const disables = createFormatDate(createDate({ date, size }))(
+    dateFormat
+  ).filter(inDisable);
 
   if (disables.length === 1) {
     let disable = disables[0];
@@ -569,13 +545,18 @@ export const parseFormat = dateFormat => date =>
 
 /**
  *
- * @param date
+ * @param {Date} date
  * @param start
  * @param end
- * @returns {(setState:any)=>(size?:any)=>undefined}
+ * @returns {(size) => (next) => void}
  */
 export const monthSwitcher = (date: Date, start, end) => size => next => {
-  const now = setDate(date, size, "month");
+  const now = new Date(
+    date.getFullYear(),
+    date.getMonth() + size,
+    date.getDate()
+  );
+
   const endGap = end ? diff(end, now) : 1;
   const startGap = end ? diff(now, start) : 2;
   let reachStart = startGap < 1 && endGap >= 0;
@@ -595,37 +576,40 @@ export const monthSwitcher = (date: Date, start, end) => size => next => {
 /**
  *
  * @param start
- * @returns {(end) => (dateFormat?: string) => (any)}
+ * @param end
+ * @param dateFormat
+ * @returns {any}
  */
-export const between = start => end => (dateFormat?: string) => {
+export const between = (start, end, dateFormat?) => {
   start = parse(start, dateFormat);
   end = parse(end, dateFormat);
 
   if (!start || !end) {
     return [];
   }
-  let dates = createDate({
+
+  const dates = createDate({
     date: start,
-    days: diff(end, start, "days", true),
-    dateFormat,
+    size: diff(end, start, "days", true),
     direction: end > start ? 1 : -1
   });
 
-  if (!isArray(dates)) {
-    return [dates];
-  }
-  return dates;
+  return dateFormat ? createFormatDate(dates)(dateFormat) : dates;
 };
 
 export class TemplateData {
   constructor(date, size, queue, dateFormat, withRange) {
-    return <any[]>(
-      TemplateData.mapMonths(date, size).map(
-        TemplateData.mapItem(queue, withRange, dateFormat)
-      )
-    );
+    const { mapMonths, mapItem } = TemplateData;
+    const itemMap = mapItem(queue, withRange, dateFormat);
+    return <any[]>mapMonths(date, size).map(itemMap);
   }
 
+  /**
+   *
+   * @param queue
+   * @param dateFormat
+   * @returns {any}
+   */
   static mapRangeFromQueue(queue, dateFormat) {
     if (queue.length <= 0) {
       return [];
@@ -633,13 +617,20 @@ export class TemplateData {
 
     let start = parse(queue[0], dateFormat);
     let end = parse(queue[queue.length - 1], dateFormat);
-    return createDate({
-      date: start,
-      days: diff(end, start, "days"),
-      dateFormat: dateFormat
-    });
+    return createFormatDate(
+      createDate({
+        date: start,
+        size: diff(end, start, "days")
+      })
+    )(dateFormat);
   }
 
+  /**
+   *
+   * @param date
+   * @param size
+   * @returns {any[]}
+   */
   static mapMonths(date, size): any[] {
     const template = <any[]>[];
     for (let i = 0; i <= size; i++) {
@@ -655,6 +646,13 @@ export class TemplateData {
     return template;
   }
 
+  /**
+   *
+   * @param queue
+   * @param withRange
+   * @param dateFormat
+   * @returns {(item) => {year: any; month: any; dates: any[]}}
+   */
   static mapItem = (queue, withRange, dateFormat) => item =>
     TemplateData.mapDates(
       item,
@@ -662,7 +660,23 @@ export class TemplateData {
       withRange,
       dateFormat
     );
-  static mapDates = ({ year, month, size }, range, withRange, dateFormat) => {
+
+  /**
+   *
+   * @param {number} year
+   * @param {number} month
+   * @param {number} size
+   * @param {string[]} range
+   * @param {boolean} withRange
+   * @param {string} dateFormat
+   * @returns {{year: number; month: number; dates: any[]}}
+   */
+  static mapDates = (
+    { year, month, size }: mapDates,
+    range: string[],
+    withRange: boolean,
+    dateFormat: string
+  ) => {
     const dates = [];
 
     const firstDateOfMonth = new Date(year, month, 1);
@@ -681,5 +695,20 @@ export class TemplateData {
       );
     }
     return { year, month, dates };
+  };
+}
+
+/**
+ *
+ * @param format
+ * @param months
+ * @returns {({ year, month }: {year: any; month: any}) => string}
+ */
+export function formatMonthHeading(format, months) {
+  return function({ year, month }) {
+    return format
+      .toLowerCase()
+      .replace(/y{1,}/g, padding(year))
+      .replace(/m{1,}/g, months[month]);
   };
 }

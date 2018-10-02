@@ -25,7 +25,7 @@ export interface node {
 
 export interface generateDate {
   date: Date;
-  days: number;
+  size: number;
   dateFormat?: string;
   direction?: number;
   position?: string;
@@ -50,4 +50,12 @@ export interface tagData {
   date: string | number | undefined;
   day: string | number | undefined;
   className?: string | undefined;
+}
+
+
+
+export interface mapDates {
+  year: number;
+  month: number;
+  size: number;
 }

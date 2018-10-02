@@ -34,16 +34,15 @@ DatePicker build with typescript
 
 ## OPTIONS
 
-| OPTION    | RERUIRED | TYPE               | DESC                                    | Default Value/Possible Value |
-| --------- | -------- | ------------------ | ----------------------------------------| ------------- |
-| el        | YES      | string,HTMLElement | Element or selector to mount DatePcker  |               |
-| format    | YES      | string             | Date string format                      | null          |
-| startDate | NO       | Date               | Start date of DatePicker                | new Date      |
-| endDate   | NO       | Date               | End date of DatePicker                  | null          |
-| limit     | NO       | number             | Limitation between two dates            | 1             |
-| views     | NO       | number,string      | Display views of DatePicker             | auto,1,2      |
-| selection | NO       | number             | Size of dates can be picked             | 1             |
-
+| OPTION    | RERUIRED | TYPE               | DESC                                   | Default Value/Possible Value |
+| --------- | -------- | ------------------ | -------------------------------------- | ---------------------------- |
+| el        | YES      | string,HTMLElement | Element or selector to mount DatePcker |                              |
+| format    | YES      | string             | Date string format                     | null                         |
+| startDate | NO       | Date               | Start date of DatePicker               | new Date                     |
+| endDate   | NO       | Date               | End date of DatePicker                 | null                         |
+| limit     | NO       | number             | Limitation between two dates           | 1                            |
+| views     | NO       | number,string      | Display views of DatePicker            | auto,1,2                     |
+| selection | NO       | number             | Size of dates can be picked            | 1                            |
 
 ## API
 
@@ -54,8 +53,7 @@ DatePicker build with typescript
    //the datepicker i18n
    public i18n(language:any);
 
-
-   disable({
+   public disable({
         days?:Array<number>[5],
         dates?:Array<string|Date>,
         from?:<Date|string>,
@@ -76,16 +74,6 @@ DatePicker build with typescript
         to?:<Date|string>
     })
 
-   //Transform date string into date object,return Date object
-   //eg: formattedDate ='2018-3-4',format='YYYY-M-D" =>  new Date(2018,2,4)
-   public parse(formattedDate:string,dateFormat:string)
-
-
-
-   format(date:Date)
-   //Transform date object into string,return string
-   //eg: date =new Date(),format='YYYY-MM-DD' => 2018-03-04
-   public  format(date:Date,format:string)
 
 
    //Event listener
@@ -93,20 +81,11 @@ DatePicker build with typescript
                 //your logic
    //    })
    public on(event:string,fn:Function)
-
-   // Diff two dates, type are days and month
-   static diff(d1:Date,d2:Date,type:string ,isAbsolute:boolean)
-
-   //Get all dates between start date and end date,return string[]
-   static between(start:Date|string)(end:Date|string)(dateFormat:string)
-
-
 ```
 
 ## USAGE
 
 ```typescript
-
     //use build tools
     import TypePicker from '/dist/datepicker.esm.js'
     import '/dist/style.css'
@@ -134,8 +113,7 @@ DatePicker build with typescript
             limit: 7,
             format: 'YYYY-M-D',
             views: 1,
-            selection:4, // if selection not less than 2, doubleSelect will be disabled,
-                        //and `data` event and `setData` will not work
+            selection:4
         });
 
 
@@ -192,12 +170,12 @@ DatePicker build with typescript
     app.i18n({
             week:["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
             months:["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-            title:(year,month)=>`${month} ${year}`
+            title:"YYYY MM"
     })
-
-
     // if data changed ,you could use app.update() to rerender datepicker
-    app.update()
-    
-    
+    app.forceUpdate()
+
+
+
+
 ```

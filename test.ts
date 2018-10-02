@@ -67,7 +67,7 @@ function createDatePicker(options) {
   });
 
   app.i18n({
-    title: `YYYY年MM月`,
+    title: `MM YYYY`,
     days: activeLanguage.days,
     months: activeLanguage.months
   });
