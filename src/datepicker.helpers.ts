@@ -395,18 +395,17 @@ export function createDate({
  */
 export function tagClassName(index, isEnd, isStart) {
   let name = "";
-
   if (index >= 0) {
     name = "active";
   }
+
   if (isStart) {
     name = `${name} start-date`;
   } else if (isEnd) {
     name = `${name} end-date`;
-  } else if (!isEnd && !isStart && index > 0) {
+  } else if (index > 0 ) {
     name = "in-range";
   }
-
   return name;
 }
 
@@ -628,23 +627,17 @@ export class TemplateData {
   }
 
   static mapRangeFromQueue(queue, dateFormat) {
-    return function(useDefault) {
-      if (queue.length <= 0) {
-        return [];
-      }
+    if (queue.length <= 0) {
+      return [];
+    }
 
-      if (useDefault) {
-        return queue;
-      }
-
-      let start = parse(queue[0], dateFormat);
-      let end = parse(queue[queue.length - 1], dateFormat);
-      return createDate({
-        date: start,
-        days: diff(end, start, "days"),
-        dateFormat: dateFormat
-      });
-    };
+    let start = parse(queue[0], dateFormat);
+    let end = parse(queue[queue.length - 1], dateFormat);
+    return createDate({
+      date: start,
+      days: diff(end, start, "days"),
+      dateFormat: dateFormat
+    });
   }
 
   static mapMonths(date, size): any[] {
@@ -665,7 +658,7 @@ export class TemplateData {
   static mapItem = (queue, withRange, dateFormat) => item =>
     TemplateData.mapDates(
       item,
-      TemplateData.mapRangeFromQueue(queue, dateFormat)(withRange),
+      TemplateData.mapRangeFromQueue(queue, dateFormat),
       withRange,
       dateFormat
     );
@@ -682,6 +675,7 @@ export class TemplateData {
       const index = range.indexOf(format(date, dateFormat));
       const isEnd = withRange && index === range.length - 1;
       const isStart = withRange && index === 0;
+
       dates.push(
         tagData(format(date, dateFormat), date, index, isEnd, isStart)
       );
