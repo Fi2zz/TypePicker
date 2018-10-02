@@ -1,5 +1,5 @@
 import { node, generateDate } from "./datepicker.interface";
-import { isDate, padding, listHead, listTail, isArray } from "./util";
+import { isDate, padding, listHead, listTail, isArray, isDef } from "./util";
 
 /**
  *
@@ -62,17 +62,23 @@ export function getViews(view: number | string) {
   }
 }
 
-/**
- *
- * @param base
- * @param views
- * @returns {string}
- */
-export const containerClassName = (base, views) => {
-  return `${base} calendar calendar-${
-    views === 2 ? "double-views" : views === 1 ? "single-view" : "flat-view"
-  }`;
-};
+export function cellElementClassName(type) {
+  return (index, ...other) => {
+    let names = ["calendar-cell"];
+
+    names.push(`calendar-${type}-cell`);
+
+    if (index === 0) {
+      names.push("calendar-cell-weekday");
+    } else if (index === 6) {
+      names.push("calendar-cell-weekend");
+    }
+    if (other) {
+      names.push(...other);
+    }
+    return names.join(" ");
+  };
+}
 
 export function elementClassName(views) {
   let classes = ["calendar"];
@@ -207,7 +213,7 @@ export function parse(strDate: string | Date, format: string) {
 
 /**
  *
- * @param formate
+ * @param {string} format
  * @returns {RegExp}
  */
 function createDateFormatValidator(formate: string) {
@@ -288,42 +294,51 @@ export function getDates(year: number, month: number): number {
  * @param props
  * @param children
  * @param render
- * @returns {any}
+ * @returns {string}
  */
-export function tag({ tag, props = {}, children = "", render = true }: node) {
+export function tag({ tag, props = {}, render = true }: node) {
   if (!tag || !render) {
     return "";
   }
+  let children: any = "";
 
-  let attributes = [];
+  let attributes = <string[]>[];
   for (let key in props) {
     let value = props[key];
+
     if (key === "className") {
       key = "class";
     }
-    if (value) {
-      attributes.push(`${key}="${value}"`);
+
+    if (key !== "children") {
+      if (value) {
+        attributes.push(`${key}="${value}"`);
+      }
+    } else {
+      if (children === false || children === undefined || children === null) {
+        children = "";
+      } else if (Array.isArray(value)) {
+        children = value.filter(isDef).join("");
+      } else {
+        children = value;
+      }
     }
   }
-  if (children === false || children === undefined || children === null) {
-    children = "";
-  } else if (Array.isArray(children)) {
-    children = children.filter(item => !!item).join("");
-  }
-  return `<${tag} ${attributes.join("")}>${children}</${tag}>`;
+  let attrs = <string>attributes.join("");
+  return `<${tag} ${attrs}>${children}</${tag}>`;
 }
 
 /**
  *
  * @param list
- * @param spliter
+ * @param split
  * @returns {string|Request}
  */
-export function join(list, spliter?: string) {
-  if (!spliter) {
-    spliter = "";
+export function join(list, split?: string) {
+  if (!split) {
+    split = "";
   }
-  return list.join(spliter);
+  return list.join(split);
 }
 
 /***
@@ -422,14 +437,16 @@ export function defaultI18n() {
 
 /**
  *
+ * @param {string} value
  * @param {Date} item
  * @param {number} index
  * @param {boolean} isEnd
  * @param {boolean} isStart
  * @param {string} className
- * @returns {{date: number | string; day: number | string; className: string}}
+ * @returns {{date: number | string; day: number | string; className: string; value: string | undefined}}
  */
 export function tagData(
+  value?: string,
   item?: Date,
   index?: number,
   isEnd?: boolean,
@@ -443,14 +460,14 @@ export function tagData(
   if (item) {
     day = item.getDay();
     date = item.getDate();
-
     className = tagClassName(index, isEnd, isStart);
   }
 
   return {
     date,
     day,
-    className
+    className,
+    value
   };
 }
 
@@ -547,6 +564,10 @@ export function checkPickableDate({
  */
 export const formatParse = dateFormat => date =>
   format(parse(date, dateFormat), dateFormat);
+
+export const parseFormat = dateFormat => date =>
+  parse(format(date, dateFormat), dateFormat);
+
 /**
  *
  * @param date
@@ -649,24 +670,21 @@ export class TemplateData {
       dateFormat
     );
   static mapDates = ({ year, month, size }, range, withRange, dateFormat) => {
-    const put = target => item => data =>
-      (target[format(item, dateFormat)] = data);
+    const dates = [];
 
-    const dates = {};
     const firstDateOfMonth = new Date(year, month, 1);
 
-    const lastMonthDates = new Date(year, month, 0).getDate();
-    const set = put(dates);
-
     for (let i = 0; i < firstDateOfMonth.getDay(); i++) {
-      set(new Date(year, month - 1, lastMonthDates - i))(tagData());
+      dates.push(tagData());
     }
     for (let i = 0; i < size; i++) {
       const date = new Date(year, month, i + 1);
       const index = range.indexOf(format(date, dateFormat));
       const isEnd = withRange && index === range.length - 1;
       const isStart = withRange && index === 0;
-      set(date)(tagData(date, index, isEnd, isStart));
+      dates.push(
+        tagData(format(date, dateFormat), date, index, isEnd, isStart)
+      );
     }
     return { year, month, dates };
   };

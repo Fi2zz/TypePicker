@@ -17,7 +17,6 @@ import {
   format,
   diff,
   findDisableInQueue,
-  containerClassName,
   checkPickableDate,
   formatParse,
   monthSwitcher,
@@ -41,7 +40,7 @@ export default class TypePicker {
     }
     const state: any = { ...this.state };
 
-    byCondition(isDef)(option.views)(views => (state.views = views));
+    byCondition(isDef)(getViews(option.views))(views => (state.views = views));
 
     byCondition(v => !isNaN(v))(option.selection)(
       size => (state.selection = size)
@@ -54,11 +53,9 @@ export default class TypePicker {
       state.date = startDate;
     });
     byCondition(isDate)(option.endDate)(endDate => (state.endDate = endDate));
-
     byCondition(isNaN, false)(option.limit)(() => {
       state.limit = option.limit;
     });
-
     byCondition(view => isDef(view) && view === "auto")(option.views)(() => {
       if (!state.startDate) {
         state.startDate = new Date();
@@ -212,14 +209,12 @@ export default class TypePicker {
     const next = queue.enqueue(value);
     const afterEnqueue = () => {
       const dateFormat = this.state.dateFormat;
-
       if (selection === 2) {
         const includeDisabled = findDisableInQueue(
           queue.list,
           dateFormat,
           this.inDisable.bind(this)
         );
-
         if (includeDisabled) {
           if (this.inDisable(value)) {
             queue.pop();
@@ -228,7 +223,6 @@ export default class TypePicker {
           }
         }
       }
-
       const createEmitter = () => emitter("select")(queue.list);
       this.render(createEmitter);
     };
@@ -289,21 +283,18 @@ export default class TypePicker {
 
     const state = <any>{ disables: [], startDate, endDate };
     parse = parse.bind(this);
-    format = format.bind(this);
+
     const filterDay = day => {
       day = parseInt(day);
       return !isNaN(day) && day >= 0 && day <= 6;
     };
     const dayFilter = days => days.filter(filterDay);
     const value = v => v;
-    const filterDateByDay = days => {
-      return date => {
-        if (days.indexOf(date.getDay()) >= 0) {
-          return this.format(date);
-        }
-        return null;
-      };
-    };
+
+    const include = days => day => days.indexOf(day) >= 0;
+    const filterDateByDay = days => date =>
+      include(days)(date.getDay()) ? this.format(date) : "";
+
     state.endDate = or(byCondition(isDate)(parse(from))(value))(endDate);
     state.startDate = or(byCondition(isDate)(parse(to))(value))(startDate);
 
@@ -316,8 +307,10 @@ export default class TypePicker {
       dates.map(formatParse(dateFormat)).filter(isDef);
     const mapDateListFromProps = dates =>
       byCondition(isArray)(dates)(mapFormattedDate);
+
     const checkStartDateAndEndDate = start => end => next => {
       let isDates = isDate(start) && isDate(end);
+
       if (isDates && start < end) {
         next(start, end);
       } else {
@@ -330,9 +323,11 @@ export default class TypePicker {
     };
     checkStartDateAndEndDate(state.startDate)(state.endDate)((start, end) => {
       start = setSepecifiedDate(start, 1);
+
       const filteredDays = or(byCondition(isArray)(days)(dayFilter))([]);
       const mapDateByDay = (dates, days) =>
         dates.map(filterDateByDay(days)).filter(isDef);
+
       const disables = [
         //取出传进来的dates
         ...or(mapDateListFromProps(dates))([]),
