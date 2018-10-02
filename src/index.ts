@@ -328,6 +328,8 @@ export default class TypePicker {
       const mapDateByDay = (dates, days) =>
         dates.map(filterDateByDay(days)).filter(isDef);
 
+      end = new Date(end.getFullYear(), end.getMonth() + 1, 1);
+
       const disables = [
         //取出传进来的dates
         ...or(mapDateListFromProps(dates))([]),

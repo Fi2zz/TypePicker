@@ -75,9 +75,9 @@ const headView = ({ year, month, title }) =>
               tag: "span",
               props: {
                 "data-year": year,
-                "data-month": month
-              },
-              children: title
+                "data-month": month,
+                children: title
+              }
             })
           }
         })

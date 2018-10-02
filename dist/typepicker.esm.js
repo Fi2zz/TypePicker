@@ -1,5 +1,5 @@
 /*
-*  TypePicker v3.7.0
+*  TypePicker v3.8.0
 *  Fi2zz / wenjingbiao@outlook.com
 *  https://github.com/Fi2zz/datepicker
 *  (c) 2017-2018, wenjingbiao@outlook.com
@@ -669,9 +669,9 @@ var headView = function (_a) {
                             tag: "span",
                             props: {
                                 "data-year": year,
-                                "data-month": month
-                            },
-                            children: title
+                                "data-month": month,
+                                children: title
+                            }
                         })
                     }
                 })
@@ -1088,6 +1088,7 @@ var TypePicker = (function () {
             var mapDateByDay = function (dates, days) {
                 return dates.map(filterDateByDay(days)).filter(isDef);
             };
+            end = new Date(end.getFullYear(), end.getMonth() + 1, 1);
             var disables = or(mapDateListFromProps(dates))([]).concat(or(mapDateByDay(between(start)(end)(), filteredDays))([]));
             state.disables = dedupList(disables);
             _this.setState(state);
