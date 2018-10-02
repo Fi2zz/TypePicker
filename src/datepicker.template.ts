@@ -1,5 +1,12 @@
 import { tag, join } from "./datepicker.helpers";
-import { isDef } from "./util";
+import { isDef, padding } from "./util";
+
+function formatMonthHeading(format, year, month) {
+  return format
+    .toLowerCase()
+    .replace(/y{1,}/g, padding(year))
+    .replace(/m{1,}/g, padding(month + 1));
+}
 
 /**
  *
@@ -65,7 +72,7 @@ function createDateTag({ date, day, className }, item) {
   });
 }
 
-const headView = (title, year, month, heading) =>
+const headView = (year, month, format) =>
   tag({
     tag: "div",
     props: { className: "calendar-head" },
@@ -81,7 +88,7 @@ const headView = (title, year, month, heading) =>
             "data-year": year,
             "data-month": month
           },
-          children: heading(year, month)
+          children: formatMonthHeading(format, year, month)
         })
       })
     ]
@@ -107,12 +114,12 @@ const bodyView = (list, dates) =>
     children: dateListView(list, dates)
   });
 
-function createView(data: Array<any>, heading: Function) {
+function createView(data: Array<any>, format: string) {
   return week =>
     data
       .map((item: any) =>
         mainView([
-          headView(item.heading, item.year, item.month, heading),
+          headView(item.year, item.month, format),
           week,
           tag({
             tag: "div",
@@ -140,7 +147,7 @@ const createWeekView = week =>
     children: week.map(createWeekViewMapper)
   });
 export default function template(data, i18n) {
-  return function(reachEnd, reachStart, notRenderAction) {
+  return function(reachStart, reachEnd, notRenderAction) {
     const createdWeekView = createWeekView(i18n.week);
     const createdView = createView(data, i18n.title);
     const mainView = createdView(notRenderAction ? "" : createdWeekView);

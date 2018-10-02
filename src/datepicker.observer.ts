@@ -42,3 +42,6 @@ export const Observer = (function() {
     $remove
   };
 })();
+
+export const emitter = event => value => Observer.$emit(event, value);
+export const on = Observer.$on;

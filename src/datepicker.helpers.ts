@@ -74,6 +74,20 @@ export const containerClassName = (base, views) => {
   }`;
 };
 
+export function elementClassName(views) {
+  let classes = ["calendar"];
+
+  if (views === 1) {
+    classes.push("calendar-single-view");
+  } else if (views === 2) {
+    classes.push("calendar-double-views");
+  } else {
+    classes.push("calendar-flat-view");
+  }
+
+  return classes.join("  ");
+}
+
 /**
  *
  * @param el
@@ -383,27 +397,28 @@ export function tagClassName(index, isEnd, isStart) {
 
 /**
  *
- * @type {{title: (year, month) => string; week: Array<string>; months: Array<string>}}
+ * @returns {{title: string; week: Array<string>; months: Array<string>}}
  */
-export const defaultLanguage = {
-  title: <Function>(year, month) =>
-    `${year}年 ${defaultLanguage.months[month]}月`,
-  week: <Array<string>>["日", "一", "二", "三", "四", "五", "六"],
-  months: <Array<string>>[
-    "01",
-    "02",
-    "03",
-    "04",
-    "05",
-    "06",
-    "07",
-    "08",
-    "09",
-    "10",
-    "11",
-    "12"
-  ]
-};
+export function defaultI18n() {
+  return {
+    title: "YYYY年MM月",
+    week: <Array<string>>["日", "一", "二", "三", "四", "五", "六"],
+    months: <Array<string>>[
+      "01",
+      "02",
+      "03",
+      "04",
+      "05",
+      "06",
+      "07",
+      "08",
+      "09",
+      "10",
+      "11",
+      "12"
+    ]
+  };
+}
 
 /**
  *

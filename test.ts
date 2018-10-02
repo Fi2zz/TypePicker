@@ -48,29 +48,26 @@ function createDatePicker(options) {
   app.on("render", (result: any) => {
     const { nodeList, disables } = result;
 
-    console.log(result);
+    // console.log(result);
 
     for (let i = 0; i < nodeList.length; i++) {
       let node = nodeList[i];
       let date = node.getAttribute("data-date");
-
+      let placeholder = node.querySelector(".placeholder");
       if (disables.indexOf(date) >= 0) {
         node.classList.add("disabled");
       } else {
         let data = source[date];
-        if (data) {
+        if (data && placeholder) {
           if (data.highlight) node.classList.add("highlight");
-          let placeholder: HTMLElement = node.querySelector(".placeholder");
-          if (placeholder) {
-            placeholder.innerText = data.value;
-          }
+          placeholder.innerText = data.value;
         }
       }
     }
   });
 
   app.i18n({
-    title: (year, month) => `${activeLanguage["months"][month]} ${year}`,
+    title: `YYYY年MM月`,
     days: activeLanguage.days,
     months: activeLanguage.months
   });
@@ -94,7 +91,7 @@ function createDatePicker(options) {
       "2018-4-30"
     ],
     // from: new Date(2018, 10, 1),
-    // to: new Date(2018, 7, 15),
+    // to: new Date(2019, 7, 15),
     days: [2, 3, 5]
   });
   app.setDates([

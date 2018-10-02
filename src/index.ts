@@ -17,86 +17,73 @@ import {
   format,
   diff,
   findDisableInQueue,
-  defaultLanguage,
   containerClassName,
   checkPickableDate,
   formatParse,
   monthSwitcher,
   between,
   setSepecifiedDate,
-  TemplateData
+  TemplateData,
+  elementClassName,
+  defaultI18n
 } from "./datepicker.helpers";
-import { Observer } from "./datepicker.observer";
+import { emitter, on } from "./datepicker.observer";
 import { Queue } from "./datepicker.queue";
 
-const emitter = event => value => Observer.$emit(event, value);
 let queue = null;
 
 export default class TypePicker {
   constructor(option: datepicker) {
-    if (!option || !parseEl(option.el)) {
+    let el = parseEl(option.el);
+
+    if (!option || !el) {
       return;
     }
+    const state: any = { ...this.state };
 
-    this.element = parseEl(option.el);
-    const states: any = { ...this.state };
+    byCondition(isDef)(option.views)(views => (state.views = views));
 
-    byCondition(isNaN, false)(option.selection)(() => {
-      states.selection = option.selection;
-    });
-
-    byCondition(isDef)(option.format)(() => {
-      states.dateFormat = option.format;
-    });
-    byCondition(isDate)(option.startDate)(() => {
-      states.startDate = option.startDate;
-      states.reachStart = true;
-      states.date = option.startDate;
-    });
-    byCondition(isDate)(option.endDate)(() => {
-      states.endDate = option.endDate;
-    });
-    byCondition(isNaN, false)(option.limit)(() => {
-      states.limit = option.limit;
-    });
-
-    byCondition(isDef)(option.views)(() => {
-      states.views = getViews(option.views);
-
-      if (states.views === "auto") {
-        if (!states.startDate) {
-          states.startDate = new Date();
-        }
-
-        if (!states.endDate) {
-          let start = states.startDate;
-
-          states.endDate = new Date(
-            start.getFullYear(),
-            start.getMonth() + 6,
-            start.getDate()
-          );
-        }
-      }
-
-      // if (!states.startDate|| !states.endDate )
-      // {
-
-      //  }
-    });
-
-    this.element.className = containerClassName(
-      this.element.className,
-      states.views
+    byCondition(v => !isNaN(v))(option.selection)(
+      size => (state.selection = size)
     );
 
-    queue = new Queue({
-      size: states.selection,
-      limit: states.selection === 2 ? states.limit : false,
-      dateFormat: states.dateFormat
+    byCondition(isDef)(option.format)(format => (state.dateFormat = format));
+    byCondition(isDate)(option.startDate)(startDate => {
+      state.startDate = startDate;
+      state.reachStart = true;
+      state.date = startDate;
+    });
+    byCondition(isDate)(option.endDate)(endDate => (state.endDate = endDate));
+
+    byCondition(isNaN, false)(option.limit)(() => {
+      state.limit = option.limit;
     });
 
-    this.setState(states);
+    byCondition(view => isDef(view) && view === "auto")(option.views)(() => {
+      if (!state.startDate) {
+        state.startDate = new Date();
+      }
+
+      if (!state.endDate) {
+        let start = state.startDate;
+        state.endDate = new Date(
+          start.getFullYear(),
+          start.getMonth() + 6,
+          start.getDate()
+        );
+      }
+    });
+
+    this.element = el;
+    this.element.className = elementClassName(state.views);
+
+    queue = new Queue({
+      size: state.selection,
+      limit: state.selection === 2 ? state.limit : false,
+      dateFormat: state.dateFormat
+    });
+
+    this.setState(state);
   }
 
   private state: any = {
@@ -110,7 +97,7 @@ export default class TypePicker {
     dateFormat: <string>"YYYY-MM-DD",
     limit: <number>1,
     disables: <any[]>[],
-    i18n: <any>defaultLanguage
+    i18n: <any>defaultI18n()
   };
 
   protected setState<Function>(state: any | Function, next?: Function | any) {
@@ -126,7 +113,7 @@ export default class TypePicker {
   }
 
   protected element: any = null;
-  public on = Observer.$on;
+  public on = on;
   public format = (date: Date) => format(date, this.state.dateFormat);
   public parse = (date: string | Date, dateFormat?: string) =>
     parse(date, dateFormat ? dateFormat : this.state.dateFormat);
@@ -359,11 +346,7 @@ export default class TypePicker {
   }
 
   i18n(pack: any) {
-    if (
-      isArray(pack.days) &&
-      isArray(pack.months) &&
-      typeof pack.title === "function"
-    ) {
+    if (isArray(pack.days) && isArray(pack.months)) {
       this.setState({
         i18n: {
           week: pack.days,
