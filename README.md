@@ -67,13 +67,8 @@ DatePicker build with typescript
    //to   => to accept <string> or <Date> all dates before [to] date will be disabled,
    //        eg: to =2018-3-4 => all dates before 2018-3-5 will be disabled
 
-   public disable({
-        days?:Array<number>[5],
-        dates?:Array<string|Date>,
-        from?:<Date|string>,
-        to?:<Date|string>
-    })
-
+   public forceUpdate()
+   //trigger rerender outside TypePicker instance 
 
 
    //Event listener
