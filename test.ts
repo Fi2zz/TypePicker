@@ -28,8 +28,8 @@ const startDate = new Date(dist.year, dist.month, dist.date);
 const endDate = new Date(dist.year, dist.month + 6, dist.date);
 let options = {
   el: "#datepicker", // document.getElementById("datepicker"),
-  startDate,
-  endDate,
+  // startDate,
+  // endDate,
   limit: 7,
   format: dateFormat,
   selection: 2,

@@ -1,4 +1,9 @@
-import { node, generateDate, mapDates } from "./datepicker.interface";
+import {
+  node,
+  generateDate,
+  mapDates,
+  TemplateDataInterface
+} from "./datepicker.interface";
 import { isDate, padding, listHead, listTail, isArray, isDef } from "./util";
 
 /**
@@ -426,16 +431,18 @@ export function tagData(
   index?: number,
   isEnd?: boolean,
   isStart?: boolean,
-  className?: string
+  isDisabled?: boolean
 ) {
   let day = <number | string>"";
   let date = <number | string>"";
-  className = "empty disabled";
-
+  let className = "empty disabled";
   if (item) {
     day = item.getDay();
     date = item.getDate();
     className = tagClassName(index, isEnd, isStart);
+    if (isDisabled) {
+      className = `disabled ${className.trim()}`;
+    }
   }
 
   return {
@@ -598,9 +605,16 @@ export const between = (start, end, dateFormat?) => {
 };
 
 export class TemplateData {
-  constructor(date, size, queue, dateFormat, withRange) {
+  constructor({
+    date,
+    size,
+    queue,
+    dateFormat,
+    withRange,
+    disableDays
+  }: TemplateDataInterface) {
     const { mapMonths, mapItem } = TemplateData;
-    const itemMap = mapItem(queue, withRange, dateFormat);
+    const itemMap = mapItem(queue, withRange, dateFormat, disableDays);
     return <any[]>mapMonths(date, size).map(itemMap);
   }
 
@@ -653,12 +667,13 @@ export class TemplateData {
    * @param dateFormat
    * @returns {(item) => {year: any; month: any; dates: any[]}}
    */
-  static mapItem = (queue, withRange, dateFormat) => item =>
+  static mapItem = (queue, withRange, dateFormat, disableDays) => item =>
     TemplateData.mapDates(
       item,
       TemplateData.mapRangeFromQueue(queue, dateFormat),
       withRange,
-      dateFormat
+      dateFormat,
+      disableDays
     );
 
   /**
@@ -669,30 +684,51 @@ export class TemplateData {
    * @param {string[]} range
    * @param {boolean} withRange
    * @param {string} dateFormat
+   * @param {number[]} disableDays
    * @returns {{year: number; month: number; dates: any[]}}
    */
   static mapDates = (
     { year, month, size }: mapDates,
     range: string[],
     withRange: boolean,
-    dateFormat: string
+    dateFormat: string,
+    disableDays?: number[]
   ) => {
     const dates = [];
 
     const firstDateOfMonth = new Date(year, month, 1);
 
     for (let i = 0; i < firstDateOfMonth.getDay(); i++) {
-      dates.push(tagData());
+      dates.push({
+        ...tagData(),
+        disabled: true
+      });
     }
     for (let i = 0; i < size; i++) {
       const date = new Date(year, month, i + 1);
       const index = range.indexOf(format(date, dateFormat));
-      const isEnd = withRange && index === range.length - 1;
-      const isStart = withRange && index === 0;
+      let isEnd = withRange && index === range.length - 1;
+      let isStart = withRange && index === 0;
 
-      dates.push(
-        tagData(format(date, dateFormat), date, index, isEnd, isStart)
+      if (range.length <= 0) {
+        isEnd = false;
+        isStart = false;
+      }
+      let disabled = disableDays.indexOf(date.getDay()) >= 0;
+
+      let data = tagData(
+        format(date, dateFormat),
+        date,
+        index,
+        isEnd,
+        isStart,
+        disabled
       );
+
+      dates.push({
+        ...data,
+        disabled
+      });
     }
     return { year, month, dates };
   };

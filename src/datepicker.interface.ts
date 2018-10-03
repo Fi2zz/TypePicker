@@ -52,10 +52,17 @@ export interface tagData {
   className?: string | undefined;
 }
 
-
-
 export interface mapDates {
   year: number;
   month: number;
   size: number;
+}
+
+export interface TemplateDataInterface {
+  date: Date;
+  size: number;
+  queue: any[];
+  dateFormat: string;
+  withRange: boolean;
+  disableDays: number[];
 }
