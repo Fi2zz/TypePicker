@@ -6,8 +6,7 @@ import {
   byCondition,
   $,
   dedupList,
-  isDef,
-  or
+  isDef
 } from "./util";
 import template from "./datepicker.template";
 import {
@@ -21,7 +20,6 @@ import {
   formatParse,
   monthSwitcher,
   between,
-  setDate,
   TemplateData,
   elementClassName,
   defaultI18n,
@@ -29,6 +27,8 @@ import {
 } from "./datepicker.helpers";
 import { emitter, on } from "./datepicker.observer";
 import { Queue } from "./datepicker.queue";
+
+const isNotEmpty = v => isDef(v) && v !== "";
 
 let queue = null;
 
@@ -151,17 +151,19 @@ export default class TypePicker {
       disableDays
     });
 
+    let basic = disables;
+
     const findDisables = ({ dates }) =>
       dates
         .filter(item => !!item.value && item.disabled)
         .map(item => item.value);
     for (let item of data.map(findDisables)) {
-      disables.push(...item);
+      basic.push(...item);
     }
 
-    disables = disables.filter(item => !item);
+    basic = basic.filter(item => !item);
 
-    disables = dedupList(disables);
+    basic = dedupList(basic);
 
     i18n.heading = formatMonthHeading(i18n.title, i18n.months);
 
@@ -196,7 +198,7 @@ export default class TypePicker {
     const createRenderEmitter = () =>
       emitter("render")({
         nodeList,
-        disables
+        disables: basic
       });
 
     createRenderEmitter();
@@ -319,20 +321,14 @@ export default class TypePicker {
     } = this.state;
 
     const parser = dateFormat => date => parse(date, dateFormat);
-    const formater = dateFormat => date => format(date, dateFormat);
     const parseWithFormat = parser(dateFormat);
-    const formatDate = formater(dateFormat);
     const state = <any>{ disables: [], startDate, endDate, disableDays };
 
     const parseToInt = item => parseInt(item, 10);
-    const dayFilter = days =>
+    const mapDay = days =>
       isArray(days)
         ? days.map(parseToInt).filter(day => day >= 0 && day <= 6)
         : [];
-
-    const isNotEmpty = v => isDef(v) && v !== "";
-
-    const include = days => day => isArray(days) && days.indexOf(day) >= 0;
 
     byCondition(isDate)(parseWithFormat(from))(date => {
       state.endDate = date;
@@ -344,40 +340,24 @@ export default class TypePicker {
       state.date = date;
     });
 
-    const mapDateToDay = days => date =>
-      include(days)(date.getDay()) ? formatDate(date) : "";
-    const mapFormattedDate = dates =>
-      dates.map(formatParse(dateFormat)).filter(isNotEmpty);
-
-    const mapDateListFromProps = dates =>
-      byCondition(isArray)(dates)(mapFormattedDate) || [];
-
-    const mapDateByDay = dates => days =>
-      dates.map(mapDateToDay(dayFilter(days))).filter(isNotEmpty);
-
-    state.disables = [...disables, ...mapDateListFromProps(dates)];
+    const mapDatesFromProps = dates =>
+      isArray(dates)
+        ? dates.map(formatParse(dateFormat)).filter(isNotEmpty)
+        : [];
 
     if (isDate(state.startDate) && isDate(state.endDate)) {
-      let start = state.startDate;
-      let end = state.endDate;
-
-      if (start < end) {
-        start = setDate(start, 1);
-        end = new Date(end.getFullYear(), end.getMonth() + 1, 1);
-        state.disables = [
-          ...state.disables,
-          ...mapDateByDay(between(start, end))(days)
-        ];
-      }
+      state.date = state.startDate;
+      state.reachStart = true;
     } else {
       state.reachEnd = false;
       state.reachStart = false;
     }
 
-    state.disableDays = [...disableDays, ...days].filter(isDef);
-
-    state.disables = dedupList(state.disables).filter(item => !!item);
-
+    state.disables = dedupList([
+      ...disables,
+      ...mapDatesFromProps(dates)
+    ]).filter(isNotEmpty);
+    state.disableDays = [...disableDays, ...mapDay(days)].filter(isNotEmpty);
     this.setState(state);
   }
 

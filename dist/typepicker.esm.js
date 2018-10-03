@@ -1,5 +1,5 @@
 /*
-*  TypePicker v4.1.0
+*  TypePicker v4.2.0
 *  Fi2zz / wenjingbiao@outlook.com
 *  https://github.com/Fi2zz/datepicker
 *  (c) 2017-2018, wenjingbiao@outlook.com
@@ -304,9 +304,7 @@ function createDateFormatValidator(formate) {
     var regexpString = result.join("\\" + sepreator.pop());
     return new RegExp(regexpString);
 }
-var setDate = function (date, day) {
-    return new Date(date.getFullYear(), date.getMonth(), day >= 0 ? day : date.getDate());
-};
+
 function getDates(year, month) {
     var d = new Date(year, month, 1);
     var utc = Date.UTC(d.getFullYear(), d.getMonth() + 1, 0);
@@ -832,6 +830,7 @@ var Queue = (function () {
     return Queue;
 }());
 
+var isNotEmpty = function (v) { return isDef(v) && v !== ""; };
 var queue = null;
 var TypePicker = (function () {
     function TypePicker(option) {
@@ -921,6 +920,7 @@ var TypePicker = (function () {
             withRange: withRange,
             disableDays: disableDays
         });
+        var basic = disables;
         var findDisables = function (_a) {
             var dates = _a.dates;
             return dates
@@ -929,10 +929,10 @@ var TypePicker = (function () {
         };
         for (var _i = 0, _b = data.map(findDisables); _i < _b.length; _i++) {
             var item = _b[_i];
-            disables.push.apply(disables, item);
+            basic.push.apply(basic, item);
         }
-        disables = disables.filter(function (item) { return !item; });
-        disables = dedupList(disables);
+        basic = basic.filter(function (item) { return !item; });
+        basic = dedupList(basic);
         i18n.heading = formatMonthHeading(i18n.title, i18n.months);
         this.element.innerHTML = template(data, i18n)(reachStart, reachEnd, views === "auto");
         typeof next === "function" && next(this.state);
@@ -955,7 +955,7 @@ var TypePicker = (function () {
         var createRenderEmitter = function () {
             return emitter("render")({
                 nodeList: nodeList,
-                disables: disables
+                disables: basic
             });
         };
         createRenderEmitter();
@@ -1063,18 +1063,14 @@ var TypePicker = (function () {
         var to = _a.to, from = _a.from, days = _a.days, dates = _a.dates;
         var _b = this.state, endDate = _b.endDate, startDate = _b.startDate, dateFormat = _b.dateFormat, disables = _b.disables, disableDays = _b.disableDays;
         var parser = function (dateFormat) { return function (date) { return parse(date, dateFormat); }; };
-        var formater = function (dateFormat) { return function (date) { return format(date, dateFormat); }; };
         var parseWithFormat = parser(dateFormat);
-        var formatDate = formater(dateFormat);
         var state = { disables: [], startDate: startDate, endDate: endDate, disableDays: disableDays };
         var parseToInt = function (item) { return parseInt(item, 10); };
-        var dayFilter = function (days) {
+        var mapDay = function (days) {
             return isArray(days)
                 ? days.map(parseToInt).filter(function (day) { return day >= 0 && day <= 6; })
                 : [];
         };
-        var isNotEmpty = function (v) { return isDef(v) && v !== ""; };
-        var include = function (days) { return function (day) { return isArray(days) && days.indexOf(day) >= 0; }; };
         byCondition(isDate)(parseWithFormat(from))(function (date) {
             state.endDate = date;
         });
@@ -1083,34 +1079,21 @@ var TypePicker = (function () {
             state.reachStart = true;
             state.date = date;
         });
-        var mapDateToDay = function (days) { return function (date) {
-            return include(days)(date.getDay()) ? formatDate(date) : "";
-        }; };
-        var mapFormattedDate = function (dates) {
-            return dates.map(formatParse(dateFormat)).filter(isNotEmpty);
+        var mapDatesFromProps = function (dates) {
+            return isArray(dates)
+                ? dates.map(formatParse(dateFormat)).filter(isNotEmpty)
+                : [];
         };
-        var mapDateListFromProps = function (dates) {
-            return byCondition(isArray)(dates)(mapFormattedDate) || [];
-        };
-        var mapDateByDay = function (dates) { return function (days) {
-            return dates.map(mapDateToDay(dayFilter(days))).filter(isNotEmpty);
-        }; };
-        state.disables = disables.concat(mapDateListFromProps(dates));
         if (isDate(state.startDate) && isDate(state.endDate)) {
-            var start = state.startDate;
-            var end = state.endDate;
-            if (start < end) {
-                start = setDate(start, 1);
-                end = new Date(end.getFullYear(), end.getMonth() + 1, 1);
-                state.disables = state.disables.concat(mapDateByDay(between(start, end))(days));
-            }
+            state.date = state.startDate;
+            state.reachStart = true;
         }
         else {
             state.reachEnd = false;
             state.reachStart = false;
         }
-        state.disableDays = disableDays.concat(days).filter(isDef);
-        state.disables = dedupList(state.disables).filter(function (item) { return !!item; });
+        state.disables = dedupList(disables.concat(mapDatesFromProps(dates))).filter(isNotEmpty);
+        state.disableDays = disableDays.concat(mapDay(days)).filter(isNotEmpty);
         this.setState(state);
     };
     TypePicker.prototype.i18n = function (pack) {
