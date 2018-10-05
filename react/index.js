@@ -5,7 +5,6 @@ import TypePicker from "../dist/typepicker.esm";
 
 export class ReactTypePicker extends React.Component {
   app = null;
-
   componentDidMount() {
     this.app = new TypePicker({
       el: "#react-datepicker",
@@ -33,7 +32,6 @@ export class ReactTypePicker extends React.Component {
       this.app.i18n(this.props.i18n);
     }
   }
-
   render() {
     return <div id={"react-datepicker"} />;
   }
