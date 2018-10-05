@@ -43,6 +43,7 @@ function createDateTag(data) {
       className: `${cellElementClassName("date")(data.day, data.className)}`,
       "data-day": data.day,
       "data-date": data.value ? data.value : "",
+      "data-disabled": data.disabled,
       children: nodeChildren
     }
   });
@@ -51,10 +52,10 @@ function createDateTag(data) {
 const mapHeadView = (year, month, title) => ({
   year,
   month,
-  title: title({ year, month })
+  title
 });
 
-const headView = ({ year, month, title }) =>
+const headView = (year, month, title) =>
   tag({
     tag: "div",
     props: {
@@ -95,15 +96,15 @@ const bodyView = dates =>
     }
   });
 
-const mapView = (weekView, title) => item =>
+const mapView = weekView => item =>
   mainView([
-    headView(mapHeadView(item.year, item.month, title)),
-    weekView(),
+    headView(item.year, item.month, item.heading),
+    weekView,
     bodyView(item.dates)
   ]);
 
-const createView = (data: Array<any>, title: string) => weekView =>
-  data.map(mapView(weekView, title)).filter(isDef);
+const createView = (data: Array<any>, weekView) =>
+  data.map(mapView(weekView)).filter(isDef);
 
 const createWeekViewMapper = (day, index) =>
   tag({
@@ -118,17 +119,14 @@ const createWeekView = week =>
     tag: "div",
     props: {
       className: "calendar-day",
-
       children: week.map(createWeekViewMapper)
     }
   });
-export default function template(data, i18n) {
+export default function template(data, week) {
   return function(reachStart, reachEnd, notRenderAction) {
-    const createdWeekView = createWeekView(i18n.week);
-    const createdView = createView(data, i18n.heading);
-    const mainView = createdView(
-      () => (notRenderAction ? "" : createdWeekView)
-    );
+    const createdWeekView = createWeekView(week);
+
+    const mainView = createView(data, notRenderAction ? "" : createdWeekView);
     let createdActionView = createActionView(reachStart, reachEnd);
     if (notRenderAction) {
       mainView.unshift(createdWeekView);

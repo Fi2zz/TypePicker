@@ -28,13 +28,14 @@ const startDate = new Date(dist.year, dist.month, dist.date);
 const endDate = new Date(dist.year, dist.month + 6, dist.date);
 let options = {
   el: "#datepicker", // document.getElementById("datepicker"),
-  // startDate,
-  // endDate,
-  limit: 7,
+  startDate,
+  endDate,
+  limit: 10,
   format: dateFormat,
   selection: 2,
   views: 2,
-  infinite: true
+  infinite: true,
+  lastSelectedItemCanBeInvalid: false
 };
 
 function createDatePicker(options) {
@@ -45,24 +46,22 @@ function createDatePicker(options) {
     formControl.value = value;
   });
 
-  app.on("render", (result: any) => {
-    const { nodeList, disables } = result;
-
-    console.log(app);
-    // console.log(result);
-
+  app.on("render", nodeList => {
     for (let i = 0; i < nodeList.length; i++) {
       let node = nodeList[i];
       let date = node.getAttribute("data-date");
+      let disable = node.getAttribute("data-disabled");
+
+      if (disable) {
+        disable = JSON.parse(disable);
+      }
+
       let placeholder = node.querySelector(".placeholder");
-      if (disables.indexOf(date) >= 0) {
-        node.classList.add("disabled");
-      } else {
-        let data = source[date];
-        if (data && placeholder) {
-          if (data.highlight) node.classList.add("highlight");
-          placeholder.innerText = data.value;
-        }
+
+      let data = source[date];
+      if (!disable && data) {
+        if (data.highlight) node.classList.add("highlight");
+        placeholder.innerText = data.value;
       }
     }
   });
@@ -89,18 +88,19 @@ function createDatePicker(options) {
       "2018-4-18",
       "2018-4-20",
       "2018-4-29",
-      "2018-4-30"
+      "2018-4-30",
+      "2018-10-1",
+      "2018-10-2"
     ],
     // from: new Date(2018, 10, 1),
     // to: new Date(2019, 7, 15),
-    days: [2, 3, 5]
+    days: [4, 5]
   });
   app.setDates([
     // "2018-9-27",
     // "2018-9-28",
-    "2018-10-1",
-    "2018-10-2",
-    "2018-10-3"
+    "2018-10-6",
+    "2018-10-11"
   ]);
 
   // app.update();

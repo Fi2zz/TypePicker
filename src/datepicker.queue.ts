@@ -1,18 +1,26 @@
 import { diff, parse } from "./datepicker.helpers";
+
 interface q {
   size: number;
   limit: boolean | number;
   dateFormat;
 }
+
+function copy(v) {
+  return JSON.parse(JSON.stringify(v));
+}
+
 export class Queue {
   constructor({ size, limit, dateFormat }: q) {
     this.size = size;
     this.limit = limit;
     this.format = dateFormat;
   }
+
   size = 1;
   limit: boolean | number = 1;
   format = "";
+
   enqueue = date => next => {
     let front = this.front();
     let now = parse(date, this.format);
@@ -26,9 +34,15 @@ export class Queue {
     if (this.list.indexOf(date) >= 0 && this.list.length > 1) {
       this.empty();
     }
+
+    if (this.list.indexOf(date) >= 0) {
+      return;
+    }
+
     this.list.push(date);
     this.reset(next);
   };
+
   reset(next) {
     if (this.list.length > this.size) {
       this.list = [this.list.pop()];
@@ -38,8 +52,17 @@ export class Queue {
     }
   }
 
+  resetWithValue(value) {
+    this.empty();
+    this.list.push(value);
+  }
+
   shift() {
     this.list.shift();
+  }
+
+  cache() {
+    return copy(this.list);
   }
 
   slice(start, end) {
@@ -49,9 +72,11 @@ export class Queue {
   dequeue() {
     this.list.shift();
   }
+
   pop() {
     this.list.pop();
   }
+
   empty() {
     this.list = [];
   }
@@ -61,4 +86,12 @@ export class Queue {
   }
 
   list: any[] = [];
+
+  length() {
+    return this.list.length;
+  }
+
+  replace(v) {
+    this.list = v;
+  }
 }

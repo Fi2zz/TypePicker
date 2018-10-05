@@ -7,6 +7,7 @@ export interface datepicker {
   endDate?: Date;
   selection?: number;
   infinite?: boolean;
+  lastSelectedItemCanBeInvalid?: boolean;
 }
 
 export interface disable {
@@ -23,7 +24,7 @@ export interface node {
   render?: Boolean;
 }
 
-export interface generateDate {
+export interface CreateDate {
   date: Date;
   size: number;
   dateFormat?: string;
@@ -32,11 +33,7 @@ export interface generateDate {
   index?: number;
 }
 
-export interface nodeClassName {
-  index: number;
-  isEnd: boolean;
-  isStart: boolean;
-}
+
 
 export interface template {
   data?: Array<any>;
@@ -46,23 +43,39 @@ export interface template {
   reachEnd: boolean;
 }
 
-export interface tagData {
-  date: string | number | undefined;
-  day: string | number | undefined;
-  className?: string | undefined;
+export interface TagData {
+  value?: string;
+  item?: Date;
+  index?: number;
+  isEnd?: boolean;
+  isStart?: boolean;
+  isDisabled?: boolean;
+  withRange?: boolean;
+}
+
+export interface monthItem {
+  date: Date;
+  size: number;
+  heading: string;
 }
 
 export interface mapDates {
-  year: number;
-  month: number;
-  size: number;
+  queue: string[];
+  withRange: boolean;
+  format: Function;
+  disables: any;
 }
 
 export interface TemplateDataInterface {
   date: Date;
   size: number;
   queue: any[];
-  dateFormat: string;
   withRange: boolean;
-  disableDays: number[];
+  format: Function;
+  heading: Function;
+  parse: Function;
+  disables: {
+    days: number[];
+    dates: string[];
+  };
 }
