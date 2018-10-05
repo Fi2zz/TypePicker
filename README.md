@@ -40,7 +40,7 @@ DatePicker build with typescript
 | format    | YES      | string             | Date string format                     | null                         |
 | startDate | NO       | Date               | Start date of DatePicker               | new Date                     |
 | endDate   | NO       | Date               | End date of DatePicker                 | null                         |
-| limit     | NO       | number             | Limitation between two dates           | 1                            |
+| limit     | NO       | number|bolean      | Limitation between two dates           | 1                            |
 | views     | NO       | number,string      | Display views of DatePicker            | auto,1,2                     |
 | selection | NO       | number             | Size of dates can be picked            | 1                            |
 
@@ -112,25 +112,26 @@ DatePicker build with typescript
         });
 
 
-    app.on("render", (result: any) => {
-        const { nodeList, disables } = result;
+    app.on("render", (nodeList) => {
+       
+        
         for (let i = 0; i < nodeList.length; i++) {
-
             let node = nodeList[i];
             let date = node.getAttribute("data-date");
-
-            //change disable item style
-            if (disables.indexOf(date) >= 0) {
-                node.classList.add("disabled");
-            } else {
-
-                //you may use any data type which you like
-                const data = source[date];
-                if (data) {
-                    //render data value on date cell node
-                    node.querySelector(".placeholder").innerText = data.value;
-                }
+            let disable =node.getAttribute('data-disabled');
+           
+           
+            if(disable){
+                disable =JSON.parse(disable)
             }
+            
+            
+            let data =YOUR_SOURCE_WHATEVER_YOU_LIKE[date];
+            //render your value to datepicker
+            if(data&& !disable){
+                node.querySelector(".placeholder").innerText = data.value;
+            }
+
         }
     });
 
