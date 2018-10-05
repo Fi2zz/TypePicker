@@ -40,7 +40,7 @@ DatePicker build with typescript
 | format    | YES      | string             | Date string format                     | null                         |
 | startDate | NO       | Date               | Start date of DatePicker               | new Date                     |
 | endDate   | NO       | Date               | End date of DatePicker                 | null                         |
-| limit     | NO       | number|bolean      | Limitation between two dates           | 1                            |
+| limit     | NO       | number             | bolean                                 | Limitation between two dates | 1 |
 | views     | NO       | number,string      | Display views of DatePicker            | auto,1,2                     |
 | selection | NO       | number             | Size of dates can be picked            | 1                            |
 
@@ -68,14 +68,14 @@ DatePicker build with typescript
    //        eg: to =2018-3-4 => all dates before 2018-3-5 will be disabled
 
    public forceUpdate()
-   //trigger rerender outside TypePicker instance 
+   //trigger rerender outside TypePicker instance
 
+   public onSelect(fn:Function);
+   //trigger when date picked
 
-   //Event listener
-   //eg: datePicker.on("event",(result)=>{
-                //your logic
-   //    })
-   public on(event:string,fn:Function)
+   public onRender(fn:Function);
+
+   //trigger when TypePicker render
 ```
 
 ## USAGE
@@ -112,20 +112,20 @@ DatePicker build with typescript
         });
 
 
-    app.on("render", (nodeList) => {
-       
-        
+    app.onRender(nodeList => {
+
+
         for (let i = 0; i < nodeList.length; i++) {
             let node = nodeList[i];
             let date = node.getAttribute("data-date");
             let disable =node.getAttribute('data-disabled');
-           
-           
+
+
             if(disable){
                 disable =JSON.parse(disable)
             }
-            
-            
+
+
             let data =YOUR_SOURCE_WHATEVER_YOU_LIKE[date];
             //render your value to datepicker
             if(data&& !disable){
@@ -136,7 +136,7 @@ DatePicker build with typescript
     });
 
     //`select` event fired by click on date cell and DatePicker init
-    app.on("select", (value) => {
+    app.onSelect(value => {
         // place your logic  here
         //eg:
         // document.getElementById("dates").innerText = value
@@ -170,8 +170,4 @@ DatePicker build with typescript
     })
     // if data changed ,you could use app.update() to rerender datepicker
     app.forceUpdate()
-
-
-
-
 ```

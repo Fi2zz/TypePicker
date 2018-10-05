@@ -127,7 +127,9 @@ export default class TypePicker {
   }
 
   protected element: any = null;
-  public on = on;
+
+  public onRender = next => on("render", next);
+  public onSelect = next => on("select", next);
 
   private render(next?: Function | undefined) {
     let {

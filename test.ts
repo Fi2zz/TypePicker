@@ -39,11 +39,11 @@ let options = {
 let app = new TypePicker(options);
 
 console.log(app);
-app.on("select", (value: any) => {
+app.onSelect((value: any) => {
   formControl.value = value;
 });
 
-app.on("render", nodeList => {
+app.onRender(nodeList => {
   for (let i = 0; i < nodeList.length; i++) {
     let node = nodeList[i];
     let date = node.getAttribute("data-date");
@@ -90,7 +90,7 @@ app.disable({
     "2018-10-2"
   ],
   from: new Date(2018, 10, 1),
-  to: new Date(2019, 7, 15),
+  to: new Date(2018, 7, 15),
   days: [4, 5]
 });
 app.setDates([
