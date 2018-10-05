@@ -34,7 +34,7 @@ DatePicker build with typescript
 
 ## OPTIONS
 
-| OPTION    | RERUIRED | TYPE               | DESC                                   | Default Value/Possible Value |
+| OPTION    | REQUIRED | TYPE               | DESC                                   | Default Value/Possible Value |
 | --------- | -------- | ------------------ | -------------------------------------- | ---------------------------- |
 | el        | YES      | string,HTMLElement | Element or selector to mount DatePcker |                              |
 | format    | YES      | string             | Date string format                     | null                         |
@@ -54,7 +54,7 @@ DatePicker build with typescript
    public i18n(language:any);
 
    public disable({
-        days?:Array<number>[5],
+        days?:Array<number>,
         dates?:Array<string|Date>,
         from?:<Date|string>,
         to?:<Date|string>
