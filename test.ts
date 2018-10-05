@@ -33,12 +33,10 @@ let options = {
   limit: 10,
   format: dateFormat,
   selection: 2,
-  views: 2,
-  infinite: true,
-  lastSelectedItemCanBeInvalid: false
+  views: 2
 };
 
-function createDatePicker(options) {
+
   let app = new TypePicker(options);
 
   console.log(app);
@@ -102,39 +100,3 @@ function createDatePicker(options) {
     "2018-10-6",
     "2018-10-11"
   ]);
-
-  // app.update();
-  return app;
-}
-
-function popupHandler(visible: boolean) {
-  const pop = <HTMLElement>document.querySelector(".popup");
-  pop.style.display = visible ? "block" : "none";
-}
-
-function init(document: Document) {
-  createDatePicker(options);
-
-  document.addEventListener("click", e => {
-    const target = <HTMLElement>e.target;
-    if (target) {
-      const parent = <HTMLElement>target.parentNode;
-
-      if (!parent) {
-        return null;
-      }
-
-      if (parent.nodeType === 1) {
-        if (target.tagName.toLowerCase() === "input") {
-          popupHandler(true);
-        } else if (parent.tagName.toLowerCase() === "body") {
-          popupHandler(false);
-        }
-      } else {
-        popupHandler(false);
-      }
-    }
-  });
-}
-
-init(document);
