@@ -33,7 +33,7 @@ let options = {
   limit: 10,
   format: dateFormat,
   selection: 2,
-  views: 2
+  views: 1
 };
 
 let app = new TypePicker(options);

@@ -14,11 +14,11 @@ brand-disabled = #ccc
     width: 44px
     height: 44px
     text-align: center
-    background #fff
     border: none
     position absolute
     top 0
     z-index 100
+    font-size: 12px
     
     &:focus
       outline: none
@@ -39,13 +39,14 @@ brand-disabled = #ccc
     z-index: 9
   .calendar-body, .calendar-day
     font-size: 0
+    text-align: left
   .calendar-day
-    text-align: center
     position: relative
     height: 44px
     &-cell
       height: 44px
       line-height 44px
+      text-align: center
   .calendar-cell
     font-size: 14px
     width (100 / 7) * 1%
@@ -85,6 +86,11 @@ brand-disabled = #ccc
       position: relative
       color brand-default
       background brand
+  .calendar-head
+    height: 44px
+    position: relative
+    line-height 44px
+    text-align: center
 
   &.calendar-double-views
     width: 100%
@@ -94,11 +100,7 @@ brand-disabled = #ccc
       width: 50%
       vertical-align: top
       display: inline-block
-    .calendar-head
-      height: 44px
-      position: relative
-      line-height 44px
-      text-align: center
+
   &.calendar-flat-view, &.calendar-single-view
     max-width 768px
   &.calendar-flat-view, &.calendar-single-view
