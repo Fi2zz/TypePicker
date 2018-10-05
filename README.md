@@ -2,6 +2,14 @@
 
 DatePicker build with typescript
 
+
+<a href="./react/index.js"> react version</a> 
+
+
+<a href="./vue/index.vue"> vue version </a>
+
+
+
 <table>
     <tr>
     <td colspan="2">
