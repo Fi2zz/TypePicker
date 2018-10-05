@@ -397,13 +397,18 @@ export default class TypePicker {
       isArray(dates)
         ? dates.map(formatParse(dateFormat)).filter(isNotEmpty)
         : [];
-
-    if (isDate(state.startDate) && isDate(state.endDate)) {
-      state.date = state.startDate;
-      state.reachStart = true;
-    } else {
+    if (!isDate(state.startDate) || !isDate(state.endDate)) {
       state.reachEnd = false;
       state.reachStart = false;
+    } else {
+      let start = state.startDate;
+      let end = state.endDate;
+      if (start > end) {
+        state.startDate = end;
+        state.endDate = start;
+        state.date = end;
+        state.reachStart = true;
+      }
     }
 
     state.disableDates = dedupList([

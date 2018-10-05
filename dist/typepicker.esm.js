@@ -1,5 +1,5 @@
 /*
-*  TypePicker v4.3.0
+*  TypePicker v4.4.0
 *  Fi2zz / wenjingbiao@outlook.com
 *  https://github.com/Fi2zz/datepicker
 *  (c) 2017-2018, wenjingbiao@outlook.com
@@ -1071,13 +1071,19 @@ var TypePicker = (function () {
                 ? dates.map(formatParse(dateFormat)).filter(isNotEmpty)
                 : [];
         };
-        if (isDate(state.startDate) && isDate(state.endDate)) {
-            state.date = state.startDate;
-            state.reachStart = true;
-        }
-        else {
+        if (!isDate(state.startDate) || !isDate(state.endDate)) {
             state.reachEnd = false;
             state.reachStart = false;
+        }
+        else {
+            var start = state.startDate;
+            var end = state.endDate;
+            if (start > end) {
+                state.startDate = end;
+                state.endDate = start;
+                state.date = end;
+                state.reachStart = true;
+            }
         }
         state.disableDates = dedupList(disableDates.concat(mapDatesFromProps(dates))).filter(isNotEmpty);
         state.disableDays = disableDays.concat(mapDay(days)).filter(isNotEmpty);
