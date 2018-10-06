@@ -1,6 +1,46 @@
-import { DateTag } from "./datepicker.interface";
-import { tag, join, cellElementClassName } from "./datepicker.helpers";
-import { isNotEmpty } from "./util";
+import { DateTag, node } from "./datepicker.interface";
+import { isDef, isNotEmpty, join } from "./util";
+import { DOMHelpers } from "./datepicker.dom.helper";
+
+/**
+ *
+ * @param tag
+ * @param props
+ * @param children
+ * @param render
+ * @returns {string}
+ */
+function tag({ tag, props = {}, render = true }: node) {
+  if (!tag || !render) {
+    return "";
+  }
+  let children: any = "";
+
+  let attributes = <string[]>[];
+  for (let key in props) {
+    let value = props[key];
+
+    if (key === "className") {
+      key = "class";
+    }
+
+    if (key !== "children") {
+      if (isDef(value)) {
+        attributes.push(`${key}="${value}"`);
+      }
+    } else {
+      if (children === false || children === undefined || children === null) {
+        children = "";
+      } else if (Array.isArray(value)) {
+        children = value.filter(isDef).join("");
+      } else {
+        children = value;
+      }
+    }
+  }
+  let attrs = <string>attributes.join("");
+  return `<${tag} ${attrs}>${children}</${tag}>`;
+}
 
 /**
  *
@@ -57,7 +97,7 @@ function createDateTag(data: DateTag) {
   }
 
   const props = {
-    className: cellElementClassName(data.day, data.className),
+    className: DOMHelpers.class.cell(data.day, data.className),
     "data-disabled": data.disabled,
     children: nodeChildren
   };
@@ -163,7 +203,7 @@ const createWeekViewMapper = (day: string, index: number) =>
   tag({
     tag: "div",
     props: {
-      className: cellElementClassName(index),
+      className: DOMHelpers.class.cell(index),
       children: day
     }
   });

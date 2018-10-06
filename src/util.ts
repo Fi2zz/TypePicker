@@ -13,13 +13,6 @@ const isEmpty = v => isUndef(v) || v == "";
 
 /**
  *
- * @param {HTMLElement} el
- * @param {string} attr
- * @returns {string | null}
- */
-export const attr = (el: HTMLElement, attr: string) => el.getAttribute(attr);
-/**
- *
  * @param {Number} n
  * @returns {string}
  */
@@ -141,13 +134,13 @@ export function byCondition(condition: any, when?: Boolean) {
 
 /**
  *
- * @param el
- * @returns {any}
+ * @param list
+ * @param split
+ * @returns {string|Request}
  */
-export function parseEl(el: any) {
-  if (!el) {
-    return null;
+export function join(list, split?: string) {
+  if (!split) {
+    split = "";
   }
-
-  return typeof el === "string" ? $(el) : el;
+  return list.join(split);
 }

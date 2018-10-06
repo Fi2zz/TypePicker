@@ -1,14 +1,11 @@
 import { datepicker, Disable, I18n } from "./datepicker.interface";
 import {
-  attr,
   isDate,
   isArray,
   byCondition,
-  $,
   dedupList,
   isDef,
-  isNotEmpty,
-  parseEl
+  isNotEmpty
 } from "./util";
 import {
   getViews,
@@ -18,21 +15,20 @@ import {
   formatParse,
   changeMonth,
   between,
-  TemplateData,
-  elementClassName,
   defaultI18n
 } from "./datepicker.helpers";
 import { publish, subscribe } from "./datepicker.observer";
 import { Queue } from "./datepicker.queue";
 import { template } from "./datepicker.template";
+import { TemplateData } from "./datepicker.data.generator";
+import { DOMHelpers } from "./datepicker.dom.helper";
 
 let queue = null;
 let initSelectedDates = [];
 
 export default class TypePicker {
   constructor(option: datepicker) {
-    let el = parseEl(option.el);
-
+    let el = DOMHelpers.select(option.el);
     if (!option || !el) {
       return;
     }
@@ -85,12 +81,17 @@ export default class TypePicker {
       }
     });
 
+    if (state.selection !== 2) {
+      state.limit = false;
+      state.lastSelectedItemCanBeInvalid = false;
+    }
+
     this.element = el;
-    this.element.className = elementClassName(state.views);
+    this.element.className = DOMHelpers.class.container(state.views);
 
     queue = new Queue({
       size: state.selection,
-      limit: state.selection === 2 ? state.limit : false,
+      limit: state.limit,
       dateFormat: state.dateFormat
     });
 
@@ -115,7 +116,6 @@ export default class TypePicker {
 
   protected setState<Function>(state: any): void {
     this.state = { ...this.state, ...state };
-
     let id = setTimeout(() => {
       clearTimeout(id);
       this.render();
@@ -124,11 +124,7 @@ export default class TypePicker {
 
   protected element: HTMLElement = null;
 
-  /**
-   *
-   * @param {Function | undefined} next
-   */
-  private render(next?: Function | undefined): void {
+  private render(): void {
     let {
       reachStart,
       reachEnd,
@@ -140,8 +136,7 @@ export default class TypePicker {
       selection,
       i18n,
       disableDays,
-      disableDates,
-      lastSelectedItemCanBeInvalid
+      disableDates
     } = this.state;
 
     const size = () =>
@@ -165,95 +160,48 @@ export default class TypePicker {
         dates: disableDates
       }
     });
-    const findDisabledFromTemplateData = data => {
-      const result = [];
-      for (let item of data) {
-        let dates = item.dates;
-        for (let dateItem of dates) {
-          if (dateItem.disabled && dateItem.date) {
-            result.push(dateItem.value);
-          }
-        }
-      }
-      return result;
-    };
+    const disables = TemplateData.findDisabled(data);
 
-    const disables = findDisabledFromTemplateData(data);
+    initSelectedDates = TemplateData.setInitDatesToQueue(
+      disables,
+      initSelectedDates,
+      this.enqueue.bind(this)
+    );
 
     this.element.innerHTML = template(data, i18n.week)(
       reachStart,
       reachEnd,
       views === "auto"
     );
-    const setInitDatesToQueue = () => {
-      if (initSelectedDates.length > 0) {
-        let initDisables = [];
-        for (let item of initSelectedDates) {
-          let isDisable = disables.indexOf(item) >= 0;
-          if (isDisable) {
-            initDisables.push(item);
-          }
-        }
-
-        let f1 = initSelectedDates[0];
-
-        if (
-          initSelectedDates.length !== initDisables.length &&
-          disables.indexOf(f1) <= -1
-        ) {
-          for (let item of initSelectedDates) {
-            let isDisable = disables.indexOf(item) >= 0;
-            this.enqueue(item, disables, isDisable);
-          }
-        }
-
-        initSelectedDates = [];
-      }
-    };
-
-    setInitDatesToQueue();
-
-    typeof next === "function" && next(this.state);
 
     //日期切换
-    const dom = selector => $(this.element, selector);
+    const select = selector => DOMHelpers.select(this.element, selector);
 
-    const nodeList = dom(".calendar-cell");
-    const prevActionDOM = dom(".calendar-action-prev");
-    const nextActionDOM = dom(".calendar-action-next");
-    const update = changeMonth(date, startDate, endDate);
-
-    if (prevActionDOM && nextActionDOM) {
-      prevActionDOM.addEventListener("click", e => {
-        e.preventDefault();
-        !reachStart && this.setState(update(-1));
-      });
-      nextActionDOM.addEventListener("click", e => {
-        e.preventDefault();
-        !reachEnd && this.setState(update(1));
-      });
-    }
+    const nodeList = select(".calendar-cell");
+    const prevActionDOM = select(".calendar-action.prev");
+    const nextActionDOM = select(".calendar-action.next");
 
     //dispatch render event when rendered
     publish("render", nodeList);
+    //dispatch select event when rendered
+    publish("select", queue.list);
+    if (prevActionDOM && nextActionDOM) {
+      const actionHandler = type => size => () => {
+        !type && this.setState(changeMonth(date, startDate, endDate)(size));
+      };
+      prevActionDOM.addEventListener("click", actionHandler(reachStart)(-1));
+      nextActionDOM.addEventListener("click", actionHandler(reachEnd)(-1));
+    }
+
     for (let i = 0; i < nodeList.length; i++) {
-      nodeList[i].addEventListener("click", () => {
-        const date = attr(nodeList[i], "data-date");
-        let disable = <string>attr(nodeList[i], "data-disabled");
-
+      let node = nodeList[i];
+      node.addEventListener("click", () => {
+        const date = DOMHelpers.attr(node, "data-date");
+        const disable = <string>DOMHelpers.attr(node, "data-disabled");
         let isDisabled = false;
-
         if (isDef(disable)) {
           isDisabled = <boolean>JSON.parse(disable);
         }
-
-        if (
-          (!lastSelectedItemCanBeInvalid || queue.length() <= 0) &&
-          isDisabled
-        ) {
-          return;
-        }
-
         this.enqueue(date, disables, isDisabled);
       });
     }
@@ -263,14 +211,14 @@ export default class TypePicker {
    *
    * @param {string} value
    * @param {string[]} disables
-   * @param {boolean} valueIsDisabled
+   * @param {boolean} invalidValue
    */
   private enqueue(
     value: string,
     disables: string[],
-    valueIsDisabled: boolean
+    invalidValue: boolean
   ): void {
-    let cache = queue.cache();
+    const cache = queue.cache();
 
     const {
       dateFormat,
@@ -281,29 +229,50 @@ export default class TypePicker {
 
     const withParse = date => parse(date, dateFormat);
 
-    const afterEnqueue = () => {
-      const date$1 = withParse(queue.list[0]);
-      const date$2 = withParse(queue.list[queue.list.length - 1]);
+    const checkPushable = () => {
+      if (
+        (!lastSelectedItemCanBeInvalid || queue.length() <= 0) &&
+        invalidValue
+      ) {
+        return false;
+      }
 
-      const findDisabled = (queue, disables, dateFormat) => parse => {
-        let date$1 = queue[0];
-        let date$2 = queue[queue.length - 1];
+      if (queue.include(value) && queue.length() === 1 && !invalidValue) {
+        return false;
+      }
 
-        if (date$1 === date$2) {
-          return 0;
+      if (selection === 2 && invalidValue) {
+        let size = queue.length();
+        if (size === 2) {
+          return false;
+        } else if (size === 1) {
+          let f1 = queue.front();
+          let space = diff(withParse(value), withParse(f1), "days");
+
+          const disablesInQueue = TemplateData.findDisabledInQueue({
+            queue: [...queue.list, value],
+            disables,
+            dateFormat,
+            parse: withParse
+          });
+          if (disablesInQueue.length >= selection || space < 0) {
+            return false;
+          }
         }
-        date$1 = parse(date$1);
-        date$2 = parse(date$2);
-        let dates = between(date$1, date$2, dateFormat)
-          .map((_, index) => (disables.indexOf(_) >= 0 ? index : -1))
-          .filter(v => isDef(v) && v >= 0);
+      }
 
-        return isArray(dates) ? dates : [dates];
-      };
+      return true;
+    };
 
-      const space = diff(date$2, date$1, "days");
+    if (!checkPushable()) {
+      return;
+    }
 
+    const afterEnqueue = () => {
       if (limit !== false) {
+        const date$1 = withParse(queue.list[0]);
+        const date$2 = withParse(queue.list[queue.list.length - 1]);
+        const space = diff(date$2, date$1, "days");
         if (
           space < 0 ||
           queue.list.length > selection ||
@@ -313,18 +282,21 @@ export default class TypePicker {
         }
       }
 
-      const disablesInQueue = findDisabled(queue.list, disables, dateFormat)(
-        withParse
-      );
+      const disablesInQueue = TemplateData.findDisabledInQueue({
+        queue: queue.list,
+        disables,
+        dateFormat,
+        parse: withParse
+      });
 
       if (lastSelectedItemCanBeInvalid) {
         if (disablesInQueue.length >= selection) {
-          if (valueIsDisabled) {
+          if (invalidValue) {
             queue.pop();
           } else {
             queue.shift();
           }
-        } else if (queue.length() === 1 && valueIsDisabled) {
+        } else if (queue.length() === 1 && invalidValue) {
           queue.replace(cache);
         }
       } else {
@@ -334,8 +306,9 @@ export default class TypePicker {
           }
         }
       }
-      this.render(() => publish("select", queue.list));
+      this.render();
     };
+
     queue.enqueue(value)(afterEnqueue);
   }
 

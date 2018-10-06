@@ -1,5 +1,5 @@
 /*
-*  TypePicker v5.1.0
+*  TypePicker v5.3.0
 *  Fi2zz / wenjingbiao@outlook.com
 *  https://github.com/Fi2zz/datepicker
 *  (c) 2017-2018, wenjingbiao@outlook.com
@@ -19,39 +19,12 @@ const __assign = Object.assign || function (target) {
 
 var isUndef = function (v) { return v === undefined || v === null; };
 var isEmpty = function (v) { return isUndef(v) || v == ""; };
-var attr = function (el, attr) { return el.getAttribute(attr); };
 var padding = function (n) { return "" + (n > 9 ? n : "0" + n); };
 var isNotEmpty = function (v) { return !isEmpty(v); };
 var isDef = function (v) { return !isUndef(v); };
 var isArray = function (list) { return list instanceof Array; };
 var isDate = function (object) { return object instanceof Date; };
-function $(selector, selector$2) {
-    var selectAll = function (who, selector) {
-        var ArrayNodes = Array.prototype.slice.call(who.querySelectorAll(selector));
-        if (ArrayNodes.length <= 0) {
-            return null;
-        }
-        else if (ArrayNodes.length === 1) {
-            return ArrayNodes[0];
-        }
-        else {
-            return ArrayNodes;
-        }
-    };
-    if (typeof selector === "string") {
-        if (selector.indexOf("#") === 0) {
-            selector = selector.substr(1);
-            return document.getElementById(selector);
-        }
-        else if (selector.indexOf(".") == 0) {
-            return selectAll(document, selector);
-        }
-    }
-    else {
-        return selectAll(selector, selector$2);
-    }
-    return null;
-}
+
 function dedupList(list, condition) {
     var map = {};
     var result = [];
@@ -93,11 +66,11 @@ function byCondition(condition, when) {
         };
     };
 }
-function parseEl(el) {
-    if (!el) {
-        return null;
+function join(list, split) {
+    if (!split) {
+        split = "";
     }
-    return typeof el === "string" ? $(el) : el;
+    return list.join(split);
 }
 
 function diff(start, end, type, isAbsolute) {
@@ -140,36 +113,6 @@ function getViews(view) {
             return views;
         }
     }
-}
-function cellElementClassName(index) {
-    var other = [];
-    for (var _i = 1; _i < arguments.length; _i++) {
-        other[_i - 1] = arguments[_i];
-    }
-    var names = ["calendar-cell"];
-    if (index === 0) {
-        names.push("is-weekday");
-    }
-    else if (index === 6) {
-        names.push("is-weekend");
-    }
-    if (other) {
-        names.push.apply(names, other);
-    }
-    return names.join(" ");
-}
-function elementClassName(views) {
-    var classes = ["calendar"];
-    if (views === 1) {
-        classes.push("calendar-single-view");
-    }
-    else if (views === 2) {
-        classes.push("calendar-double-views");
-    }
-    else {
-        classes.push("calendar-flat-view");
-    }
-    return classes.join("  ");
 }
 function format(date, format) {
     if (!format) {
@@ -283,44 +226,6 @@ function createDateFormatValidator(formate) {
     var regexpString = result.join("\\" + sepreator.pop());
     return new RegExp(regexpString);
 }
-function tag(_a) {
-    var tag = _a.tag, _b = _a.props, props = _b === void 0 ? {} : _b, _c = _a.render, render = _c === void 0 ? true : _c;
-    if (!tag || !render) {
-        return "";
-    }
-    var children = "";
-    var attributes = [];
-    for (var key in props) {
-        var value = props[key];
-        if (key === "className") {
-            key = "class";
-        }
-        if (key !== "children") {
-            if (isDef(value)) {
-                attributes.push(key + "=\"" + value + "\"");
-            }
-        }
-        else {
-            if (children === false || children === undefined || children === null) {
-                children = "";
-            }
-            else if (Array.isArray(value)) {
-                children = value.filter(isDef).join("");
-            }
-            else {
-                children = value;
-            }
-        }
-    }
-    var attrs = attributes.join("");
-    return "<" + tag + " " + attrs + ">" + children + "</" + tag + ">";
-}
-function join(list, split) {
-    if (!split) {
-        split = "";
-    }
-    return list.join(split);
-}
 function createDate(options) {
     var date = options.date, size = options.size, _a = options.direction, direction = _a === void 0 ? 1 : _a, _b = options.position, position = _b === void 0 ? "date" : _b, index = options.index;
     var dir = function (v, size, dir) {
@@ -375,46 +280,6 @@ function defaultI18n() {
         ]
     };
 }
-function tagData(options) {
-    if (options === void 0) { options = {}; }
-    var value = options.value, item = options.item, index = options.index, isEnd = options.isEnd, isStart = options.isStart, isDisabled = options.isDisabled, withRange = options.withRange;
-    function tagClassName(index, isEnd, isStart, withRange) {
-        var name = "";
-        if (index >= 0) {
-            name = "active";
-        }
-        if (withRange) {
-            if (isStart) {
-                name = name + " start-date";
-            }
-            else if (isEnd) {
-                name = name + " end-date";
-            }
-            else if (index > 0) {
-                name = "in-range";
-            }
-        }
-        return name;
-    }
-    var day = "";
-    var date = "";
-    var className = "empty disabled";
-    if (item) {
-        day = item.getDay();
-        date = item.getDate();
-        className = tagClassName(index, isEnd, isStart, withRange);
-        if (isDisabled) {
-            className = "disabled " + className.trim();
-        }
-    }
-    return {
-        date: date,
-        day: day,
-        className: className,
-        value: value,
-        disabled: isDisabled
-    };
-}
 var formatParse = function (dateFormat) { return function (date) {
     return format(parse(date, dateFormat), dateFormat);
 }; };
@@ -447,88 +312,6 @@ var between = function (start, end, dateFormat) {
     });
     return dateFormat ? createFormatDate(dates)(dateFormat) : dates;
 };
-var TemplateData = (function () {
-    function TemplateData(_a) {
-        var date = _a.date, size = _a.size, queue = _a.queue, format = _a.format, parse = _a.parse, withRange = _a.withRange, disables = _a.disables, heading = _a.heading;
-        var mapMonths = TemplateData.mapMonths, mapDates = TemplateData.mapDates, mapQueue = TemplateData.mapQueue;
-        if (withRange) {
-            queue = mapQueue(queue, format, parse);
-        }
-        return (mapMonths(date, size, heading).map(mapDates({ queue: queue, withRange: withRange, format: format, disables: disables })));
-    }
-    TemplateData.mapQueue = function (queue, format, parse) {
-        if (queue.length <= 0) {
-            return [];
-        }
-        var start = parse(queue[0]);
-        var end = parse(queue[queue.length - 1]);
-        return createDate({
-            date: start,
-            size: diff(end, start, "days")
-        }).map(format);
-    };
-    TemplateData.mapMonths = function (date, size, heading) {
-        var template = [];
-        function getDates(date) {
-            return new Date(Date.UTC(date.getFullYear(), date.getMonth() + 1, 0)).getUTCDate();
-        }
-        for (var i = 0; i <= size; i++) {
-            var now = new Date(date.getFullYear(), date.getMonth() + i, 1);
-            template.push({
-                size: getDates(now),
-                date: now,
-                heading: heading(now)
-            });
-        }
-        return template;
-    };
-    TemplateData.formatMonthHeading = function (format, months) {
-        return function (date) {
-            return format
-                .toLowerCase()
-                .replace(/y{1,}/g, padding(date.getFullYear()))
-                .replace(/m{1,}/g, months[date.getMonth()]);
-        };
-    };
-    TemplateData.mapDates = function (options) { return function (monthItem) {
-        var date = monthItem.date, size = monthItem.size, heading = monthItem.heading;
-        var queue = options.queue, withRange = options.withRange, format = options.format, disables = options.disables;
-        var year = date.getFullYear();
-        var month = date.getMonth();
-        var dates = [];
-        var createEmptyItem = function (size, list) {
-            for (var i = 0; i < size; i++) {
-                list.push(tagData({ isDisabled: true }));
-            }
-            return list;
-        };
-        createEmptyItem(new Date(year, month, 1).getDay(), dates);
-        for (var i = 0; i < size; i++) {
-            var date_1 = new Date(year, month, i + 1);
-            var index = queue.indexOf(format(date_1));
-            var isEnd = withRange && index === queue.length - 1;
-            var isStart = withRange && index === 0;
-            if (queue.length <= 0) {
-                isEnd = false;
-                isStart = false;
-            }
-            var withFormat = format(date_1);
-            var disabled = disables.days.indexOf(date_1.getDay()) >= 0 ||
-                disables.dates.indexOf(withFormat) >= 0;
-            dates.push(tagData({
-                value: withFormat,
-                item: date_1,
-                index: index,
-                isEnd: isEnd,
-                isStart: isStart,
-                isDisabled: disabled,
-                withRange: withRange
-            }));
-        }
-        return { year: year, month: month, heading: heading, dates: dates };
-    }; };
-    return TemplateData;
-}());
 
 var Observer = (function () {
     var clientList = {};
@@ -634,9 +417,110 @@ var Queue = (function () {
     Queue.prototype.replace = function (v) {
         this.list = v;
     };
+    Queue.prototype.include = function (v) {
+        return this.list.indexOf(v) >= 0;
+    };
     return Queue;
 }());
 
+var DOMHelpers = {
+    select: function (selector, selector$2) {
+        if (typeof selector !== "string" && !selector$2) {
+            return selector;
+        }
+        var selectAll = function (who, selector) {
+            var ArrayNodes = Array.prototype.slice.call(who.querySelectorAll(selector));
+            if (ArrayNodes.length <= 0) {
+                return null;
+            }
+            else if (ArrayNodes.length === 1) {
+                return ArrayNodes[0];
+            }
+            else {
+                return ArrayNodes;
+            }
+        };
+        if (typeof selector === "string") {
+            if (selector.indexOf("#") === 0) {
+                selector = selector.substr(1);
+                return document.getElementById(selector);
+            }
+            else if (selector.indexOf(".") == 0) {
+                return selectAll(document, selector);
+            }
+        }
+        else {
+            return selectAll(selector, selector$2);
+        }
+        return null;
+    },
+    attr: function (el, attr) { return el.getAttribute(attr); },
+    class: {
+        cell: function (index) {
+            var other = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                other[_i - 1] = arguments[_i];
+            }
+            var names = ["calendar-cell"];
+            if (index === 0) {
+                names.push("is-weekday");
+            }
+            else if (index === 6) {
+                names.push("is-weekend");
+            }
+            if (other) {
+                names.push.apply(names, other);
+            }
+            return names.join(" ");
+        },
+        container: function (views) {
+            var classes = ["calendar"];
+            if (views === 1) {
+                classes.push("calendar-single-view");
+            }
+            else if (views === 2) {
+                classes.push("calendar-double-views");
+            }
+            else {
+                classes.push("calendar-flat-view");
+            }
+            return classes.join("  ");
+        }
+    }
+};
+
+function tag(_a) {
+    var tag = _a.tag, _b = _a.props, props = _b === void 0 ? {} : _b, _c = _a.render, render = _c === void 0 ? true : _c;
+    if (!tag || !render) {
+        return "";
+    }
+    var children = "";
+    var attributes = [];
+    for (var key in props) {
+        var value = props[key];
+        if (key === "className") {
+            key = "class";
+        }
+        if (key !== "children") {
+            if (isDef(value)) {
+                attributes.push(key + "=\"" + value + "\"");
+            }
+        }
+        else {
+            if (children === false || children === undefined || children === null) {
+                children = "";
+            }
+            else if (Array.isArray(value)) {
+                children = value.filter(isDef).join("");
+            }
+            else {
+                children = value;
+            }
+        }
+    }
+    var attrs = attributes.join("");
+    return "<" + tag + " " + attrs + ">" + children + "</" + tag + ">";
+}
 function createActionView(reachStart, reachEnd) {
     var node = function (type, disabled) {
         var className = ["calendar-action", type];
@@ -673,7 +557,7 @@ function createDateTag(data) {
         }));
     }
     var props = {
-        className: cellElementClassName(data.day, data.className),
+        className: DOMHelpers.class.cell(data.day, data.className),
         "data-disabled": data.disabled,
         children: nodeChildren
     };
@@ -744,7 +628,7 @@ var createWeekViewMapper = function (day, index) {
     return tag({
         tag: "div",
         props: {
-            className: cellElementClassName(index),
+            className: DOMHelpers.class.cell(index),
             children: day
         }
     });
@@ -771,6 +655,182 @@ function template(data, week) {
     };
 }
 
+function tagData(options) {
+    if (options === void 0) { options = {}; }
+    var value = options.value, item = options.item, index = options.index, isEnd = options.isEnd, isStart = options.isStart, isDisabled = options.isDisabled, withRange = options.withRange;
+    function tagClassName(index, isEnd, isStart, withRange) {
+        var name = "";
+        if (index >= 0) {
+            name = "active";
+        }
+        if (withRange) {
+            if (isStart) {
+                name = name + " start-date";
+            }
+            else if (isEnd) {
+                name = name + " end-date";
+            }
+            else if (index > 0) {
+                name = "in-range";
+            }
+        }
+        return name;
+    }
+    var day = "";
+    var date = "";
+    var className = "empty disabled";
+    if (item) {
+        day = item.getDay();
+        date = item.getDate();
+        className = tagClassName(index, isEnd, isStart, withRange);
+        if (isDisabled) {
+            className = "disabled " + className.trim();
+        }
+    }
+    return {
+        date: date,
+        day: day,
+        className: className,
+        value: value,
+        disabled: isDisabled
+    };
+}
+var TemplateData = (function () {
+    function TemplateData(_a) {
+        var date = _a.date, size = _a.size, queue = _a.queue, format$$1 = _a.format, parse$$1 = _a.parse, withRange = _a.withRange, disables = _a.disables, heading = _a.heading;
+        var mapMonths = TemplateData.mapMonths, mapDates = TemplateData.mapDates, mapQueue = TemplateData.mapQueue;
+        if (withRange) {
+            queue = mapQueue(queue, format$$1, parse$$1);
+        }
+        return (mapMonths(date, size, heading).map(mapDates({ queue: queue, withRange: withRange, format: format$$1, disables: disables })));
+    }
+    TemplateData.mapQueue = function (queue, format$$1, parse$$1) {
+        if (queue.length <= 0) {
+            return [];
+        }
+        var start = parse$$1(queue[0]);
+        var end = parse$$1(queue[queue.length - 1]);
+        return createDate({
+            date: start,
+            size: diff(end, start, "days")
+        }).map(format$$1);
+    };
+    TemplateData.mapMonths = function (date, size, heading) {
+        var template = [];
+        function getDates(date) {
+            return new Date(Date.UTC(date.getFullYear(), date.getMonth() + 1, 0)).getUTCDate();
+        }
+        for (var i = 0; i <= size; i++) {
+            var now = new Date(date.getFullYear(), date.getMonth() + i, 1);
+            template.push({
+                size: getDates(now),
+                date: now,
+                heading: heading(now)
+            });
+        }
+        return template;
+    };
+    TemplateData.formatMonthHeading = function (format$$1, months) {
+        return function (date) {
+            return format$$1
+                .toLowerCase()
+                .replace(/y{1,}/g, padding(date.getFullYear()))
+                .replace(/m{1,}/g, months[date.getMonth()]);
+        };
+    };
+    TemplateData.findDisabled = function (data) {
+        var result = [];
+        for (var _i = 0, data_1 = data; _i < data_1.length; _i++) {
+            var item = data_1[_i];
+            var dates = item.dates;
+            for (var _a = 0, dates_1 = dates; _a < dates_1.length; _a++) {
+                var dateItem = dates_1[_a];
+                if (dateItem.disabled && dateItem.date) {
+                    result.push(dateItem.value);
+                }
+            }
+        }
+        return result;
+    };
+    TemplateData.findDisabledInQueue = function (_a) {
+        var queue = _a.queue, disables = _a.disables, dateFormat = _a.dateFormat, parse$$1 = _a.parse;
+        var date$1 = queue[0];
+        var date$2 = queue[queue.length - 1];
+        if (date$1 === date$2) {
+            return 0;
+        }
+        date$1 = parse$$1(date$1);
+        date$2 = parse$$1(date$2);
+        var dates = between(date$1, date$2, dateFormat)
+            .map(function (_, index) { return (disables.indexOf(_) >= 0 ? index : -1); })
+            .filter(function (v) { return isDef(v) && v >= 0; });
+        return isArray(dates) ? dates : [dates];
+    };
+    TemplateData.setInitDatesToQueue = function (disables, selected, enqueue) {
+        if (selected.length > 0) {
+            var initDisables = [];
+            for (var _i = 0, selected_1 = selected; _i < selected_1.length; _i++) {
+                var item = selected_1[_i];
+                var isDisable = disables.indexOf(item) >= 0;
+                if (isDisable) {
+                    initDisables.push(item);
+                }
+            }
+            var f1 = selected[0];
+            if (selected.length !== initDisables.length &&
+                disables.indexOf(f1) <= -1) {
+                for (var _a = 0, selected_2 = selected; _a < selected_2.length; _a++) {
+                    var item = selected_2[_a];
+                    var isDisable = disables.indexOf(item) >= 0;
+                    enqueue(item, disables, isDisable);
+                }
+            }
+            return [];
+        }
+        else {
+            return [];
+        }
+    };
+    TemplateData.mapDates = function (options) { return function (monthItem) {
+        var date = monthItem.date, size = monthItem.size, heading = monthItem.heading;
+        var queue = options.queue, withRange = options.withRange, format$$1 = options.format, disables = options.disables;
+        var year = date.getFullYear();
+        var month = date.getMonth();
+        var dates = [];
+        var createEmptyItem = function (size, list) {
+            for (var i = 0; i < size; i++) {
+                list.push(tagData({ isDisabled: true }));
+            }
+            return list;
+        };
+        createEmptyItem(new Date(year, month, 1).getDay(), dates);
+        for (var i = 0; i < size; i++) {
+            var date_1 = new Date(year, month, i + 1);
+            var index = queue.indexOf(format$$1(date_1));
+            var isEnd = withRange && index === queue.length - 1;
+            var isStart = withRange && index === 0;
+            if (queue.length <= 0) {
+                isEnd = false;
+                isStart = false;
+            }
+            var withFormat = format$$1(date_1);
+            var disabled = disables.days.indexOf(date_1.getDay()) >= 0 ||
+                disables.dates.indexOf(withFormat) >= 0;
+            dates.push(tagData({
+                value: withFormat,
+                item: date_1,
+                index: index,
+                isEnd: isEnd,
+                isStart: isStart,
+                isDisabled: disabled,
+                withRange: withRange
+            }));
+        }
+        return { year: year, month: month, heading: heading, dates: dates };
+    }; };
+    return TemplateData;
+}());
+
 var queue = null;
 var initSelectedDates = [];
 var TypePicker = (function () {
@@ -795,7 +855,7 @@ var TypePicker = (function () {
         this.forceUpdate = function () { return _this.render(); };
         this.onRender = function (next) { return subscribe("render", next); };
         this.onSelect = function (next) { return subscribe("select", next); };
-        var el = parseEl(option.el);
+        var el = DOMHelpers.select(option.el);
         if (!option || !el) {
             return;
         }
@@ -834,11 +894,15 @@ var TypePicker = (function () {
                 state.selection = 2;
             }
         });
+        if (state.selection !== 2) {
+            state.limit = false;
+            state.lastSelectedItemCanBeInvalid = false;
+        }
         this.element = el;
-        this.element.className = elementClassName(state.views);
+        this.element.className = DOMHelpers.class.container(state.views);
         queue = new Queue({
             size: state.selection,
-            limit: state.selection === 2 ? state.limit : false,
+            limit: state.limit,
             dateFormat: state.dateFormat
         });
         this.setState(state);
@@ -851,9 +915,9 @@ var TypePicker = (function () {
             _this.render();
         }, 0);
     };
-    TypePicker.prototype.render = function (next) {
+    TypePicker.prototype.render = function () {
         var _this = this;
-        var _a = this.state, reachStart = _a.reachStart, reachEnd = _a.reachEnd, views = _a.views, startDate = _a.startDate, endDate = _a.endDate, date = _a.date, dateFormat = _a.dateFormat, selection = _a.selection, i18n = _a.i18n, disableDays = _a.disableDays, disableDates = _a.disableDates, lastSelectedItemCanBeInvalid = _a.lastSelectedItemCanBeInvalid;
+        var _a = this.state, reachStart = _a.reachStart, reachEnd = _a.reachEnd, views = _a.views, startDate = _a.startDate, endDate = _a.endDate, date = _a.date, dateFormat = _a.dateFormat, selection = _a.selection, i18n = _a.i18n, disableDays = _a.disableDays, disableDates = _a.disableDates;
         var size = function () {
             return views == 2 ? 1 : views === "auto" ? diff(endDate, startDate) : 0;
         };
@@ -873,73 +937,30 @@ var TypePicker = (function () {
                 dates: disableDates
             }
         });
-        var findDisabledFromTemplateData = function (data) {
-            var result = [];
-            for (var _i = 0, data_1 = data; _i < data_1.length; _i++) {
-                var item = data_1[_i];
-                var dates = item.dates;
-                for (var _a = 0, dates_1 = dates; _a < dates_1.length; _a++) {
-                    var dateItem = dates_1[_a];
-                    if (dateItem.disabled && dateItem.date) {
-                        result.push(dateItem.value);
-                    }
-                }
-            }
-            return result;
-        };
-        var disables = findDisabledFromTemplateData(data);
+        var disables = TemplateData.findDisabled(data);
+        initSelectedDates = TemplateData.setInitDatesToQueue(disables, initSelectedDates, this.enqueue.bind(this));
         this.element.innerHTML = template(data, i18n.week)(reachStart, reachEnd, views === "auto");
-        var setInitDatesToQueue = function () {
-            if (initSelectedDates.length > 0) {
-                var initDisables = [];
-                for (var _i = 0, initSelectedDates_1 = initSelectedDates; _i < initSelectedDates_1.length; _i++) {
-                    var item = initSelectedDates_1[_i];
-                    var isDisable = disables.indexOf(item) >= 0;
-                    if (isDisable) {
-                        initDisables.push(item);
-                    }
-                }
-                var f1 = initSelectedDates[0];
-                if (initSelectedDates.length !== initDisables.length &&
-                    disables.indexOf(f1) <= -1) {
-                    for (var _a = 0, initSelectedDates_2 = initSelectedDates; _a < initSelectedDates_2.length; _a++) {
-                        var item = initSelectedDates_2[_a];
-                        var isDisable = disables.indexOf(item) >= 0;
-                        _this.enqueue(item, disables, isDisable);
-                    }
-                }
-                initSelectedDates = [];
-            }
-        };
-        setInitDatesToQueue();
-        typeof next === "function" && next(this.state);
-        var dom = function (selector) { return $(_this.element, selector); };
-        var nodeList = dom(".calendar-cell");
-        var prevActionDOM = dom(".calendar-action-prev");
-        var nextActionDOM = dom(".calendar-action-next");
-        var update = changeMonth(date, startDate, endDate);
-        if (prevActionDOM && nextActionDOM) {
-            prevActionDOM.addEventListener("click", function (e) {
-                e.preventDefault();
-                !reachStart && _this.setState(update(-1));
-            });
-            nextActionDOM.addEventListener("click", function (e) {
-                e.preventDefault();
-                !reachEnd && _this.setState(update(1));
-            });
-        }
+        var select = function (selector) { return DOMHelpers.select(_this.element, selector); };
+        var nodeList = select(".calendar-cell");
+        var prevActionDOM = select(".calendar-action.prev");
+        var nextActionDOM = select(".calendar-action.next");
         publish("render", nodeList);
+        publish("select", queue.list);
+        if (prevActionDOM && nextActionDOM) {
+            var actionHandler = function (type) { return function (size) { return function () {
+                !type && _this.setState(changeMonth(date, startDate, endDate)(size));
+            }; }; };
+            prevActionDOM.addEventListener("click", actionHandler(reachStart)(-1));
+            nextActionDOM.addEventListener("click", actionHandler(reachEnd)(-1));
+        }
         var _loop_1 = function (i) {
-            nodeList[i].addEventListener("click", function () {
-                var date = attr(nodeList[i], "data-date");
-                var disable = attr(nodeList[i], "data-disabled");
+            var node = nodeList[i];
+            node.addEventListener("click", function () {
+                var date = DOMHelpers.attr(node, "data-date");
+                var disable = DOMHelpers.attr(node, "data-disabled");
                 var isDisabled = false;
                 if (isDef(disable)) {
                     isDisabled = JSON.parse(disable);
-                }
-                if ((!lastSelectedItemCanBeInvalid || queue.length() <= 0) &&
-                    isDisabled) {
-                    return;
                 }
                 _this.enqueue(date, disables, isDisabled);
             });
@@ -948,46 +969,70 @@ var TypePicker = (function () {
             _loop_1(i);
         }
     };
-    TypePicker.prototype.enqueue = function (value, disables, valueIsDisabled) {
+    TypePicker.prototype.enqueue = function (value, disables, invalidValue) {
         var _this = this;
         var cache = queue.cache();
         var _a = this.state, dateFormat = _a.dateFormat, lastSelectedItemCanBeInvalid = _a.lastSelectedItemCanBeInvalid, limit = _a.limit, selection = _a.selection;
         var withParse = function (date) { return parse(date, dateFormat); };
-        var afterEnqueue = function () {
-            var date$1 = withParse(queue.list[0]);
-            var date$2 = withParse(queue.list[queue.list.length - 1]);
-            var findDisabled = function (queue, disables, dateFormat) { return function (parse$$1) {
-                var date$1 = queue[0];
-                var date$2 = queue[queue.length - 1];
-                if (date$1 === date$2) {
-                    return 0;
+        var checkPushable = function () {
+            if ((!lastSelectedItemCanBeInvalid || queue.length() <= 0) &&
+                invalidValue) {
+                return false;
+            }
+            if (queue.include(value) && queue.length() === 1 && !invalidValue) {
+                return false;
+            }
+            if (selection === 2 && invalidValue) {
+                var size = queue.length();
+                if (size === 2) {
+                    return false;
                 }
-                date$1 = parse$$1(date$1);
-                date$2 = parse$$1(date$2);
-                var dates = between(date$1, date$2, dateFormat)
-                    .map(function (_, index) { return (disables.indexOf(_) >= 0 ? index : -1); })
-                    .filter(function (v) { return isDef(v) && v >= 0; });
-                return isArray(dates) ? dates : [dates];
-            }; };
-            var space = diff(date$2, date$1, "days");
+                else if (size === 1) {
+                    var f1 = queue.front();
+                    var space = diff(withParse(value), withParse(f1), "days");
+                    var disablesInQueue = TemplateData.findDisabledInQueue({
+                        queue: queue.list.concat([value]),
+                        disables: disables,
+                        dateFormat: dateFormat,
+                        parse: withParse
+                    });
+                    if (disablesInQueue.length >= selection || space < 0) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        };
+        if (!checkPushable()) {
+            return;
+        }
+        var afterEnqueue = function () {
             if (limit !== false) {
+                var date$1 = withParse(queue.list[0]);
+                var date$2 = withParse(queue.list[queue.list.length - 1]);
+                var space = diff(date$2, date$1, "days");
                 if (space < 0 ||
                     queue.list.length > selection ||
                     (selection === 2 && space > limit)) {
                     queue.shift();
                 }
             }
-            var disablesInQueue = findDisabled(queue.list, disables, dateFormat)(withParse);
+            var disablesInQueue = TemplateData.findDisabledInQueue({
+                queue: queue.list,
+                disables: disables,
+                dateFormat: dateFormat,
+                parse: withParse
+            });
             if (lastSelectedItemCanBeInvalid) {
                 if (disablesInQueue.length >= selection) {
-                    if (valueIsDisabled) {
+                    if (invalidValue) {
                         queue.pop();
                     }
                     else {
                         queue.shift();
                     }
                 }
-                else if (queue.length() === 1 && valueIsDisabled) {
+                else if (queue.length() === 1 && invalidValue) {
                     queue.replace(cache);
                 }
             }
@@ -998,7 +1043,7 @@ var TypePicker = (function () {
                     }
                 }
             }
-            _this.render(function () { return publish("select", queue.list); });
+            _this.render();
         };
         queue.enqueue(value)(afterEnqueue);
     };

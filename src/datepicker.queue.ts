@@ -108,4 +108,8 @@ export class Queue {
   replace(v) {
     this.list = v;
   }
+
+  include(v) {
+    return this.list.indexOf(v) >= 0;
+  }
 }

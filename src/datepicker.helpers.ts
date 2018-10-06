@@ -1,19 +1,12 @@
-import {
-  node,
-  CreateDate,
-  mapDates,
-  TemplateDataInterface,
-  monthItem,
-  TagData
-} from "./datepicker.interface";
-import { isDate, padding, isArray, isDef } from "./util";
+import { CreateDate } from "./datepicker.interface";
+import { isDate, padding, isArray } from "./util";
 
 /**
  *
- * @param start
- * @param end
- * @param type
- * @param isAbsolute
+ * @param {Date} start
+ * @param {Date} end
+ * @param {string} type
+ * @param {boolean} isAbsolute
  * @returns {number}
  */
 export function diff(
@@ -67,44 +60,6 @@ export function getViews(view: number | string) {
       return views;
     }
   }
-}
-
-/**
- *
- * @param {number} index
- * @param other
- * @returns {string}
- */
-export function cellElementClassName(index: number, ...other) {
-  let names = ["calendar-cell"];
-  if (index === 0) {
-    names.push("is-weekday");
-  } else if (index === 6) {
-    names.push("is-weekend");
-  }
-  if (other) {
-    names.push(...other);
-  }
-  return names.join(" ");
-}
-
-/**
- *
- * @param views
- * @returns {string}
- */
-export function elementClassName(views) {
-  let classes = ["calendar"];
-
-  if (views === 1) {
-    classes.push("calendar-single-view");
-  } else if (views === 2) {
-    classes.push("calendar-double-views");
-  } else {
-    classes.push("calendar-flat-view");
-  }
-
-  return classes.join("  ");
 }
 
 /**
@@ -242,63 +197,10 @@ function createDateFormatValidator(formate: string) {
 
 /**
  *
- * @param tag
- * @param props
- * @param children
- * @param render
- * @returns {string}
- */
-export function tag({ tag, props = {}, render = true }: node) {
-  if (!tag || !render) {
-    return "";
-  }
-  let children: any = "";
-
-  let attributes = <string[]>[];
-  for (let key in props) {
-    let value = props[key];
-
-    if (key === "className") {
-      key = "class";
-    }
-
-    if (key !== "children") {
-      if (isDef(value)) {
-        attributes.push(`${key}="${value}"`);
-      }
-    } else {
-      if (children === false || children === undefined || children === null) {
-        children = "";
-      } else if (Array.isArray(value)) {
-        children = value.filter(isDef).join("");
-      } else {
-        children = value;
-      }
-    }
-  }
-  let attrs = <string>attributes.join("");
-  return `<${tag} ${attrs}>${children}</${tag}>`;
-}
-
-/**
- *
- * @param list
- * @param split
- * @returns {string|Request}
- */
-export function join(list, split?: string) {
-  if (!split) {
-    split = "";
-  }
-  return list.join(split);
-}
-
-/**
- *
  * @param {CreateDate} options
  * @returns {any}
  */
-function createDate(options: CreateDate): any {
+export function createDate(options: CreateDate): any {
   const { date, size, direction = 1, position = "date", index } = options;
 
   const dir = (v: number, size: number, dir: number) =>
@@ -322,7 +224,12 @@ function createDate(options: CreateDate): any {
   return result;
 }
 
-function createFormatDate(dates) {
+/**
+ *
+ * @param {Array<Date>} dates
+ * @returns {(dateFormat) => (string[] | string[])}
+ */
+function createFormatDate(dates: Array<Date>) {
   return dateFormat => {
     const fmt = dateFormat => date => format(date, dateFormat);
     if (isArray(dates)) {
@@ -355,54 +262,6 @@ export function defaultI18n() {
       "11",
       "12"
     ]
-  };
-}
-
-/**
- *
- * @param {TagData} options
- * @returns {{date: number | string; day: number | string; className: string; value: string; disabled: boolean}}
- */
-function tagData(options: TagData = {}) {
-  const { value, item, index, isEnd, isStart, isDisabled, withRange } = options;
-
-  function tagClassName(index, isEnd, isStart, withRange: boolean) {
-    let name = "";
-    if (index >= 0) {
-      name = "active";
-    }
-    if (withRange) {
-      if (isStart) {
-        name = `${name} start-date`;
-      } else if (isEnd) {
-        name = `${name} end-date`;
-      } else if (index > 0) {
-        name = "in-range";
-      }
-    }
-
-    return name;
-  }
-
-  let day = <number | string>"";
-  let date = <number | string>"";
-  let className = "empty disabled";
-  if (item) {
-    day = item.getDay();
-    date = item.getDate();
-
-    className = tagClassName(index, isEnd, isStart, withRange);
-    if (isDisabled) {
-      className = `disabled ${className.trim()}`;
-    }
-  }
-
-  return {
-    date,
-    day,
-    className,
-    value,
-    disabled: isDisabled
   };
 }
 
@@ -468,145 +327,3 @@ export const between = (start, end, dateFormat?) => {
 
   return dateFormat ? createFormatDate(dates)(dateFormat) : dates;
 };
-
-export class TemplateData {
-  constructor({
-    date,
-    size,
-    queue,
-    format,
-    parse,
-    withRange,
-    disables,
-    heading
-  }: TemplateDataInterface) {
-    const { mapMonths, mapDates, mapQueue } = TemplateData;
-
-    if (withRange) {
-      queue = mapQueue(queue, format, parse);
-    }
-
-    return <any[]>(
-      mapMonths(date, size, heading).map(
-        mapDates({ queue, withRange, format, disables })
-      )
-    );
-  }
-
-  /**
-   *
-   * @param queue
-   * @param format
-   * @param parse
-   * @returns {any}
-   */
-  static mapQueue(queue, format, parse) {
-    if (queue.length <= 0) {
-      return [];
-    }
-
-    let start = parse(queue[0]);
-    let end = parse(queue[queue.length - 1]);
-    return createDate({
-      date: start,
-      size: diff(end, start, "days")
-    }).map(format);
-  }
-
-  /**
-   *
-   * @param date
-   * @param size
-   * @param heading
-   * @returns {any[]}
-   */
-  static mapMonths(date, size, heading): any[] {
-    const template = <any[]>[];
-
-    function getDates(date): number {
-      return new Date(
-        Date.UTC(date.getFullYear(), date.getMonth() + 1, 0)
-      ).getUTCDate();
-    }
-
-    for (let i = 0; i <= size; i++) {
-      let now = new Date(date.getFullYear(), date.getMonth() + i, 1);
-      template.push({
-        size: getDates(now),
-        date: now,
-        heading: heading(now)
-      });
-    }
-    return template;
-  }
-
-  /**
-   *
-   * @param {mapDates} options
-   * @returns {({ year, month, size }: monthItem) => {year: number; month: number; dates: any[]}}
-   */
-  static mapDates = (options: mapDates) => (monthItem: monthItem) => {
-    const { date, size, heading } = monthItem;
-    const { queue, withRange, format, disables } = options;
-
-    const year = date.getFullYear();
-    const month = date.getMonth();
-
-    const dates = [];
-    const createEmptyItem = (size, list) => {
-      for (let i = 0; i < size; i++) {
-        list.push(tagData({ isDisabled: true }));
-      }
-      return list;
-    };
-    createEmptyItem(new Date(year, month, 1).getDay(), dates);
-    for (let i = 0; i < size; i++) {
-      const date = new Date(year, month, i + 1);
-      const index = queue.indexOf(format(date));
-      let isEnd = withRange && index === queue.length - 1;
-      let isStart = withRange && index === 0;
-
-      if (queue.length <= 0) {
-        isEnd = false;
-        isStart = false;
-      }
-      let withFormat = format(date);
-      let disabled =
-        disables.days.indexOf(date.getDay()) >= 0 ||
-        disables.dates.indexOf(withFormat) >= 0;
-
-      dates.push(
-        tagData({
-          value: withFormat,
-          item: date,
-          index,
-          isEnd,
-          isStart,
-          isDisabled: disabled,
-          withRange
-        })
-      );
-    }
-    if (dates.length < 42) {
-      // createEmptyItem(42 - dates.length, dates);
-    }
-
-    return { year, month, heading, dates };
-  };
-
-  /**
-   *
-   * @param format
-   * @param months
-   * @returns {(date) => string}
-   */
-
-  static formatMonthHeading(format, months) {
-    return function(date) {
-      return format
-        .toLowerCase()
-        .replace(/y{1,}/g, padding(date.getFullYear()))
-        .replace(/m{1,}/g, months[date.getMonth()]);
-    };
-  }
-}

@@ -24,9 +24,9 @@ const options = {
   endDate,
   limit: 10,
   format: "YYYY-M-D",
-  selection: 2,
+  selection: 6,
   views: 2,
-  lastSelectedItemCanBeInvalid: true
+  lastSelectedItemCanBeInvalid: false
 };
 
 const app = new TypePicker(options);
@@ -81,6 +81,6 @@ app.disable({
 app.setDates([
   // "2018-9-27",
   // "2018-9-28",
-  "2018-10-6",
+  "2018-10-7",
   "2018-10-11"
 ]);
