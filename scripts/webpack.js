@@ -5,7 +5,7 @@ const WebpackDevServer = require("webpack-dev-server");
 const config = {
   mode: "development",
   entry: {
-    app: ["./test.ts", "./src/style.styl", "./test/test.styl"]
+    app: ["./example/index.ts", "./src/style.styl", "./example/style.styl"]
   },
   output: {
     path: path.resolve(__dirname, "./dist"),
@@ -42,7 +42,7 @@ const config = {
     new webpack.HotModuleReplacementPlugin(),
     new HtmlWebpackPlugin({
       filename: "index.html",
-      template: "index.html",
+      template: "./example/index.html",
       inject: true
     })
   ]

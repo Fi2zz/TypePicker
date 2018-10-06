@@ -1,7 +1,16 @@
+import { DateTag } from "./datepicker.interface";
 import { tag, join, cellElementClassName } from "./datepicker.helpers";
-import { isDef, padding } from "./util";
 
-function createActionView(reachStart, reachEnd) {
+import { isNotEmpty } from "./util";
+
+/**
+ *
+ * @param {boolean} reachStart
+ * @param {boolean} reachEnd
+ * @returns {(string)[]}
+ */
+
+function createActionView(reachStart: boolean, reachEnd: boolean) {
   const node = (type, disabled) => {
     let className = ["calendar-action", `calendar-action-${type}`];
     if (disabled) {
@@ -19,7 +28,12 @@ function createActionView(reachStart, reachEnd) {
   return [node("prev", reachStart), node("next", reachEnd)];
 }
 
-function createDateTag(data) {
+/**
+ *
+ * @param {DateTag} data
+ * @returns {string}
+ */
+function createDateTag(data: DateTag) {
   const dateTag = tag({
     tag: "div",
     props: {
@@ -29,13 +43,14 @@ function createDateTag(data) {
   });
   const nodeChildren = [dateTag];
   if (data.value) {
-    const placeholderTag = tag({
-      tag: "div",
-      props: {
-        className: "placeholder"
-      }
-    });
-    nodeChildren.push(placeholderTag);
+    nodeChildren.push(
+      tag({
+        tag: "div",
+        props: {
+          className: "placeholder"
+        }
+      })
+    );
   }
   return tag({
     tag: "div",
@@ -49,13 +64,14 @@ function createDateTag(data) {
   });
 }
 
-const mapHeadView = (year, month, title) => ({
-  year,
-  month,
-  title
-});
-
-const headView = (year, month, title) =>
+/**
+ *
+ * @param {number} year
+ * @param {number} month
+ * @param {string} title
+ * @returns {string}
+ */
+const headView = (year: number, month: number, title: string) =>
   tag({
     tag: "div",
     props: {
@@ -79,7 +95,12 @@ const headView = (year, month, title) =>
     }
   });
 
-const mainView = children =>
+/**
+ *
+ * @param {string | any[]} children
+ * @returns {string}
+ */
+const mainView = (children: string | any[]) =>
   tag({
     tag: "div",
     props: {
@@ -87,7 +108,13 @@ const mainView = children =>
       children
     }
   });
-const bodyView = dates =>
+
+/**
+ *
+ * @param {Array<any>} dates
+ * @returns {string}
+ */
+const bodyView = (dates: Array<any>) =>
   tag({
     tag: "div",
     props: {
@@ -96,17 +123,34 @@ const bodyView = dates =>
     }
   });
 
-const mapView = weekView => item =>
+/**
+ *
+ * @param {string} weekView
+ * @returns {(item: any) => string}
+ */
+const mapView = (weekView: string) => (item: any) =>
   mainView([
     headView(item.year, item.month, item.heading),
     weekView,
     bodyView(item.dates)
   ]);
 
+/**
+ *
+ * @param {Array<any>} data
+ * @param weekView
+ * @returns {string[]}
+ */
 const createView = (data: Array<any>, weekView) =>
-  data.map(mapView(weekView)).filter(isDef);
+  data.map(mapView(weekView)).filter(isNotEmpty);
 
-const createWeekViewMapper = (day, index) =>
+/**
+ *
+ * @param {string} day
+ * @param {number} index
+ * @returns {string}
+ */
+const createWeekViewMapper = (day: string, index: number) =>
   tag({
     tag: "div",
     props: {
@@ -114,7 +158,13 @@ const createWeekViewMapper = (day, index) =>
       children: day
     }
   });
-const createWeekView = week =>
+
+/**
+ *
+ * @param {Array<string>} week
+ * @returns {string}
+ */
+const createWeekView = (week: Array<string>) =>
   tag({
     tag: "div",
     props: {
@@ -122,10 +172,17 @@ const createWeekView = week =>
       children: week.map(createWeekViewMapper)
     }
   });
-export default function template(data, week) {
+
+/**
+ *
+ * @param data
+ * @param week
+ * @returns {(reachStart, reachEnd, notRenderAction) => any}
+ */
+
+export function template(data, week) {
   return function(reachStart, reachEnd, notRenderAction) {
     const createdWeekView = createWeekView(week);
-
     const mainView = createView(data, notRenderAction ? "" : createdWeekView);
     let createdActionView = createActionView(reachStart, reachEnd);
     if (notRenderAction) {

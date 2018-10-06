@@ -6,7 +6,12 @@ interface q {
   dateFormat;
 }
 
-function copy(v) {
+/**
+ *
+ * @param {any} v
+ * @returns {any}
+ */
+function copy(v: any) {
   return JSON.parse(JSON.stringify(v));
 }
 
@@ -21,7 +26,12 @@ export class Queue {
   limit: boolean | number = 1;
   format = "";
 
-  enqueue = date => next => {
+  /**
+   *
+   * @param {string} date
+   * @returns {(next?: (Function | undefined)) => void}
+   */
+  enqueue = (date: string) => (next?: Function | undefined): void => {
     let front = this.front();
     let now = parse(date, this.format);
     let prev = parse(front, this.format);
@@ -43,7 +53,11 @@ export class Queue {
     this.reset(next);
   };
 
-  reset(next) {
+  /**
+   *
+   * @param {Function} next
+   */
+  reset(next?: Function) {
     if (this.list.length > this.size) {
       this.list = [this.list.pop()];
     }

@@ -1,4 +1,4 @@
-import { datepicker, disable } from "./datepicker.interface";
+import { datepicker, Disable, I18n } from "./datepicker.interface";
 import {
   attr,
   isDate,
@@ -6,12 +6,12 @@ import {
   byCondition,
   $,
   dedupList,
-  isDef
+  isDef,
+  isNotEmpty,
+  parseEl
 } from "./util";
-import template from "./datepicker.template";
 import {
   getViews,
-  parseEl,
   parse,
   format,
   diff,
@@ -22,10 +22,9 @@ import {
   elementClassName,
   defaultI18n
 } from "./datepicker.helpers";
-import { emitter, on } from "./datepicker.observer";
+import { publish, subscribe } from "./datepicker.observer";
 import { Queue } from "./datepicker.queue";
-
-const isNotEmpty = v => isDef(v) && v !== "";
+import { template } from "./datepicker.template";
 
 let queue = null;
 let initSelectedDates = [];
@@ -114,24 +113,22 @@ export default class TypePicker {
     disableDates: <string[]>[]
   };
 
-  protected setState<Function>(state: any | Function, next?: Function | any) {
-    if (typeof state === "function") {
-      this.state = state(this.state);
-    } else {
-      this.state = { ...this.state, ...state };
-    }
+  protected setState<Function>(state: any): void {
+    this.state = { ...this.state, ...state };
+
     let id = setTimeout(() => {
       clearTimeout(id);
-      this.render(next);
+      this.render();
     }, 0);
   }
 
-  protected element: any = null;
+  protected element: HTMLElement = null;
 
-  public onRender = next => on("render", next);
-  public onSelect = next => on("select", next);
-
-  private render(next?: Function | undefined) {
+  /**
+   *
+   * @param {Function | undefined} next
+   */
+  private render(next?: Function | undefined): void {
     let {
       reachStart,
       reachEnd,
@@ -147,8 +144,9 @@ export default class TypePicker {
       lastSelectedItemCanBeInvalid
     } = this.state;
 
-    const size =
+    const size = () =>
       views == 2 ? 1 : views === "auto" ? diff(endDate, startDate) : 0;
+
     const withRange = selection === 2;
 
     const withFormat = date => format(date, dateFormat);
@@ -156,7 +154,7 @@ export default class TypePicker {
 
     const data = new TemplateData({
       date,
-      size,
+      size: size(),
       queue: queue.list,
       format: withFormat,
       parse: withParse,
@@ -168,10 +166,9 @@ export default class TypePicker {
       }
     });
     const findDisabledFromTemplateData = data => {
-      let result = [];
+      const result = [];
       for (let item of data) {
         let dates = item.dates;
-
         for (let dateItem of dates) {
           if (dateItem.disabled && dateItem.date) {
             result.push(dateItem.value);
@@ -240,31 +237,41 @@ export default class TypePicker {
     }
 
     //dispatch render event when rendered
-    emitter("render")(nodeList);
+    publish("render", nodeList);
     for (let i = 0; i < nodeList.length; i++) {
       nodeList[i].addEventListener("click", () => {
         const date = attr(nodeList[i], "data-date");
-        let disable = attr(nodeList[i], "data-disabled");
+        let disable = <string>attr(nodeList[i], "data-disabled");
+
+        let isDisabled = false;
 
         if (isDef(disable)) {
-          disable = JSON.parse(disable);
+          isDisabled = <boolean>JSON.parse(disable);
         }
 
-        if (!lastSelectedItemCanBeInvalid && disable) {
+        if (
+          (!lastSelectedItemCanBeInvalid || queue.length() <= 0) &&
+          isDisabled
+        ) {
           return;
         }
 
-        if (queue.length() <= 0) {
-          if (disable) {
-            return;
-          }
-        }
-        this.enqueue(date, disables, disable);
+        this.enqueue(date, disables, isDisabled);
       });
     }
   }
 
-  private enqueue(value, disables, valueIsDisabled) {
+  /**
+   *
+   * @param {string} value
+   * @param {string[]} disables
+   * @param {boolean} valueIsDisabled
+   */
+  private enqueue(
+    value: string,
+    disables: string[],
+    valueIsDisabled: boolean
+  ): void {
     let cache = queue.cache();
 
     const {
@@ -273,8 +280,6 @@ export default class TypePicker {
       limit,
       selection
     } = this.state;
-
-    const next = queue.enqueue(value);
 
     const withParse = date => parse(date, dateFormat);
 
@@ -310,12 +315,12 @@ export default class TypePicker {
         }
       }
 
-      let queueIncludeDisabled = findDisabled(queue.list, disables, dateFormat)(
+      const disablesInQueue = findDisabled(queue.list, disables, dateFormat)(
         withParse
       );
 
       if (lastSelectedItemCanBeInvalid) {
-        if (queueIncludeDisabled.length >= selection) {
+        if (disablesInQueue.length >= selection) {
           if (valueIsDisabled) {
             queue.pop();
           } else {
@@ -326,18 +331,21 @@ export default class TypePicker {
         }
       } else {
         if (limit !== false) {
-          if (queueIncludeDisabled.length > 0) {
+          if (disablesInQueue.length > 0) {
             queue.resetWithValue(value);
           }
         }
       }
-      this.render(() => emitter("select")(queue.list));
+      this.render(() => publish("select", queue.list));
     };
-
-    next(afterEnqueue);
+    queue.enqueue(value)(afterEnqueue);
   }
 
-  public setDates(dates: Array<any>) {
+  /**
+   *
+   * @param {Array<any>} dates
+   */
+  public setDates(dates: Array<any>): void {
     if (!isArray(dates)) return;
 
     const { selection, limit, dateFormat } = this.state;
@@ -365,7 +373,12 @@ export default class TypePicker {
       .filter(isDef);
   }
 
-  public disable({ to, from, days, dates }: disable) {
+  /**
+   *
+   * @param {Disable} options
+   */
+  public disable(options: Disable): void {
+    const { to, from, days, dates } = options;
     const {
       endDate,
       startDate,
@@ -422,7 +435,11 @@ export default class TypePicker {
     this.setState(state);
   }
 
-  public i18n(pack: any) {
+  /**
+   *
+   * @param {I18n} pack
+   */
+  public i18n(pack: I18n): void {
     if (isArray(pack.days) && isArray(pack.months)) {
       this.setState({
         i18n: {
@@ -434,5 +451,17 @@ export default class TypePicker {
     }
   }
 
-  public forceUpdate = () => this.render();
+  public forceUpdate = (): void => this.render();
+
+  /**
+   *
+   * @param {Function} next
+   */
+  public onRender = (next: Function): void => subscribe("render", next);
+
+  /**
+   *
+   * @param {Function} next
+   */
+  public onSelect = (next: Function): void => subscribe("select", next);
 }

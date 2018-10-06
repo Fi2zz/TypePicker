@@ -10,7 +10,13 @@ export interface datepicker {
   lastSelectedItemCanBeInvalid?: boolean;
 }
 
-export interface disable {
+export interface I18n {
+  title: string;
+  days: string[];
+  months: string[];
+}
+
+export interface Disable {
   dates?: Array<any>;
   days?: Array<number>;
   to?: Date | string;
@@ -32,8 +38,6 @@ export interface CreateDate {
   position?: string;
   index?: number;
 }
-
-
 
 export interface template {
   data?: Array<any>;
@@ -78,4 +82,14 @@ export interface TemplateDataInterface {
     days: number[];
     dates: string[];
   };
+}
+
+
+
+export interface DateTag {
+  className: string;
+  value: string | undefined;
+  disabled: boolean | undefined;
+  day: number;
+  date: number;
 }

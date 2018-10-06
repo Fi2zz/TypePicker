@@ -7,6 +7,7 @@ import {
   TagData
 } from "./datepicker.interface";
 import { isDate, padding, isArray, isDef } from "./util";
+
 /**
  *
  * @param start
@@ -68,10 +69,14 @@ export function getViews(view: number | string) {
   }
 }
 
+/**
+ *
+ * @param type
+ * @returns {(index, ...other) => string}
+ */
 export function cellElementClassName(type) {
   return (index, ...other) => {
     let names = ["calendar-cell"];
-
     names.push(`calendar-${type}-cell`);
 
     if (index === 0) {
@@ -86,6 +91,11 @@ export function cellElementClassName(type) {
   };
 }
 
+/**
+ *
+ * @param views
+ * @returns {string}
+ */
 export function elementClassName(views) {
   let classes = ["calendar"];
 
@@ -98,19 +108,6 @@ export function elementClassName(views) {
   }
 
   return classes.join("  ");
-}
-
-/**
- *
- * @param el
- * @returns {any}
- */
-export function parseEl(el: any) {
-  if (!el) {
-    return null;
-  }
-
-  return typeof el === "string" ? document.querySelector(el) : el;
 }
 
 /**
@@ -420,9 +417,6 @@ function tagData(options: TagData = {}) {
 export const formatParse = dateFormat => date =>
   format(parse(date, dateFormat), dateFormat);
 
-export const parseFormat = dateFormat => date =>
-  parse(format(date, dateFormat), dateFormat);
-
 /**
  *
  * @param {Date} date
@@ -430,7 +424,7 @@ export const parseFormat = dateFormat => date =>
  * @param end
  * @returns {(size) => (next) => void}
  */
-export const changeMonth = (date: Date, start, end) =>next=> size  => {
+export const changeMonth = (date: Date, start, end) => next => size => {
   const now = new Date(
     date.getFullYear(),
     date.getMonth() + size,
