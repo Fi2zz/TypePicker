@@ -195,9 +195,9 @@ legacy way
     });
 
 
-	//use `setDates` to set init dates to DatePicker instance
-	//`setDates` accept an array which type can be string and Date.
-	//as type string, dates' format must be the same as TypePicker's date format
+    //use `setDates` to set init dates to DatePicker instance
+    //`setDates` accept an array which type can be string and Date.
+    //as type string, dates' format must be the same as TypePicker's date format
     app.setDates(["2018-2-21",new Date()]);
     
     // use `disable` to set specified date or day to disabled,
