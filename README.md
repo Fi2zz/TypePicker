@@ -195,18 +195,17 @@ legacy way
     });
 
 
-		//use `setDates` to set init dates to DatePicker instance
-		//`setDates` accept an array which type can be string and Date.
-		//as type string, dates' format must be the same as TypePicker's date format
+	//use `setDates` to set init dates to DatePicker instance
+	//`setDates` accept an array which type can be string and Date.
+	//as type string, dates' format must be the same as TypePicker's date format
     app.setDates(["2018-2-21",new Date()]);
-       // use `disable` to set specified date or day to disabled,
-       // `disable ` accept an object => {dates,days,from,to},
-       // dates<Array<any>>,accept <Date> and  <string>
-       // days<Array<number>>,accept 0,1,2,3,4,5,6
-       // from<Date|string>,as type string,who's format must be the same as TypePicker's date format
-       // to<Date|string> ,as type string,who's format must be the same as TypePicker's date format
-   
-
+    
+    // use `disable` to set specified date or day to disabled,
+    // `disable ` accept an object => {dates,days,from,to},
+    // dates<Array<any>>,accept <Date> and  <string>
+    // days<Array<number>>,accept 0,1,2,3,4,5,6
+    // from<Date|string>,as type string,who's format must be the same as TypePicker's date format
+    // to<Date|string> ,as type string,who's format must be the same as TypePicker's date format
     app.disable({
             dates: [
                 "2018-2-18",
@@ -218,12 +217,14 @@ legacy way
             from:new Date(2018,2,10)
             to:'2018-7-15'
     });
-    //set DatePicker's language
+    
+    //TypePicker i18n
     app.i18n({
             days:["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
             months:["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
             title:"YYYY MM"
     })
+    
     //to re-render TypePicker DOMs outside the instance, use `forceUpdate`
     app.forceUpdate()
     
