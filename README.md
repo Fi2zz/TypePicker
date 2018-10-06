@@ -55,11 +55,15 @@ DatePicker build with typescript
 ## API
 
 ```typescript
-   public setDates([dates]:tuple);
+   public setDates(dates:tuple);
    //Set  dates to DatePicker
    //dates accept <string> and <Date>
    //the datepicker i18n
-   public i18n(language:any);
+   public i18n({
+                days:Array<number>,
+                months:Array<string>,
+                title:<string>
+            });
 
    public disable({
         days?:Array<number>,
@@ -76,14 +80,14 @@ DatePicker build with typescript
    //        eg: to =2018-3-4 => all dates before 2018-3-5 will be disabled
 
    public forceUpdate()
-   //trigger rerender outside TypePicker instance
+   //trigger re-render TypePicker outside TypePicker instance
 
    public onSelect(fn:Function);
    //trigger when date picked
 
    public onRender(fn:Function);
-
    //trigger when TypePicker render
+
 ```
 
 ## USAGE
