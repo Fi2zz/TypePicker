@@ -221,18 +221,16 @@ export default class TypePicker {
     const nodeList = dom(".calendar-cell");
     const prevActionDOM = dom(".calendar-action-prev");
     const nextActionDOM = dom(".calendar-action-next");
-    const update = changeMonth(date, startDate, endDate)(
-      this.setState.bind(this)
-    );
+    const update = changeMonth(date, startDate, endDate);
 
     if (prevActionDOM && nextActionDOM) {
       prevActionDOM.addEventListener("click", e => {
         e.preventDefault();
-        !reachStart && update(-1);
+        !reachStart && this.setState(update(-1));
       });
       nextActionDOM.addEventListener("click", e => {
         e.preventDefault();
-        !reachEnd && update(1);
+        !reachEnd && this.setState(update(1));
       });
     }
 

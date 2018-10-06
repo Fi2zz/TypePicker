@@ -71,24 +71,21 @@ export function getViews(view: number | string) {
 
 /**
  *
- * @param type
- * @returns {(index, ...other) => string}
+ * @param {number} index
+ * @param other
+ * @returns {string}
  */
-export function cellElementClassName(type) {
-  return (index, ...other) => {
-    let names = ["calendar-cell"];
-    names.push(`calendar-${type}-cell`);
-
-    if (index === 0) {
-      names.push("calendar-cell-weekday");
-    } else if (index === 6) {
-      names.push("calendar-cell-weekend");
-    }
-    if (other) {
-      names.push(...other);
-    }
-    return names.join(" ");
-  };
+export function cellElementClassName(index: number, ...other) {
+  let names = ["calendar-cell"];
+  if (index === 0) {
+    names.push("is-weekday");
+  } else if (index === 6) {
+    names.push("is-weekend");
+  }
+  if (other) {
+    names.push(...other);
+  }
+  return names.join(" ");
 }
 
 /**
@@ -424,7 +421,7 @@ export const formatParse = dateFormat => date =>
  * @param end
  * @returns {(size) => (next) => void}
  */
-export const changeMonth = (date: Date, start, end) => next => size => {
+export const changeMonth = (date: Date, start, end) => size => {
   const now = new Date(
     date.getFullYear(),
     date.getMonth() + size,
@@ -440,11 +437,12 @@ export const changeMonth = (date: Date, start, end) => next => size => {
     reachEnd = false;
     reachStart = false;
   }
-  next({
+
+  return {
     reachEnd,
     reachStart,
     date: now
-  });
+  };
 };
 
 /**

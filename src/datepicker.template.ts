@@ -1,6 +1,5 @@
 import { DateTag } from "./datepicker.interface";
 import { tag, join, cellElementClassName } from "./datepicker.helpers";
-
 import { isNotEmpty } from "./util";
 
 /**
@@ -12,16 +11,15 @@ import { isNotEmpty } from "./util";
 
 function createActionView(reachStart: boolean, reachEnd: boolean) {
   const node = (type, disabled) => {
-    let className = ["calendar-action", `calendar-action-${type}`];
+    const className = ["calendar-action", type];
     if (disabled) {
-      className.push("disabled", "calendar-action-disabled");
+      className.push("disabled");
     }
     return tag({
-      tag: "a",
+      tag: "div",
       props: {
-        className: className.join(" "),
-        href: "javascripts:;",
-        children: tag({ tag: "span", props: { children: type } })
+        className: join(className, " "),
+        children: [type]
       }
     });
   };
@@ -34,14 +32,19 @@ function createActionView(reachStart: boolean, reachEnd: boolean) {
  * @returns {string}
  */
 function createDateTag(data: DateTag) {
-  const dateTag = tag({
-    tag: "div",
-    props: {
-      className: "date",
-      children: data.date
-    }
-  });
-  const nodeChildren = [dateTag];
+  const nodeChildren = [];
+  if (isNotEmpty(data.date)) {
+    nodeChildren.push(
+      tag({
+        tag: "div",
+        props: {
+          className: "date",
+          children: data.date
+        }
+      })
+    );
+  }
+
   if (data.value) {
     nodeChildren.push(
       tag({
@@ -52,15 +55,21 @@ function createDateTag(data: DateTag) {
       })
     );
   }
+
+  const props = {
+    className: cellElementClassName(data.day, data.className),
+    "data-disabled": data.disabled,
+    children: nodeChildren
+  };
+  if (isNotEmpty(data.value)) {
+    props["data-date"] = data.value;
+  }
+  if (isNotEmpty(data.day)) {
+    props["data-day"] = data.day;
+  }
   return tag({
     tag: "div",
-    props: {
-      className: `${cellElementClassName("date")(data.day, data.className)}`,
-      "data-day": data.day,
-      "data-date": data.value ? data.value : "",
-      "data-disabled": data.disabled,
-      children: nodeChildren
-    }
+    props
   });
 }
 
@@ -154,7 +163,7 @@ const createWeekViewMapper = (day: string, index: number) =>
   tag({
     tag: "div",
     props: {
-      className: cellElementClassName("day")(index),
+      className: cellElementClassName(index),
       children: day
     }
   });

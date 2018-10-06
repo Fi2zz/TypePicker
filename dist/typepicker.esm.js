@@ -1,5 +1,5 @@
 /*
-*  TypePicker v5.0.0
+*  TypePicker v5.1.0
 *  Fi2zz / wenjingbiao@outlook.com
 *  https://github.com/Fi2zz/datepicker
 *  (c) 2017-2018, wenjingbiao@outlook.com
@@ -141,25 +141,22 @@ function getViews(view) {
         }
     }
 }
-function cellElementClassName(type) {
-    return function (index) {
-        var other = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            other[_i - 1] = arguments[_i];
-        }
-        var names = ["calendar-cell"];
-        names.push("calendar-" + type + "-cell");
-        if (index === 0) {
-            names.push("calendar-cell-weekday");
-        }
-        else if (index === 6) {
-            names.push("calendar-cell-weekend");
-        }
-        if (other) {
-            names.push.apply(names, other);
-        }
-        return names.join(" ");
-    };
+function cellElementClassName(index) {
+    var other = [];
+    for (var _i = 1; _i < arguments.length; _i++) {
+        other[_i - 1] = arguments[_i];
+    }
+    var names = ["calendar-cell"];
+    if (index === 0) {
+        names.push("is-weekday");
+    }
+    else if (index === 6) {
+        names.push("is-weekend");
+    }
+    if (other) {
+        names.push.apply(names, other);
+    }
+    return names.join(" ");
 }
 function elementClassName(views) {
     var classes = ["calendar"];
@@ -421,7 +418,7 @@ function tagData(options) {
 var formatParse = function (dateFormat) { return function (date) {
     return format(parse(date, dateFormat), dateFormat);
 }; };
-var changeMonth = function (date, start, end) { return function (next) { return function (size) {
+var changeMonth = function (date, start, end) { return function (size) {
     var now = new Date(date.getFullYear(), date.getMonth() + size, date.getDate());
     var endGap = end ? diff(end, now) : 1;
     var startGap = end ? diff(now, start) : 2;
@@ -431,12 +428,12 @@ var changeMonth = function (date, start, end) { return function (next) { return 
         reachEnd = false;
         reachStart = false;
     }
-    next({
+    return {
         reachEnd: reachEnd,
         reachStart: reachStart,
         date: now
-    });
-}; }; };
+    };
+}; };
 var between = function (start, end, dateFormat) {
     start = parse(start, dateFormat);
     end = parse(end, dateFormat);
@@ -642,30 +639,31 @@ var Queue = (function () {
 
 function createActionView(reachStart, reachEnd) {
     var node = function (type, disabled) {
-        var className = ["calendar-action", "calendar-action-" + type];
+        var className = ["calendar-action", type];
         if (disabled) {
-            className.push("disabled", "calendar-action-disabled");
+            className.push("disabled");
         }
         return tag({
-            tag: "a",
+            tag: "div",
             props: {
-                className: className.join(" "),
-                href: "javascripts:;",
-                children: tag({ tag: "span", props: { children: type } })
+                className: join(className, " "),
+                children: [type]
             }
         });
     };
     return [node("prev", reachStart), node("next", reachEnd)];
 }
 function createDateTag(data) {
-    var dateTag = tag({
-        tag: "div",
-        props: {
-            className: "date",
-            children: data.date
-        }
-    });
-    var nodeChildren = [dateTag];
+    var nodeChildren = [];
+    if (isNotEmpty(data.date)) {
+        nodeChildren.push(tag({
+            tag: "div",
+            props: {
+                className: "date",
+                children: data.date
+            }
+        }));
+    }
     if (data.value) {
         nodeChildren.push(tag({
             tag: "div",
@@ -674,15 +672,20 @@ function createDateTag(data) {
             }
         }));
     }
+    var props = {
+        className: cellElementClassName(data.day, data.className),
+        "data-disabled": data.disabled,
+        children: nodeChildren
+    };
+    if (isNotEmpty(data.value)) {
+        props["data-date"] = data.value;
+    }
+    if (isNotEmpty(data.day)) {
+        props["data-day"] = data.day;
+    }
     return tag({
         tag: "div",
-        props: {
-            className: "" + cellElementClassName("date")(data.day, data.className),
-            "data-day": data.day,
-            "data-date": data.value ? data.value : "",
-            "data-disabled": data.disabled,
-            children: nodeChildren
-        }
+        props: props
     });
 }
 var headView = function (year, month, title) {
@@ -741,7 +744,7 @@ var createWeekViewMapper = function (day, index) {
     return tag({
         tag: "div",
         props: {
-            className: cellElementClassName("day")(index),
+            className: cellElementClassName(index),
             children: day
         }
     });
@@ -914,15 +917,15 @@ var TypePicker = (function () {
         var nodeList = dom(".calendar-cell");
         var prevActionDOM = dom(".calendar-action-prev");
         var nextActionDOM = dom(".calendar-action-next");
-        var update = changeMonth(date, startDate, endDate)(this.setState.bind(this));
+        var update = changeMonth(date, startDate, endDate);
         if (prevActionDOM && nextActionDOM) {
             prevActionDOM.addEventListener("click", function (e) {
                 e.preventDefault();
-                !reachStart && update(-1);
+                !reachStart && _this.setState(update(-1));
             });
             nextActionDOM.addEventListener("click", function (e) {
                 e.preventDefault();
-                !reachEnd && update(1);
+                !reachEnd && _this.setState(update(1));
             });
         }
         publish("render", nodeList);

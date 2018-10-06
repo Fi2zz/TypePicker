@@ -24,10 +24,10 @@ brand-disabled = #ccc
       outline: none
     &.disabled
       color brand-disabled
-    &-prev
+    &.prev
       left 0
       float: left
-    &-next
+    &.next
       right 0
       float: right
   .calendar-action-bar
@@ -40,23 +40,28 @@ brand-disabled = #ccc
   .calendar-body, .calendar-day
     font-size: 0
     text-align: left
+    .calendar-cell
+      font-size: 14px
+      width (100 / 7) * 1%
+      display: inline-block
+      vertical-align: top
+
+
   .calendar-day
     position: relative
     height: 44px
-    &-cell
+    .calendar-cell
       height: 44px
       line-height 44px
       text-align: center
-  .calendar-cell
-    font-size: 14px
-    width (100 / 7) * 1%
-    display: inline-block
-    vertical-align: top
-  .calendar-date-cell
-    min-height: 64px
-    height 2rem
-    text-align: center
-    position: relative
+
+
+  .calendar-body
+    .calendar-cell
+      min-height: 64px
+      height 2rem
+      text-align: center
+      position: relative
     .date
       padding-left: 4px
       padding-top: 4px
@@ -73,16 +78,16 @@ brand-disabled = #ccc
       text-align: center
       padding-right: 4px
 
-    &:not(:empty)
+    .calendar-cell:not(:empty)
       cursor pointer
-    & ~ &.disabled
+    .calendar-cell ~ .calendar-cell.disabled
       cursor pointer
-    &.disabled
+    .calendar-cell.disabled
       color lighten(brand-disabled, 20%)
       cursor default
-    &.in-range
+    .calendar-cell.in-range
       background #eee
-    &.active
+    .calendar-cell.active
       position: relative
       color brand-default
       background brand
@@ -124,38 +129,3 @@ brand-disabled = #ccc
       cursor pointer
       display: inline-block
       padding 0 8px
-  .calendar-main
-    padding-top: 44px
-
-.extra-panel
-  position: absolute
-  top: 0
-  left: 0
-  bottom: 0
-  background-color #fff
-  right: 0
-  z-index: 100
-  h3
-      padding-left: 16px
-      cursor pointer
-  .extra-item
-      display: inline-block
-      vertical-align: top
-      width (100 / 4) * 1%
-      text-align: center
-      height (100 / 3) * 1%
-      position: relative
-      cursor pointer
-      font-size 16px
-      &.active
-        background-color brand
-        color brand-default
-      span
-        position: absolute
-        transform translate(-50%, -50%)
-        top: 50%
-        left: 50%
-
-.no-data
-  .calendar-title
-    cursor pointer

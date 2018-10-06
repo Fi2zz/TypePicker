@@ -25,7 +25,7 @@ const options = {
   limit: 10,
   format: "YYYY-M-D",
   selection: 2,
-  views: 1,
+  views: 2,
   lastSelectedItemCanBeInvalid: true
 };
 
@@ -74,8 +74,8 @@ app.disable({
     "2018-10-1",
     "2018-10-2"
   ],
-  from: new Date(2018, 10, 1),
-  to: new Date(2018, 7, 15),
+  // from: new Date(2018, 10, 1),
+  // to: new Date(2018, 7, 15),
   days: [4, 5]
 });
 app.setDates([
