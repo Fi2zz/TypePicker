@@ -172,7 +172,7 @@ DatePicker build with typescript
     app.disable(disabled);
     //set DatePicker's language
     app.i18n({
-            week:["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+            days:["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
             months:["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
             title:"YYYY MM"
     })
