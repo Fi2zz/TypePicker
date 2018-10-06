@@ -1,10 +1,5 @@
-import { diff, parse } from "./datepicker.helpers";
-
-interface q {
-  size: number;
-  limit: boolean | number;
-  dateFormat;
-}
+import { diff } from "./datepicker.helpers";
+import { QueueInterface } from "./datepicker.interface";
 
 /**
  *
@@ -16,15 +11,16 @@ function copy(v: any) {
 }
 
 export class Queue {
-  constructor({ size, limit, dateFormat }: q) {
+  constructor(interfaces: QueueInterface) {
+    const { size, limit, parse } = interfaces;
     this.size = size;
     this.limit = limit;
-    this.format = dateFormat;
+    this.parse = parse;
   }
 
   size = 1;
   limit: boolean | number = 1;
-  format = "";
+  parse = null;
 
   /**
    *
@@ -33,8 +29,8 @@ export class Queue {
    */
   enqueue = (date: string) => (next?: Function | undefined): void => {
     let front = this.front();
-    let now = parse(date, this.format);
-    let prev = parse(front, this.format);
+    let now = this.parse(date);
+    let prev = this.parse(front);
     if (this.limit) {
       if (prev >= now || diff(now, prev, "days", true) > this.limit) {
         this.empty();

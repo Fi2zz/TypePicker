@@ -1,5 +1,5 @@
 /*
-*  TypePicker v5.3.0
+*  TypePicker v5.4.0
 *  Fi2zz / wenjingbiao@outlook.com
 *  https://github.com/Fi2zz/datepicker
 *  (c) 2017-2018, wenjingbiao@outlook.com
@@ -355,16 +355,15 @@ function copy(v) {
     return JSON.parse(JSON.stringify(v));
 }
 var Queue = (function () {
-    function Queue(_a) {
-        var size = _a.size, limit = _a.limit, dateFormat = _a.dateFormat;
+    function Queue(interfaces) {
         var _this = this;
         this.size = 1;
         this.limit = 1;
-        this.format = "";
+        this.parse = null;
         this.enqueue = function (date) { return function (next) {
             var front = _this.front();
-            var now = parse(date, _this.format);
-            var prev = parse(front, _this.format);
+            var now = _this.parse(date);
+            var prev = _this.parse(front);
             if (_this.limit) {
                 if (prev >= now || diff(now, prev, "days", true) > _this.limit) {
                     _this.empty();
@@ -380,9 +379,10 @@ var Queue = (function () {
             _this.reset(next);
         }; };
         this.list = [];
+        var size = interfaces.size, limit = interfaces.limit, parse$$1 = interfaces.parse;
         this.size = size;
         this.limit = limit;
-        this.format = dateFormat;
+        this.parse = parse$$1;
     }
     Queue.prototype.reset = function (next) {
         if (this.list.length > this.size) {
@@ -461,7 +461,7 @@ var DOMHelpers = {
         return null;
     },
     attr: function (el, attr) { return el.getAttribute(attr); },
-    class: {
+    "class": {
         cell: function (index) {
             var other = [];
             for (var _i = 1; _i < arguments.length; _i++) {
@@ -477,7 +477,7 @@ var DOMHelpers = {
             if (other) {
                 names.push.apply(names, other);
             }
-            return names.join(" ");
+            return names.join(" ").trim();
         },
         container: function (views) {
             var classes = ["calendar"];
@@ -490,7 +490,7 @@ var DOMHelpers = {
             else {
                 classes.push("calendar-flat-view");
             }
-            return classes.join("  ");
+            return classes.join("  ").trim();
         }
     }
 };
@@ -563,15 +563,14 @@ function createDateTag(data) {
         }));
     }
     var props = {
-        className: DOMHelpers.class.cell(data.day, data.className),
-        "data-disabled": data.disabled,
+        className: DOMHelpers["class"].cell(data.day, data.className),
         children: nodeChildren
     };
+    if (isNotEmpty(data.disabled) && data.disabled !== false) {
+        props["data-disabled"] = data.disabled;
+    }
     if (isNotEmpty(data.value)) {
         props["data-date"] = data.value;
-    }
-    if (isNotEmpty(data.day)) {
-        props["data-day"] = data.day;
     }
     return tag({
         tag: "div",
@@ -634,7 +633,7 @@ var createWeekViewMapper = function (day, index) {
     return tag({
         tag: "div",
         props: {
-            className: DOMHelpers.class.cell(index),
+            className: DOMHelpers["class"].cell(index),
             children: day
         }
     });
@@ -905,11 +904,11 @@ var TypePicker = (function () {
             state.lastSelectedItemCanBeInvalid = false;
         }
         this.element = el;
-        this.element.className = DOMHelpers.class.container(state.views);
+        this.element.className = DOMHelpers["class"].container(state.views);
         queue = new Queue({
             size: state.selection,
             limit: state.limit,
-            dateFormat: state.dateFormat
+            parse: function (date) { return parse(date, state.dateFormat); }
         });
         this.setState(state);
     }
@@ -957,7 +956,7 @@ var TypePicker = (function () {
                 !type && _this.setState(changeMonth(date, startDate, endDate)(size));
             }; }; };
             prevActionDOM.addEventListener("click", actionHandler(reachStart)(-1));
-            nextActionDOM.addEventListener("click", actionHandler(reachEnd)(-1));
+            nextActionDOM.addEventListener("click", actionHandler(reachEnd)(1));
         }
         var _loop_1 = function (i) {
             var node = nodeList[i];

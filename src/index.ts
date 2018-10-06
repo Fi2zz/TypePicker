@@ -92,7 +92,7 @@ export default class TypePicker {
     queue = new Queue({
       size: state.selection,
       limit: state.limit,
-      dateFormat: state.dateFormat
+      parse: date => parse(date, state.dateFormat)
     });
 
     this.setState(state);
@@ -190,7 +190,7 @@ export default class TypePicker {
         !type && this.setState(changeMonth(date, startDate, endDate)(size));
       };
       prevActionDOM.addEventListener("click", actionHandler(reachStart)(-1));
-      nextActionDOM.addEventListener("click", actionHandler(reachEnd)(-1));
+      nextActionDOM.addEventListener("click", actionHandler(reachEnd)(1));
     }
 
     for (let i = 0; i < nodeList.length; i++) {

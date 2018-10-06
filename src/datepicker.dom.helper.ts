@@ -42,7 +42,7 @@ export const DOMHelpers = {
       if (other) {
         names.push(...other);
       }
-      return names.join(" ");
+      return names.join(" ").trim();
     },
     container(views) {
       let classes = ["calendar"];
@@ -55,7 +55,7 @@ export const DOMHelpers = {
         classes.push("calendar-flat-view");
       }
 
-      return classes.join("  ");
+      return classes.join("  ").trim();
     }
   }
 };

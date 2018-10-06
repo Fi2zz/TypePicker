@@ -1,12 +1,13 @@
-# TypePicker
+# TypePicker 
+
+##### uh! naming project is the most difficult thing of the world
+ 
 
 DatePicker build with typescript
 
 
-<a href="./react/index.js"> react version</a> 
 
-
-<a href="./vue/index.vue"> vue version </a>
+<a href="./react/index.js"> react version</a> <a href="./vue/index.vue"> vue version </a>
 
 
 
@@ -32,9 +33,9 @@ DatePicker build with typescript
 
 ## FEATURES
 
-1.  Easy to display data on html element by using `render` event
+1.  Easy to display data on html element by using `onRender`
 2.  Support double views,flat view and single view
-3.  Support Multi selection
+3.  Support multi selection
 
 ## RUN DEMO
 
@@ -42,19 +43,28 @@ DatePicker build with typescript
 
 ## OPTIONS
 
-| OPTION    | REQUIRED | TYPE               | DESC                                   | Default Value/Possible Value |
+| OPTION    | REQUIRED | TYPE               | DESC                                   | Default /Possible Value |
 | --------- | -------- | ------------------ | -------------------------------------- | ---------------------------- |
 | el        | YES      | string,HTMLElement | Element or selector to mount DatePcker |                              |
-| format    | YES      | string             | Date string format                     | null                         |
+| format    | YES      | string             | Date string format                     | YYYY-MM-DD                         |
 | startDate | NO       | Date               | Start date of DatePicker               | new Date                     |
 | endDate   | NO       | Date               | End date of DatePicker                 | null                         |
-| limit     | NO       | number             | bolean                                 | Limitation between two dates | 1 |
+| limit     | NO       | number, bolean                                 | Limitation between two dates | 1 |
 | views     | NO       | number,string      | Display views of DatePicker            | auto,1,2                     |
 | selection | NO       | number             | Size of dates can be picked            | 1                            |
+
+
+```
+NOTE
+
+`limit` option only works when `selection` option's value is 2
+
+```
 
 ## API
 
 ```typescript
+
    public setDates(dates:tuple);
    //Set  dates to DatePicker
    //dates accept <string> and <Date>
@@ -86,19 +96,49 @@ DatePicker build with typescript
    //trigger when date picked
 
    public onRender(fn:Function);
-   //trigger when TypePicker render
+   //trigger every time TypePicker render
+
 
 ```
 
-## USAGE
+## HOW TO USE
+
+use build tools,like webpack
+
+if you're using typescript
 
 ```typescript
-    //use build tools
-    import TypePicker from '/dist/datepicker.esm.js'
-    import '/dist/style.css'
-    //not use build tools
-    <script src="/dist/datepicker.min.js"></script>
+	
+	import TypePicker from './src/index.ts'
+
+
+```
+
+
+or if you are using javascript
+
+```javascript
+
+	//import js file
+	import TypePicker from '/dist/datepicker.esm.js'
+	//import css file
+	import '/dist/style.css'
+
+
+```
+
+legacy way
+
+```html
+
+    <script src="/dist/datepicker.js"></script>
     <link  href="/dist/style.css" rel="stylesheet"/>
+    
+``` 
+
+
+
+```typescript
 
 
 
@@ -112,6 +152,7 @@ DatePicker build with typescript
     const from = new Date(dist.year, dist.month, dist.date)
     const to = new Date(dist.year, dist.month + 9, 0);
     const currDate = new Date(dist.year, dist.month, dist.date);
+    
     //setup typePicker instance
     const app = new TypePicker({
             el: document.getElementById("datepicker"),
@@ -124,6 +165,8 @@ DatePicker build with typescript
         });
 
 
+    //get nodes list from  TypePicker instance.
+    //use `onRender`,you could put your data to DOMs outside TypePicker instance 
     app.onRender(nodeList => {
 
 
@@ -131,13 +174,10 @@ DatePicker build with typescript
             let node = nodeList[i];
             let date = node.getAttribute("data-date");
             let disable =node.getAttribute('data-disabled');
-
-
+			
             if(disable){
                 disable =JSON.parse(disable)
             }
-
-
             let data =YOUR_SOURCE_WHATEVER_YOU_LIKE[date];
             //render your value to datepicker
             if(data&& !disable){
@@ -147,22 +187,27 @@ DatePicker build with typescript
         }
     });
 
-    //`select` event fired by click on date cell and DatePicker init
+    //get selected dates from TypePicker instance
     app.onSelect(value => {
         // place your logic  here
         //eg:
         // document.getElementById("dates").innerText = value
     });
 
-    //tuple type,accept <string> and <Date>
-    const selected=["2018-2-21",new Date()];
-       //use `setDates` to set init dates to DatePicker instance
-    app.setDates(selected);
-       // use `setDisabled` to set specified date or day to disabled,
-       // `setDisabled` accept an object => {dates,days},
-       // <tuple>dates,accept <Date> and  <string>
-       // <Array<number>>days accept 0,1,2,3,4,5,6
-    const disabled ={
+
+		//use `setDates` to set init dates to DatePicker instance
+		//`setDates` accept an array which type can be string and Date.
+		//as type string, dates' format must be the same as TypePicker's date format
+    app.setDates(["2018-2-21",new Date()]);
+       // use `disable` to set specified date or day to disabled,
+       // `disable ` accept an object => {dates,days,from,to},
+       // dates<Array<any>>,accept <Date> and  <string>
+       // days<Array<number>>,accept 0,1,2,3,4,5,6
+       // from<Date|string>,as type string,who's format must be the same as TypePicker's date format
+       // to<Date|string> ,as type string,who's format must be the same as TypePicker's date format
+   
+
+    app.disable({
             dates: [
                 "2018-2-18",
                 "2018-2-19",
@@ -172,14 +217,15 @@ DatePicker build with typescript
             days: [1, 5, 2, 6],
             from:new Date(2018,2,10)
             to:'2018-7-15'
-    }
-    app.disable(disabled);
+    });
     //set DatePicker's language
     app.i18n({
             days:["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
             months:["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
             title:"YYYY MM"
     })
-    // if data changed ,you could use app.update() to rerender datepicker
+    //to re-render TypePicker DOMs outside the instance, use `forceUpdate`
     app.forceUpdate()
+    
+    
 ```

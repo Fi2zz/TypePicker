@@ -98,14 +98,14 @@ function createDateTag(data: DateTag) {
 
   const props = {
     className: DOMHelpers.class.cell(data.day, data.className),
-    "data-disabled": data.disabled,
     children: nodeChildren
   };
+
+  if (isNotEmpty(data.disabled) && data.disabled !== false) {
+    props["data-disabled"] = data.disabled;
+  }
   if (isNotEmpty(data.value)) {
     props["data-date"] = data.value;
-  }
-  if (isNotEmpty(data.day)) {
-    props["data-day"] = data.day;
   }
   return tag({
     tag: "div",
