@@ -108,39 +108,29 @@ use build tools,like webpack
 if you're using typescript
 
 ```typescript
-	
-	import TypePicker from './src/index.ts'
-
-
+import TypePicker from './src/index.ts'
 ```
 
 
 or if you are using javascript
 
 ```javascript
-
-	//import js file
-	import TypePicker from '/dist/datepicker.esm.js'
-	//import css file
-	import '/dist/style.css'
-
-
+//import js file
+import TypePicker from '/dist/datepicker.esm.js'
+//import css file
+import '/dist/style.css'
 ```
 
 legacy way
 
 ```html
-
-    <script src="/dist/datepicker.js"></script>
-    <link  href="/dist/style.css" rel="stylesheet"/>
-    
+<script src="/dist/datepicker.js"></script>
+<link  href="/dist/style.css" rel="stylesheet"/>
 ``` 
 
 
 
 ```typescript
-
-
 
     const date = new Date();
     const dist = {
