@@ -217,6 +217,5 @@ app.i18n({
 
 //to re-render TypePicker DOMs outside the instance, use `forceUpdate`
 app.forceUpdate()
-
-    
+ 
 ```
