@@ -132,91 +132,91 @@ legacy way
 
 ```typescript
 
-    const date = new Date();
-    const dist = {
-           year: date.getFullYear(),
-           month: date.getMonth(),
-           date: date.getDate()
-    };
+const date = new Date();
+const dist = {
+   year: date.getFullYear(),
+   month: date.getMonth(),
+   date: date.getDate()
+};
 
-    const from = new Date(dist.year, dist.month, dist.date)
-    const to = new Date(dist.year, dist.month + 9, 0);
-    const currDate = new Date(dist.year, dist.month, dist.date);
-    
-    //setup typePicker instance
-    const app = new TypePicker({
-            el: document.getElementById("datepicker"),
-            endDate:to,
-            startDate:from,
-            limit: 7,
-            format: 'YYYY-M-D',
-            views: 1,
-            selection:4
-        });
+const from = new Date(dist.year, dist.month, dist.date)
+const to = new Date(dist.year, dist.month + 9, 0);
+const currDate = new Date(dist.year, dist.month, dist.date);
 
-
-    //get nodes list from  TypePicker instance.
-    //use `onRender`,you could put your data to DOMs outside TypePicker instance 
-    app.onRender(nodeList => {
+//setup typePicker instance
+const app = new TypePicker({
+    el: document.getElementById("datepicker"),
+    endDate:to,
+    startDate:from,
+    limit: 7,
+    format: 'YYYY-M-D',
+    views: 1,
+    selection:4
+});
 
 
-        for (let i = 0; i < nodeList.length; i++) {
-            let node = nodeList[i];
-            let date = node.getAttribute("data-date");
-            let disable =node.getAttribute('data-disabled');
-			
-            if(disable){
-                disable =JSON.parse(disable)
-            }
-            let data =YOUR_SOURCE_WHATEVER_YOU_LIKE[date];
-            //render your value to datepicker
-            if(data&& !disable){
-                node.querySelector(".placeholder").innerText = data.value;
-            }
-
-        }
-    });
-
-    //get selected dates from TypePicker instance
-    app.onSelect(value => {
-        // place your logic  here
-        //eg:
-        // document.getElementById("dates").innerText = value
-    });
+//get nodes list from  TypePicker instance.
+//use `onRender`,you could put your data to DOMs outside TypePicker instance 
+app.onRender(nodeList => {
 
 
-    //use `setDates` to set init dates to DatePicker instance
-    //`setDates` accept an array which type can be string and Date.
-    //as type string, dates' format must be the same as TypePicker's date format
-    app.setDates(["2018-2-21",new Date()]);
-    
-    // use `disable` to set specified date or day to disabled,
-    // `disable ` accept an object => {dates,days,from,to},
-    // dates<Array<any>>,accept <Date> and  <string>
-    // days<Array<number>>,accept 0,1,2,3,4,5,6
-    // from<Date|string>,as type string,who's format must be the same as TypePicker's date format
-    // to<Date|string> ,as type string,who's format must be the same as TypePicker's date format
-    app.disable({
-            dates: [
-                "2018-2-18",
-                "2018-2-19",
-                "2018-2-22",
-                new Date
-            ],
-            days: [1, 5, 2, 6],
-            from:new Date(2018,2,10)
-            to:'2018-7-15'
-    });
-    
-    //TypePicker i18n
-    app.i18n({
-            days:["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
-            months:["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-            title:"YYYY MM"
-    })
-    
-    //to re-render TypePicker DOMs outside the instance, use `forceUpdate`
-    app.forceUpdate()
-    
+for (let i = 0; i < nodeList.length; i++) {
+    let node = nodeList[i];
+    let date = node.getAttribute("data-date");
+    let disable =node.getAttribute('data-disabled');
+
+    if(disable){
+	disable =JSON.parse(disable)
+    }
+    let data =YOUR_SOURCE_WHATEVER_YOU_LIKE[date];
+    //render your value to datepicker
+    if(data&& !disable){
+	node.querySelector(".placeholder").innerText = data.value;
+    }
+
+}
+});
+
+//get selected dates from TypePicker instance
+app.onSelect(value => {
+// place your logic  here
+//eg:
+// document.getElementById("dates").innerText = value
+});
+
+
+//use `setDates` to set init dates to DatePicker instance
+//`setDates` accept an array which type can be string and Date.
+//as type string, dates' format must be the same as TypePicker's date format
+app.setDates(["2018-2-21",new Date()]);
+
+// use `disable` to set specified date or day to disabled,
+// `disable ` accept an object => {dates,days,from,to},
+// dates<Array<any>>,accept <Date> and  <string>
+// days<Array<number>>,accept 0,1,2,3,4,5,6
+// from<Date|string>,as type string,who's format must be the same as TypePicker's date format
+// to<Date|string> ,as type string,who's format must be the same as TypePicker's date format
+app.disable({
+    dates: [
+	"2018-2-18",
+	"2018-2-19",
+	"2018-2-22",
+	new Date
+    ],
+    days: [1, 5, 2, 6],
+    from:new Date(2018,2,10)
+    to:'2018-7-15'
+});
+
+//TypePicker i18n
+app.i18n({
+    days:["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    months:["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    title:"YYYY MM"
+})
+
+//to re-render TypePicker DOMs outside the instance, use `forceUpdate`
+app.forceUpdate()
+
     
 ```
