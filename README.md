@@ -103,16 +103,16 @@ NOTE
 
 ## HOW TO USE
 
-use build tools,like webpack
+### use build tools,like webpack
 
-if you're using typescript
+if you're using TypeScript
 
 ```typescript
 import TypePicker from './src/index.ts'
 ```
 
 
-or if you are using javascript
+if you are using JavaScript
 
 ```javascript
 //import js file
@@ -121,14 +121,12 @@ import TypePicker from '/dist/datepicker.esm.js'
 import '/dist/style.css'
 ```
 
-legacy way
+### legacy way
 
 ```html
 <script src="/dist/datepicker.js"></script>
 <link  href="/dist/style.css" rel="stylesheet"/>
 ``` 
-
-
 
 ```typescript
 
