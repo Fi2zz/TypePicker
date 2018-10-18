@@ -31,7 +31,10 @@ const options = {
 
 const app = new TypePicker(options);
 console.log(app);
-app.onSelect((value: string[]) => (input.value = value.join(",")));
+app.onSelect((value: any[]) => {
+  //value contains time and string
+  input.value = value.map(item => `${item.time} ${item.string}`).join("");
+}); //).join(",")));
 app.onRender(nodeList => {
   for (let i = 0; i < nodeList.length; i++) {
     let node = nodeList[i];

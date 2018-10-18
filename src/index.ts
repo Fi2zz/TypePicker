@@ -1,4 +1,4 @@
-import { datepicker, Disable, I18n } from "./datepicker.interface";
+import { datepicker, Disable, I18n, State } from "./datepicker.interface";
 import {
   isDate,
   isArray,
@@ -32,7 +32,7 @@ export default class TypePicker {
     if (!option || !el) {
       return;
     }
-    const state: any = { ...this.state };
+    const state = { ...this.state };
 
     byCondition(isDef)(getViews(option.views))(views => (state.views = views));
     byCondition(v => !isNaN(v))(option.selection)(
@@ -98,7 +98,7 @@ export default class TypePicker {
     this.setState(state);
   }
 
-  private state: any = {
+  private state = {
     selection: <number>1,
     views: <number | string>1,
     date: <Date>new Date(),
@@ -140,12 +140,16 @@ export default class TypePicker {
     } = this.state;
 
     const size = () =>
-      views == 2 ? 1 : views === "auto" ? diff(endDate, startDate) : 0;
+      views == 2
+        ? 1
+        : views === "auto"
+          ? diff(<Date>endDate, <Date>startDate)
+          : 0;
 
     const withRange = selection === 2;
 
-    const withFormat = date => format(date, dateFormat);
-    const withParse = date => parse(date, dateFormat);
+    const withFormat = date => format(date, <string>dateFormat);
+    const withParse = date => parse(date, <string>dateFormat);
 
     const data = new TemplateData({
       date,
@@ -184,7 +188,14 @@ export default class TypePicker {
     //dispatch render event when rendered
     publish("render", nodeList);
     //dispatch select event when rendered
-    publish("select", queue.list);
+
+    let transformed = queue.list.map(item => {
+      return {
+        time: withParse(item) ? withParse(item).getTime() : withParse(item),
+        string: item
+      };
+    });
+    publish("select", transformed);
     if (prevActionDOM && nextActionDOM) {
       const actionHandler = type => size => () => {
         !type && this.setState(changeMonth(date, startDate, endDate)(size));

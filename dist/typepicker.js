@@ -1,5 +1,5 @@
 /*
-*  TypePicker v5.4.0
+*  TypePicker v5.5.0
 *  Fi2zz / wenjingbiao@outlook.com
 *  https://github.com/Fi2zz/datepicker
 *  (c) 2017-2018, wenjingbiao@outlook.com
@@ -924,7 +924,11 @@ var TypePicker = (function () {
         var _this = this;
         var _a = this.state, reachStart = _a.reachStart, reachEnd = _a.reachEnd, views = _a.views, startDate = _a.startDate, endDate = _a.endDate, date = _a.date, dateFormat = _a.dateFormat, selection = _a.selection, i18n = _a.i18n, disableDays = _a.disableDays, disableDates = _a.disableDates;
         var size = function () {
-            return views == 2 ? 1 : views === "auto" ? diff(endDate, startDate) : 0;
+            return views == 2
+                ? 1
+                : views === "auto"
+                    ? diff(endDate, startDate)
+                    : 0;
         };
         var withRange = selection === 2;
         var withFormat = function (date) { return format(date, dateFormat); };
@@ -950,7 +954,13 @@ var TypePicker = (function () {
         var prevActionDOM = select(".calendar-action.prev");
         var nextActionDOM = select(".calendar-action.next");
         publish("render", nodeList);
-        publish("select", queue.list);
+        var transformed = queue.list.map(function (item) {
+            return {
+                time: withParse(item) ? withParse(item).getTime() : withParse(item),
+                string: item
+            };
+        });
+        publish("select", transformed);
         if (prevActionDOM && nextActionDOM) {
             var actionHandler = function (type) { return function (size) { return function () {
                 !type && _this.setState(changeMonth(date, startDate, endDate)(size));
