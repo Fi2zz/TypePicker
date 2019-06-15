@@ -9,8 +9,8 @@ const { startDate, endDate } = (() => {
     month: date.getMonth(),
     date: date.getDate()
   };
-  const startDate = new Date(dist.year, dist.month, dist.date);
-  const endDate = new Date(dist.year, dist.month + 6, dist.date);
+  const startDate = new Date(dist.year, dist.month, 29);
+  const endDate = new Date(dist.year, dist.month + 1, dist.date);
 
   return {
     startDate,
@@ -24,8 +24,8 @@ const options = {
   endDate,
   limit: 10,
   format: "YYYY-M-D",
-  selection: 6,
-  views: 2,
+  selection: 2,
+  views: 'auto',
   lastSelectedItemCanBeInvalid: false
 };
 
@@ -74,13 +74,13 @@ app.disable({
   //   "2018-10-1",
   //   "2018-10-2"
   // ],
-  from: "2018-10-1", // new Date(2018, 10, 1),
-  to: "2019-10-1" //new Date(2019, 7, 15)
+  // from: "2018-10-1", // new Date(2018, 10, 1),
+  // to: "2019-10-1" //new Date(2019, 7, 15)
   // days: [4, 5]
 });
 app.setDates([
   // "2018-9-27",
   // "2018-9-28",
-  "2018-10-7",
-  "2018-10-11"
+  "2019-6-16",
+  // "2019-6-14"
 ]);

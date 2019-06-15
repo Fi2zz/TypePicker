@@ -1,8 +1,8 @@
 /*
-*  TypePicker v5.4.0
+*  TypePicker v5.5.0
 *  Fi2zz / wenjingbiao@outlook.com
 *  https://github.com/Fi2zz/datepicker
-*  (c) 2017-2018, wenjingbiao@outlook.com
+*  (c) 2017-2019, wenjingbiao@outlook.com
 *  MIT License
 */
 (function (global, factory) {
@@ -24,6 +24,7 @@ const __assign = Object.assign || function (target) {
 };
 
 var isUndef = function (v) { return v === undefined || v === null; };
+var isBool = function (v) { return typeof v === "boolean"; };
 var isEmpty = function (v) { return isUndef(v) || v == ""; };
 var padding = function (n) { return "" + (n > 9 ? n : "0" + n); };
 var isNotEmpty = function (v) { return !isEmpty(v); };
@@ -52,6 +53,9 @@ function dedupList(list, condition) {
     }
     return result;
 }
+var yes = function (v) { return v === true; };
+var not = function (v) { return !yes(v); };
+
 function byCondition(condition, when) {
     return function (value) {
         return function (next) {
@@ -65,19 +69,44 @@ function byCondition(condition, when) {
             else {
                 result = condition === when;
             }
-            if (next && typeof next === "function" && result) {
+            if (typeof next === "function" && result) {
                 return next(value);
             }
             return result;
         };
     };
 }
+var equal = function (input) { return function (matched) { return input === matched; }; };
+var condition = byCondition;
 function join(list, split) {
     if (!split) {
         split = "";
     }
     return list.join(split);
 }
+function mapList(input, map, filter) {
+    if (!isArray(input)) {
+        return [];
+    }
+    var list = input.map(function (item, index) { return map(item, index); });
+    if (!filter) {
+        return list;
+    }
+    return list.filter(filter);
+}
+function filterList(list, filter) {
+    return list.filter(filter);
+}
+function sliceList(list, start, end) {
+    return list.slice(start, end);
+}
+var toInt = function (input) { return parseInt(input, 10); };
+var or = function (condition$1, condition$2) { return function (then, otherwise) {
+    condition$1 || condition$2 ? then() : otherwise && otherwise();
+}; };
+var and = function (con$1, con$2) { return function (then, otherwise) {
+    con$1 && con$2 ? then() : otherwise && otherwise();
+}; };
 
 function diff(start, end, type, isAbsolute) {
     if (type === void 0) { type = "month"; }
@@ -143,7 +172,7 @@ function parse(strDate, format) {
             return new Date();
         if (string instanceof Date)
             return string;
-        var split = string.split(/\W/).map(function (item) { return parseInt(item); });
+        var split = string.split(/\W/).map(toInt);
         var date = new Date(split.join(" "));
         if (!date.getTime())
             return null;
@@ -206,7 +235,7 @@ function parse(strDate, format) {
     return ret(strDate, format);
 }
 function createDateFormatValidator(formate) {
-    var sepreator = formate.split(/\w/).filter(function (item) { return !!item; });
+    var separator = formate.split(/\w/).filter(function (item) { return !!item; }).pop();
     var result = formate.split(/\W/).map(function (string, index) {
         var length = string.length;
         if (index === 0) {
@@ -221,15 +250,10 @@ function createDateFormatValidator(formate) {
             }
         }
         else if (index === 2) {
-            if (length === 1) {
-                return "(?:[1-9]?[0-9])";
-            }
-            else if (length === 2) {
-                return "[0-9][1-9]";
-            }
+            return "\\d{1,2}";
         }
     });
-    var regexpString = result.join("\\" + sepreator.pop());
+    var regexpString = result.join("\\" + separator);
     return new RegExp(regexpString);
 }
 function createDate(options) {
@@ -837,7 +861,7 @@ var TemplateData = (function () {
 }());
 
 var queue = null;
-var initSelectedDates = [];
+var selectedDates = [];
 var TypePicker = (function () {
     function TypePicker(option) {
         var _this = this;
@@ -858,24 +882,30 @@ var TypePicker = (function () {
         };
         this.element = null;
         this.forceUpdate = function () { return _this.render(); };
-        this.onRender = function (next) { return subscribe("render", next); };
-        this.onSelect = function (next) { return subscribe("select", next); };
+        this.onRender = function (next) {
+            return subscribe("render", next);
+        };
+        this.onSelect = function (next) {
+            return subscribe("select", next);
+        };
         var el = DOMHelpers.select(option.el);
         if (!option || !el) {
             return;
         }
-        var state = __assign({}, this.state);
-        byCondition(isDef)(getViews(option.views))(function (views) { return (state.views = views); });
-        byCondition(function (v) { return !isNaN(v); })(option.selection)(function (size) { return (state.selection = size); });
-        byCondition(isDef)(option.format)(function (format$$1) { return (state.dateFormat = format$$1); });
-        byCondition(isDate)(option.startDate)(function (startDate) {
+        var state = this.state;
+        condition(isDef)(getViews(option.views))(function (views) { return (state.views = views); });
+        condition(isNaN, false)(option.selection)(function (size) { return (state.selection = size); });
+        condition(isDef)(option.format)(function (format$$1) { return (state.dateFormat = format$$1); });
+        condition(isDate)(option.startDate)(function (startDate) {
             state.startDate = startDate;
             state.reachStart = true;
             state.date = startDate;
         });
-        byCondition(isDate)(option.endDate)(function (endDate) { return (state.endDate = endDate); });
-        byCondition(function (v) { return isDef(v) && (!isNaN(v) || v === false); })(option.limit)(function (limit) { return (state.limit = limit); });
-        byCondition(function (view) { return isDef(view) && view === "auto"; })(option.views)(function () {
+        condition(isDate)(option.endDate)(function (endDate) { return (state.endDate = endDate); });
+        or(!isNaN(option.limit), not(option.limit))(function () {
+            state.limit = option.limit;
+        });
+        and(isDef(option.views), equal(option.views)("auto"))(function () {
             if (!state.startDate) {
                 state.startDate = new Date();
             }
@@ -884,22 +914,20 @@ var TypePicker = (function () {
                 state.endDate = new Date(start.getFullYear(), start.getMonth() + 6, start.getDate());
             }
         });
-        if (state.startDate && state.endDate) {
+        and(isDate(state.startDate), isDate(state.endDate))(function () {
             var date = state.startDate;
             var firstDate = new Date(date.getFullYear(), date.getMonth(), 1);
             var dates = between(firstDate, date, state.dateFormat);
             dates.pop();
             state.disableDates = dates;
-        }
-        else {
-        }
-        byCondition(function (v) { return isDef(v) && typeof v === "boolean"; })(option.lastSelectedItemCanBeInvalid)(function (value) {
+        });
+        condition(isBool)(option.lastSelectedItemCanBeInvalid)(function (value) {
             state.lastSelectedItemCanBeInvalid = value;
             if (value === true) {
                 state.selection = 2;
             }
         });
-        if (state.selection !== 2) {
+        if (!equal(state.selection)(2)) {
             state.limit = false;
             state.lastSelectedItemCanBeInvalid = false;
         }
@@ -924,11 +952,19 @@ var TypePicker = (function () {
         var _this = this;
         var _a = this.state, reachStart = _a.reachStart, reachEnd = _a.reachEnd, views = _a.views, startDate = _a.startDate, endDate = _a.endDate, date = _a.date, dateFormat = _a.dateFormat, selection = _a.selection, i18n = _a.i18n, disableDays = _a.disableDays, disableDates = _a.disableDates;
         var size = function () {
-            return views == 2 ? 1 : views === "auto" ? diff(endDate, startDate) : 0;
+            return views == 2
+                ? 1
+                : views === "auto"
+                    ? diff(endDate, startDate)
+                    : 0;
         };
         var withRange = selection === 2;
-        var withFormat = function (date) { return format(date, dateFormat); };
-        var withParse = function (date) { return parse(date, dateFormat); };
+        var withFormat = function (date) {
+            return format(date, dateFormat);
+        };
+        var withParse = function (date) {
+            return parse(date, dateFormat);
+        };
         var data = new TemplateData({
             date: date,
             size: size(),
@@ -943,9 +979,11 @@ var TypePicker = (function () {
             }
         });
         var disables = TemplateData.findDisabled(data);
-        initSelectedDates = TemplateData.setInitDatesToQueue(disables, initSelectedDates, this.enqueue.bind(this));
+        selectedDates = TemplateData.setInitDatesToQueue(disables, selectedDates, this.enqueue.bind(this));
         this.element.innerHTML = template(data, i18n.week)(reachStart, reachEnd, views === "auto");
-        var select = function (selector) { return DOMHelpers.select(_this.element, selector); };
+        var select = function (selector) {
+            return DOMHelpers.select(_this.element, selector);
+        };
         var nodeList = select(".calendar-cell");
         var prevActionDOM = select(".calendar-action.prev");
         var nextActionDOM = select(".calendar-action.next");
@@ -953,7 +991,8 @@ var TypePicker = (function () {
         publish("select", queue.list);
         if (prevActionDOM && nextActionDOM) {
             var actionHandler = function (type) { return function (size) { return function () {
-                !type && _this.setState(changeMonth(date, startDate, endDate)(size));
+                !type &&
+                    _this.setState(changeMonth(date, startDate, endDate)(size));
             }; }; };
             prevActionDOM.addEventListener("click", actionHandler(reachStart)(-1));
             nextActionDOM.addEventListener("click", actionHandler(reachEnd)(1));
@@ -962,10 +1001,10 @@ var TypePicker = (function () {
             var node = nodeList[i];
             node.addEventListener("click", function () {
                 var date = DOMHelpers.attr(node, "data-date");
-                var disable = DOMHelpers.attr(node, "data-disabled");
+                var disable = (DOMHelpers.attr(node, "data-disabled"));
                 var isDisabled = false;
                 if (isDef(disable)) {
-                    isDisabled = JSON.parse(disable);
+                    isDisabled = disable === "true";
                 }
                 _this.enqueue(date, disables, isDisabled);
             });
@@ -978,13 +1017,18 @@ var TypePicker = (function () {
         var _this = this;
         var cache = queue.cache();
         var _a = this.state, dateFormat = _a.dateFormat, lastSelectedItemCanBeInvalid = _a.lastSelectedItemCanBeInvalid, limit = _a.limit, selection = _a.selection;
-        var withParse = function (date) { return parse(date, dateFormat); };
+        var withParse = function (date) {
+            return parse(date, dateFormat);
+        };
         var checkPushable = function () {
-            if ((!lastSelectedItemCanBeInvalid || queue.length() <= 0) &&
+            if ((!lastSelectedItemCanBeInvalid ||
+                queue.length() <= 0) &&
                 invalidValue) {
                 return false;
             }
-            if (queue.include(value) && queue.length() === 1 && !invalidValue) {
+            if (queue.include(value) &&
+                queue.length() === 1 &&
+                !invalidValue) {
                 return false;
             }
             if (selection === 2 && invalidValue) {
@@ -1001,7 +1045,8 @@ var TypePicker = (function () {
                         dateFormat: dateFormat,
                         parse: withParse
                     });
-                    if (disablesInQueue.length >= selection || space < 0) {
+                    if (disablesInQueue.length >= selection ||
+                        space < 0) {
                         return false;
                     }
                 }
@@ -1037,7 +1082,8 @@ var TypePicker = (function () {
                         queue.shift();
                     }
                 }
-                else if (queue.length() === 1 && invalidValue) {
+                else if (queue.length() === 1 &&
+                    invalidValue) {
                     queue.replace(cache);
                 }
             }
@@ -1056,56 +1102,59 @@ var TypePicker = (function () {
         if (!isArray(dates))
             return;
         var _a = this.state, selection = _a.selection, limit = _a.limit, dateFormat = _a.dateFormat;
-        var withParse = function (date) { return parse(date, dateFormat); };
-        var withFormat = function (date) { return format(date, dateFormat); };
-        var datesList = dates.map(withParse).filter(isDef);
+        var withParse = function (date) {
+            return parse(date, dateFormat);
+        };
+        var withFormat = function (date) {
+            return isDate(date)
+                ? format(date, dateFormat)
+                : date;
+        };
+        dates = mapList(dates, withParse, isDef);
         if (selection === 2) {
-            if (datesList.length > selection) {
-                datesList = datesList.slice(0, selection);
+            var _b = mapList(sliceList(dates, 0, 2), withParse, isDef), start = _b[0], end = _b[1];
+            dates = [start, end];
+            if (isDef(start) && isDef(end)) {
+                var gap = diff(end, start, "days");
+                if (gap > limit || gap < 0) {
+                    dates = [];
+                }
             }
-            var _b = datesList
-                .map(function (item) { return (isDate(item) ? item : withParse(item)); })
-                .filter(isDef), start = _b[0], end = _b[1];
-            var gap = diff(end, start, "days", true);
-            if ((gap > limit && selection === 2) || end < start) {
-                return;
+            else {
+                dates = [];
             }
-            datesList = [start, end];
         }
-        initSelectedDates = datesList
-            .map(function (date) { return (isDate(date) ? withFormat(date) : date); })
-            .filter(isDef);
+        if (dates.length <= 0) {
+            return;
+        }
+        selectedDates = mapList(dates, withFormat, isDef);
+        this.render();
     };
     TypePicker.prototype.disable = function (options) {
         var to = options.to, from = options.from, days = options.days, dates = options.dates;
         var _a = this.state, endDate = _a.endDate, startDate = _a.startDate, dateFormat = _a.dateFormat, disableDates = _a.disableDates, disableDays = _a.disableDays;
-        var parser = function (dateFormat) { return function (date) { return parse(date, dateFormat); }; };
+        var parser = function (dateFormat) { return function (date) {
+            return parse(date, dateFormat);
+        }; };
         var parseWithFormat = parser(dateFormat);
-        var state = { disableDates: [], startDate: startDate, endDate: endDate, disableDays: disableDays };
-        var parseToInt = function (item) { return parseInt(item, 10); };
-        var mapDay = function (days) {
-            return isArray(days)
-                ? days.map(parseToInt).filter(function (day) { return day >= 0 && day <= 6; })
-                : [];
+        var state = {
+            disableDates: [],
+            startDate: startDate,
+            endDate: endDate,
+            disableDays: disableDays
         };
-        byCondition(isDate)(parseWithFormat(from))(function (date) {
-            state.endDate = date;
+        byCondition(isDate)(parseWithFormat(from))(function (from) {
+            state.endDate = from;
         });
-        byCondition(isDate)(parseWithFormat(to))(function (date) {
-            state.startDate = date;
+        byCondition(isDate)(parseWithFormat(to))(function (to) {
+            state.startDate = to;
             state.reachStart = true;
-            state.date = date;
+            state.date = to;
         });
-        var mapDatesFromProps = function (dates) {
-            return isArray(dates)
-                ? dates.map(formatParse(dateFormat)).filter(isNotEmpty)
-                : [];
-        };
-        if (!isDate(state.startDate) || !isDate(state.endDate)) {
+        or(!isDate(state.startDate), !isDate(state.endDate))(function () {
             state.reachEnd = false;
             state.reachStart = false;
-        }
-        else {
+        }, function () {
             var start = state.startDate;
             var end = state.endDate;
             if (start > end) {
@@ -1114,18 +1163,19 @@ var TypePicker = (function () {
                 state.date = end;
                 state.reachStart = true;
             }
-        }
-        state.disableDates = dedupList(disableDates.concat(mapDatesFromProps(dates))).filter(isNotEmpty);
-        state.disableDays = disableDays.concat(mapDay(days)).filter(isNotEmpty);
+        });
+        state.disableDates = filterList(dedupList(disableDates.concat(mapList(dates, formatParse(dateFormat), isNotEmpty))), isNotEmpty);
+        state.disableDays = filterList(disableDays.concat(mapList(days, toInt, function (day) { return day >= 0 && day <= 6; })), isNotEmpty);
         this.setState(state);
     };
-    TypePicker.prototype.i18n = function (pack) {
-        if (isArray(pack.days) && isArray(pack.months)) {
+    TypePicker.prototype.i18n = function (i18n) {
+        if (isArray(i18n.days) &&
+            isArray(i18n.months)) {
             this.setState({
                 i18n: {
-                    week: pack.days,
-                    months: pack.months,
-                    title: pack.title
+                    week: i18n.days,
+                    months: i18n.months,
+                    title: i18n.title
                 }
             });
         }
