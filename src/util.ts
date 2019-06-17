@@ -1,9 +1,11 @@
 /**
  *
- * @param v
+ * @param v {any}
  * @returns {boolean}
  */
-const isUndef = v => v === undefined || v === null;
+const isUndef = (v: any) => v === undefined || v === null;
+export const isBool = (v: any) => typeof v === "boolean";
+
 /**
  *
  * @param v
@@ -50,29 +52,29 @@ export const isDate = object => object instanceof Date;
  */
 
 export function $(selector: string | any, selector$2?: string): any {
-  const selectAll = (who, selector) => {
-    let ArrayNodes = Array.prototype.slice.call(who.querySelectorAll(selector));
-    if (ArrayNodes.length <= 0) {
-      return null;
-    } else if (ArrayNodes.length === 1) {
-      return ArrayNodes[0];
+    const selectAll = (who, selector) => {
+        let ArrayNodes = Array.prototype.slice.call(who.querySelectorAll(selector));
+        if (ArrayNodes.length <= 0) {
+            return null;
+        } else if (ArrayNodes.length === 1) {
+            return ArrayNodes[0];
+        } else {
+            return ArrayNodes;
+        }
+    };
+
+    if (typeof selector === "string") {
+        if (selector.indexOf("#") === 0) {
+            selector = selector.substr(1);
+            return document.getElementById(selector);
+        } else if (selector.indexOf(".") == 0) {
+            return selectAll(document, selector);
+        }
     } else {
-      return ArrayNodes;
+        return selectAll(selector, selector$2);
     }
-  };
 
-  if (typeof selector === "string") {
-    if (selector.indexOf("#") === 0) {
-      selector = selector.substr(1);
-      return document.getElementById(selector);
-    } else if (selector.indexOf(".") == 0) {
-      return selectAll(document, selector);
-    }
-  } else {
-    return selectAll(selector, selector$2);
-  }
-
-  return null;
+    return null;
 }
 
 /**
@@ -82,27 +84,43 @@ export function $(selector: string | any, selector$2?: string): any {
  * @returns {any[]}
  */
 export function dedupList(list: any[], condition?) {
-  let map = {};
+    let map = {};
 
-  let result = [];
+    let result = [];
 
-  if (list.length <= 0) {
-    return [];
-  }
-
-  for (let item of list) {
-    if (!condition) {
-      map[item] = item;
-    } else {
-      map[condition] = item;
+    if (list.length <= 0) {
+        return [];
     }
-  }
-  for (let key in map) {
-    let item = map[key];
-    result.push(item);
-  }
 
-  return result;
+    for (let item of list) {
+        if (!condition) {
+            map[item] = item;
+        } else {
+            map[condition] = item;
+        }
+    }
+    for (let key in map) {
+        let item = map[key];
+        result.push(item);
+    }
+
+    return result;
+}
+
+export const yes = v => v === true;
+
+export const not = v => !yes(v);
+
+export function ifYes(
+    condition: boolean,
+    then: Function,
+    otherwise?: Function
+) {
+    if (condition) {
+        then();
+    } else {
+        typeof otherwise === "function" && otherwise();
+    }
 }
 
 /**
@@ -112,25 +130,27 @@ export function dedupList(list: any[], condition?) {
  * @returns {(value?: any) => (next?: Function) => (any)}
  */
 export function byCondition(condition: any, when?: Boolean) {
-  return (value?: any) => {
-    return (next?: Function) => {
-      if (!isDef(when)) {
-        when = true;
-      }
-      let result;
-      if (typeof condition === "function") {
-        result = condition(value) === when;
-      } else {
-        result = condition === when;
-      }
-
-      if (next && typeof next === "function" && result) {
-        return next(value);
-      }
-      return result;
+    return (value?: any) => {
+        return (next?: Function) => {
+            if (!isDef(when)) {
+                when = true;
+            }
+            let result;
+            if (typeof condition === "function") {
+                result = condition(value) === when;
+            } else {
+                result = condition === when;
+            }
+            if (typeof next === "function" && result) {
+                return next(value);
+            }
+            return result;
+        };
     };
-  };
 }
+
+export const equal = (input) => matched => input === matched;
+export const condition = byCondition;
 
 /**
  *
@@ -139,8 +159,42 @@ export function byCondition(condition: any, when?: Boolean) {
  * @returns {string|Request}
  */
 export function join(list, split?: string) {
-  if (!split) {
-    split = "";
-  }
-  return list.join(split);
+    if (!split) {
+        split = "";
+    }
+    return list.join(split);
 }
+
+export function mapList(input, map, filter) {
+    if (!isArray(input)) {
+        return [];
+    }
+
+    const list = input.map((item, index) => map(item, index));
+
+    if (!filter) {
+        return list;
+    }
+
+    return list.filter(filter);
+}
+
+
+export function filterList(list, filter) {
+    return list.filter(filter)
+}
+
+
+export function sliceList(list, start, end) {
+    return list.slice(start, end);
+}
+
+export const toInt = input => parseInt(input, 10);
+
+export const or = (condition$1, condition$2) => (then, otherwise?: Function) => {
+    condition$1 || condition$2 ? then() : otherwise && otherwise()
+
+};
+export const and = (con$1, con$2) => (then, otherwise?: Function) => {
+    con$1 && con$2 ? then() : otherwise && otherwise()
+};
