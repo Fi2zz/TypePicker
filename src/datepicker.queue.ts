@@ -1,15 +1,5 @@
 import { diff } from "./datepicker.helpers";
 import { QueueInterface } from "./datepicker.interface";
-
-/**
- *
- * @param {any} v
- * @returns {any}
- */
-function copy(v: any) {
-  return JSON.parse(JSON.stringify(v));
-}
-
 export class Queue {
   constructor(interfaces: QueueInterface) {
     const { size, limit, parse } = interfaces;
@@ -17,34 +7,32 @@ export class Queue {
     this.limit = limit;
     this.parse = parse;
   }
-
   size = 1;
   limit: boolean | number = 1;
   parse = null;
-
   /**
    *
    * @param {string} date
    * @returns {(next?: (Function | undefined)) => void}
    */
-  enqueue = (date: string) => (next?: Function | undefined): void => {
+  enqueue = (date: any) => (next?: Function | undefined): void => {
     let front = this.front();
-    let now = this.parse(date);
-    let prev = this.parse(front);
-    if (this.limit) {
+    let now = this.parse(date.value);
+    let prev = this.parse(front ? front.value : null);
+
+    if (this.limit && prev) {
       if (prev >= now || diff(now, prev, "days", true) > this.limit) {
         this.empty();
       }
     }
 
-    if (this.list.indexOf(date) >= 0 && this.list.length > 1) {
+    if (this.find(date.value) && this.length() > 1) {
       this.empty();
     }
 
-    if (this.list.indexOf(date) >= 0) {
+    if (this.find(date.value)) {
       return;
     }
-
     this.list.push(date);
     this.reset(next);
   };
@@ -55,10 +43,13 @@ export class Queue {
    */
   reset(next?: Function) {
     if (this.list.length > this.size) {
-      this.list = [this.list.pop()];
+      this.replace([this.last()]);
     }
     if (typeof next === "function") {
-      setTimeout(() => next(), 0);
+      let id = setTimeout(function afterQueueReset() {
+        next();
+        clearTimeout(id);
+      }, 0);
     }
   }
 
@@ -67,22 +58,9 @@ export class Queue {
     this.list.push(value);
   }
 
-  shift() {
-    this.list.shift();
+  last() {
+    return this.list[this.length() - 1];
   }
-
-  cache() {
-    return copy(this.list);
-  }
-
-  slice(start, end) {
-    this.list.slice(start, end);
-  }
-
-  dequeue() {
-    this.list.shift();
-  }
-
   pop() {
     this.list.pop();
   }
@@ -96,7 +74,9 @@ export class Queue {
   }
 
   list: any[] = [];
-
+  find(value: string) {
+    return this.list.filter(item => item.value === value).pop();
+  }
   length() {
     return this.list.length;
   }
@@ -107,5 +87,12 @@ export class Queue {
 
   include(v) {
     return this.list.indexOf(v) >= 0;
+  }
+
+  has(value) {
+    return !!this.find(value);
+  }
+  map(mapper) {
+    return this.list.map(mapper);
   }
 }

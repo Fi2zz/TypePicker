@@ -39,51 +39,6 @@ export interface CreateDate {
   index?: number;
 }
 
-export interface template {
-  data?: Array<any>;
-  i18n: any;
-  week: Array<any>;
-  reachStart: boolean;
-  reachEnd: boolean;
-}
-
-export interface TagData {
-  value?: string;
-  item?: Date;
-  index?: number;
-  isEnd?: boolean;
-  isStart?: boolean;
-  isDisabled?: boolean;
-  withRange?: boolean;
-}
-
-export interface monthItem {
-  date: Date;
-  size: number;
-  heading: string;
-}
-
-export interface mapDates {
-  queue: string[];
-  withRange: boolean;
-  format: Function;
-  disables: any;
-}
-
-export interface TemplateDataInterface {
-  date: Date;
-  size: number;
-  queue: any[];
-  withRange: boolean;
-  format: Function;
-  heading: Function;
-  parse: Function;
-  disables: {
-    days: number[];
-    dates: string[];
-  };
-}
-
 export interface DateTag {
   className: string;
   value: string | undefined;
@@ -96,8 +51,20 @@ export interface QueueInterface {
   size: number;
   limit: boolean | number;
   parse: Function;
+  index?: Function;
 }
 
 export interface State {
-  // [k: string]: string | number | Date | boolean | any[];
+  selection: number;
+  views: number | string;
+  startDate: Date | null;
+  endDate: Date | null;
+  reachStart: boolean;
+  reachEnd: boolean;
+  dateFormat: string;
+  limit: number | boolean;
+  i18n: I18n;
+  date: Date;
+  lastSelectedItemCanBeInvalid: boolean;
+  selected: Array<any>;
 }

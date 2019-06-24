@@ -7,15 +7,10 @@ export class ReactTypePicker extends React.Component {
   app = null;
   componentDidMount() {
     this.app = new TypePicker({
-      el: "#react-datepicker",
-      format: this.props.dateFormat || "YYYY-MM-DD",
-      views: this.props.views || 1,
-      selection: this.props.selection || 1,
-      limit: this.props.limit || 1,
-      startDate: this.props.startDate,
-      endDate: this.props.endDate
+      ...this.props.options,
+      format: this.props.options.dateFormat || "YYYY-MM-DD",
+      el: "#react-datepicker"
     });
-
     if (typeof this.props.onSelect === "function") {
       this.app.onSelect(this.props.onSelect.bind(this));
     }
@@ -42,5 +37,6 @@ ReactTypePicker.propTypes = {
   onRender: PropTypes.func.isRequired,
   i18n: PropTypes.object.isRequired,
   dates: PropTypes.array,
-  disables: PropTypes.object
+  disables: PropTypes.object,
+  datepickerConfig: PropTypes.object
 };

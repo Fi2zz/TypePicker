@@ -1,9 +1,8 @@
 {
   "compilerOptions": {
-    "outDir": "temp",
+    "outDir": "dist",
     "sourceMap": false,
     "noImplicitAny": false,
-    "module": "ES6",
     "target": "es3",
     "noEmitOnError": false,
     "allowSyntheticDefaultImports": true,
@@ -12,8 +11,15 @@
     "allowJs": true,
     "removeComments": true,
     "noUnusedLocals": false,
-    "lib": ["dom", "es5", "es2015.promise"]
+    "lib": [
+      "dom",
+      "es5"
+    ]
   },
-  "include": ["./src/**/*"],
-  "exclude": ["./test/**/*"]
+  "include": [
+    "./src/**/*"
+  ],
+  "exclude": [
+    "./test/**/*"
+  ]
 }

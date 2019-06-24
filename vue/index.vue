@@ -40,7 +40,8 @@ export default {
     i18n: {
       type: Object,
       default: null
-    }
+    },
+    options: Object
   },
   data() {
     return {
@@ -51,7 +52,8 @@ export default {
     this.$nextTick(() => {
       this.app = new TypePicker({
         el: "#datepicker",
-        format: this.dateFormat || "YYYY-MM-DD"
+        ...this.options,
+        format: this.options.dateFormat || "YYYY-MM-DD"
       });
 
       this.app.setDates(this.dates);

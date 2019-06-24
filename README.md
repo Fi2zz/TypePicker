@@ -1,15 +1,10 @@
-# TypePicker 
+# TypePicker
 
 ##### uh! naming project is the most difficult thing of the world
- 
 
 DatePicker build with typescript
 
-
-
 <a href="./react/index.js"> react version</a> <a href="./vue/index.vue"> vue version </a>
-
-
 
 <table>
     <tr>
@@ -44,15 +39,14 @@ DatePicker build with typescript
 ## OPTIONS
 
 | OPTION    | REQUIRED | TYPE               | DESC                                   | Default /Possible Value |
-| --------- | -------- | ------------------ | -------------------------------------- | ---------------------------- |
-| el        | YES      | string,HTMLElement | Element or selector to mount DatePcker |                              |
-| format    | YES      | string             | Date string format                     | YYYY-MM-DD                         |
-| startDate | NO       | Date               | Start date of DatePicker               | new Date                     |
-| endDate   | NO       | Date               | End date of DatePicker                 | null                         |
-| limit     | NO       | number, bolean                                 | Limitation between two dates | 1 |
-| views     | NO       | number,string      | Display views of DatePicker            | auto,1,2                     |
-| selection | NO       | number             | Size of dates can be picked            | 1                            |
-
+| --------- | -------- | ------------------ | -------------------------------------- | ----------------------- |
+| el        | YES      | string,HTMLElement | Element or selector to mount DatePcker |                         |
+| format    | YES      | string             | Date string format                     | YYYY-MM-DD              |
+| startDate | NO       | Date               | Start date of DatePicker               | new Date                |
+| endDate   | NO       | Date               | End date of DatePicker                 | null                    |
+| limit     | NO       | number, bolean     | Limitation between two dates           | 1                       |
+| views     | NO       | number,string      | Display views of DatePicker            | auto,1,2                |
+| selection | NO       | number             | Size of dates can be picked            | 1                       |
 
 ```
 NOTE
@@ -89,8 +83,6 @@ NOTE
    //to   => to accept <string> or <Date> all dates before [to] date will be disabled,
    //        eg: to =2018-3-4 => all dates before 2018-3-5 will be disabled
 
-   public forceUpdate()
-   //trigger re-render TypePicker outside TypePicker instance
 
    public onSelect(fn:Function);
    //trigger when date picked
@@ -108,25 +100,24 @@ NOTE
 if you're using TypeScript
 
 ```typescript
-import TypePicker from './src/index.ts'
+import TypePicker from "./src/index.ts";
 ```
-
 
 if you are using JavaScript
 
 ```javascript
 //import js file
-import TypePicker from '/dist/datepicker.esm.js'
+import TypePicker from "/dist/datepicker.esm.js";
 //import css file
-import '/dist/style.css'
+import "/dist/style.css";
 ```
 
 ### legacy way
 
 ```html
 <script src="/dist/datepicker.js"></script>
-<link  href="/dist/style.css" rel="stylesheet"/>
-``` 
+<link href="/dist/style.css" rel="stylesheet" />
+```
 
 ```typescript
 
@@ -154,7 +145,7 @@ const app = new TypePicker({
 
 
 //get nodes list from  TypePicker instance.
-//use `onRender`,you could put your data to DOMs outside TypePicker instance 
+//use `onRender`,you could put your data to DOMs outside TypePicker instance
 app.onRender(nodeList => {
 
 
@@ -213,7 +204,5 @@ app.i18n({
     title:"YYYY MM"
 })
 
-//to re-render TypePicker DOMs outside the instance, use `forceUpdate`
-app.forceUpdate()
- 
+
 ```

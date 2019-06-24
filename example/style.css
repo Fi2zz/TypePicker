@@ -1,0 +1,101 @@
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  background-color: #222;
+}
+#app {
+  position: absolute;
+  top: 50px;
+  left: 50%;
+  transform: translate(-50%, 0);
+  width: 100%;
+}
+.calendar-action {
+  position: relative;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0 !important;
+}
+.calendar-action:before {
+  content: '';
+  display: block;
+  width: 32px;
+  height: 32px;
+  border: 2px #06a2d0 solid;
+  transform: translate(-50%, -50%) rotate(45deg) scale(0.5);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}
+.calendar-action:hover:before {
+  border-color: #047192;
+}
+.calendar-action.disabled:before {
+  border-color: #ccc;
+}
+.calendar-action:hover:before {
+  border-color: #ccc;
+}
+.calendar-action.prev:before {
+  border-top: none;
+  border-right: none;
+}
+.calendar-action.next:before {
+  border-left: none;
+  border-bottom: none;
+}
+.highlight {
+  color: #06a2d0;
+}
+.start-date {
+  background: #182828 !important;
+}
+.end-date {
+  background: #006f6f !important;
+}
+.toolbar {
+  margin: auto;
+  width: 720px;
+  height: 44px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.toolbar .container {
+  width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+}
+.toolbar .form-control {
+  padding-top: 0;
+  padding-bottom: 0;
+  line-height: 34px;
+  background-color: transparent;
+  border: none;
+  flex: 1;
+  text-align: center;
+}
+.toolbar .input-group-addon {
+  z-index: 9;
+  width: auto;
+  line-height: 32px;
+  padding: 0 6px;
+  font-size: 12px;
+  height: 32px;
+}
+#datepicker {
+  box-shadow: rgba(128,128,128,0.09) 0px 2px 10px;
+  border-top: 1px rgba(128,128,128,0.09) solid;
+  width: 720px;
+  min-height: 480px;
+  margin: auto;
+  border-radius: 8px;
+  background-color: #fff;
+}
