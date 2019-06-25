@@ -107,7 +107,7 @@ if you are using JavaScript
 
 ```javascript
 //import js file
-import TypePicker from "/dist/datepicker.esm.js";
+import TypePicker from "/dist/datepicker.js";
 //import css file
 import "/dist/style.css";
 ```
