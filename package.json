@@ -11,9 +11,7 @@
   "license": "MIT",
   "scripts": {
     "start": "webpack --mode development  -w --display errors-only --display-error-details",
-    "build": "webpack --mode production --disokat errors-ony --display-error-details",
-    "build:esm": "webpack --mode production --disokat errors-ony --display-error-details --module",
-    "gulp": "gulp package build build:esm"
+    "build": "gulp package build build:esm"
   },
   "devDependencies": {
     "@babel/core": "^7.4.5",
