@@ -1,5 +1,5 @@
 /*!
- * TypePicker v5.8.0
+ * TypePicker v5.8.4
  * A Typescript Datepicker
  * (c) 2017-2019,Fi2zzz <wenjingbiao@outlook.com>
  * https://github.com/Fi2zz/datepicker

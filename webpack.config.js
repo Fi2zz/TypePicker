@@ -4,10 +4,8 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
-const fs = require('fs-extra')
-
-
 module.exports = function (_, options) {
+
     const isEnvProduction = options.mode === "production";
     const isEnvDevelopment = options.mode === "development";
     const output = {
@@ -15,11 +13,18 @@ module.exports = function (_, options) {
             ? path.resolve(__dirname, "example")
             : path.resolve(__dirname, "dist"),
         publicPath: "/",
-        filename: isEnvProduction ? "typepicker.js" : 'example.js',
+        filename: 'example.js',
     };
     if (isEnvProduction) {
         output.library = 'TypePicker';
-        output.libraryExport = 'default' // string | [...modules]
+        if (!options.module) {
+            output.libraryExport = 'default' // string | [...modules]
+            output.filename = "typepicker.js"
+        } else {
+            //for  import TypePicker from '/path/to/typepicker.js'
+            output.libraryTarget = "umd";
+            output.filename = "typepicker.esm.js"
+        }
     }
     return {
         mode: options.mode,
@@ -90,22 +95,6 @@ module.exports = function (_, options) {
                 test: /\.js|css$/,
                 banner() {
                     const pkg = require('./package');
-
-                    function increaseVersion(version) {
-                        version = version.split(".").map(item => parseInt(item));
-                        let main = version[0];
-                        let min = version[1];
-                        min += 1;
-                        if (min >= 10) {
-                            min = 0;
-                            main += 1;
-                        }
-                        return `${main}.${min}.0`;
-                    }
-
-
-                    pkg.version = increaseVersion(pkg.version);
-                    fs.writeFileSync(path.resolve('./package.json'), JSON.stringify(pkg, null, 2))
                     let banner = [
                         `TypePicker v${pkg.version}\n`,
                         `${pkg.description}\n`,
