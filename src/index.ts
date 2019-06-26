@@ -392,7 +392,9 @@ export default class TypePicker {
    */
   public setDates = (dates: Array<string | Date>): void => {
     const { selection, limit, dateFormat } = state;
+
     const withParse = (date: Date | string) => parse(date, dateFormat);
+
     if (!isArray(dates) || dates.some(date => !isDate(withParse(date)))) return;
     const withFormat = (date: Date) =>
       isDate(date) ? format(date, dateFormat) : date;
@@ -411,6 +413,7 @@ export default class TypePicker {
           : mapList(dates, withFormat, isDef);
       }
     );
+
     if (dates.length <= 0) {
       return;
     }

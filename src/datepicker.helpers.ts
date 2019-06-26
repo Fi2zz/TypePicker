@@ -111,7 +111,7 @@ export function parse(strDate: string | Date, format: string) {
     format = "YYYY-MM-DD";
   }
 
-  const formatRegExpTester = createDateFormatValidator(format);
+  const formatRegExpTester = createDateFormatRegExpression(format);
   if (!formatRegExpTester.test(<string>strDate)) {
     return null;
   }
@@ -142,6 +142,7 @@ export function parse(strDate: string | Date, format: string) {
         const regExp = info[0];
         const handler = info[info.length - 1];
         const index = dateStr.search(regExp);
+
         if (!~index) {
           isValid = false;
         } else {
@@ -164,32 +165,35 @@ export function parse(strDate: string | Date, format: string) {
   return ret(strDate, format);
 }
 
+const ALPHABET_AND_NUMBER_RE = /[A-Za-z0-9]/g;
+const NON_ALPHABET_AND_NUMBER_RE = /[^A_Za-z0-9]/;
 /**
- *
- * @param formate
+ * @param format string
  */
-function createDateFormatValidator(formate: string) {
-  const separator = formate
-    .split(/\w/)
-    .filter(item => !!item)
-    .pop();
-  const result: any = formate.split(/\W/).map((string, index) => {
-    let { length } = string;
-    if (index === 0) {
-      return `\\d{${length}}`;
-    } else if (index === 1) {
-      if (length === 1) {
-        return `\(?:[1-9]?[0-9])`;
-      } else if (length === 2) {
-        return `\([0-9][0-2])`;
+function createDateFormatRegExpression(format: string) {
+  const separator = format.replace(ALPHABET_AND_NUMBER_RE, "").trim();
+  const result = format
+    .split(NON_ALPHABET_AND_NUMBER_RE)
+    .reduce((acc, string, index) => {
+      let { length } = string;
+      let sep = index - 1 === -1 ? "" : separator ? separator[index - 1] : "";
+      let partial = "";
+      if (index === 0) {
+        partial = `(^[0-9]{${length}})`;
+      } else if (index === 1) {
+        let suffix = `[1-9]|1[0-2]`;
+        let prefix = `${length === 1 ? "" : "0"}`;
+        partial = `(${prefix}${suffix})`;
+      } else if (index === 2) {
+        const group$1 = `${length === 2 ? 0 : ""}[1-9]`.trim();
+        const group$2 = "(1|2)[0-9]";
+        const group$3 = "30|31";
+        partial = `((${group$1})|(${group$2})|(${group$3}))`.trim();
       }
-    } else if (index === 2) {
-      return "\\d{1,2}";
-    }
-  });
-
-  const regexpString = result.join(`\\${separator}`);
-  return new RegExp(regexpString);
+      partial = acc + sep + partial;
+      return partial;
+    }, "");
+  return new RegExp(`${result}$`);
 }
 
 /**

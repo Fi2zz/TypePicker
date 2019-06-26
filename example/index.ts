@@ -26,7 +26,7 @@ const options = {
   //   startDate,
   //   endDate,
   limit: 10,
-  format: "YYYY-M-D",
+  format: "YYYY-MM-DD",
   selection: 3,
   views: 2,
   lastSelectedItemCanBeInvalid: false
@@ -36,6 +36,8 @@ const app = new TypePicker(options);
 
 console.log(app);
 app.onSelect((value: any[]) => {
+  console.log("onselect", value);
+
   input.value = value.join("");
 });
 app.onRender(nodeList => {
@@ -94,7 +96,8 @@ app.disable({
 // ]);
 
 app.setDates([
-  "2017-7-18"
+  //   new Date(),
+  "2017-07-18"
   //   new Date(),
   //   "2019-6-20",
   //   "2019-6-26",
