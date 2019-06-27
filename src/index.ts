@@ -240,7 +240,6 @@ export default class TypePicker {
   }
 
   protected element: HTMLElement = null;
-
   protected render(): void {
     let {
       reachStart,
@@ -390,7 +389,7 @@ export default class TypePicker {
    *
    * @param dates Array<string | Date>
    */
-  public setDates = (dates: Array<string | Date>): void => {
+  public setDates(dates: Array<string | Date>): void {
     const { selection, limit, dateFormat } = state;
 
     const withParse = (date: Date | string) => parse(date, dateFormat);
@@ -422,17 +421,29 @@ export default class TypePicker {
       value: item,
       selected: true
     }));
-    useCallback({
-      selected,
-      date: withParse(dates[0])
-    })(this.render);
-  };
+
+    const partial: Partial<State> = {
+      selected
+    };
+    const currentDate = withParse(dates[0]);
+
+    if (currentDate) {
+      partial.date = currentDate;
+      if (state.startDate) {
+        partial.reachStart = currentDate <= state.startDate;
+      }
+      if (state.endDate) {
+        partial.reachEnd = currentDate >= state.endDate;
+      }
+    }
+    useCallback(partial)(this.render);
+  }
 
   /**
    *
    * @param {Disable} options
    */
-  public disable = (options: Disable): void => {
+  public disable(options: Disable): void {
     let { to, from, days, dates } = options;
     const { endDate, startDate, dateFormat } = state;
 
@@ -486,25 +497,28 @@ export default class TypePicker {
     );
 
     useCallback(newState)(this.render);
-  };
+  }
 
   /**
    *
    * @param i18n
    */
-  public i18n = (i18n: I18n): void =>
+  public i18n(i18n: I18n): void {
     i18nValidator(i18n, (i18n: I18n) => useCallback({ i18n })(this.render));
+  }
   /**
    *
    * @param next: (dispatchValue: NodeListOf<HTMLElement>) => void
    */
-  public onRender = (
-    next: (dispatchValue: NodeListOf<HTMLElement>) => void
-  ): void => subscribe("render", next);
+  public onRender(next) {
+    subscribe("render", next);
+  }
+
   /**
    *
    * @param next : (dispatchValue: string[]) => void
    */
-  public onSelect = (next: (dispatchValue: string[]) => void): void =>
+  public onSelect(next: (dispatchValue: string[]) => void): void {
     subscribe("select", next);
+  }
 }

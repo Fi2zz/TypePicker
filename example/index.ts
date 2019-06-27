@@ -12,8 +12,8 @@ const { startDate, endDate } = (() => {
     month: date.getMonth(),
     date: date.getDate()
   };
-  const startDate = new Date(dist.year, dist.month, dist.date);
-  const endDate = new Date(dist.year, dist.month + 6, dist.date);
+  const startDate = new Date(2017, dist.month, dist.date);
+  const endDate = new Date(dist.year, dist.month, dist.date);
 
   return {
     startDate,
@@ -23,11 +23,11 @@ const { startDate, endDate } = (() => {
 
 const options = {
   el: document.getElementById("datepicker"),
-  //   startDate,
-  //   endDate,
+  startDate,
+  endDate,
   limit: 10,
   format: "YYYY-MM-DD",
-  selection: 3,
+  selection: 1,
   views: 2,
   lastSelectedItemCanBeInvalid: false
 };
@@ -97,7 +97,7 @@ app.disable({
 
 app.setDates([
   //   new Date(),
-  "2017-07-18"
+  "2019-06-30"
   //   new Date(),
   //   "2019-6-20",
   //   "2019-6-26",

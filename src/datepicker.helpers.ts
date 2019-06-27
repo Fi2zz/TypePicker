@@ -95,6 +95,12 @@ export function parse(strDate: string | Date, format: string) {
   if (isDate(strDate)) {
     return strDate;
   }
+  if (
+    !strDate ||
+    !createDateFormatRegExpression(format).test(<string>strDate)
+  ) {
+    return null;
+  }
 
   function parse(string: string | Date): any {
     if (!string) return new Date();
@@ -105,16 +111,6 @@ export function parse(strDate: string | Date, format: string) {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
   }
 
-  //能直接解析成日期对象的，直接返回日期对象
-  //如 YYYY/MM/DD YYYY-MM-DD
-  if (!format) {
-    format = "YYYY-MM-DD";
-  }
-
-  const formatRegExpTester = createDateFormatRegExpression(format);
-  if (!formatRegExpTester.test(<string>strDate)) {
-    return null;
-  }
   let ret = parse(strDate);
   if (ret) return ret;
   const token = /d{1,4}|M{1,4}|YY(?:YY)?|S{1,3}|Do|ZZ|([HhMsDm])\1?|[aA]|"[^"]*"|'[^']*'/g;
@@ -124,7 +120,7 @@ export function parse(strDate: string | Date, format: string) {
     DD: [/\d{2}/, (d: any, v: any) => (d.day = parseInt(v))],
     MM: [/\d{2}/, (d: any, v: any) => (d.month = parseInt(v) - 1)],
     YY: [/\d{2,4}/, (d: any, v: any) => (d.year = parseInt(v))],
-    YYYY: [/\d{2,4}/, (d: any, v: any) => (d.year = parseInt(v))]
+    YYYY: [/\d{4}/, (d: any, v: any) => (d.year = parseInt(v))]
   };
   ret = function(dateStr: string, format: string) {
     if (dateStr.length > 1000) {
@@ -166,17 +162,22 @@ export function parse(strDate: string | Date, format: string) {
 }
 
 const ALPHABET_AND_NUMBER_RE = /[A-Za-z0-9]/g;
-const NON_ALPHABET_AND_NUMBER_RE = /[^A_Za-z0-9]/;
+
 /**
  * @param format string
  */
 function createDateFormatRegExpression(format: string) {
   const separator = format.replace(ALPHABET_AND_NUMBER_RE, "").trim();
   const result = format
-    .split(NON_ALPHABET_AND_NUMBER_RE)
-    .reduce((acc, string, index) => {
+    .split(/\W/)
+    .map((string, index) => {
       let { length } = string;
-      let sep = index - 1 === -1 ? "" : separator ? separator[index - 1] : "";
+      let sep =
+        index - 1 === -1
+          ? ""
+          : separator[index - 1]
+          ? separator[index - 1]
+          : "";
       let partial = "";
       if (index === 0) {
         partial = `(^[0-9]{${length}})`;
@@ -190,9 +191,9 @@ function createDateFormatRegExpression(format: string) {
         const group$3 = "30|31";
         partial = `((${group$1})|(${group$2})|(${group$3}))`.trim();
       }
-      partial = acc + sep + partial;
-      return partial;
-    }, "");
+      return sep + partial;
+    })
+    .join("");
   return new RegExp(`${result}$`);
 }
 
