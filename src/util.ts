@@ -126,30 +126,45 @@ export function ifYes(
 /**
  *
  * @param condition
- * @param {Boolean} when
- * @returns {(value?: any) => (next?: Function) => (any)}
+ * @param expected
  */
-export function condition(condition: any, when?: Boolean) {
+export function condition(condition: any, expected?: boolean) {
   return (value?: any) => {
     return (next?: Function) => {
-      if (!isDef(when)) {
-        when = true;
-      }
-      let result;
-      if (typeof condition === "function") {
-        result = condition(value) === when;
-      } else {
-        result = condition === when;
-      }
-      if (typeof next === "function" && result) {
+      expected = expected || true;
+      const output: boolean =
+        (typeof condition === "function" ? condition(value) : condition) ===
+        expected;
+      if (typeof next === "function" && output) {
         return next(value);
       }
-      return result;
     };
   };
 }
 
-export const equal = input => matched => input === matched;
+export const equal = (input: any, matched: any) => (next?: Function) => {
+  const isTrue = input === matched;
+
+  if (isTrue) {
+    if (typeof next === "function") {
+      next(input);
+    } else {
+      return isTrue;
+    }
+  }
+};
+
+export const notEqual = (input: any, matched: any) => (next?: Function) => {
+  const isFalse = input === matched;
+
+  if (isFalse) {
+    if (typeof next === "function") {
+      next(input);
+    } else {
+      return isFalse;
+    }
+  }
+};
 
 /**
  *

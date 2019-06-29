@@ -21,6 +21,7 @@ import {
   condition,
   dedupList,
   equal,
+  notEqual,
   filterList,
   isArray,
   isBool,
@@ -121,6 +122,7 @@ function enqueue(
       queue.resetWithValue(item);
     }
   }
+
   queue.enqueue(item)(
     (): void => {
       const dispatchValue = queue.map((item: { value: any }) => item.value);
@@ -171,6 +173,10 @@ function useCallback(partial: Partial<State>) {
 }
 
 export default class TypePicker {
+  startDate: Date | null;
+  endDate: Date | null;
+  date: Date | null;
+
   constructor(option: datepicker) {
     const el = DOMHelpers.select(option.el);
     if (!el || !option) {
@@ -179,21 +185,31 @@ export default class TypePicker {
     condition(isDef)(getViews(option.views))(
       (views: any) => (state.views = views)
     );
-    condition(isNaN, false)(option.selection)(size => (state.selection = size));
-    condition(isDef)(option.format)(format => (state.dateFormat = format));
-    condition(isDate)(option.startDate)((startDate: any) => {
+    condition((size: number) => !isNaN(size))(option.selection)(
+      (size: number) => {
+        state.selection = size;
+      }
+    );
+
+    condition(isDef)(option.format)(
+      (format: string) => (state.dateFormat = format)
+    );
+    condition(isDate)(option.startDate)((startDate: Date) => {
       state.startDate = startDate;
       state.reachStart = true;
       state.date = startDate;
     });
     condition(isDate)(option.endDate)(
-      (endDate: any) => (state.endDate = endDate)
+      (endDate: Date) => (state.endDate = endDate)
     );
-    or(!isNaN(option.limit), not(option.limit))(() => {
-      state.limit = option.limit;
+
+    condition(
+      (limit: number | boolean) => !isNaN(limit as number) || limit !== false
+    )(option.limit)((limit: number | boolean) => {
+      state.limit = limit;
     });
 
-    and(isDef(option.views), equal(option.views)("auto"))(() => {
+    equal(option.views as string, "auto")(() => {
       if (!state.startDate) {
         state.startDate = new Date();
       }
@@ -209,11 +225,14 @@ export default class TypePicker {
     });
 
     and(isDate(state.startDate), isDate(state.endDate))(() => {
-      let date = state.startDate;
-      let firstDate = new Date(date.getFullYear(), date.getMonth(), 1);
-      let dates = between(firstDate, date, state.dateFormat);
-      dates.pop();
-      disableDates = dates;
+      const date = state.startDate;
+      const firstDate = new Date(date.getFullYear(), date.getMonth(), 1);
+      const dateBeforeStartDate = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate() - 1
+      );
+      disableDates = between(firstDate, dateBeforeStartDate, state.dateFormat);
     });
     condition(isBool)(option.lastSelectedItemCanBeInvalid)((value: boolean) => {
       state.lastSelectedItemCanBeInvalid = value;
@@ -221,20 +240,18 @@ export default class TypePicker {
         state.selection = 2;
       }
     });
-    if (!equal(state.selection)(2)) {
-      state.limit = false;
-      state.lastSelectedItemCanBeInvalid = false;
-    }
 
+    notEqual(state.selection as number, 2)(() => {
+      state.limit = isDef(state.limit) ? state.selection : false;
+      state.lastSelectedItemCanBeInvalid = false;
+    });
     this.element = el;
     this.element.className = DOMHelpers.class.container(state.views);
-
     queue = new Queue({
       size: state.selection,
       limit: state.limit,
       parse: (date: string | Date) => parse(date, state.dateFormat)
     });
-
     this.render = this.render.bind(this);
     useCallback(state)(this.render);
   }
@@ -272,43 +289,45 @@ export default class TypePicker {
     const monthData = TemplateData.mapMonths(date, size, heading);
 
     const data = monthData.map(item => {
-      item.dates = item.dates.map(item => {
-        let value = "";
-        if (item.origin) {
-          value = withFormat(item.origin);
+      item.dates = item.dates.map(
+        (item: { origin: Date; day: any; disabled: any; date: any }) => {
+          let value = "";
+          if (item.origin) {
+            value = withFormat(item.origin);
+          }
+
+          const isValidDates =
+            isDate(item.origin) && isDate(startDate) && isDate(endDate);
+          const disabled =
+            disableDates.indexOf(value) >= 0 ||
+            disableDays.indexOf(item.day) >= 0 ||
+            item.disabled ||
+            (isValidDates &&
+              (item.origin.getTime() > endDate.getTime() ||
+                item.origin.getTime() < startDate.getTime()));
+
+          const index = selected.indexOf(value);
+          const selectedLength = selected.length;
+
+          const className = classname({
+            isActive: queue.has(value),
+            isStart: useRange && index === 0,
+            isEnd: useRange && index === selectedLength - 1,
+            inRange: useRange && index > 0 && index < selectedLength - 1,
+            isDisabled: disabled,
+            isSelected: queue.has(value),
+            isEmpty: !isNotEmpty(value)
+          });
+
+          return {
+            value,
+            disabled,
+            selected: index >= 0,
+            date: item.date,
+            className
+          };
         }
-
-        const isValidDates =
-          isDate(item.origin) && isDate(startDate) && isDate(endDate);
-        const disabled =
-          disableDates.indexOf(value) >= 0 ||
-          disableDays.indexOf(item.day) >= 0 ||
-          item.disabled ||
-          (isValidDates &&
-            (item.origin.getTime() > endDate.getTime() ||
-              item.origin.getTime() < startDate.getTime()));
-
-        const index = selected.indexOf(value);
-        const selectedLength = selected.length;
-
-        const className = classname({
-          isActive: queue.has(value),
-          isStart: useRange && index === 0,
-          isEnd: useRange && index === selectedLength - 1,
-          inRange: useRange && index > 0 && index < selectedLength - 1,
-          isDisabled: disabled,
-          isSelected: queue.has(value),
-          isEmpty: !isNotEmpty(value)
-        });
-
-        return {
-          value,
-          disabled,
-          selected: index >= 0,
-          date: item.date,
-          className
-        };
-      });
+      );
       return item;
     });
 
@@ -383,6 +402,10 @@ export default class TypePicker {
         );
       });
     }
+
+    this.date = date;
+    this.startDate = startDate;
+    this.endDate = endDate;
   }
 
   /**
@@ -395,45 +418,46 @@ export default class TypePicker {
     const withParse = (date: Date | string) => parse(date, dateFormat);
 
     if (!isArray(dates) || dates.some(date => !isDate(withParse(date)))) return;
-    const withFormat = (date: Date) =>
-      isDate(date) ? format(date, dateFormat) : date;
+    const withFormat = (date: Date | string) =>
+      isDate(date) ? format(date as Date, dateFormat) : date;
 
+    dates = sliceList(dates, 0, selection + 1);
+    dates = mapList(dates, withParse, isDef);
     dates = reduceList(
-      mapList(sliceList(dates, 0, selection), withParse, isDef),
+      dates,
       (prev: Date | null, curr: Date | null, _: number, dates: Array<any>) => {
-        let gap = 0;
-        if (prev && curr) {
-          gap = diff(curr, prev, "days");
+        if (selection == 2 && isDef(limit)) {
+          let gap = 0;
+          if (prev && curr) {
+            gap = diff(curr, prev, "days");
+          }
+          if (gap > limit || gap < 0) {
+            return [];
+          }
         }
-        return selection === 2
-          ? gap > limit || gap < 0
-            ? []
-            : mapList(dates, withFormat, isDef)
-          : mapList(dates, withFormat, isDef);
+        return dates;
       }
     );
-
+    dates = mapList(dates, withFormat, isDef);
     if (dates.length <= 0) {
       return;
     }
-
-    const selected = mapList(dates, (item: string) => ({
-      value: item,
-      selected: true
-    }));
-
     const partial: Partial<State> = {
-      selected
+      selected: mapList(dates, (item: string) => ({
+        value: item,
+        selected: true
+      }))
     };
     const currentDate = withParse(dates[0]);
-
     if (currentDate) {
-      partial.date = currentDate;
       if (state.startDate) {
-        partial.reachStart = currentDate <= state.startDate;
+        partial.reachStart = currentDate < state.startDate;
       }
       if (state.endDate) {
-        partial.reachEnd = currentDate >= state.endDate;
+        partial.reachEnd = currentDate > state.endDate;
+      }
+      if (!partial.reachEnd && !partial.reachStart) {
+        partial.date = currentDate;
       }
     }
     useCallback(partial)(this.render);
@@ -510,7 +534,7 @@ export default class TypePicker {
    *
    * @param next: (dispatchValue: NodeListOf<HTMLElement>) => void
    */
-  public onRender(next) {
+  public onRender(next: Function) {
     subscribe("render", next);
   }
 
