@@ -1,80 +1,8 @@
-import { diff, createDate, between } from "./datepicker.helpers";
-import { padding } from "./util";
-function getDates(date): number {
-  return new Date(
-    Date.UTC(date.getFullYear(), date.getMonth() + 1, 0)
-  ).getUTCDate();
-}
-
-const getFirstWeek = (year, month) => {
-  const size = new Date(year, month, 1).getDay();
-  const list = [];
-  for (let i = 0; i < size; i++) {
-    list.push({
-      orign: null,
-      month,
-      year,
-      day: i,
-      disabled: true,
-      selected: false
-    });
-  }
-  return list;
-};
-const getFirstDate = (date, size) => {
-  const dates = [];
-
-  for (let i = 0; i <= size; i++) {
-    const now = new Date(date.getFullYear(), date.getMonth() + i, 1);
-    dates.push({
-      month: now.getMonth(),
-      year: now.getFullYear(),
-      size: getDates(now)
-    });
-  }
-
-  return dates;
-};
-export class TemplateData {
-  /**
-   *
-   * @param queue
-   * @param formater
-   * @param parser
-   * @param should
-   * @returns Array<string>
-   */
-  static mapQueue(
-    queue,
-    formater: Function,
-    parser: Function,
-    should: boolean
-  ): any {
-    const length = queue.length();
-
-    if (length <= 0) {
-      return [];
-    }
-
-    if (!should) {
-      return queue.map(item => item.value);
-    }
-
-    const first = queue.front();
-    const last = queue.last();
-
-    if (first.value === last.value) {
-      return [];
-    }
-    const start = parser(first.value);
-    const end = parser(last.value);
-    const size = diff(end, start, "days");
-    return createDate({
-      date: start,
-      size: size
-    }).map(formater);
-  }
-
+import { createDates, createDateDataOfMonth } from "./datepicker.helpers";
+import { classname } from "./datepicker.template";
+import { createList, isNotEmpty } from "./util";
+export class MonthPanelData {
+  data = [];
   /**
    *
    * @param date
@@ -82,47 +10,85 @@ export class TemplateData {
    * @param heading
    * @returns {any[]}
    */
-  static mapMonths(
-    date: { getFullYear: () => number; getMonth: () => number },
-    size: number,
-    heading: Function
-  ): any[] {
-    return getFirstDate(date, size).map(item => {
-      item.heading = heading(item);
-      item.dates = TemplateData.getDates(item);
-      return item;
+  mapMonths(date: Date, size: number) {
+    const getFirstDateOfMonth = index =>
+      new Date(date.getFullYear(), date.getMonth() + index, 1);
+    this.data = createList(size, getFirstDateOfMonth).map(date => {
+      const dates = new Date(
+        Date.UTC(date.getFullYear(), date.getMonth() + 1, 0)
+      ).getUTCDate();
+
+      const day = date.getDay();
+      //get days of first week at each month
+      const firstWeek = createList(day, day => ({
+        year: date.getFullYear(),
+        month: date.getMonth(),
+        day
+      })).map(item => createDateDataOfMonth(null, true, item));
+      const restWeeks = createDates(date, dates - 1).map(now =>
+        createDateDataOfMonth(now)
+      );
+      return {
+        month: date.getMonth(),
+        year: date.getFullYear(),
+        dates: [...firstWeek, ...restWeeks]
+      };
     });
   }
 
-  static getDates({ size, year, month }) {
-    //get days of first week at each month
-    const dates = getFirstWeek(year, month);
-    for (let i = 0; i < size; i++) {
-      const now = new Date(year, month, i + 1);
-      dates.push({
-        origin: now,
-        day: now.getDay(),
-        date: now.getDate(),
-        month: now.getMonth(),
-        year: now.getFullYear(),
-        disabled: false,
-        selected: false
+  mapDates(range, useFormatDate, usePanelTitle) {
+    this.data = this.data.map(item => {
+      const dates = item.dates.map(item => {
+        const value = useFormatDate(item.origin);
+        const date = item.date;
+
+        const [inRange, isStart, isEnd, selected, inQueue, inDisabled] = range(
+          item.origin,
+          value,
+          item.day
+        );
+
+        const disabled = inDisabled || item.disabled;
+
+        const className = classname({
+          isActive: inQueue,
+          isStart,
+          isEnd,
+          inRange,
+          isDisabled: disabled,
+          isSelected: inQueue,
+          isEmpty: !isNotEmpty(value)
+        });
+
+        return {
+          value,
+          disabled,
+          selected,
+          date,
+          className
+        };
       });
-    }
-    return dates;
+
+      return {
+        dates,
+        heading: usePanelTitle(item.year, item.month)
+      };
+    });
+    return this.data;
   }
 
-  static getBetweens(date, size, format) {
-    let dates = [];
+  mapDisabled(disables) {
+    const data = this.data;
 
-    for (let i = 0; i < size; i++) {
-      const now = new Date(
-        date.getFullYear(),
-        date.getMonth(),
-        i + date.getDate()
-      );
-      dates.push(format(now));
+    const result = [];
+    for (let item of data) {
+      let dates = item.dates;
+      for (let dateItem of dates) {
+        if (dateItem.disabled && dateItem.date) {
+          result.push(dateItem.value);
+        }
+      }
     }
-    return dates;
+    disables = result;
   }
 }

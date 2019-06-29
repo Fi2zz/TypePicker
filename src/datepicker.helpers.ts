@@ -1,4 +1,4 @@
-import { CreateDate, I18n } from "./datepicker.interface";
+import { I18n } from "./datepicker.interface";
 import { isDate, padding, isArray, isDef, toInt } from "./util";
 
 /**
@@ -9,12 +9,12 @@ import { isDate, padding, isArray, isDef, toInt } from "./util";
  * @param {boolean} isAbsolute
  * @returns {number}
  */
-export function diff(
+export function timeDiff(
   start: Date,
   end: Date,
   type: string = "month",
   isAbsolute?: boolean
-) {
+): number {
   let result: number;
   if (!isDate(start) || !isDate(end)) {
     return 0;
@@ -39,27 +39,35 @@ export function diff(
 
 /**
  *
- * @param view
- * @returns {any}
+ * @param first Date
+ * @param second Date
+ * @param isAbsolute boolean
  */
-export function getViews(view: number | string) {
-  if (!view) {
-    return 1;
-  }
-  const views = parseInt(<any>view, 10);
-  if (isNaN(views)) {
-    if (view !== "auto") {
-      return 1;
-    } else {
-      return "auto";
-    }
-  } else {
-    if (view > 2 || views <= 0) {
-      return 1;
-    } else {
-      return views;
-    }
-  }
+export const diffDates = (first: Date, second: Date, isAbsolute?: boolean) =>
+  timeDiff(first, second, "days", isAbsolute);
+
+/**
+ *
+ * @param first Date
+ * @param second Date
+ * @param isAbsolute boolean
+ */
+export const diffMonths = (first: Date, second: Date, isAbsolute?: boolean) =>
+  timeDiff(first, second, "month", isAbsolute);
+
+/**
+ *
+ * @param view
+ * @returns {number|string}
+ */
+export function getViews(view: number | string): number | string {
+  const map = {
+    auto: "auto",
+    1: 1,
+    2: 2
+  };
+  const views = map[view];
+  return views ? views : 1;
 }
 
 /**
@@ -68,7 +76,10 @@ export function getViews(view: number | string) {
  * @param format
  * @returns {string}
  */
-export function format(date: Date, format?: string) {
+export function format(date: Date, format?: string): string {
+  if (!isDate(date)) {
+    return null;
+  }
   if (!format) {
     format = "YYYY-MM-DD";
   }
@@ -199,53 +210,36 @@ function createDateFormatRegExpression(format: string) {
 
 /**
  *
- * @param options
+ * @param date
+ * @param size
+ * @param direction
  */
-export function createDate(options: CreateDate): any {
-  const { date, size, direction = 1, position = "date", index } = options;
+export function createDates(
+  date: Date,
+  size: number,
+  direction?: number
+): Array<Date> {
+  direction = direction || 1;
 
-  const dir = (v: number, size: number, dir: number) =>
-    dir > 0 ? v + size : v - size;
+  const dir = (now: number, size: number) =>
+    direction > 0 ? now + size : now - size;
 
   let result = [];
+  if (!isDate(date)) {
+    return result;
+  }
 
   for (let i = 0; i <= size; i++) {
     let currYear = date.getFullYear();
     let currMonth = date.getMonth();
     let currDate = date.getDate();
-    if (position === "year") {
-      currYear = dir(index ? index : currYear, i, direction);
-    } else if (position === "month") {
-      currMonth = dir(index ? index : currMonth, i, direction);
-    } else {
-      currDate = dir(index ? index : currDate, i, direction);
-    }
+    currDate = dir(currDate, i);
     result.push(new Date(currYear, currMonth, currDate));
   }
   return result;
 }
 
-/**
- *
- * @param {Array<Date>} dates
- * @returns {(dateFormat) => (string[] | string[])}
- */
-function createFormatDate(dates: Array<Date>) {
-  return dateFormat => {
-    const fmt = dateFormat => date => format(date, dateFormat);
-    if (isArray(dates)) {
-      return dates.map(fmt(dateFormat));
-    } else {
-      return [fmt(dateFormat)(dates)];
-    }
-  };
-}
-
-/**
- *
- * @returns {{title: string; days: Array<string>; months: Array<string>}}
- */
-export function defaultI18n() {
+export function defaultI18n(): I18n {
   return {
     title: "YYYY年MM月",
     days: <Array<string>>["日", "一", "二", "三", "四", "五", "六"],
@@ -278,27 +272,19 @@ export function i18nValidator(i18n: I18n, next: Function) {
 
 /**
  *
- * @param dateFormat
- * @returns {(date) => string}
- */
-export const formatParse = (dateFormat: string) => (date: Date) =>
-  format(parse(date, dateFormat), dateFormat);
-/**
- *
- * @param {Date} date
+ * @param date
  * @param start
  * @param end
- * @returns {(size) => (next) => void}
  */
-export const changeMonth = (date: Date, start, end) => size => {
+export const changeMonth = (date: Date, start: Date, end: Date) => size => {
   const now = new Date(
     date.getFullYear(),
     date.getMonth() + size,
     date.getDate()
   );
 
-  const endGap = end ? diff(end, now) : 1;
-  const startGap = end ? diff(now, start) : 2;
+  const endGap = end ? diffMonths(end, now) : 1;
+  const startGap = end ? diffMonths(now, start) : 2;
   let reachStart = startGap < 1 && endGap >= 0;
   let reachEnd = startGap > 1 && endGap <= 1;
 
@@ -319,21 +305,51 @@ export const changeMonth = (date: Date, start, end) => size => {
  * @param start
  * @param end
  * @param dateFormat
- * @returns {any}
  */
-export const between = (start, end, dateFormat?) => {
-  start = parse(start, dateFormat);
-  end = parse(end, dateFormat);
+export const between = (
+  start: Date | string,
+  end: Date | string,
+  dateFormat?: string
+) => {
+  const _start: Date = parse(start, dateFormat);
+  const _end: Date = parse(end, dateFormat);
 
   if (!start || !end) {
     return [];
   }
 
-  const dates = createDate({
-    date: start,
-    size: diff(end, start, "days", true),
-    direction: end > start ? 1 : -1
-  });
+  const dates = createDates(
+    _start,
+    diffDates(_end, _start, true),
+    end > start ? 1 : -1
+  );
 
-  return dateFormat ? createFormatDate(dates)(dateFormat) : dates;
+  const formatter = date => format(date, dateFormat);
+  return dateFormat ? dates.map(formatter) : dates;
+};
+
+export const createDateDataOfMonth = (origin, disabled?, partial?) => {
+  disabled = disabled || false;
+
+  partial = partial || {};
+  let { year, month, day } = partial;
+
+  let date = null;
+
+  if (isDate(origin)) {
+    year = origin.getFullYear();
+    month = origin.getMonth();
+    day = origin.getDay();
+    date = origin.getDate();
+  }
+
+  return {
+    origin,
+    month,
+    year,
+    day,
+    date,
+    disabled,
+    selected: false
+  };
 };

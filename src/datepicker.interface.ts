@@ -34,9 +34,6 @@ export interface CreateDate {
   date: Date;
   size: number;
   dateFormat?: string;
-  direction?: number;
-  position?: string;
-  index?: number;
 }
 
 export interface DateTag {
@@ -67,4 +64,5 @@ export interface State {
   date: Date;
   lastSelectedItemCanBeInvalid: boolean;
   selected: Array<any>;
+  panelSize: number;
 }

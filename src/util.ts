@@ -179,6 +179,19 @@ export function join(list, split?: string) {
   return list.join(split);
 }
 
+export function createList(size, filled = undefined) {
+  const list = [];
+  if (!size || size === 0) {
+    return list;
+  }
+
+  for (let i = 0; i < size; i++) {
+    list.push(typeof filled === "function" ? filled(i) : filled);
+  }
+
+  return list;
+}
+
 export function mapList(input, map, filter?) {
   if (!isArray(input)) {
     return [];

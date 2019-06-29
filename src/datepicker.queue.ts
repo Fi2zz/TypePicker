@@ -1,4 +1,4 @@
-import { diff } from "./datepicker.helpers";
+import { diffDates } from "./datepicker.helpers";
 import { QueueInterface } from "./datepicker.interface";
 export class Queue {
   constructor(interfaces: QueueInterface) {
@@ -21,7 +21,7 @@ export class Queue {
     let prev = this.parse(front ? front.value : null);
 
     if (this.limit && prev) {
-      if (prev >= now || diff(now, prev, "days", true) > this.limit) {
+      if (prev >= now || diffDates(now, prev, true) > this.limit) {
         this.empty();
       }
     }

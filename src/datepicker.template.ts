@@ -92,8 +92,7 @@ function createActionView(reachStart: boolean, reachEnd: boolean): (string)[] {
     return tag({
       tag: "div",
       props: {
-        className: join(className, " "),
-        children: [type]
+        className: join(className, " ")
       }
     });
   };
@@ -164,14 +163,9 @@ const headView = (year: number, month: number, title: string): string =>
           tag: "div",
           props: {
             className: "calendar-title",
-            children: tag({
-              tag: "span",
-              props: {
-                "data-year": year,
-                "data-month": month,
-                children: title
-              }
-            })
+            "data-year": year,
+            "data-month": month,
+            children: title
           }
         })
       ]

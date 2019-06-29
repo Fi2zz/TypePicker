@@ -12,7 +12,7 @@ const { startDate, endDate } = (() => {
     month: date.getMonth(),
     date: date.getDate()
   };
-  const startDate = new Date(dist.year - 1, dist.month, dist.date);
+  const startDate = new Date(dist.year - 1, dist.month - 2, dist.date);
   const endDate = new Date(dist.year, dist.month, dist.date);
 
   return {
@@ -27,8 +27,8 @@ const options = {
   endDate,
   limit: 2,
   format: "YYYY-MM-DD",
-  selection: 3,
-  views: 2,
+  selection: 2,
+  views: 2, //"auto",
   lastSelectedItemCanBeInvalid: false
 };
 
