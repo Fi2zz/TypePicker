@@ -25,7 +25,7 @@ const options = {
   el: document.getElementById("datepicker"),
   startDate,
   endDate,
-  limit: 2,
+  limit: 10,
   format: "YYYY-MM-DD",
   selection: 2,
   views: 2, //"auto",
@@ -83,7 +83,7 @@ app.disable({
   //   dates: ["2019-6-21", "2019-6-27", "2019-6-28"],
   //   to: "2019-6-1", // new Date(2018, 10, 1),
   //   from: "2019-8-28", //new Date(2019, 7, 15)
-  days: [4, 5]
+  // days: [4, 5]
 });
 
 // app.setDates([

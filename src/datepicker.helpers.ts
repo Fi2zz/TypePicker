@@ -1,6 +1,39 @@
-import { I18n } from "./datepicker.interface";
-import { isDate, padding, isArray, isDef, toInt } from "./util";
+import { I18n, QueueInterface } from "./datepicker.interface";
+import {
+  isDate,
+  padding,
+  isArray,
+  toInt,
+  createList,
+  isNotEmpty
+} from "./util";
 
+export function classname(options) {
+  const { isActive, isStart, isEnd, isDisabled, inRange, isEmpty } = options;
+  if (isEmpty) {
+    return "empty disabled";
+  }
+  let className = "";
+  if (isActive) {
+    className = "active";
+
+    if (isStart) {
+      className = "active start-date";
+    } else if (isEnd) {
+      className = "active end-date";
+    }
+  }
+
+  if (inRange) {
+    return "in-range";
+  }
+
+  if (isDisabled && !isActive) {
+    className = "disabled";
+  }
+
+  return className;
+}
 /**
  *
  * @param {Date} start
@@ -54,21 +87,6 @@ export const diffDates = (first: Date, second: Date, isAbsolute?: boolean) =>
  */
 export const diffMonths = (first: Date, second: Date, isAbsolute?: boolean) =>
   timeDiff(first, second, "month", isAbsolute);
-
-/**
- *
- * @param view
- * @returns {number|string}
- */
-export function getViews(view: number | string): number | string {
-  const map = {
-    auto: "auto",
-    1: 1,
-    2: 2
-  };
-  const views = map[view];
-  return views ? views : 1;
-}
 
 /**
  *
@@ -300,34 +318,6 @@ export const changeMonth = (date: Date, start: Date, end: Date) => size => {
   };
 };
 
-/**
- *
- * @param start
- * @param end
- * @param dateFormat
- */
-export const between = (
-  start: Date | string,
-  end: Date | string,
-  dateFormat?: string
-) => {
-  const _start: Date = parse(start, dateFormat);
-  const _end: Date = parse(end, dateFormat);
-
-  if (!start || !end) {
-    return [];
-  }
-
-  const dates = createDates(
-    _start,
-    diffDates(_end, _start, true),
-    end > start ? 1 : -1
-  );
-
-  const formatter = date => format(date, dateFormat);
-  return dateFormat ? dates.map(formatter) : dates;
-};
-
 export const createDateDataOfMonth = (origin, disabled?, partial?) => {
   disabled = disabled || false;
 
@@ -353,3 +343,321 @@ export const createDateDataOfMonth = (origin, disabled?, partial?) => {
     selected: false
   };
 };
+
+/**
+ *
+ * @type {{subscribe: (key: string, fn: Function) => void; publish: (...args: any[]) => boolean}}
+ */
+const Observer = (function() {
+  const clientList = <any>{};
+  /**
+   *
+   * @param {string} key
+   * @param {Function} fn
+   */
+  const subscribe = function(key: string, fn: Function) {
+    if (!clientList[key]) {
+      clientList[key] = [];
+    }
+    clientList[key].push(fn);
+  };
+  /**
+   *
+   * @param args
+   * @returns {boolean}
+   */
+  const publish = function(...args: Array<any>) {
+    let key = [].shift.call(args);
+    let fns = clientList[key];
+    if (!fns || fns.length === 0) {
+      return false;
+    }
+    for (let i = 0, fn; (fn = fns[i++]); ) {
+      fn.apply(this, args);
+    }
+  };
+  return {
+    subscribe,
+    publish
+  };
+})();
+
+/**
+ *
+ * @param {string} event
+ * @param value
+ * @returns {boolean}
+ */
+export const publish = (event: string, value: any) =>
+  Observer.publish(event, value);
+/**
+ *
+ * @type {(key: string, fn: Function) => void}
+ */
+export const subscribe = Observer.subscribe;
+
+export class Disabled {
+  days = [];
+  dates = [];
+  all = [];
+  update(type: string, value: any) {
+    this[type] = value;
+  }
+  findDay(day) {
+    return this.days.indexOf(day) >= 0;
+  }
+  findDate(date) {
+    return this.dates.indexOf(date) >= 0;
+  }
+  findBoth(date, day) {
+    return this.findDate(date) && this.findDay(day);
+  }
+  oneOf(date, day) {
+    return this.findDate(date) || this.findDay(day);
+  }
+  find(date) {
+    return this.all.indexOf(date) >= 0;
+  }
+  startDate;
+  endDate;
+  outofRange(date: Date) {
+    const isValidDates =
+      isDate(date) && isDate(this.startDate) && isDate(this.endDate);
+    return isValidDates && (date > this.endDate || date < this.startDate);
+  }
+
+  some(handler) {
+    return this.all.some(handler);
+  }
+}
+
+export class MonthPanelData {
+  data = [];
+  /**
+   *
+   * @param date
+   * @param size
+   * @param heading
+   * @returns {any[]}
+   */
+  mapMonths(date: Date, size: number) {
+    const getFirstDateOfMonth = index =>
+      new Date(date.getFullYear(), date.getMonth() + index, 1);
+    this.data = createList(size, getFirstDateOfMonth).map(date => {
+      const dates = new Date(
+        Date.UTC(date.getFullYear(), date.getMonth() + 1, 0)
+      ).getUTCDate();
+
+      const day = date.getDay();
+      //get days of first week at each month
+      const firstWeek = createList(day, day => ({
+        year: date.getFullYear(),
+        month: date.getMonth(),
+        day
+      })).map(item => createDateDataOfMonth(null, true, item));
+      const restWeeks = createDates(date, dates - 1).map(now =>
+        createDateDataOfMonth(now)
+      );
+      return {
+        month: date.getMonth(),
+        year: date.getFullYear(),
+        dates: [...firstWeek, ...restWeeks]
+      };
+    });
+  }
+
+  mapDates({
+    useFormatDate,
+    usePanelTitle, //: Function,
+    useRange //: Function
+  }) {
+    this.data = this.data.map(item => {
+      const dates = item.dates.map(item => {
+        const value = useFormatDate(item.origin);
+        const date = item.date;
+        const [inQueue, inDisabled, inRange, isStart, isEnd] = useRange({
+          date: item.origin,
+          value,
+          day: item.day
+        });
+
+        const disabled = inDisabled || item.disabled;
+
+        const className = classname({
+          isActive: inQueue,
+          isStart,
+          isEnd,
+          inRange,
+          isDisabled: disabled,
+          isEmpty: !isNotEmpty(value)
+        });
+
+        return {
+          value,
+          disabled,
+          date,
+          className
+        };
+      });
+
+      return {
+        dates,
+        heading: usePanelTitle(item.year, item.month)
+      };
+    });
+    return this.data;
+  }
+
+  mapDisabled(handler) {
+    const data = this.data;
+    const result = [];
+    for (let item of data) {
+      let dates = item.dates;
+      for (let dateItem of dates) {
+        if (dateItem.disabled && dateItem.date) {
+          result.push(dateItem.value);
+        }
+      }
+    }
+    handler(result);
+    // disables.setAll(result);
+  }
+}
+
+export class Queue {
+  constructor(interfaces: QueueInterface) {
+    const { size, limit, useRange, useFormatDate, useParseDate } = interfaces;
+    this.size = size;
+    this.limit = limit;
+    this.useRange = useRange;
+    this.useFormatDate = useFormatDate;
+    this.useParseDate = useParseDate;
+  }
+  size = 1;
+  limit: boolean | number = 1;
+  parse = null;
+  useRange: boolean = false;
+  useFormatDate = null;
+  useParseDate = null;
+  /**
+   *
+   * @param {string} date
+   * @returns {(next?: (Function | undefined)) => void}
+   */
+  enqueue = (date: any) => (next?: Function | undefined): void => {
+    let front = this.front();
+
+    let last = this.last();
+
+    if (last) {
+      if (last.value == date.value) {
+        this.dequeue();
+      }
+      let lastDate = this.useParseDate(last.value);
+      let nowDate = this.useParseDate(date.value);
+      if (lastDate > nowDate) {
+        this.list = [];
+      }
+    }
+    this.list.push(date);
+    this.reset(next);
+  };
+
+  dequeue() {
+    this.list.shift();
+  }
+
+  /**
+   *
+   * @param {Function} next
+   */
+  reset(next?: Function) {
+    if (this.list.length > this.size) {
+      this.replace([this.last()]);
+    } else {
+      const [first, last] = this.list;
+
+      if (first && last) {
+        const diffs = diffDates(
+          this.useParseDate(first.value),
+          this.useParseDate(last.value),
+          true
+        );
+        if (diffs > this.limit) {
+          this.dequeue();
+        }
+      }
+    }
+    if (typeof next === "function") {
+      let id = setTimeout(function afterQueueReset() {
+        next();
+        clearTimeout(id);
+      }, 0);
+    }
+  }
+
+  resetWithValue(value) {
+    this.empty();
+    this.list.push(value);
+  }
+
+  last() {
+    return this.list[this.length() - 1];
+  }
+  pop() {
+    this.list.pop();
+  }
+
+  empty() {
+    this.list = [];
+  }
+
+  front() {
+    return this.list[0];
+  }
+
+  list: any[] = [];
+  find(value: string) {
+    return this.list.filter(item => item.value === value).pop();
+  }
+  length() {
+    return this.list.length;
+  }
+
+  replace(v) {
+    this.list = v;
+  }
+
+  include(v) {
+    return this.list.indexOf(v) >= 0;
+  }
+
+  has(value) {
+    return !!this.find(value);
+  }
+  map(mapper) {
+    return this.list.map(mapper);
+  }
+  getRange() {
+    const length = this.length();
+
+    if (length <= 0) {
+      return [];
+    }
+
+    if (!this.useRange) {
+      return this.map(item => item.value);
+    }
+
+    const first = this.front();
+    const last = this.last();
+
+    if (first.value === last.value) {
+      return [];
+    }
+    const start = this.useParseDate(first.value);
+    const end = this.useParseDate(last.value);
+    const size = diffDates(end, start);
+    return createDates(start, size).map(this.useFormatDate.bind(this));
+  }
+}

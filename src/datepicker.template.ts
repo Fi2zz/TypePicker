@@ -2,40 +2,6 @@ import { DateTag, node } from "./datepicker.interface";
 import { isDef, isNotEmpty, join } from "./util";
 import { DOMHelpers } from "./datepicker.dom.helper";
 
-export const classname = ({
-  isActive,
-  isStart,
-  isEnd,
-  isDisabled,
-  inRange,
-  isSelected,
-  isEmpty
-}) => {
-  if (isEmpty) {
-    return "empty disabled";
-  }
-  let className = "";
-  if (isActive) {
-    className = "active";
-
-    if (isStart) {
-      className = "active start-date";
-    } else if (isEnd) {
-      className = "active end-date";
-    }
-  }
-
-  if (inRange) {
-    return "in-range";
-  }
-
-  if (isDisabled && !isSelected) {
-    className = "disabled";
-  }
-
-  return className;
-};
-
 /**
  *
  * @param tag

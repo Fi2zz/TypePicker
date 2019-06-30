@@ -47,10 +47,27 @@ export interface DateTag {
 export interface QueueInterface {
   size: number;
   limit: boolean | number;
-  parse: Function;
-  index?: Function;
+  useRange: boolean;
+  useParseDate: Function;
+  useFormatDate: Function;
 }
 
+export interface Disables {
+  days: number[];
+  dates: string[];
+  update: Function;
+  setAll: Function;
+  find: Function;
+  all: string[];
+  findDate: Function;
+  findDay: Function;
+  findBoth: Function;
+  oneOf: Function;
+  startDate: Date | null;
+  endDate: Date | null;
+  outofRange: Function;
+  some: Function;
+}
 export interface State {
   selection: number;
   views: number | string;

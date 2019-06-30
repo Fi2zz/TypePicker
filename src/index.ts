@@ -1,8 +1,6 @@
 import "./style.css";
-import { MonthPanelData } from "./datepicker.data.generator";
 import { DOMHelpers } from "./datepicker.dom.helper";
 import {
-  between,
   changeMonth,
   defaultI18n,
   diffDates,
@@ -10,11 +8,14 @@ import {
   format,
   i18nValidator,
   parse,
-  createDates
+  Disabled,
+  MonthPanelData,
+  createDates,
+  publish,
+  subscribe,
+  Queue
 } from "./datepicker.helpers";
 import { datepicker, Disable, I18n, State } from "./datepicker.interface";
-import { publish, subscribe } from "./datepicker.observer";
-import { Queue } from "./datepicker.queue";
 import { template } from "./datepicker.template";
 import {
   and,
@@ -38,10 +39,7 @@ import {
 } from "./util";
 
 let queue = null;
-let disableDates = [];
-let disableDays = [];
-let disables = [];
-
+let disables = new Disabled();
 const viewsMap = {
   auto: "auto",
   1: 1,
@@ -54,6 +52,19 @@ function formatPanelTitle(year, month) {
     .replace(/y{1,}/g, padding(year))
     .replace(/m{1,}/g, getState().i18n.months[month]);
 }
+const findDisabledBeforeStartDate = (
+  startDate: Date | string,
+  dateBeforeStartDate: Date | string
+) => {
+  const _start: Date = useParseDate(startDate);
+  const _end: Date = useParseDate(dateBeforeStartDate);
+  if (!_start || !_end) {
+    return [];
+  }
+  return createDates(_start, diffDates(_end, _start, true), -1).map(
+    useFormatDate
+  );
+};
 
 const datesBetweenEnqueuedAndInqueue = (current, last) => {
   const size = diffDates(current, last);
@@ -66,29 +77,6 @@ const datesBetweenEnqueuedAndInqueue = (current, last) => {
     return useFormatDate(now);
   });
 };
-
-function getSelectedFromQueue(shouldMapQueue: boolean): any {
-  const length = queue.length();
-
-  if (length <= 0) {
-    return [];
-  }
-
-  if (!shouldMapQueue) {
-    return queue.map(item => item.value);
-  }
-
-  const first = queue.front();
-  const last = queue.last();
-
-  if (first.value === last.value) {
-    return [];
-  }
-  const start = useParseDate(first.value);
-  const end = useParseDate(last.value);
-  const size = diffDates(end, start);
-  return createDates(start, size).map(useFormatDate);
-}
 
 function enqueue(
   queue: Queue,
@@ -151,7 +139,7 @@ function useEnqueue(
   state.selected
     .map(item => {
       if ("disabled" in item === false) {
-        item.disabled = disables.indexOf(item.value) > -1;
+        item.disabled = disables.find(item.value); //> -1;
       }
       item.selected = true;
       return item;
@@ -179,11 +167,9 @@ let state: State = {
 function setState(partial: Partial<State>) {
   state = partial ? { ...state, ...partial } : state;
 }
-
 function getState() {
   return state;
 }
-
 function useFormatDate(date: Date): string {
   return format(date, getState().dateFormat);
 }
@@ -192,78 +178,62 @@ function useParseDate(date: Date | string): Date {
   return parse(date, getState().dateFormat);
 }
 
+const inDisable = (date: Date | null, formattedDate: string, day: number) => {
+  return disables.oneOf(formattedDate, day) || disables.outofRange(date);
+};
+
+function getInRange({ range, value, expected, lower }) {
+  const index = range.indexOf(value);
+
+  if (!lower || expected === lower) {
+    return index === expected;
+  }
+
+  return index > expected && index < lower;
+}
+
 function renderTemplate(): string {
   const state = getState();
-  let {
-    reachStart,
-    reachEnd,
-    views,
-    startDate,
-    endDate,
-    date,
-    selection,
-    i18n,
-    panelSize
-  } = state;
-  const useRange = selection === 2;
-
   const monthPanelData = new MonthPanelData();
   monthPanelData.mapMonths(
-    isNaN(views as number) ? startDate : date,
-    panelSize
+    isNaN(state.views as number) ? state.startDate : state.date,
+    state.panelSize
   );
-  monthPanelData.mapDates(
-    (date, value, day) => {
-      const useSelected = getSelectedFromQueue(useRange);
-      const inSelelected = (value, greater, lower?) => {
-        const index = useSelected.indexOf(value);
-        if (!lower) {
-          return index === greater;
-        }
-        if (greater === lower) {
-          if (greater >= 0 && lower >= 0) {
-            return index >= greater;
-          } else {
-            return index <= lower;
-          }
-        }
-        return index > greater && index < lower;
-      };
-      const inDisable = (date, value, day) => {
-        const isDisabled = value => {
-          const isValidDates =
-            isDate(value) && isDate(startDate) && isDate(endDate);
-          return isValidDates && (value > endDate || value < startDate);
-        };
-        return (
-          disableDates.indexOf(value) >= 0 ||
-          disableDays.indexOf(day) >= 0 ||
-          isDisabled(date)
-        );
-      };
-      const inRange = inSelelected(value, 0, useSelected.length - 1);
-      const isEnd = inSelelected(value, useSelected.length - 1);
-      const isStart = inSelelected(value, 0);
+  monthPanelData.mapDates({
+    useFormatDate: useFormatDate,
+    usePanelTitle: formatPanelTitle,
+    useRange: ({ date, value, day }) => {
+      const range = queue.getRange();
+      const inRange = getInRange({
+        range,
+        value,
+        expected: 0,
+        lower: range.length - 1
+      });
+      const isEnd = getInRange({
+        range,
+        value,
+        expected: range.length - 1,
+        lower: range.length - 1
+      });
+      const isStart = getInRange({ range, value, expected: 0, lower: 0 });
       const inQueue = queue.has(value);
       return [
-        useRange && inRange,
-        useRange && isStart,
-        useRange && isEnd,
-        inSelelected(value, 0, 0),
         inQueue,
-        inDisable(date, value, day)
+        inDisable(date, value, day),
+        queue.useRange && inRange,
+        queue.useRange && isStart,
+        queue.useRange && isEnd
       ];
-    },
-    useFormatDate,
-    formatPanelTitle
-  );
-  monthPanelData.mapDisabled(disables);
+    }
+  });
+  monthPanelData.mapDisabled(dates => disables.update("all", dates));
   return template({
     data: monthPanelData.data,
-    days: i18n.days,
-    reachStart,
-    reachEnd,
-    switchable: !isNaN(views as number)
+    days: state.i18n.days,
+    reachStart: state.reachStart,
+    reachEnd: state.reachEnd,
+    switchable: !isNaN(state.views as number)
   });
 }
 
@@ -306,7 +276,6 @@ export default class TypePicker {
     )(option.limit)((limit: number | boolean) => {
       partial.limit = limit;
     });
-
     equal(option.views as string, "auto")(() => {
       if (!partial.startDate) {
         partial.startDate = new Date();
@@ -331,11 +300,12 @@ export default class TypePicker {
         date.getMonth(),
         date.getDate() - 1
       );
-      disableDates = between(
-        firstDate,
-        dateBeforeStartDate,
-        partial.dateFormat
+      disables.update(
+        "dates",
+        findDisabledBeforeStartDate(firstDate, dateBeforeStartDate)
       );
+      disables.update("startDate", partial.startDate);
+      disables.update("endDate", partial.endDate);
     });
     condition(isBool)(option.lastSelectedItemCanBeInvalid)((value: boolean) => {
       partial.lastSelectedItemCanBeInvalid = value;
@@ -343,17 +313,14 @@ export default class TypePicker {
         partial.selection = 2;
       }
     });
-
-    notEqual(partial.selection as number, 2)(() => {
-      partial.limit = isDef(partial.limit) ? partial.selection : false;
-      partial.lastSelectedItemCanBeInvalid = false;
-    });
     this.element = el;
     this.element.className = DOMHelpers.class.container(partial.views);
     queue = new Queue({
       size: partial.selection,
       limit: partial.limit,
-      parse: (date: string | Date) => parse(date, partial.dateFormat)
+      useRange: partial.selection === 2,
+      useFormatDate,
+      useParseDate
     });
 
     partial.panelSize =
@@ -365,6 +332,10 @@ export default class TypePicker {
   }
   protected element: HTMLElement = null;
   protected update(partial) {
+    if (partial && Object.keys(partial).length <= 0) {
+      return;
+    }
+
     setState(partial);
     const {
       date,
@@ -497,17 +468,22 @@ export default class TypePicker {
     if (!isArray(days)) {
       days = [];
     }
-    const partial: Partial<State> = {};
+    const partial: Partial<State> = {
+      startDate: state.startDate,
+      endDate: state.endDate
+    };
     condition(isDate)(useParseDate(from))((from: any) => {
       partial.endDate = from;
+      disables.update("endDate", from);
     });
     condition(isDate)(useParseDate(to))((to: any) => {
       partial.startDate = to;
       partial.reachStart = true;
       partial.date = to;
+      disables.update("startDate", to);
     });
 
-    or(!isDate(state.startDate), !isDate(state.endDate))(
+    or(!isDate(partial.startDate), !isDate(partial.endDate))(
       () => {
         partial.reachEnd = false;
         partial.reachStart = false;
@@ -525,22 +501,26 @@ export default class TypePicker {
     );
 
     if (days.length > 0) {
-      disableDays = filterList(
-        mapList(days, toInt, (day: number) => day >= 0 && day <= 6),
-        isNotEmpty
+      disables.update(
+        "days",
+        filterList(
+          mapList(days, toInt, (day: number) => day >= 0 && day <= 6),
+          isNotEmpty
+        )
       );
     }
     if (dates.length > 0) {
-      disableDates = filterList(
-        dedupList(
-          mapList([...disableDates, ...dates], useParseDate, isNotEmpty)
-        ),
-        isNotEmpty
+      disables.update(
+        "dates",
+        filterList(
+          dedupList(
+            mapList([...disables.dates, ...dates], useParseDate, isNotEmpty)
+          ),
+          isNotEmpty
+        )
       );
     }
-    if (Object.keys(partial).length > 0) {
-      this.update(partial);
-    }
+    this.update(partial);
   }
 
   /**
