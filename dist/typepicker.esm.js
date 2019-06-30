@@ -1,5 +1,5 @@
 /*!
- * TypePicker v5.9.5
+ * TypePicker v5.9.6
  * 2019/6/30
  * A Typescript Datepicker
  * (c) 2017-2019,Fi2zzz <wenjingbiao@outlook.com>
