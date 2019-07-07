@@ -1,4 +1,4 @@
-export interface datepicker {
+export interface TypePickerOptions {
   el: string | HTMLElement;
   limit?: number;
   format?: string;
@@ -10,7 +10,7 @@ export interface datepicker {
   lastSelectedItemCanBeInvalid?: boolean;
 }
 
-export interface I18n {
+export interface TypePickerI18n {
   title: string;
   days: string[];
   months: string[];
@@ -52,6 +52,12 @@ export interface QueueInterface {
   useFormatDate: Function;
 }
 
+export interface QueueItem {
+  value?: string;
+  disabled?: boolean;
+  selected?: boolean;
+}
+
 export interface Disables {
   days: number[];
   dates: string[];
@@ -68,18 +74,13 @@ export interface Disables {
   outofRange: Function;
   some: Function;
 }
-export interface State {
+export interface TypePickerState {
   selection: number;
-  views: number | string;
   startDate: Date | null;
   endDate: Date | null;
-  reachStart: boolean;
-  reachEnd: boolean;
   dateFormat: string;
   limit: number | boolean;
-  i18n: I18n;
-  date: Date;
+  i18n: TypePickerI18n;
   lastSelectedItemCanBeInvalid: boolean;
   selected: Array<any>;
-  panelSize: number;
 }

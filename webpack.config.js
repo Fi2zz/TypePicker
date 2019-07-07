@@ -7,6 +7,7 @@ const TerserPlugin = require("terser-webpack-plugin");
 module.exports = function(_, options) {
   const isEnvProduction = options.mode === "production";
   const isEnvDevelopment = options.mode === "development";
+  const useSourceMap = options.sourceMap || isEnvDevelopment;
   const output = {
     path: isEnvDevelopment
       ? path.resolve(__dirname, "example")
@@ -58,7 +59,7 @@ module.exports = function(_, options) {
     resolve: {
       extensions: [".js", ".json", ".ts", ".tsx"]
     },
-    devtool: isEnvDevelopment && "#eval-source-map",
+    devtool: useSourceMap && "#eval-source-map",
 
     optimization: {
       minimizer: [

@@ -1,12 +1,5 @@
-import { I18n, QueueInterface } from "./datepicker.interface";
-import {
-  isDate,
-  padding,
-  isArray,
-  toInt,
-  createList,
-  isNotEmpty
-} from "./util";
+import { TypePickerI18n, QueueInterface } from "./datepicker.interface";
+import { isDate, padding, toInt, isEmpty, List } from "./util";
 
 export function classname(options) {
   const { isActive, isStart, isEnd, isDisabled, inRange, isEmpty } = options;
@@ -257,7 +250,7 @@ export function createDates(
   return result;
 }
 
-export function defaultI18n(): I18n {
+export function defaultI18n(): TypePickerI18n {
   return {
     title: "YYYY年MM月",
     days: <Array<string>>["日", "一", "二", "三", "四", "五", "六"],
@@ -278,45 +271,15 @@ export function defaultI18n(): I18n {
   };
 }
 
-export function i18nValidator(i18n: I18n, next: Function) {
+export function i18nValidator(i18n: TypePickerI18n, next: Function) {
   if (
-    isArray(i18n.days) &&
-    isArray(i18n.months) &&
+    List.isList(i18n.days) &&
+    List.isList(i18n.months) &&
     typeof i18n.title === "string"
   ) {
     next(i18n);
   }
 }
-
-/**
- *
- * @param date
- * @param start
- * @param end
- */
-export const changeMonth = (date: Date, start: Date, end: Date) => size => {
-  const now = new Date(
-    date.getFullYear(),
-    date.getMonth() + size,
-    date.getDate()
-  );
-
-  const endGap = end ? diffMonths(end, now) : 1;
-  const startGap = end ? diffMonths(now, start) : 2;
-  let reachStart = startGap < 1 && endGap >= 0;
-  let reachEnd = startGap > 1 && endGap <= 1;
-
-  if (!start || !end) {
-    reachEnd = false;
-    reachStart = false;
-  }
-
-  return {
-    reachEnd,
-    reachStart,
-    date: now
-  };
-};
 
 export const createDateDataOfMonth = (origin, disabled?, partial?) => {
   disabled = disabled || false;
@@ -443,14 +406,14 @@ export class MonthPanelData {
   mapMonths(date: Date, size: number) {
     const getFirstDateOfMonth = index =>
       new Date(date.getFullYear(), date.getMonth() + index, 1);
-    this.data = createList(size, getFirstDateOfMonth).map(date => {
+    this.data = List.create(size, getFirstDateOfMonth).map(date => {
       const dates = new Date(
         Date.UTC(date.getFullYear(), date.getMonth() + 1, 0)
       ).getUTCDate();
 
       const day = date.getDay();
       //get days of first week at each month
-      const firstWeek = createList(day, day => ({
+      const firstWeek = List.create(day, day => ({
         year: date.getFullYear(),
         month: date.getMonth(),
         day
@@ -489,7 +452,7 @@ export class MonthPanelData {
           isEnd,
           inRange,
           isDisabled: disabled,
-          isEmpty: !isNotEmpty(value)
+          isEmpty: isEmpty(value)
         });
 
         return {
@@ -525,14 +488,15 @@ export class MonthPanelData {
 }
 
 export class Queue {
-  constructor(interfaces: QueueInterface) {
-    const { size, limit, useRange, useFormatDate, useParseDate } = interfaces;
+  setOptions(options: QueueInterface) {
+    const { size, limit, useRange, useFormatDate, useParseDate } = options;
     this.size = size;
     this.limit = limit;
     this.useRange = useRange;
     this.useFormatDate = useFormatDate;
     this.useParseDate = useParseDate;
   }
+
   size = 1;
   limit: boolean | number = 1;
   parse = null;
@@ -545,8 +509,6 @@ export class Queue {
    * @returns {(next?: (Function | undefined)) => void}
    */
   enqueue = (date: any) => (next?: Function | undefined): void => {
-    let front = this.front();
-
     let last = this.last();
 
     if (last) {

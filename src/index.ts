@@ -1,88 +1,40 @@
 import "./style.css";
 import { DOMHelpers } from "./datepicker.dom.helper";
 import {
-  changeMonth,
-  defaultI18n,
   diffDates,
   diffMonths,
-  format,
   i18nValidator,
-  parse,
-  Disabled,
   MonthPanelData,
-  createDates,
   publish,
-  subscribe,
-  Queue
+  subscribe
 } from "./datepicker.helpers";
-import { datepicker, Disable, I18n, State } from "./datepicker.interface";
-import { template } from "./datepicker.template";
 import {
-  and,
-  condition,
-  dedupList,
-  equal,
-  notEqual,
-  filterList,
-  isArray,
-  isBool,
-  isDate,
-  isDef,
-  isNotEmpty,
-  mapList,
-  or,
-  padding,
-  reduceList,
-  sliceList,
-  createList,
-  toInt
-} from "./util";
+  TypePickerOptions,
+  Disable,
+  TypePickerI18n,
+  TypePickerState,
+  QueueItem
+} from "./datepicker.interface";
+import { template } from "./datepicker.template";
+import { match, isBool, isDate, isDef, isNotEmpty, toInt, List } from "./util";
 
-let queue = null;
-let disables = new Disabled();
-const viewsMap = {
-  auto: "auto",
-  1: 1,
-  2: 2
-};
+import {
+  getState,
+  setState,
+  checkSwitchable,
+  useFormatDate,
+  useParseDate,
+  disables,
+  queue,
+  findDisabledBeforeStartDate,
+  findDatesBetweenEnqueuedAndInqueue,
+  usePanelTitle,
+  inDisable
+} from "./state";
 
-function formatPanelTitle(year, month) {
-  return getState()
-    .i18n.title.toLowerCase()
-    .replace(/y{1,}/g, padding(year))
-    .replace(/m{1,}/g, getState().i18n.months[month]);
-}
-const findDisabledBeforeStartDate = (
-  startDate: Date | string,
-  dateBeforeStartDate: Date | string
-) => {
-  const _start: Date = useParseDate(startDate);
-  const _end: Date = useParseDate(dateBeforeStartDate);
-  if (!_start || !_end) {
-    return [];
-  }
-  return createDates(_start, diffDates(_end, _start, true), -1).map(
-    useFormatDate
-  );
-};
+let temp = [];
 
-const datesBetweenEnqueuedAndInqueue = (current, last) => {
-  const size = diffDates(current, last);
-  return createList(size, index => {
-    const now = new Date(
-      current.getFullYear(),
-      current.getMonth(),
-      index + current.getDate()
-    );
-    return useFormatDate(now);
-  });
-};
-
-function enqueue(
-  queue: Queue,
-  item: { value: string; disabled: any; selected: boolean },
-  next: Function
-): void {
+function useQueue(item: QueueItem, next: Function): void {
   const { lastSelectedItemCanBeInvalid, selection } = getState();
   if (item.disabled && selection !== 2) {
     return;
@@ -94,7 +46,7 @@ function enqueue(
     let someInvalid = false;
 
     if (last) {
-      const between = datesBetweenEnqueuedAndInqueue(
+      const between = findDatesBetweenEnqueuedAndInqueue(
         useParseDate(item.value),
         useParseDate(last.value)
       );
@@ -127,96 +79,55 @@ function enqueue(
   );
 }
 
-function useEnqueue(
-  data: { value: string; disabled: boolean } | null,
-  next: Function
-) {
+function useUpdate(data: QueueItem, next: Function) {
   const state = getState();
   if (data) {
+    temp.push(data);
     state.selected.push(data);
   }
+  const selected = List.map(temp, item => {
+    item.disabled = disables.find(item.value);
+    item.selected = true;
+    return item;
+  });
 
-  state.selected
-    .map(item => {
-      if ("disabled" in item === false) {
-        item.disabled = disables.find(item.value); //> -1;
+  List.loop(selected, item => {
+    useQueue(item, dispatchValue => {
+      let partial: Partial<TypePickerState> = {};
+      partial.selected = dispatchValue;
+      publish("select", dispatchValue);
+      if (typeof next === "function") {
+        next(partial);
       }
-      item.selected = true;
-      return item;
-    })
-    .forEach(item => enqueue(queue, item, next));
-  state.selected = [];
+    });
+  });
+  temp = [];
 }
 
-let state: State = {
-  date: new Date(),
-  selection: 1,
-  views: 1,
-  startDate: null,
-  endDate: null,
-  reachEnd: false,
-  reachStart: false,
-  dateFormat: "YYYY-MM-DD",
-  limit: 1,
-  i18n: defaultI18n(),
-  lastSelectedItemCanBeInvalid: false,
-  selected: [],
-  panelSize: 1
-};
-
-function setState(partial: Partial<State>) {
-  state = partial ? { ...state, ...partial } : state;
-}
-function getState() {
-  return state;
-}
-function useFormatDate(date: Date): string {
-  return format(date, getState().dateFormat);
-}
-
-function useParseDate(date: Date | string): Date {
-  return parse(date, getState().dateFormat);
-}
-
-const inDisable = (date: Date | null, formattedDate: string, day: number) => {
-  return disables.oneOf(formattedDate, day) || disables.outofRange(date);
-};
-
-function getInRange({ range, value, expected, lower }) {
-  const index = range.indexOf(value);
-
-  if (!lower || expected === lower) {
-    return index === expected;
-  }
-
-  return index > expected && index < lower;
-}
-
-function renderTemplate(): string {
+function renderTemplate({ views, date, reachEnd, reachStart }): string {
   const state = getState();
   const monthPanelData = new MonthPanelData();
   monthPanelData.mapMonths(
-    isNaN(state.views as number) ? state.startDate : state.date,
-    state.panelSize
+    isNaN(views as number) ? state.startDate : date,
+    views
   );
+
   monthPanelData.mapDates({
-    useFormatDate: useFormatDate,
-    usePanelTitle: formatPanelTitle,
+    useFormatDate,
+    usePanelTitle,
     useRange: ({ date, value, day }) => {
       const range = queue.getRange();
-      const inRange = getInRange({
+      const inRange = List.inRange(
         range,
         value,
-        expected: 0,
-        lower: range.length - 1
-      });
-      const isEnd = getInRange({
+        (index, list) => index > 0 && index < list.length - 1
+      );
+      const isEnd = List.inRange(
         range,
         value,
-        expected: range.length - 1,
-        lower: range.length - 1
-      });
-      const isStart = getInRange({ range, value, expected: 0, lower: 0 });
+        (index, list) => index === list.length - 1
+      );
+      const isStart = List.inRange(range, value, index => index === 0);
       const inQueue = queue.has(value);
       return [
         inQueue,
@@ -231,52 +142,55 @@ function renderTemplate(): string {
   return template({
     data: monthPanelData.data,
     days: state.i18n.days,
-    reachStart: state.reachStart,
-    reachEnd: state.reachEnd,
-    switchable: !isNaN(state.views as number)
+    reachStart,
+    reachEnd,
+    switchable: views > 0 && views <= 2
   });
 }
 
-export default class TypePicker {
+const isNumberOrTrue = v => !isNaN(v as number) || v === true;
+
+const isNumber = v => !isNaN(v);
+
+class TypePicker {
   startDate: Date | null;
   endDate: Date | null;
-  date: Date | null;
+  date = new Date();
+  views = 1;
 
-  constructor(option: datepicker) {
+  constructor(option: TypePickerOptions) {
     const el = DOMHelpers.select(option.el);
     if (!el || !option) {
       return;
     }
-    const partial: Partial<State> = {};
-    condition(isDef)(option.format)(
-      (format: string) => (partial.dateFormat = format)
+    let _date = this.date;
+    let _views = this.views;
+    const partial: Partial<TypePickerState> = {};
+    match({ condition: isDef, value: option.format })(
+      format => (partial.dateFormat = format)
+    );
+    match({ condition: isDef, value: option.views })(views => {
+      const viewsList = [1, 2, "auto"];
+      _views = viewsList.indexOf(views) >= 0 ? views : viewsList[0];
+    });
+    match({ condition: isNumber, value: option.selection })(
+      size => (partial.selection = size)
+    );
+    match({ condition: isDate, value: option.startDate })(date => {
+      partial.startDate = date;
+      _date = date;
+    });
+    match({ condition: isDate, value: option.endDate })(
+      date => (partial.endDate = date)
     );
 
-    condition(isDef)(option.views)((views: any) => {
-      const view = viewsMap[views];
-      partial.views = view ? view : viewsMap[1];
-    });
-    condition((size: number) => !isNaN(size))(option.selection)(
-      (size: number) => {
-        partial.selection = size;
-      }
+    match({ condition: isNumberOrTrue, value: option.limit })(
+      limit => (partial.limit = limit)
     );
-
-    condition(isDate)(option.startDate)((startDate: Date) => {
-      partial.startDate = startDate;
-      partial.reachStart = true;
-      partial.date = startDate;
-    });
-    condition(isDate)(option.endDate)(
-      (endDate: Date) => (partial.endDate = endDate)
-    );
-
-    condition(
-      (limit: number | boolean) => !isNaN(limit as number) || limit !== false
-    )(option.limit)((limit: number | boolean) => {
-      partial.limit = limit;
-    });
-    equal(option.views as string, "auto")(() => {
+    match({
+      condition: (option.views as string) == "auto",
+      value: option.views
+    })(() => {
       if (!partial.startDate) {
         partial.startDate = new Date();
       }
@@ -289,10 +203,14 @@ export default class TypePicker {
           start.getDate()
         );
       }
-      partial.date = partial.startDate;
+      _views = diffMonths(partial.endDate, partial.startDate);
+      _date = partial.startDate;
     });
 
-    and(isDate(partial.startDate), isDate(partial.endDate))(() => {
+    match({
+      condition: (dates: any) => List.every(dates, date => isDate(date)),
+      value: [partial.startDate, partial.endDate]
+    })(() => {
       const date = partial.startDate;
       const firstDate = new Date(date.getFullYear(), date.getMonth(), 1);
       const dateBeforeStartDate = new Date(
@@ -307,15 +225,21 @@ export default class TypePicker {
       disables.update("startDate", partial.startDate);
       disables.update("endDate", partial.endDate);
     });
-    condition(isBool)(option.lastSelectedItemCanBeInvalid)((value: boolean) => {
-      partial.lastSelectedItemCanBeInvalid = value;
-      if (value === true) {
-        partial.selection = 2;
+    match({ condition: isBool, value: option.lastSelectedItemCanBeInvalid })(
+      value => {
+        partial.lastSelectedItemCanBeInvalid = value;
+        if (value === true) {
+          partial.selection = 2;
+        }
       }
-    });
+    );
     this.element = el;
-    this.element.className = DOMHelpers.class.container(partial.views);
-    queue = new Queue({
+    this.element.className = DOMHelpers.class.container(_views);
+    this.startDate = partial.startDate;
+    this.endDate = partial.endDate;
+    this.date = _date;
+    this.views = _views;
+    queue.setOptions({
       size: partial.selection,
       limit: partial.limit,
       useRange: partial.selection === 2,
@@ -323,78 +247,60 @@ export default class TypePicker {
       useParseDate
     });
 
-    partial.panelSize =
-      partial.views === "auto"
-        ? diffMonths(partial.endDate, partial.startDate)
-        : (partial.views as number);
-
     this.update(partial);
   }
+
   protected element: HTMLElement = null;
-  protected update(partial) {
+
+  protected update(partial, next?: Function) {
     if (partial && Object.keys(partial).length <= 0) {
       return;
     }
+    const [reachEnd, reachStart] = checkSwitchable(this.date);
 
     setState(partial);
-    const {
-      date,
-      startDate,
-      endDate,
-      reachEnd,
-      reachStart,
-      panelSize
-    } = getState();
 
-    this.date = date;
-    this.startDate = startDate;
-    this.endDate = endDate;
-    this.element.innerHTML = renderTemplate();
-    const select = (selector: string) =>
-      DOMHelpers.select(this.element, selector);
-    const nodeList = select(".calendar-cell");
+    this.element.innerHTML = renderTemplate({
+      views: this.views,
+      date: this.date,
+      reachEnd,
+      reachStart
+    });
+
+    const select = selector => DOMHelpers.select(this.element, selector);
+
     const prevActionDOM = select(".calendar-action.prev");
     const nextActionDOM = select(".calendar-action.next");
+    const nodeList = select(".calendar-cell");
 
-    //dispatch render event when rendered
-    publish("render", nodeList);
-
-    const useUpdate = (
-      item: {
-        value: string;
-        disabled: boolean;
-        selected?: boolean;
-      } | null
-    ) =>
-      useEnqueue(item, (dispatchValue: string[]) => {
-        publish("select", dispatchValue);
-        this.update(null);
-      });
-    useUpdate(null);
     if (prevActionDOM && nextActionDOM) {
-      const actionHandler = (disabled: any, size: number) => () => {
-        !disabled && this.update(changeMonth(date, startDate, endDate)(size));
+      const listener = (disabled: any, step: number) => {
+        const now = new Date(
+          this.date.getFullYear(),
+          this.date.getMonth() + step * this.views,
+          this.date.getDate()
+        );
+        if (disabled) {
+          return;
+        }
+        this.date = now;
+        this.update(null);
       };
-      prevActionDOM.addEventListener(
-        "click",
-        actionHandler(reachStart, -1 * (panelSize as number))
-      );
-      nextActionDOM.addEventListener(
-        "click",
-        actionHandler(reachEnd, panelSize as number)
-      );
+      prevActionDOM.addEventListener("click", () => listener(reachStart, -1));
+      nextActionDOM.addEventListener("click", () => listener(reachEnd, 1));
     }
 
-    for (let i = 0; i < nodeList.length; i++) {
-      let node = nodeList[i];
+    List.loop(nodeList, node => {
       node.addEventListener("click", () => {
-        useUpdate({
-          value: DOMHelpers.attr(node, "data-date"),
-          disabled: DOMHelpers.attr(node, "data-disabled") === "true",
-          selected: true
-        });
+        const value = DOMHelpers.attr(node, "data-date");
+        const disabled = DOMHelpers.attr(node, "data-disabled") !== null;
+        if (!value) {
+          return;
+        }
+        useUpdate({ value, disabled }, this.update.bind(this));
       });
-    }
+    });
+    useUpdate(null, this.update.bind(this));
   }
 
   /**
@@ -402,57 +308,35 @@ export default class TypePicker {
    * @param dates Array<string | Date>
    */
   public setDates(dates: Array<string | Date>): void {
-    const { selection, limit, startDate, endDate } = getState();
-    if (!isArray(dates) || dates.length <= 0) return;
-
-    dates = sliceList(dates, 0, selection + 1);
-
-    if (dates.length <= 0 || dates.some(date => !isDate(useParseDate(date)))) {
-      return;
-    }
-    dates = mapList(dates, useParseDate, isDef);
-    if (dates.length <= 0) {
-      return;
-    }
-
-    dates = reduceList(
-      dates,
-      (prev: Date | null, curr: Date | null, _: number, dates: Array<any>) => {
-        if (selection == 2 && isDef(limit)) {
-          let gap = 0;
-          if (prev && curr) {
-            gap = diffDates(curr, prev);
+    const { selection, limit } = getState();
+    dates = List.slice(dates, 0, selection + 1);
+    dates = List.map(dates, useParseDate);
+    match({ condition: dates => List.every(dates, isDate), value: dates })(
+      dates => {
+        dates = List.map(dates, useParseDate, isDef);
+        dates = List.reduce(dates, (prev: Date, curr: Date) => {
+          if (selection == 2 && isNumber(limit)) {
+            let gap = diffDates(curr, prev);
+            if (gap > limit || gap < 0) {
+              return [];
+            }
           }
-          if (gap > limit || gap < 0) {
-            return [];
-          }
+          return List.map(dates, useFormatDate, isDef);
+        });
+        if (dates.length <= 0) {
+          return;
         }
-        return mapList(dates, useFormatDate, isDef);
+        temp = List.map(dates, item => ({
+          value: item,
+          selected: true
+        }));
+        const currentDate = useParseDate(dates[dates.length - 1]);
+        if (currentDate) {
+          this.date = currentDate;
+        }
+        this.update(null);
       }
     );
-
-    if (dates.length <= 0) {
-      return;
-    }
-    const partial: Partial<State> = {
-      selected: mapList(dates, (item: string) => ({
-        value: item,
-        selected: true
-      }))
-    };
-    const currentDate = useParseDate(dates[0]);
-    if (currentDate) {
-      if (startDate) {
-        partial.reachStart = currentDate < startDate;
-      }
-      if (endDate) {
-        partial.reachEnd = currentDate > endDate;
-      }
-      if (!partial.reachEnd && !partial.reachStart) {
-        partial.date = currentDate;
-      }
-    }
-    this.update(partial);
   }
 
   /**
@@ -462,64 +346,56 @@ export default class TypePicker {
   public disable(options: Disable): void {
     let { to, from, days, dates } = options;
     const state = getState();
-    if (!isArray(dates)) {
+    if (!List.isList(dates)) {
       dates = [];
     }
-    if (!isArray(days)) {
+    if (!List.isList(days)) {
       days = [];
     }
-    const partial: Partial<State> = {
+    const partial: Partial<TypePickerState> = {
       startDate: state.startDate,
       endDate: state.endDate
     };
-    condition(isDate)(useParseDate(from))((from: any) => {
+
+    from = useParseDate(from);
+    to = useParseDate(to);
+    match({ condition: isDate, value: from })((from: any) => {
       partial.endDate = from;
       disables.update("endDate", from);
     });
-    condition(isDate)(useParseDate(to))((to: any) => {
+    match({ condition: isDate, value: to })((to: any) => {
       partial.startDate = to;
-      partial.reachStart = true;
-      partial.date = to;
+      this.date = to;
       disables.update("startDate", to);
     });
 
-    or(!isDate(partial.startDate), !isDate(partial.endDate))(
-      () => {
-        partial.reachEnd = false;
-        partial.reachStart = false;
-      },
-      () => {
-        let start = state.startDate;
-        let end = state.endDate;
-        if (start > end) {
-          partial.startDate = end;
-          partial.endDate = start;
-          partial.date = end;
-          partial.reachStart = true;
-        }
+    match({
+      condition: List.every([partial.startDate, partial.endDate], isDate)
+    })(() => {
+      let start = state.startDate;
+      let end = state.endDate;
+      if (start > end) {
+        partial.startDate = end;
+        partial.endDate = start;
+        this.date = end;
+      }
+    });
+
+    match({ condition: (v: { length: number }) => v.length > 0, value: days })(
+      days => {
+        disables.update(
+          "days",
+          List.map(days, toInt, (day: number) => day >= 0 && day <= 6)
+        );
       }
     );
+    match({ condition: v => v.length > 0, value: dates })(dates => {
+      dates = List.map([...disables.dates, ...dates], useParseDate, isNotEmpty);
+      disables.update("dates", List.dedup(dates));
+    });
 
-    if (days.length > 0) {
-      disables.update(
-        "days",
-        filterList(
-          mapList(days, toInt, (day: number) => day >= 0 && day <= 6),
-          isNotEmpty
-        )
-      );
-    }
-    if (dates.length > 0) {
-      disables.update(
-        "dates",
-        filterList(
-          dedupList(
-            mapList([...disables.dates, ...dates], useParseDate, isNotEmpty)
-          ),
-          isNotEmpty
-        )
-      );
-    }
+    this.startDate = partial.startDate;
+    this.endDate = partial.endDate;
     this.update(partial);
   }
 
@@ -527,9 +403,10 @@ export default class TypePicker {
    *
    * @param i18n
    */
-  public i18n(i18n: I18n): void {
-    i18nValidator(i18n, (i18n: I18n) => this.update({ i18n }));
+  public i18n(i18n: TypePickerI18n): void {
+    i18nValidator(i18n, (i18n: TypePickerI18n) => this.update({ i18n }));
   }
+
   /**
    *
    * @param next: (dispatchValue: NodeListOf<HTMLElement>) => void
@@ -546,3 +423,6 @@ export default class TypePicker {
     subscribe("select", next);
   }
 }
+
+export { subscribe, publish };
+export default TypePicker;

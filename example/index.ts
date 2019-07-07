@@ -12,7 +12,7 @@ const { startDate, endDate } = (() => {
     month: date.getMonth(),
     date: date.getDate()
   };
-  const startDate = new Date(dist.year - 1, dist.month - 2, dist.date);
+  const startDate = new Date(dist.year, dist.month - 6, dist.date);
   const endDate = new Date(dist.year, dist.month, dist.date);
 
   return {
@@ -28,13 +28,12 @@ const options = {
   limit: 10,
   format: "YYYY-MM-DD",
   selection: 2,
-  views: 2, //"auto",
+  views: 2, // "auto",
   lastSelectedItemCanBeInvalid: false
 };
 
 const app = new TypePicker(options);
 
-console.log(app);
 app.onSelect((value: any[]) => {
   console.log("onselect", value);
 
@@ -81,9 +80,9 @@ app.disable({
   //   "2018-10-2"
   // ],
   //   dates: ["2019-6-21", "2019-6-27", "2019-6-28"],
-  //   to: "2019-6-1", // new Date(2018, 10, 1),
-  //   from: "2019-8-28", //new Date(2019, 7, 15)
-  // days: [4, 5]
+  to: "2019-6-1", // new Date(2018, 10, 1),
+  from: "2019-8-28", //new Date(2019, 7, 15)
+  days: [4, 5]
 });
 
 // app.setDates([
@@ -96,9 +95,9 @@ app.disable({
 // ]);
 
 app.setDates([
-  "2019-06-16",
-  "2019-06-18",
-  "2019-06-29"
+  "2019-05-29",
+  "2019-07-03"
+
   //   new Date(),
   // "2019-06-30"
   //   new Date(),
@@ -111,3 +110,4 @@ app.setDates([
   //   "2019-7-1",
   //   "2019-7-3"
 ]);
+// console.log(app);

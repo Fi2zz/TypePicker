@@ -1,5 +1,5 @@
 import { DateTag, node } from "./datepicker.interface";
-import { isDef, isNotEmpty, join } from "./util";
+import { isDef, isNotEmpty, List } from "./util";
 import { DOMHelpers } from "./datepicker.dom.helper";
 
 /**
@@ -10,8 +10,8 @@ import { DOMHelpers } from "./datepicker.dom.helper";
  * @param render
  * @returns {string}
  */
-function tag({ tag, props = {}, render = true }: node): string {
-  if (!tag || !render) {
+function tag({ tag, props = {} }: node): string {
+  if (!tag) {
     return "";
   }
   let children: any = "";
@@ -29,12 +29,12 @@ function tag({ tag, props = {}, render = true }: node): string {
         attributes.push(`${key}="${value}"`);
       }
     } else {
-      if (children === false || children === undefined || children === null) {
-        children = "";
-      } else if (Array.isArray(value)) {
-        children = value.filter(isDef).join("");
-      } else {
-        children = value;
+      if (children !== false && children !== undefined && children !== null) {
+        if (Array.isArray(value)) {
+          children = value.filter(isDef).join("");
+        } else {
+          children = value;
+        }
       }
     }
   }
@@ -58,7 +58,8 @@ function createActionView(reachStart: boolean, reachEnd: boolean): (string)[] {
     return tag({
       tag: "div",
       props: {
-        className: join(className, " ")
+        className: List.string(className, " "),
+        disabled: disabled ? "disabled" : null
       }
     });
   };
@@ -119,7 +120,7 @@ function createDateTag(data: DateTag): string {
  * @param {string} title
  * @returns {string}
  */
-const headView = (year: number, month: number, title: string): string =>
+const headView = (title: string): string =>
   tag({
     tag: "div",
     props: {
@@ -129,8 +130,6 @@ const headView = (year: number, month: number, title: string): string =>
           tag: "div",
           props: {
             className: "calendar-title",
-            "data-year": year,
-            "data-month": month,
             children: title
           }
         })
@@ -172,11 +171,7 @@ const bodyView = (dates: Array<any>): string =>
  * @returns {(item: any) => string}
  */
 const mapView = (weekView: string): ((item: any) => string) => (item: any) =>
-  mainView([
-    headView(item.year, item.month, item.heading),
-    weekView,
-    bodyView(item.dates)
-  ]);
+  mainView([headView(item.heading), weekView, bodyView(item.dates)]);
 
 /**
  *
@@ -231,5 +226,5 @@ export function template({
   } else {
     actionView = createActionView(reachStart, reachEnd);
   }
-  return join([...actionView, ...mainView]);
+  return List.string([...actionView, ...mainView]);
 }
