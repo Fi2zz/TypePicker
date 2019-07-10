@@ -11,15 +11,8 @@
     "allowJs": true,
     "removeComments": true,
     "noUnusedLocals": false,
-    "lib": [
-      "dom",
-      "es5"
-    ]
+    "lib": ["dom", "es6"]
   },
-  "include": [
-    "./src/**/*"
-  ],
-  "exclude": [
-    "./test/**/*"
-  ]
+  "include": ["./src/**/*"],
+  "exclude": ["./test/**/*"]
 }

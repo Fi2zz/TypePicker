@@ -1,5 +1,5 @@
 import { TypePickerI18n, QueueInterface } from "./datepicker.interface";
-import { isDate, padding, toInt, isEmpty, List } from "./util";
+import { isDate, padding, toInt, isEmpty, List, isDef } from "./util";
 
 export function classname(options) {
   const { isActive, isStart, isEnd, isDisabled, inRange, isEmpty } = options;
@@ -363,29 +363,39 @@ export class Disabled {
   days = [];
   dates = [];
   all = [];
+  startDate;
+  endDate;
+
   update(type: string, value: any) {
     this[type] = value;
   }
+
+  set(partial) {
+    for (let key in partial) {
+      this[key] = partial[key];
+    }
+  }
+
   findDay(day) {
-    return this.days.indexOf(day) >= 0;
+    return List.includes(this.days, day);
   }
   findDate(date) {
-    return this.dates.indexOf(date) >= 0;
+    return List.includes(this.dates, date);
   }
-  findBoth(date, day) {
+  both(date, day) {
     return this.findDate(date) && this.findDay(day);
   }
   oneOf(date, day) {
     return this.findDate(date) || this.findDay(day);
   }
   find(date) {
-    return this.all.indexOf(date) >= 0;
+    return List.includes(this.all, date);
   }
-  startDate;
-  endDate;
   outofRange(date: Date) {
-    const isValidDates =
-      isDate(date) && isDate(this.startDate) && isDate(this.endDate);
+    const isValidDates = List.every(
+      [this.startDate, this.endDate, date],
+      isDate
+    );
     return isValidDates && (date > this.endDate || date < this.startDate);
   }
 
@@ -483,7 +493,6 @@ export class MonthPanelData {
       }
     }
     handler(result);
-    // disables.setAll(result);
   }
 }
 

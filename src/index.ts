@@ -29,7 +29,10 @@ import {
   findDisabledBeforeStartDate,
   findDatesBetweenEnqueuedAndInqueue,
   usePanelTitle,
-  inDisable
+  inDisable,
+  viewTypes,
+  events,
+  dataset
 } from "./state";
 
 let temp = [];
@@ -138,7 +141,7 @@ function renderTemplate({ views, date, reachEnd, reachStart }): string {
       ];
     }
   });
-  monthPanelData.mapDisabled(dates => disables.update("all", dates));
+  monthPanelData.mapDisabled(dates => disables.set({ all: dates }));
   return template({
     data: monthPanelData.data,
     days: state.i18n.days,
@@ -164,14 +167,13 @@ class TypePicker {
       return;
     }
     let _date = this.date;
-    let _views = this.views;
+    let _views = this.views as any;
     const partial: Partial<TypePickerState> = {};
     match({ condition: isDef, value: option.format })(
       format => (partial.dateFormat = format)
     );
     match({ condition: isDef, value: option.views })(views => {
-      const viewsList = [1, 2, "auto"];
-      _views = viewsList.indexOf(views) >= 0 ? views : viewsList[0];
+      _views = viewTypes[viewTypes[views]];
     });
     match({ condition: isNumber, value: option.selection })(
       size => (partial.selection = size)
@@ -181,14 +183,14 @@ class TypePicker {
       _date = date;
     });
     match({ condition: isDate, value: option.endDate })(
-      date => (partial.endDate = date)
+      (date: Date) => (partial.endDate = date)
     );
 
     match({ condition: isNumberOrTrue, value: option.limit })(
       limit => (partial.limit = limit)
     );
     match({
-      condition: (option.views as string) == "auto",
+      condition: (option.views as string) === viewTypes.auto,
       value: option.views
     })(() => {
       if (!partial.startDate) {
@@ -208,7 +210,7 @@ class TypePicker {
     });
 
     match({
-      condition: (dates: any) => List.every(dates, date => isDate(date)),
+      condition: (dates: any) => List.every(dates, isDate),
       value: [partial.startDate, partial.endDate]
     })(() => {
       const date = partial.startDate;
@@ -218,12 +220,11 @@ class TypePicker {
         date.getMonth(),
         date.getDate() - 1
       );
-      disables.update(
-        "dates",
-        findDisabledBeforeStartDate(firstDate, dateBeforeStartDate)
-      );
-      disables.update("startDate", partial.startDate);
-      disables.update("endDate", partial.endDate);
+      disables.set({
+        dates: findDisabledBeforeStartDate(firstDate, dateBeforeStartDate),
+        startDate: partial.startDate,
+        endDate: partial.endDate
+      });
     });
     match({ condition: isBool, value: option.lastSelectedItemCanBeInvalid })(
       value => {
@@ -286,14 +287,16 @@ class TypePicker {
         this.date = now;
         this.update(null);
       };
-      prevActionDOM.addEventListener("click", () => listener(reachStart, -1));
-      nextActionDOM.addEventListener("click", () => listener(reachEnd, 1));
+      prevActionDOM.addEventListener(events.click, () =>
+        listener(reachStart, -1)
+      );
+      nextActionDOM.addEventListener(events.click, () => listener(reachEnd, 1));
     }
 
     List.loop(nodeList, node => {
-      node.addEventListener("click", () => {
-        const value = DOMHelpers.attr(node, "data-date");
-        const disabled = DOMHelpers.attr(node, "data-disabled") !== null;
+      node.addEventListener(events.click, () => {
+        const value = DOMHelpers.attr(node, dataset.date);
+        const disabled = DOMHelpers.attr(node, dataset.disabled) !== null;
         if (!value) {
           return;
         }
@@ -345,57 +348,49 @@ class TypePicker {
    */
   public disable(options: Disable): void {
     let { to, from, days, dates } = options;
-    const state = getState();
     if (!List.isList(dates)) {
       dates = [];
     }
     if (!List.isList(days)) {
       days = [];
     }
-    const partial: Partial<TypePickerState> = {
-      startDate: state.startDate,
-      endDate: state.endDate
-    };
-
-    from = useParseDate(from);
-    to = useParseDate(to);
-    match({ condition: isDate, value: from })((from: any) => {
-      partial.endDate = from;
-      disables.update("endDate", from);
-    });
-    match({ condition: isDate, value: to })((to: any) => {
-      partial.startDate = to;
-      this.date = to;
-      disables.update("startDate", to);
-    });
+    const partial: Partial<TypePickerState> = {};
+    match({ condition: isDate, value: useParseDate(from) })(
+      (from: Date) => (partial.endDate = from)
+    );
+    match({ condition: isDate, value: useParseDate(to) })(
+      (to: Date) => (partial.startDate = to)
+    );
 
     match({
-      condition: List.every([partial.startDate, partial.endDate], isDate)
-    })(() => {
-      let start = state.startDate;
-      let end = state.endDate;
+      condition: dates => List.every(dates, isDate),
+      value: [partial.startDate, partial.endDate]
+    })(([start, end]) => {
       if (start > end) {
         partial.startDate = end;
         partial.endDate = start;
-        this.date = end;
       }
+      disables.set({ startDate: partial.startDate, endDate: partial.endDate });
+      this.date = partial.startDate;
+      this.startDate = partial.startDate;
+      this.endDate = partial.endDate;
     });
 
     match({ condition: (v: { length: number }) => v.length > 0, value: days })(
       days => {
-        disables.update(
-          "days",
-          List.map(days, toInt, (day: number) => day >= 0 && day <= 6)
-        );
+        const isValidDay = day => isNumber(day) && day >= 0 && day <= 6;
+        disables.set({
+          days: List.map(days, toInt, isValidDay)
+        });
       }
     );
     match({ condition: v => v.length > 0, value: dates })(dates => {
-      dates = List.map([...disables.dates, ...dates], useParseDate, isNotEmpty);
-      disables.update("dates", List.dedup(dates));
+      dates = List.map([...disables.dates, ...dates], useParseDate, isDate);
+      dates = List.map(dates, useFormatDate, isDef);
+      disables.set({
+        dates: List.dedup(dates)
+      });
     });
-
-    this.startDate = partial.startDate;
-    this.endDate = partial.endDate;
     this.update(partial);
   }
 

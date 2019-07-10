@@ -28,6 +28,7 @@ function version(op) {
     try {
       const contentString = file.contents.toString();
       const contentObject = JSON.parse(contentString);
+      console.log("Current Version", contentObject.version);
       contentObject.version = contentObject.version
         .split(".")
         .reduce((acc, curr, index, list) => {
@@ -46,6 +47,8 @@ function version(op) {
           }
           return [main, min, patch].join(".");
         });
+
+      console.log("New Version", contentObject.version);
       file.contents = Buffer.from(JSON.stringify(contentObject, null, 2));
     } catch (e) {
       throw new Error(e);

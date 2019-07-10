@@ -23,8 +23,8 @@ const { startDate, endDate } = (() => {
 
 const options = {
   el: document.getElementById("datepicker"),
-  startDate,
-  endDate,
+  // startDate,
+  // endDate,
   limit: 10,
   format: "YYYY-MM-DD",
   selection: 2,
@@ -79,10 +79,10 @@ app.disable({
   //   "2018-10-1",
   //   "2018-10-2"
   // ],
-  //   dates: ["2019-6-21", "2019-6-27", "2019-6-28"],
-  to: "2019-6-1", // new Date(2018, 10, 1),
-  from: "2019-8-28", //new Date(2019, 7, 15)
-  days: [4, 5]
+  dates: ["2019-6-21", "2019-6-27", "2019-07-28"],
+  to: "2019-08-12", // new Date(2018, 10, 1),
+  from: "2019-07-01" //new Date(2019, 7, 15)
+  // days: [4, 5]
 });
 
 // app.setDates([
@@ -95,7 +95,7 @@ app.disable({
 // ]);
 
 app.setDates([
-  "2019-05-29",
+  // "2019-05-29",
   "2019-07-03"
 
   //   new Date(),

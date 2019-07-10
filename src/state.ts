@@ -25,8 +25,6 @@ const state: TypePickerState = {
 
 export function setState(partial: Partial<TypePickerState>, next?: Function) {
   if (partial) {
-
-    
     for (let key in partial) {
       if (state.hasOwnProperty(key)) {
         state[key] = partial[key];
@@ -68,14 +66,16 @@ export const findDisabledBeforeStartDate = (
   startDate: Date | string,
   dateBeforeStartDate: Date | string
 ) => {
-  const _start: Date = useParseDate(startDate);
-  const _end: Date = useParseDate(dateBeforeStartDate);
-  if (!_start || !_end) {
+  startDate = useParseDate(startDate) as Date;
+  dateBeforeStartDate = useParseDate(dateBeforeStartDate) as Date;
+  if (!startDate || !dateBeforeStartDate) {
     return [];
   }
-  return createDates(_start, diffDates(_end, _start, true), -1).map(
-    useFormatDate
-  );
+  return createDates(
+    startDate,
+    diffDates(dateBeforeStartDate, startDate, true),
+    -1
+  ).map(useFormatDate);
 };
 
 export const findDatesBetweenEnqueuedAndInqueue = (current, last) => {
@@ -104,3 +104,20 @@ export const inDisable = (
 ) => {
   return disables.oneOf(formattedDate, day) || disables.outofRange(date);
 };
+
+export enum viewTypes {
+  single = 1,
+  double = 2,
+  auto = "auto",
+  undefined = 1,
+  null = 1
+}
+
+export enum events {
+  click = "click"
+}
+
+export enum dataset {
+  date = "data-date",
+  disabled = "data-disabled"
+}

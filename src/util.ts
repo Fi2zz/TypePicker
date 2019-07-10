@@ -119,5 +119,10 @@ export const List = {
     const index = list.indexOf(value);
     handler(index, list);
   },
-  isList: list => list instanceof Array
+  isList: list => list instanceof Array,
+  includes(list, item) {
+    const hasIncludes = typeof list.includes == "function";
+
+    return hasIncludes ? list.includes(item) : list.indexOf(item) >= 0;
+  }
 };
