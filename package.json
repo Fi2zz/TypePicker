@@ -1,6 +1,6 @@
 {
   "name": "datepicker",
-  "version": "6.0.5",
+  "version": "6.0.6",
   "description": "A Typescript Datepicker",
   "author": "Fi2zzz <wenjingbiao@outlook.com>",
   "repository": {
@@ -30,6 +30,5 @@
     "gulp": "^4.0.2",
     "through2": "^3.0.1",
     "webpack-stream": "^5.2.1"
-  },
-  "dependencies": {}
+  }
 }

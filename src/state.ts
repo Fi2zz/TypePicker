@@ -44,14 +44,16 @@ export function getState(): TypePickerState {
  */
 export const checkSwitchable = (date: Date) => {
   const { startDate, endDate } = getState();
+
   if (!startDate || !endDate) {
     return [false, false];
   }
   const endGap = diffMonths(endDate, date);
   const startGap = diffMonths(date, startDate);
-  return [startGap > 0 && endGap <= 0, startGap <= 0 && endGap > 0];
+  const reachStart = startGap < 1 && endGap > 0;
+  const reachEnd = startGap > 0 && endGap <= 1;
+  return [reachStart, reachEnd];
 };
-
 export function useFormatDate(date: Date): string {
   return format(date, getState().dateFormat);
 }

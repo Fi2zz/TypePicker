@@ -167,7 +167,7 @@ class TypePicker {
       return;
     }
     let _date = this.date;
-    let _views = this.views as any;
+    let _views: string | number = this.views;
     const partial: Partial<TypePickerState> = {};
     match({ condition: isDef, value: option.format })(
       format => (partial.dateFormat = format)
@@ -178,14 +178,15 @@ class TypePicker {
     match({ condition: isNumber, value: option.selection })(
       size => (partial.selection = size)
     );
-    match({ condition: isDate, value: option.startDate })(date => {
-      partial.startDate = date;
-      _date = date;
-    });
-    match({ condition: isDate, value: option.endDate })(
+    match({ condition: isDate, value: useParseDate(option.startDate) })(
+      date => {
+        partial.startDate = date;
+        _date = date;
+      }
+    );
+    match({ condition: isDate, value: useParseDate(option.endDate) })(
       (date: Date) => (partial.endDate = date)
     );
-
     match({ condition: isNumberOrTrue, value: option.limit })(
       limit => (partial.limit = limit)
     );
@@ -212,8 +213,8 @@ class TypePicker {
     match({
       condition: (dates: any) => List.every(dates, isDate),
       value: [partial.startDate, partial.endDate]
-    })(() => {
-      const date = partial.startDate;
+    })(([startDate, endDate]) => {
+      const date = startDate;
       const firstDate = new Date(date.getFullYear(), date.getMonth(), 1);
       const dateBeforeStartDate = new Date(
         date.getFullYear(),
@@ -222,8 +223,8 @@ class TypePicker {
       );
       disables.set({
         dates: findDisabledBeforeStartDate(firstDate, dateBeforeStartDate),
-        startDate: partial.startDate,
-        endDate: partial.endDate
+        startDate,
+        endDate
       });
     });
     match({ condition: isBool, value: option.lastSelectedItemCanBeInvalid })(
@@ -234,12 +235,7 @@ class TypePicker {
         }
       }
     );
-    this.element = el;
-    this.element.className = DOMHelpers.class.container(_views);
-    this.startDate = partial.startDate;
-    this.endDate = partial.endDate;
-    this.date = _date;
-    this.views = _views;
+
     queue.setOptions({
       size: partial.selection,
       limit: partial.limit,
@@ -248,32 +244,34 @@ class TypePicker {
       useParseDate
     });
 
+    this.element = el;
+    this.element.className = DOMHelpers.class.container(_views);
+    this.startDate = partial.startDate;
+    this.endDate = partial.endDate;
+    this.date = _date;
+    this.views = _views;
+
     this.update(partial);
   }
 
   protected element: HTMLElement = null;
 
-  protected update(partial, next?: Function) {
+  protected update(partial) {
     if (partial && Object.keys(partial).length <= 0) {
       return;
     }
-    const [reachEnd, reachStart] = checkSwitchable(this.date);
-
+    const [reachStart, reachEnd] = checkSwitchable(this.date);
     setState(partial);
-
     this.element.innerHTML = renderTemplate({
       views: this.views,
       date: this.date,
       reachEnd,
       reachStart
     });
-
     const select = selector => DOMHelpers.select(this.element, selector);
-
     const prevActionDOM = select(".calendar-action.prev");
     const nextActionDOM = select(".calendar-action.next");
     const nodeList = select(".calendar-cell");
-
     if (prevActionDOM && nextActionDOM) {
       const listener = (disabled: any, step: number) => {
         const now = new Date(
@@ -292,7 +290,6 @@ class TypePicker {
       );
       nextActionDOM.addEventListener(events.click, () => listener(reachEnd, 1));
     }
-
     List.loop(nodeList, node => {
       node.addEventListener(events.click, () => {
         const value = DOMHelpers.attr(node, dataset.date);
