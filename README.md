@@ -32,10 +32,6 @@ DatePicker build with typescript
 2.  Support double views,flat view and single view
 3.  Support multi selection
 
-## RUN DEMO
-
-    yarn start or npm run start
-
 ## OPTIONS
 
 | OPTION    | REQUIRED | TYPE               | DESC                                   | Default /Possible Value |

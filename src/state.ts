@@ -123,6 +123,7 @@ export class Selection {
  */
 export const checkSwitchable = (date: Date) => {
   const { startDate, endDate } = getState();
+
   if (!startDate || !endDate) {
     return [false, false];
   }
@@ -131,7 +132,6 @@ export const checkSwitchable = (date: Date) => {
 
   return [diffStart <= 0 && diffEnd > 0, diffStart > 0 && diffEnd <= 1];
 };
-
 export function useFormatDate(date: Date): string {
   return format(date, getState().format);
 }
