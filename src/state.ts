@@ -5,11 +5,11 @@ import {
   parse,
   format,
   Disabled,
-  createDates
+  createDates,
+  formatHeading
 } from "./datepicker.helpers";
 
-import { padding, List } from "./util";
-import { TypePickerState, SelectionInterface } from "./datepicker.interface";
+import { TypePickerState, SelectionItem } from "./datepicker.interface";
 
 const state: TypePickerState = {
   selection: 1,
@@ -19,7 +19,8 @@ const state: TypePickerState = {
   limit: 1,
   i18n: defaultI18n(),
   useInvalidAsSelected: false,
-  selected: []
+  selected: [],
+  views: 1
 };
 
 export function setState(partial: Partial<TypePickerState>, next?: Function) {
@@ -38,17 +39,14 @@ export function getState(): TypePickerState {
 export class Selection {
   size = 1;
   list: any[] = [];
-  useRange: boolean = false;
-  setOptions(options: SelectionInterface) {
-    const { size, useRange } = options;
+  setSize(size: number) {
     this.size = size;
-    this.useRange = useRange;
   }
   last = () => this.list[this.length() - 1];
   front = () => this.list[0];
   length = () => this.list.length;
 
-  push = (date: any) => (afterPush: Function): void => {
+  push = (date: SelectionItem) => (afterPush: Function): void => {
     this.beforePush(date);
     this.list.push(date);
     this.afterPush();
@@ -96,23 +94,6 @@ export class Selection {
     }
     return -1;
   }
-  getRange() {
-    const length = this.length();
-
-    if (length <= 0 || !this.useRange) {
-      return [];
-    }
-    const first = this.front();
-    const last = this.last();
-
-    if (first.value === last.value) {
-      return [];
-    }
-    const start = useParseDate(first.value);
-    const end = useParseDate(last.value);
-    const size = diffDates(end, start);
-    return createDates(start, size).map(useFormatDate.bind(this));
-  }
 }
 
 /**
@@ -122,15 +103,16 @@ export class Selection {
  * @param end
  */
 export const checkSwitchable = (date: Date) => {
-  const { startDate, endDate } = getState();
-
-  if (!startDate || !endDate) {
+  const { startDate, endDate, views } = getState();
+  if (views > 2) {
     return [false, false];
   }
   const diffEnd = diffMonths(endDate, date);
   const diffStart = diffMonths(date, startDate);
-
-  return [diffStart <= 0 && diffEnd > 0, diffStart > 0 && diffEnd <= 1];
+  return [
+    diffStart <= 0 && diffEnd > 0,
+    diffStart > 0 && diffEnd <= (views === 1 ? 0 : 1)
+  ];
 };
 export function useFormatDate(date: Date): string {
   return format(date, getState().format);
@@ -157,10 +139,8 @@ export const findDisabledBeforeStartDate = (
 };
 
 export function usePanelTitle(year, month) {
-  return getState()
-    .i18n.title.toLowerCase()
-    .replace(/y{1,}/g, padding(year))
-    .replace(/m{1,}/g, getState().i18n.months[month]);
+  const { i18n } = getState();
+  return formatHeading(i18n.title, year, i18n.months[month]);
 }
 export enum viewTypes {
   single = 1,

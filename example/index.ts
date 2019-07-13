@@ -27,9 +27,9 @@ const options = {
   endDate,
   limit: false,
   format: "YYYY-MM-DD",
-  selection: 3,
-  views: 2, // "auto",
-  useInvalidAsSelected: false
+  useInvalidAsSelected: false,
+  selection: 2,
+  views: "auto"
 };
 
 const app = new TypePicker(options);

@@ -1,6 +1,12 @@
 import { TypePickerI18n } from "./datepicker.interface";
-import { isDate, padding, toInt, isEmpty, List, isDef } from "./util";
+import { isDate, isEmpty, List, isDef } from "./util";
 
+/**
+ *
+ * @param {Number} n
+ * @returns {string}
+ */
+export const padding = (n: Number): string => `${n > 9 ? n : "0" + n}`;
 export function classname(options) {
   const { isActive, isStart, isEnd, isDisabled, inRange, isEmpty } = options;
   if (isEmpty) {
@@ -127,7 +133,7 @@ export function parse(strDate: string | Date, format: string) {
   function parse(string: string | Date): any {
     if (!string) return new Date();
     if (string instanceof Date) return string;
-    let split = string.split(/\W/).map(toInt);
+    let split = string.split(/\W/).map(item => parseInt(item, 10));
     let date = new Date(split.join(" "));
     if (!date.getTime()) return null;
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -181,6 +187,13 @@ export function parse(strDate: string | Date, format: string) {
   };
 
   return ret(strDate, format);
+}
+
+export function formatHeading(format, year, month) {
+  return format
+    .toLowerCase()
+    .replace(/y{1,}/g, padding(year))
+    .replace(/m{1,}/g, month);
 }
 
 const ALPHABET_AND_NUMBER_RE = /[A-Za-z0-9]/g;

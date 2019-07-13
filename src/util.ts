@@ -1,33 +1,6 @@
-/**
- *
- * @param v
- * @returns {boolean}
- */
 export const isDef = (v: any) => v !== undefined && v !== null;
 export const isBool = (v: any) => typeof v === "boolean";
-/**
- *
- * @param v
- * @returns {boolean}
- */
 export const isEmpty = (v): boolean => !isDef(v) || v == "";
-/**
- *
- * @param {Number} n
- * @returns {string}
- */
-export const padding = (n: Number): string => `${n > 9 ? n : "0" + n}`;
-/**
- *
- * @param v
- * @returns {boolean}
- */
-export const isNotEmpty = (v): boolean => !isEmpty(v);
-/**
- *
- * @param object
- * @returns {boolean}
- */
 export const isDate = object => object instanceof Date;
 
 interface match {
@@ -35,7 +8,6 @@ interface match {
   value?: any;
   expected?: boolean;
 }
-
 export function match(input: match) {
   return (next?: Function) => {
     let { condition, value, expected } = input;
@@ -48,7 +20,6 @@ export function match(input: match) {
     }
   };
 }
-export const toInt = input => parseInt(input, 10);
 export const List = {
   slice: (list, start, end) =>
     List.isList(list) ? list.slice(start, end) : [],
@@ -127,7 +98,6 @@ export const List = {
   isList: list => list instanceof Array,
   includes(list, item) {
     const hasIncludes = typeof list.includes == "function";
-
     return hasIncludes ? list.includes(item) : list.indexOf(item) >= 0;
   }
 };

@@ -1,69 +1,46 @@
-import { DateTagData, TagData } from "./datepicker.interface";
-import { isDef, isNotEmpty, List } from "./util";
+import { DateTagData } from "./datepicker.interface";
+import { isDef, isEmpty, List } from "./util";
 import { DOMHelpers } from "./datepicker.dom.helper";
 
-/**
- *
- * @param tag
- * @param props
- * @param children
- * @param render
- * @returns {string}
- */
-function tag({ tag, props = {} }: TagData): string {
+function createTag(tag, props: any): string {
   if (!tag) {
-    return "";
+    tag = "div";
   }
   let children: any = "";
-
-  let attributes = <string[]>[];
+  const attributes = <string[]>[];
   for (let key in props) {
     let value = props[key];
-
-    if (key === "className") {
-      key = "class";
-    }
-
-    if (key !== "children") {
-      if (isDef(value)) {
-        attributes.push(`${key}="${value}"`);
-      }
-    } else {
-      if (children !== false && children !== undefined && children !== null) {
-        if (Array.isArray(value)) {
-          children = value.filter(isDef).join("");
-        } else {
-          children = value;
+    if (isDef(value)) {
+      if (key !== "children") {
+        if (key === "className") {
+          key = "class";
+          attributes.push(`${key}="${value}"`);
+        }
+      } else {
+        if (value !== false) {
+          if (Array.isArray(value)) {
+            children = value.filter(isDef).join("");
+          } else {
+            children = value;
+          }
         }
       }
     }
   }
-  let attrs = <string>attributes.join("");
-  return `<${tag} ${attrs}>${children}</${tag}>`;
+  return `<${tag} ${attributes.join("")}>${children}</${tag}>`;
 }
-
-/**
- *
- * @param {boolean} reachStart
- * @param {boolean} reachEnd
- * @returns {(string)[]}
- */
-
-function createActionView(reachStart: boolean, reachEnd: boolean): (string)[] {
+function createActionView(reachStart: boolean, reachEnd: boolean) {
   const node = (type, disabled) => {
     const className = ["calendar-action", type];
     if (disabled) {
       className.push("disabled");
     }
-    return tag({
-      tag: "div",
-      props: {
-        className: List.string(className, " "),
-        disabled: disabled ? "disabled" : null
-      }
+    return createTag("div", {
+      className: List.string(className, " "),
+      disabled: disabled ? "disabled" : null
     });
   };
-  return [node("prev", reachStart), node("next", reachEnd)];
+  return [node("prev", reachStart), node("next", reachEnd)].join("");
 }
 
 /**
@@ -71,27 +48,21 @@ function createActionView(reachStart: boolean, reachEnd: boolean): (string)[] {
  * @param {DateTagData} data
  * @returns {string}
  */
-function createDateTag(data: DateTagData): string {
+function createDateView(data: DateTagData): string {
   const nodeChildren = [];
-  if (isNotEmpty(data.date)) {
+  if (!isEmpty(data.date)) {
     nodeChildren.push(
-      tag({
-        tag: "div",
-        props: {
-          className: "date",
-          children: data.date
-        }
+      createTag("div", {
+        className: "date",
+        children: data.date
       })
     );
   }
 
   if (data.value) {
     nodeChildren.push(
-      tag({
-        tag: "div",
-        props: {
-          className: "placeholder"
-        }
+      createTag("div", {
+        className: "placeholder"
       })
     );
   }
@@ -101,77 +72,30 @@ function createDateTag(data: DateTagData): string {
     children: nodeChildren
   };
 
-  if (isNotEmpty(data.disabled)) {
+  if (!isEmpty(data.disabled)) {
     props["data-disabled"] = data.disabled;
   }
-  if (isNotEmpty(data.value)) {
+  if (!isEmpty(data.value)) {
     props["data-date"] = data.value;
   }
-  return tag({
-    tag: "div",
-    props
-  });
+  return createTag("div", props);
 }
 
 /**
  *
- * @param {number} year
- * @param {number} month
- * @param {string} title
+ * @param {Array<string>} week
  * @returns {string}
  */
-const headView = (title: string): string =>
-  tag({
-    tag: "div",
-    props: {
-      className: "calendar-head",
-      children: [
-        tag({
-          tag: "div",
-          props: {
-            className: "calendar-title",
-            children: title
-          }
-        })
-      ]
-    }
+const createDayView = (week: Array<string>): string =>
+  createTag("div", {
+    className: "calendar-day",
+    children: week.map((day, index) =>
+      createTag("div", {
+        className: DOMHelpers.class.cell(index),
+        children: day
+      })
+    )
   });
-
-/**
- *
- * @param {string | any[]} children
- * @returns {string}
- */
-const mainView = (children: string | any[]): string =>
-  tag({
-    tag: "div",
-    props: {
-      className: "calendar-item",
-      children
-    }
-  });
-
-/**
- *
- * @param {Array<any>} dates
- * @returns {string}
- */
-const bodyView = (dates: Array<any>): string =>
-  tag({
-    tag: "div",
-    props: {
-      className: "calendar-body",
-      children: dates.map(item => createDateTag(item))
-    }
-  });
-
-/**
- *
- * @param {string} weekView
- * @returns {(item: any) => string}
- */
-const mapView = (weekView: string): ((item: any) => string) => (item: any) =>
-  mainView([headView(item.heading), weekView, bodyView(item.dates)]);
 
 /**
  *
@@ -179,52 +103,45 @@ const mapView = (weekView: string): ((item: any) => string) => (item: any) =>
  * @param weekView
  * @returns {string[]}
  */
-const createView = (data: Array<any>, weekView: string): string[] =>
-  data.map(mapView(weekView)).filter(isNotEmpty);
-
-/**
- *
- * @param {string} day
- * @param {number} index
- * @returns {string}
- */
-const createWeekViewMapper = (day: string, index: number): string =>
-  tag({
-    tag: "div",
-    props: {
-      className: DOMHelpers.class.cell(index),
-      children: day
-    }
-  });
-
-/**
- *
- * @param {Array<string>} week
- * @returns {string}
- */
-const createWeekView = (week: Array<string>): string =>
-  tag({
-    tag: "div",
-    props: {
-      className: "calendar-day",
-      children: week.map(createWeekViewMapper)
-    }
-  });
-
-export function template({
+const createCalendarView = ({
   data,
   days,
+  switchable,
   reachStart,
-  reachEnd,
-  switchable
-}): string {
-  const dayView = createWeekView(days);
-  const mainView = createView(data, !switchable ? "" : dayView);
-  let actionView = [];
+  reachEnd
+}): string[] => {
+  const dayView = createDayView(days);
+  let mapped = data.map(item => {
+    const calendarViewData = [
+      createTag("div", {
+        className: "calendar-head",
+        children: item.heading
+      }),
+      switchable && dayView,
+      createTag("div", {
+        className: "calendar-body",
+        children: item.dates.map(createDateView)
+      })
+    ].filter(Boolean);
+
+    return createTag("div", {
+      className: "calendar-item",
+      children: calendarViewData
+    });
+  });
   if (!switchable) {
-    mainView.unshift(dayView);
-  } else {
-    actionView = createActionView(reachStart, reachEnd);
+    return [dayView, ...mapped];
   }
-  return List.string([...actionView, ...mainView]);
-}
+  return [createActionView(reachStart, reachEnd), ...mapped];
+};
+
+export const template = ({ data, days, reachStart, reachEnd, switchable }) =>
+  List.string(
+    createCalendarView({
+      data,
+      days,
+      switchable,
+      reachStart,
+      reachEnd
+    })
+  );

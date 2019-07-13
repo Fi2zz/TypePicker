@@ -28,13 +28,6 @@ export interface TypePickerDisable {
   from?: Date | string;
 }
 
-export interface TagData {
-  tag: string;
-  props?: any;
-  children?: any;
-  render?: Boolean;
-}
-
 export interface DateTagData {
   className: string;
   value: string | undefined;
@@ -43,12 +36,7 @@ export interface DateTagData {
   date: number;
 }
 
-export interface SelectionInterface {
-  size: number;
-  useRange: boolean;
-}
 export interface SelectionItem {
   value?: string;
   disabled?: boolean;
-  selected?: boolean;
 }
