@@ -5,21 +5,20 @@ import {
   parse,
   format,
   Disabled,
-  Queue,
   createDates
 } from "./datepicker.helpers";
 
 import { padding, List } from "./util";
-import { TypePickerState } from "./datepicker.interface";
+import { TypePickerState, SelectionInterface } from "./datepicker.interface";
 
 const state: TypePickerState = {
   selection: 1,
   startDate: null,
   endDate: null,
-  dateFormat: "YYYY-MM-DD",
+  format: "YYYY-MM-DD",
   limit: 1,
   i18n: defaultI18n(),
-  lastSelectedItemCanBeInvalid: false,
+  useInvalidAsSelected: false,
   selected: []
 };
 
@@ -36,6 +35,86 @@ export function getState(): TypePickerState {
   return state;
 }
 
+export class Selection {
+  size = 1;
+  list: any[] = [];
+  useRange: boolean = false;
+  setOptions(options: SelectionInterface) {
+    const { size, useRange } = options;
+    this.size = size;
+    this.useRange = useRange;
+  }
+  last = () => this.list[this.length() - 1];
+  front = () => this.list[0];
+  length = () => this.list.length;
+
+  push = (date: any) => (afterPush: Function): void => {
+    this.beforePush(date);
+    this.list.push(date);
+    this.afterPush();
+    const id = setTimeout(function afterQueueReset() {
+      afterPush();
+      clearTimeout(id);
+    }, 0);
+  };
+  beforePush(date) {
+    for (let item of this.list) {
+      if (item && item.value === date.value) {
+        if (this.size === 2) {
+          this.shift();
+        } else {
+          this.list = [];
+        }
+      }
+    }
+  }
+
+  afterPush() {
+    let temp = {};
+    let list = [];
+    for (let item of this.list) {
+      if (!temp[item.value]) {
+        temp[item.value] = 1;
+        list.push(item);
+      }
+    }
+    this.list = list;
+  }
+  clean = () => (this.list = []);
+  shift = () => this.list.shift();
+  pop = () => this.list.pop();
+
+  has(value: string) {
+    return this.list.filter(item => item && item.value === value).length > 0;
+  }
+  map = mapper => this.list.map(mapper);
+  findIndex(item) {
+    for (let date of this.list) {
+      if (date.value === item) {
+        return this.list.indexOf(date);
+      }
+    }
+    return -1;
+  }
+  getRange() {
+    const length = this.length();
+
+    if (length <= 0 || !this.useRange) {
+      return [];
+    }
+    const first = this.front();
+    const last = this.last();
+
+    if (first.value === last.value) {
+      return [];
+    }
+    const start = useParseDate(first.value);
+    const end = useParseDate(last.value);
+    const size = diffDates(end, start);
+    return createDates(start, size).map(useFormatDate.bind(this));
+  }
+}
+
 /**
  *
  * @param date
@@ -47,20 +126,19 @@ export const checkSwitchable = (date: Date) => {
   if (!startDate || !endDate) {
     return [false, false];
   }
-  const endGap = diffMonths(endDate, date);
-  const startGap = diffMonths(date, startDate);
-  return [startGap > 0 && endGap <= 0, startGap <= 0 && endGap > 0];
+  const diffEnd = diffMonths(endDate, date);
+  const diffStart = diffMonths(date, startDate);
+
+  return [diffStart <= 0 && diffEnd > 0, diffStart > 0 && diffEnd <= 1];
 };
 
 export function useFormatDate(date: Date): string {
-  return format(date, getState().dateFormat);
+  return format(date, getState().format);
 }
 
 export function useParseDate(date: Date | string): Date {
-  return parse(date, getState().dateFormat);
+  return parse(date, getState().format);
 }
-export const disables = new Disabled();
-export const queue = new Queue();
 
 export const findDisabledBeforeStartDate = (
   startDate: Date | string,
@@ -78,33 +156,12 @@ export const findDisabledBeforeStartDate = (
   ).map(useFormatDate);
 };
 
-export const findDatesBetweenEnqueuedAndInqueue = (current, last) => {
-  const size = diffDates(current, last);
-  return List.create(size, index => {
-    const now = new Date(
-      current.getFullYear(),
-      current.getMonth(),
-      index + current.getDate()
-    );
-    return useFormatDate(now);
-  });
-};
-
 export function usePanelTitle(year, month) {
   return getState()
     .i18n.title.toLowerCase()
     .replace(/y{1,}/g, padding(year))
     .replace(/m{1,}/g, getState().i18n.months[month]);
 }
-
-export const inDisable = (
-  date: Date | null,
-  formattedDate: string,
-  day: number
-) => {
-  return disables.oneOf(formattedDate, day) || disables.outofRange(date);
-};
-
 export enum viewTypes {
   single = 1,
   double = 2,
@@ -121,3 +178,6 @@ export enum dataset {
   date = "data-date",
   disabled = "data-disabled"
 }
+
+export const disables = new Disabled();
+export const queue = new Selection();

@@ -75,13 +75,18 @@ export const List = {
     }
     return list;
   },
-  dedup(list: any[]) {
+  dedup(list: any[], key?) {
     let map = {};
     if (list.length <= 0) {
       return [];
     }
 
-    return list.reduce((acc, curr) => {
+    return list.reduce((acc, currItem) => {
+      let curr = currItem;
+      if (key) {
+        curr = currItem[key];
+      }
+
       if (!map[curr]) {
         map[curr] = 1;
         acc.push(curr);
@@ -113,11 +118,11 @@ export const List = {
     return list.every(handler);
   },
   inRange(list, value, handler) {
-    if (!List.isList(list)) {
+    if (!List.isList(list) || list.length <= 0) {
       return false;
     }
     const index = list.indexOf(value);
-    handler(index, list);
+    return handler(index, list);
   },
   isList: list => list instanceof Array,
   includes(list, item) {

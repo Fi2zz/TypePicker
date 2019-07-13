@@ -23,13 +23,13 @@ const { startDate, endDate } = (() => {
 
 const options = {
   el: document.getElementById("datepicker"),
-  // startDate,
-  // endDate,
-  limit: 10,
+  startDate,
+  endDate,
+  limit: false,
   format: "YYYY-MM-DD",
-  selection: 2,
+  selection: 3,
   views: 2, // "auto",
-  lastSelectedItemCanBeInvalid: false
+  useInvalidAsSelected: false
 };
 
 const app = new TypePicker(options);
@@ -37,7 +37,7 @@ const app = new TypePicker(options);
 app.onSelect((value: any[]) => {
   console.log("onselect", value);
 
-  input.value = value.join("");
+  input.innerText = value.join(","); // value.join("");
 });
 app.onRender(nodeList => {
   for (let i = 0; i < nodeList.length; i++) {
@@ -81,7 +81,7 @@ app.disable({
   // ],
   dates: ["2019-6-21", "2019-6-27", "2019-07-28"],
   to: "2019-08-12", // new Date(2018, 10, 1),
-  from: "2019-07-01" //new Date(2019, 7, 15)
+  from: "2019-03-01" //new Date(2019, 7, 15)
   // days: [4, 5]
 });
 
@@ -96,7 +96,8 @@ app.disable({
 
 app.setDates([
   // "2019-05-29",
-  "2019-07-03"
+  "2019-07-03",
+  "2019-07-19"
 
   //   new Date(),
   // "2019-06-30"

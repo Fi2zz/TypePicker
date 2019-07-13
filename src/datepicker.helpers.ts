@@ -1,4 +1,4 @@
-import { TypePickerI18n, QueueInterface } from "./datepicker.interface";
+import { TypePickerI18n } from "./datepicker.interface";
 import { isDate, padding, toInt, isEmpty, List, isDef } from "./util";
 
 export function classname(options) {
@@ -388,6 +388,11 @@ export class Disabled {
   oneOf(date, day) {
     return this.findDate(date) || this.findDay(day);
   }
+
+  of(date, value, day) {
+    return this.oneOf(value, day) || this.outofRange(date);
+  }
+
   find(date) {
     return List.includes(this.all, date);
   }
@@ -493,142 +498,5 @@ export class MonthPanelData {
       }
     }
     handler(result);
-  }
-}
-
-export class Queue {
-  setOptions(options: QueueInterface) {
-    const { size, limit, useRange, useFormatDate, useParseDate } = options;
-    this.size = size;
-    this.limit = limit;
-    this.useRange = useRange;
-    this.useFormatDate = useFormatDate;
-    this.useParseDate = useParseDate;
-  }
-
-  size = 1;
-  limit: boolean | number = 1;
-  parse = null;
-  useRange: boolean = false;
-  useFormatDate = null;
-  useParseDate = null;
-  /**
-   *
-   * @param {string} date
-   * @returns {(next?: (Function | undefined)) => void}
-   */
-  enqueue = (date: any) => (next?: Function | undefined): void => {
-    let last = this.last();
-
-    if (last) {
-      if (last.value == date.value) {
-        this.dequeue();
-      }
-      let lastDate = this.useParseDate(last.value);
-      let nowDate = this.useParseDate(date.value);
-      if (lastDate > nowDate) {
-        this.list = [];
-      }
-    }
-    this.list.push(date);
-    this.reset(next);
-  };
-
-  dequeue() {
-    this.list.shift();
-  }
-
-  /**
-   *
-   * @param {Function} next
-   */
-  reset(next?: Function) {
-    if (this.list.length > this.size) {
-      this.replace([this.last()]);
-    } else {
-      const [first, last] = this.list;
-
-      if (first && last) {
-        const diffs = diffDates(
-          this.useParseDate(first.value),
-          this.useParseDate(last.value),
-          true
-        );
-        if (diffs > this.limit) {
-          this.dequeue();
-        }
-      }
-    }
-    if (typeof next === "function") {
-      let id = setTimeout(function afterQueueReset() {
-        next();
-        clearTimeout(id);
-      }, 0);
-    }
-  }
-
-  resetWithValue(value) {
-    this.empty();
-    this.list.push(value);
-  }
-
-  last() {
-    return this.list[this.length() - 1];
-  }
-  pop() {
-    this.list.pop();
-  }
-
-  empty() {
-    this.list = [];
-  }
-
-  front() {
-    return this.list[0];
-  }
-
-  list: any[] = [];
-  find(value: string) {
-    return this.list.filter(item => item.value === value).pop();
-  }
-  length() {
-    return this.list.length;
-  }
-
-  replace(v) {
-    this.list = v;
-  }
-
-  include(v) {
-    return this.list.indexOf(v) >= 0;
-  }
-
-  has(value) {
-    return !!this.find(value);
-  }
-  map(mapper) {
-    return this.list.map(mapper);
-  }
-  getRange() {
-    const length = this.length();
-
-    if (length <= 0) {
-      return [];
-    }
-
-    if (!this.useRange) {
-      return this.map(item => item.value);
-    }
-
-    const first = this.front();
-    const last = this.last();
-
-    if (first.value === last.value) {
-      return [];
-    }
-    const start = this.useParseDate(first.value);
-    const end = this.useParseDate(last.value);
-    const size = diffDates(end, start);
-    return createDates(start, size).map(this.useFormatDate.bind(this));
   }
 }

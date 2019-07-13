@@ -1,13 +1,18 @@
 export interface TypePickerOptions {
   el: string | HTMLElement;
-  limit?: number;
+  limit?: number | boolean;
   format?: string;
   views?: number | string;
   startDate?: Date;
   endDate?: Date;
   selection?: number;
   infinite?: boolean;
-  lastSelectedItemCanBeInvalid?: boolean;
+  useInvalidAsSelected?: boolean;
+}
+
+export interface TypePickerState extends Partial<TypePickerOptions> {
+  i18n: TypePickerI18n;
+  selected: Array<any>;
 }
 
 export interface TypePickerI18n {
@@ -16,27 +21,21 @@ export interface TypePickerI18n {
   months: string[];
 }
 
-export interface Disable {
+export interface TypePickerDisable {
   dates?: Array<any>;
   days?: Array<number>;
   to?: Date | string;
   from?: Date | string;
 }
 
-export interface node {
+export interface TagData {
   tag: string;
   props?: any;
   children?: any;
   render?: Boolean;
 }
 
-export interface CreateDate {
-  date: Date;
-  size: number;
-  dateFormat?: string;
-}
-
-export interface DateTag {
+export interface DateTagData {
   className: string;
   value: string | undefined;
   disabled: boolean | undefined;
@@ -44,43 +43,12 @@ export interface DateTag {
   date: number;
 }
 
-export interface QueueInterface {
+export interface SelectionInterface {
   size: number;
-  limit: boolean | number;
   useRange: boolean;
-  useParseDate: Function;
-  useFormatDate: Function;
 }
-
-export interface QueueItem {
+export interface SelectionItem {
   value?: string;
   disabled?: boolean;
   selected?: boolean;
-}
-
-export interface Disables {
-  days: number[];
-  dates: string[];
-  update: Function;
-  setAll: Function;
-  find: Function;
-  all: string[];
-  findDate: Function;
-  findDay: Function;
-  findBoth: Function;
-  oneOf: Function;
-  startDate: Date | null;
-  endDate: Date | null;
-  outofRange: Function;
-  some: Function;
-}
-export interface TypePickerState {
-  selection: number;
-  startDate: Date | null;
-  endDate: Date | null;
-  dateFormat: string;
-  limit: number | boolean;
-  i18n: TypePickerI18n;
-  lastSelectedItemCanBeInvalid: boolean;
-  selected: Array<any>;
 }

@@ -6,14 +6,15 @@ import {
   i18nValidator,
   MonthPanelData,
   publish,
-  subscribe
+  subscribe,
+  createDates
 } from "./datepicker.helpers";
 import {
   TypePickerOptions,
-  Disable,
+  TypePickerDisable,
   TypePickerI18n,
   TypePickerState,
-  QueueItem
+  SelectionItem
 } from "./datepicker.interface";
 import { template } from "./datepicker.template";
 import { match, isBool, isDate, isDef, isNotEmpty, toInt, List } from "./util";
@@ -27,9 +28,7 @@ import {
   disables,
   queue,
   findDisabledBeforeStartDate,
-  findDatesBetweenEnqueuedAndInqueue,
   usePanelTitle,
-  inDisable,
   viewTypes,
   events,
   dataset
@@ -37,52 +36,70 @@ import {
 
 let temp = [];
 
-function useQueue(item: QueueItem, next: Function): void {
-  const { lastSelectedItemCanBeInvalid, selection } = getState();
-  if (item.disabled && selection !== 2) {
-    return;
-  }
-  const length = queue.length();
-  if (selection === 2) {
-    const last = queue.last();
-    let size = 0;
-    let someInvalid = false;
-
-    if (last) {
-      const between = findDatesBetweenEnqueuedAndInqueue(
-        useParseDate(item.value),
-        useParseDate(last.value)
-      );
-      size = between.length;
-      someInvalid = disables.some((date: string) => between.indexOf(date) >= 0);
-    }
-    if (item.disabled) {
-      if (length === 1) {
-        if (
-          last.disabled ||
-          size < 0 ||
-          someInvalid ||
-          !lastSelectedItemCanBeInvalid
-        ) {
-          return;
-        }
-      } else {
+function useQueue(item: SelectionItem, next: Function): void {
+  const { useInvalidAsSelected, selection, limit } = getState();
+  const currentQueueLength = queue.length();
+  const nexQueueLength = currentQueueLength + 1;
+  if (item.disabled) {
+    if (selection !== 2) {
+      return;
+    } else {
+      let last = queue.last();
+      let lastDate = useParseDate(last.value);
+      let date = useParseDate(item.value);
+      if (lastDate > date || nexQueueLength > queue.size) {
         return;
       }
-    } else if (length === 1 && someInvalid) {
-      queue.resetWithValue(item);
     }
   }
+  if (nexQueueLength > queue.size) {
+    queue.clean();
+  }
 
-  queue.enqueue(item)(
-    (): void => {
-      const dispatchValue = queue.map((item: { value: any }) => item.value);
-      next(dispatchValue);
+  const afterPush = next => {
+    if (queue.length() > 0 && selection === 2) {
+      let first = queue.front();
+      let last = queue.last();
+
+      let lastDate = useParseDate(last.value);
+      let firstDate = useParseDate(first.value);
+      let size = diffDates(firstDate, lastDate, true);
+      let dates: any[] = createDates(firstDate, size).map(useFormatDate);
+
+      if (dates.length > 0) {
+        dates = dates.filter(item => disables.find(item));
+        dates = dates.map(item => queue.findIndex(item));
+        if (dates.indexOf(-1) >= 0) {
+          queue.shift();
+        } else if (
+          dates.indexOf(queue.size - 1) >= 0 &&
+          !useInvalidAsSelected
+        ) {
+          queue.pop();
+        }
+      }
+      first = queue.front();
+      last = queue.last();
+      firstDate = useParseDate(first.value);
+      lastDate = useParseDate(last.value);
+      if (lastDate < firstDate) {
+        queue.shift();
+      } else if (limit) {
+        const size = diffDates(lastDate, firstDate);
+        if (size > limit) {
+          queue.shift();
+        }
+      }
     }
-  );
+
+    const value = queue.map((item: { value: any }) => item.value);
+    next(value);
+  };
+  const dispatchValue = () => afterPush(next);
+  queue.push(item)(dispatchValue);
 }
 
-function useUpdate(data: QueueItem, next: Function) {
+function useUpdate(data: SelectionItem, next: Function) {
   const state = getState();
   if (data) {
     temp.push(data);
@@ -120,6 +137,7 @@ function renderTemplate({ views, date, reachEnd, reachStart }): string {
     usePanelTitle,
     useRange: ({ date, value, day }) => {
       const range = queue.getRange();
+
       const inRange = List.inRange(
         range,
         value,
@@ -132,13 +150,8 @@ function renderTemplate({ views, date, reachEnd, reachStart }): string {
       );
       const isStart = List.inRange(range, value, index => index === 0);
       const inQueue = queue.has(value);
-      return [
-        inQueue,
-        inDisable(date, value, day),
-        queue.useRange && inRange,
-        queue.useRange && isStart,
-        queue.useRange && isEnd
-      ];
+      const inDisables = disables.of(date, value, day);
+      return [inQueue, inDisables, inRange, isStart, isEnd];
     }
   });
   monthPanelData.mapDisabled(dates => disables.set({ all: dates }));
@@ -170,7 +183,7 @@ class TypePicker {
     let _views = this.views as any;
     const partial: Partial<TypePickerState> = {};
     match({ condition: isDef, value: option.format })(
-      format => (partial.dateFormat = format)
+      format => (partial.format = format)
     );
     match({ condition: isDef, value: option.views })(views => {
       _views = viewTypes[viewTypes[views]];
@@ -226,14 +239,12 @@ class TypePicker {
         endDate: partial.endDate
       });
     });
-    match({ condition: isBool, value: option.lastSelectedItemCanBeInvalid })(
-      value => {
-        partial.lastSelectedItemCanBeInvalid = value;
-        if (value === true) {
-          partial.selection = 2;
-        }
+    match({ condition: isBool, value: option.useInvalidAsSelected })(value => {
+      partial.useInvalidAsSelected = value;
+      if (value === true) {
+        partial.selection = 2;
       }
-    );
+    });
     this.element = el;
     this.element.className = DOMHelpers.class.container(_views);
     this.startDate = partial.startDate;
@@ -242,12 +253,8 @@ class TypePicker {
     this.views = _views;
     queue.setOptions({
       size: partial.selection,
-      limit: partial.limit,
-      useRange: partial.selection === 2,
-      useFormatDate,
-      useParseDate
+      useRange: partial.selection === 2
     });
-
     this.update(partial);
   }
 
@@ -257,10 +264,8 @@ class TypePicker {
     if (partial && Object.keys(partial).length <= 0) {
       return;
     }
-    const [reachEnd, reachStart] = checkSwitchable(this.date);
-
+    const [reachStart, reachEnd] = checkSwitchable(this.date);
     setState(partial);
-
     this.element.innerHTML = renderTemplate({
       views: this.views,
       date: this.date,
@@ -344,9 +349,9 @@ class TypePicker {
 
   /**
    *
-   * @param {Disable} options
+   * @param {TypePickerDisable} options
    */
-  public disable(options: Disable): void {
+  public disable(options: TypePickerDisable): void {
     let { to, from, days, dates } = options;
     if (!List.isList(dates)) {
       dates = [];

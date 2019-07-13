@@ -1,4 +1,4 @@
-import { DateTag, node } from "./datepicker.interface";
+import { DateTagData, TagData } from "./datepicker.interface";
 import { isDef, isNotEmpty, List } from "./util";
 import { DOMHelpers } from "./datepicker.dom.helper";
 
@@ -10,7 +10,7 @@ import { DOMHelpers } from "./datepicker.dom.helper";
  * @param render
  * @returns {string}
  */
-function tag({ tag, props = {} }: node): string {
+function tag({ tag, props = {} }: TagData): string {
   if (!tag) {
     return "";
   }
@@ -68,10 +68,10 @@ function createActionView(reachStart: boolean, reachEnd: boolean): (string)[] {
 
 /**
  *
- * @param {DateTag} data
+ * @param {DateTagData} data
  * @returns {string}
  */
-function createDateTag(data: DateTag): string {
+function createDateTag(data: DateTagData): string {
   const nodeChildren = [];
   if (isNotEmpty(data.date)) {
     nodeChildren.push(
