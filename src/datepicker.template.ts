@@ -14,8 +14,8 @@ function createTag(tag, props: any): string {
       if (key !== "children") {
         if (key === "className") {
           key = "class";
-          attributes.push(`${key}="${value}"`);
         }
+        attributes.push(`${key}="${value}"`);
       } else {
         if (value !== false) {
           if (Array.isArray(value)) {
@@ -59,24 +59,22 @@ function createDateView(data: DateTagData): string {
     );
   }
 
+  const props = {
+    className: DOMHelpers.class.cell(data.day, data.className),
+    children: nodeChildren
+  };
+
   if (data.value) {
     nodeChildren.push(
       createTag("div", {
         className: "placeholder"
       })
     );
+    props["data-date"] = data.value;
   }
-
-  const props = {
-    className: DOMHelpers.class.cell(data.day, data.className),
-    children: nodeChildren
-  };
 
   if (!isEmpty(data.disabled)) {
     props["data-disabled"] = data.disabled;
-  }
-  if (!isEmpty(data.value)) {
-    props["data-date"] = data.value;
   }
   return createTag("div", props);
 }

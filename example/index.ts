@@ -1,10 +1,8 @@
 // @ts-ignore
-
+import "./style.css";
 import TypePicker from "../src";
-
 import { i18n, source } from "./mock";
-
-const input = <HTMLInputElement>document.getElementById("date-value");
+const input = <HTMLDivElement>document.getElementById("date-value");
 const { startDate, endDate } = (() => {
   const date = new Date();
   const dist = {
@@ -12,32 +10,27 @@ const { startDate, endDate } = (() => {
     month: date.getMonth(),
     date: date.getDate()
   };
-  const startDate = new Date(dist.year, dist.month - 6, dist.date);
+  const startDate = new Date(dist.year - 1, 0, dist.date);
   const endDate = new Date(dist.year, dist.month, dist.date);
-
   return {
     startDate,
     endDate
   };
 })();
-
 const options = {
   el: document.getElementById("datepicker"),
   startDate,
   endDate,
-  limit: false,
   format: "YYYY-MM-DD",
-  useInvalidAsSelected: false,
+  useInvalidAsSelected: true,
   selection: 2,
-  views: "auto"
+  views: 2 ///"auto"
 };
 
 const app = new TypePicker(options);
-
 app.onSelect((value: any[]) => {
   console.log("onselect", value);
-
-  input.innerText = value.join(","); // value.join("");
+  input.innerText = value.join(",");
 });
 app.onRender(nodeList => {
   for (let i = 0; i < nodeList.length; i++) {
@@ -60,55 +53,20 @@ app.onRender(nodeList => {
 app.i18n(i18n["zh-cn"]);
 
 app.disable({
-  // dates: [
-  //   "2018-2-18",
-  //   "2018-2-19",
-  //   "2018-2-22",
-  //   "2018-2-23",
-  //   new Date(),
-  //   "2018-2-27",
-  //   "2018-2-25",
-  //   "2018-3-28",
-  //   "2018-3-22",
-  //   "2018-3-20",
-  //   "2018-4-19",
-  //   "2018-4-18",
-  //   "2018-4-20",
-  //   "2018-4-29",
-  //   "2018-4-30",
-  //   "2018-10-1",
-  //   "2018-10-2"
-  // ],
-  dates: ["2019-6-21", "2019-6-27", "2019-07-28"],
-  to: "2019-08-12", // new Date(2018, 10, 1),
-  from: "2019-03-01" //new Date(2019, 7, 15)
-  // days: [4, 5]
+  days: [3, 4, 5],
+  dates: ["2019-06-21", "2019-6-27", "2019-07-28"],
+  to: "2019-09-12", // new Date(2018, 10, 1),
+  from: "2019-07-01" //new Date(2019, 7, 15)
 });
-
-// app.setDates([
-//   // "2019-6-25",
-//   "2019-6-28",
-//   // "2019-6-29",
-//   // "2019-6-30",
-//   // "2019-7-1",
-//   "2019-7-3"
-// ]);
-
 app.setDates([
-  // "2019-05-29",
-  "2019-07-03",
-  "2019-07-19"
-
-  //   new Date(),
-  // "2019-06-30"
-  //   new Date(),
-  //   "2019-6-20",
-  //   "2019-6-26",
-  //   "2019-6-28",
-  //   "2019-6-29",
-  //   // "2019-6-29",
-  //   // "2019-6-30",
-  //   "2019-7-1",
-  //   "2019-7-3"
+  "2019-07-22",
+  "2019-07-25",
+  "2019-05-03",
+  "2019-05-03",
+  "2019-07-15",
+  "2019-08-15"
 ]);
-// console.log(app);
+
+console.log(app);
+
+setTimeout(() => console.log("date", app.date), 0);

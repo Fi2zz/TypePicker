@@ -1,26 +1,17 @@
 body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-}
-
-* {
-  box-sizing: border-box;
+  padding: 32px;
 }
 #app {
-  width: 100%;
-  border: 1px solid #ccc;
-  width: 482px;
-  margin: 32px;
+  border: 1px #ccc solid;
+  display: block;
+  max-width: 480px;
+  width: auto;
 }
-.calendar-action {
-  position: relative;
-  cursor: pointer;
-  padding: 0;
-  font-size: 0 !important;
+#app .calendar {
+  margin: 0;
+  border-right: 1px #ccc solid;
+  border-bottom: 1px #ccc solid;
 }
-
 .highlight {
   color: #06a2d0;
 }
@@ -30,15 +21,11 @@ body {
 .calendar-cell.end-date .date {
   background: #006f6f !important;
 }
-
 #datepicker {
   background-color: #fff;
 }
 
 #date-value {
   font-size: 14px;
-  width: 100%;
-  border-top: 1px #ccc solid;
   padding: 12px;
-  display: block;
 }

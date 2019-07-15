@@ -55,7 +55,11 @@ export const List = {
     return list.reduce((acc, currItem) => {
       let curr = currItem;
       if (key) {
-        curr = currItem[key];
+        if (typeof key === "function") {
+          curr = key(curr, map);
+        } else {
+          curr = currItem[key];
+        }
       }
 
       if (!map[curr]) {
@@ -75,7 +79,10 @@ export const List = {
 
     return list.join(split);
   },
-  isEmpty: list => list.length <= 0,
+  empty(list: any[]) {
+    list = [];
+  },
+  isEmpty: list => List.isList(list) && list.length <= 0,
   loop(list, looper) {
     for (let item of list) {
       let index = list.indexOf(item);
@@ -99,5 +106,14 @@ export const List = {
   includes(list, item) {
     const hasIncludes = typeof list.includes == "function";
     return hasIncludes ? list.includes(item) : list.indexOf(item) >= 0;
+  },
+  fetch(list, index: string | number = 0) {
+    return list[index];
+  },
+  fetchEnd(list) {
+    return List.fetch(list, list.length - 1);
+  },
+  fetchTop(list) {
+    return List.fetch(list, 0);
   }
 };

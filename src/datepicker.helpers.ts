@@ -1,11 +1,6 @@
 import { TypePickerI18n } from "./datepicker.interface";
-import { isDate, isEmpty, List, isDef } from "./util";
-
-/**
- *
- * @param {Number} n
- * @returns {string}
- */
+import { isDate, isEmpty, List } from "./util";
+import { useParseDate, useFormatDate } from "./state";
 export const padding = (n: Number): string => `${n > 9 ? n : "0" + n}`;
 export function classname(options) {
   const { isActive, isStart, isEnd, isDisabled, inRange, isEmpty } = options;
@@ -402,8 +397,15 @@ export class Disabled {
     return this.findDate(date) || this.findDay(day);
   }
 
-  of(date, value, day) {
-    return this.oneOf(value, day) || this.outofRange(date);
+  of(date: Date, value: string) {
+    if (!isDate(date)) {
+      return true;
+    }
+    const day = date.getDay();
+    const result =
+      this.oneOf(value, day) || this.outofRange(date) || this.find(date);
+
+    return result;
   }
 
   find(date) {

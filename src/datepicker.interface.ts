@@ -1,6 +1,6 @@
 export interface TypePickerOptions {
   el: string | HTMLElement;
-  limit?: number | boolean;
+  limit?: number;
   format?: string;
   views?: number | string;
   startDate?: Date;
@@ -35,8 +35,8 @@ export interface DateTagData {
   day: number;
   date: number;
 }
-
 export interface SelectionItem {
+  selected?: boolean;
   value?: string;
   disabled?: boolean;
 }

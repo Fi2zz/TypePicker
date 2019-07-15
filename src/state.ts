@@ -17,7 +17,24 @@ const state: TypePickerState = {
   endDate: null,
   format: "YYYY-MM-DD",
   limit: 1,
-  i18n: defaultI18n(),
+  i18n: {
+    title: "YYYY年MM月",
+    days: <Array<string>>["日", "一", "二", "三", "四", "五", "六"],
+    months: <Array<string>>[
+      "01",
+      "02",
+      "03",
+      "04",
+      "05",
+      "06",
+      "07",
+      "08",
+      "09",
+      "10",
+      "11",
+      "12"
+    ]
+  },
   useInvalidAsSelected: false,
   selected: [],
   views: 1
@@ -102,7 +119,7 @@ export class Selection {
  * @param start
  * @param end
  */
-export const checkSwitchable = (date: Date) => {
+export const useSwitchable = (date: Date) => {
   const { startDate, endDate, views } = getState();
   if (views > 2) {
     return [false, false];

@@ -18,11 +18,10 @@ import {
 } from "./datepicker.interface";
 import { template } from "./datepicker.template";
 import { match, isBool, isDate, isDef, List } from "./util";
-
 import {
   getState,
   setState,
-  checkSwitchable,
+  useSwitchable,
   useFormatDate,
   useParseDate,
   disables,
@@ -40,69 +39,65 @@ function useQueue(item: SelectionItem, next: Function): void {
   const { useInvalidAsSelected, selection, limit } = getState();
   const currentQueueLength = queue.length();
   const nextQueueLength = currentQueueLength + 1;
+  const current = useParseDate(item.value);
+  const first = queue.front();
+  const findOutDisablesBeforePush = () => {
+    const firstDate = useParseDate(first.value);
+    const size = diffDates(firstDate, current, true);
+    const dates = List.filter(createDates(firstDate, size), date => {
+      const value = useFormatDate(date);
+      const disable = disables.of(date, value);
+      return disable && value !== item.value;
+    });
+    return dates.length > 0;
+  };
+
   if (item.disabled) {
     if (selection !== 2) {
       return;
     } else {
-      let last = queue.last();
-      let lastDate = useParseDate(last.value);
-      let date = useParseDate(item.value);
-      if (lastDate > date || nextQueueLength > queue.size) {
-        return;
+      if (currentQueueLength >= 0) {
+        if (!useInvalidAsSelected) {
+          return;
+        }
+        //find out disables before push
+        if (
+          (currentQueueLength === 1 && findOutDisablesBeforePush()) ||
+          currentQueueLength === 2
+        ) {
+          return;
+        }
       }
     }
   }
+  //find out disables between last and curren
+  else if (selection === 2) {
+    if (currentQueueLength) {
+      if (findOutDisablesBeforePush()) {
+        queue.shift();
+      } else {
+        const firstDate = useParseDate(first.value);
+        if (firstDate > current) {
+          queue.pop();
+        }
+      }
+    }
+  }
+
   if (nextQueueLength > queue.size) {
     queue.clean();
   }
-
-  const afterPush = next => {
-    if (selection === 2) {
-      let first = queue.front();
-      let last = queue.last();
-      let lastDate = useParseDate(last.value);
-      let firstDate = useParseDate(first.value);
-      let size = diffDates(firstDate, lastDate, true);
-      let dates: any[] = createDates(firstDate, size).map(useFormatDate);
-
-      if (dates.length > 0) {
-        dates = dates.filter(disables.find.bind(disables));
-        dates = dates.map(queue.findIndex.bind(queue));
-        //includes invalid dates
-        if (dates.indexOf(-1) >= 0) {
-          queue.shift();
-        }
-        //last item is invalid
-        else if (dates.indexOf(queue.size - 1) >= 0) {
-          if (!useInvalidAsSelected) {
-            queue.pop();
-          }
-        }
-      }
-      first = queue.front();
-      last = queue.last();
-      firstDate = useParseDate(first.value);
-      lastDate = useParseDate(last.value);
-      if (lastDate < firstDate) {
-        queue.shift();
-      } else if (limit) {
-        const size = diffDates(lastDate, firstDate);
-        if (size > limit) {
-          queue.shift();
-        }
-      }
-    }
-    next(queue.list);
-  };
-  const dispatchValue = () => afterPush(next);
+  const dispatchValue = () => next(queue.list);
   queue.push(item)(dispatchValue);
 }
 function useUpdate(data: SelectionItem, next: Function) {
   if (data) {
     temp.push(data);
   }
-  List.loop(temp, item => {
-    item.disabled = disables.find(item.value);
+  List.loop(temp, (item: SelectionItem) => {
+    const date = useParseDate(item.value);
+    item.disabled = disables.of(date, item.value);
+    item.selected = true;
     useQueue(item, selected => {
       publish("select", selected.map(item => item.value));
       next({ selected });
@@ -111,7 +106,7 @@ function useUpdate(data: SelectionItem, next: Function) {
   temp = [];
 }
 
-function getRangeFromQueue(useRange) {
+function getRangeFromQueue(useRange: boolean) {
   const length = queue.length();
   if (length <= 0 || !useRange) {
     return [];
@@ -139,16 +134,17 @@ function renderTemplate({ date, reachEnd, reachStart }): string {
       const inRange = List.inRange(
         range,
         value,
-        (index, list) => index > 0 && index < list.length - 1
+        (index: number, list: { length: number }) =>
+          index > 0 && index < list.length - 1
       );
       const isEnd = List.inRange(
         range,
         value,
-        (index, list) => index === list.length - 1
+        (index: number, list: { length: number }) => index === list.length - 1
       );
       const isStart = List.inRange(range, value, index => index === 0);
       const inQueue = queue.has(value);
-      const inDisables = disables.of(date, value, day);
+      const inDisables = disables.of(date, value);
       return [inQueue, inDisables, inRange, isStart, isEnd];
     }
   });
@@ -161,44 +157,37 @@ function renderTemplate({ date, reachEnd, reachStart }): string {
     switchable: 1 <= (state.views as number) && (state.views as number) <= 2
   });
 }
-
-const isNumber = v => !isNaN(v);
-
+const isNumber = (v: string) => /[0-9]/.test(v);
 class TypePicker {
   startDate: Date | null;
   endDate: Date | null;
   date = new Date();
-
   protected element: HTMLElement = null;
   constructor(option: TypePickerOptions) {
     const el = DOMHelpers.select(option.el);
     if (!el || !option) {
       return;
     }
-    let _date = this.date;
     const partial: Partial<TypePickerState> = {};
     match({ condition: isDef, value: option.format })(
-      format => (partial.format = format)
+      (format: string) => (partial.format = format)
     );
     match({ condition: isDef, value: option.views })(views => {
       partial.views = viewTypes[viewTypes[views]];
     });
     match({ condition: isNumber, value: option.selection })(
-      size => (partial.selection = size)
+      (size: number) => (partial.selection = size)
     );
     match({ condition: isDate, value: useParseDate(option.startDate) })(
-      date => {
-        partial.startDate = date;
-        _date = date;
-      }
+      (date: Date) => (partial.startDate = date)
     );
     match({ condition: isDate, value: useParseDate(option.endDate) })(
       (date: Date) => (partial.endDate = date)
     );
     match({
-      condition: limit => isNumber(limit) || limit === false,
+      condition: isNumber,
       value: option.limit
-    })(limit => (partial.limit = limit));
+    })((limit: number) => (partial.limit = limit));
     match({
       condition: (option.views as string) === viewTypes.auto,
       value: option.views
@@ -206,7 +195,6 @@ class TypePicker {
       if (!partial.startDate) {
         partial.startDate = new Date();
       }
-
       let start = partial.startDate;
       if (!partial.endDate) {
         partial.endDate = new Date(
@@ -216,7 +204,6 @@ class TypePicker {
         );
       }
       partial.views = diffMonths(partial.endDate, partial.startDate);
-      _date = partial.startDate;
     });
 
     match({
@@ -244,26 +231,31 @@ class TypePicker {
     });
     this.element = el;
     this.element.className = DOMHelpers.class.container(partial.views);
-    this.startDate = partial.startDate;
-    this.endDate = partial.endDate;
-    this.date = _date;
     queue.setSize(partial.selection);
     this.update(partial);
   }
-
   protected update(partial) {
     if (partial && Object.keys(partial).length <= 0) {
       return;
     }
-    const [reachStart, reachEnd] = checkSwitchable(this.date);
     setState(partial);
-    const state = getState();
+    const { startDate, endDate } = getState();
+    this.startDate = startDate;
+    this.endDate = endDate;
+    if (partial && partial.selected) {
+      let item = List.fetchEnd(partial.selected);
+      let date = useParseDate(item.value);
+      this.date = date;
+    }
+    const [reachStart, reachEnd] = useSwitchable(this.date);
+    useUpdate(null, this.update.bind(this));
     this.element.innerHTML = renderTemplate({
       date: this.date,
       reachEnd,
       reachStart
     });
-    const select = selector => DOMHelpers.select(this.element, selector);
+    const select = (selector: string) =>
+      DOMHelpers.select(this.element, selector);
     const prevActionDOM = select(".calendar-action.prev");
     const nextActionDOM = select(".calendar-action.next");
     const nodeList = select(".calendar-cell");
@@ -271,7 +263,7 @@ class TypePicker {
       const listener = (disabled: any, step: number) => {
         const now = new Date(
           this.date.getFullYear(),
-          this.date.getMonth() + step * (state.views as number),
+          this.date.getMonth() + step,
           this.date.getDate()
         );
         if (disabled) {
@@ -285,48 +277,63 @@ class TypePicker {
       );
       nextActionDOM.addEventListener(events.click, () => listener(reachEnd, 1));
     }
-    List.loop(nodeList, node => {
+    List.loop(nodeList, (node: HTMLElement) => {
       node.addEventListener(events.click, () => {
         const value = DOMHelpers.attr(node, dataset.date);
         const disabled = DOMHelpers.attr(node, dataset.disabled) !== null;
         if (!value) {
           return;
         }
+        this.date = useParseDate(value);
         useUpdate({ value, disabled }, this.update.bind(this));
       });
     });
-    useUpdate(null, this.update.bind(this));
   }
 
-  public setDates(dates: Array<string | Date>): void {
+  public setDates(dates: Array<string | Date>, shouldUpdate?): void {
+    shouldUpdate = shouldUpdate || true;
     const { selection, limit } = getState();
-    dates = List.slice(dates, 0, selection + 1);
-    dates = List.map(dates, useParseDate);
-    match({ condition: dates => List.every(dates, isDate), value: dates })(
-      dates => {
-        dates = List.map(dates, useParseDate, isDef);
-        dates = List.reduce(dates, (prev: Date, curr: Date) => {
-          if (selection == 2 && isNumber(limit)) {
-            let gap = diffDates(curr, prev);
-            if (gap > limit || gap < 0) {
-              return [];
-            }
+    dates = List.slice(dates, 0, selection);
+    dates = List.map(dates, useParseDate, isDef);
+    dates = List.dedup(dates, (date: Date, map: Function) => {
+      if (!map[date.toDateString()]) {
+        return date;
+      }
+      return null;
+    });
+
+    match({
+      condition: (dates: any) => List.every(dates, isDate),
+      value: dates
+    })((dates: any[]) => {
+      dates = List.reduce(dates, (prev: Date, curr: Date, index, list) => {
+        if (selection == 2 && index > 0) {
+          prev = list[index - 1];
+          const gap = diffDates(curr, prev);
+          if (gap <= 0) {
+            return [useFormatDate(curr)];
           }
-          return List.map(dates, useFormatDate, isDef);
-        });
-        if (dates.length <= 0) {
-          return;
+          if (limit && gap > limit) {
+            return [];
+          }
         }
-        temp = List.map(dates, item => ({
-          value: item
-        }));
-        const currentDate = useParseDate(dates[dates.length - 1]);
-        if (currentDate) {
-          this.date = currentDate;
-        }
+        dates = dates.sort((a, b) => a.getTime() - b.getTime());
+        return List.map(dates, useFormatDate, isDef);
+      });
+      if (dates.length <= 0) {
+        return;
+      }
+
+      temp = List.map(dates, value => ({
+        value,
+        selected: true,
+        disabled: false
+      }));
+
+      if (shouldUpdate) {
         this.update(null);
       }
-    );
+    });
   }
   public disable(options: TypePickerDisable): void {
     let { to, from, days, dates } = options;
@@ -336,58 +343,45 @@ class TypePicker {
     if (!List.isList(days)) {
       days = [];
     }
-    const partial: Partial<TypePickerState> = {};
+    let partial: Partial<TypePickerState> = {};
     match({ condition: isDate, value: useParseDate(from) })(
       (from: Date) => (partial.endDate = from)
     );
     match({ condition: isDate, value: useParseDate(to) })(
       (to: Date) => (partial.startDate = to)
     );
-
     match({
       condition: dates => List.every(dates, isDate),
       value: [partial.startDate, partial.endDate]
     })(([start, end]) => {
-      if (start > end) {
-        partial.startDate = end;
-        partial.endDate = start;
+      if (start >= end) {
+        return;
       }
       disables.set({ startDate: partial.startDate, endDate: partial.endDate });
-      this.date = partial.startDate;
-      this.startDate = partial.startDate;
-      this.endDate = partial.endDate;
     });
-
     match({ condition: (v: { length: number }) => v.length > 0, value: days })(
-      days => {
+      (days: any[]) => {
         const isValidDay = day => isNumber(day) && day >= 0 && day <= 6;
+        days = List.map(days, day => parseInt(day, 10), isValidDay);
         disables.set({
-          days: List.map(days, value => parseInt(value, 10), isValidDay)
+          days
         });
       }
     );
     match({ condition: v => v.length > 0, value: dates })(dates => {
       dates = List.map([...disables.dates, ...dates], useParseDate, isDate);
       dates = List.map(dates, useFormatDate, isDef);
+      dates = List.dedup(dates);
       disables.set({
-        dates: List.dedup(dates)
+        dates
       });
     });
     this.update(partial);
   }
 
-  /**
-   *
-   * @param i18n
-   */
   public i18n(i18n: TypePickerI18n): void {
     i18nValidator(i18n, (i18n: TypePickerI18n) => this.update({ i18n }));
   }
-
-  /**
-   *
-   * @param next: (dispatchValue: NodeListOf<HTMLElement>) => void
-   */
   public onRender(next: Function) {
     subscribe("render", next);
   }

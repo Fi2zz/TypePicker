@@ -9,11 +9,9 @@ module.exports = function(_, options) {
   const isEnvDevelopment = options.mode === "development";
   const useSourceMap = options.sourceMap || isEnvDevelopment;
   const output = {
-    path: isEnvDevelopment
-      ? path.resolve(__dirname, "example")
-      : path.resolve(__dirname, "dist"),
+    path: path.resolve(__dirname, "dist"),
     publicPath: "/",
-    filename: "example.js"
+    filename: "[name].js"
   };
   if (isEnvProduction) {
     output.library = "TypePicker";
@@ -28,18 +26,13 @@ module.exports = function(_, options) {
   }
   return {
     mode: options.mode,
-    entry: isEnvDevelopment
-      ? ["./example/index.ts", "./example/style.css"]
-      : "./src/index.ts",
+    entry: isEnvDevelopment ? "./example/index.ts" : "./src/index.ts",
     output,
     module: {
       rules: [
-        {
+         {
           test: /\.css$/,
-          use: [
-            isEnvDevelopment ? "style-loader" : MiniCssExtractPlugin.loader,
-            "css-loader"
-          ]
+          use: [isEnvProduction ? MiniCssExtractPlugin.loader:'style-loader', "css-loader"]
         },
         {
           test: /\.js$/,
@@ -54,7 +47,7 @@ module.exports = function(_, options) {
           test: /\.tsx?$/,
           use: ["ts-loader"]
         }
-      ]
+      ].filter(Boolean)
     },
     resolve: {
       extensions: [".js", ".json", ".ts", ".tsx"]
