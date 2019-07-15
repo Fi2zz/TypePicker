@@ -38,9 +38,9 @@ DatePicker build with typescript
 | --------- | -------- | ------------------ | -------------------------------------- | ----------------------- |
 | el        | YES      | string,HTMLElement | Element or selector to mount DatePcker |                         |
 | format    | YES      | string             | Date string format                     | YYYY-MM-DD              |
-| startDate | NO       | Date               | Start date of DatePicker               | new Date                |
+| startDate | NO       | Date               | Start date of DatePicker               | null                    |
 | endDate   | NO       | Date               | End date of DatePicker                 | null                    |
-| limit     | NO       | number, bolean     | Limitation between two dates           | 1                       |
+| limit     | NO       | number             | Limitation between two dates           | 1                       |
 | views     | NO       | number,string      | Display views of DatePicker            | auto,1,2                |
 | selection | NO       | number             | Size of dates can be picked            | 1                       |
 
