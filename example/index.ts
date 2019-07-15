@@ -1,4 +1,3 @@
-// @ts-ignore
 import "./style.css";
 import TypePicker from "../src";
 import { i18n, source } from "./mock";
@@ -24,7 +23,7 @@ const options = {
   format: "YYYY-MM-DD",
   useInvalidAsSelected: true,
   selection: 2,
-  views: 2 ///"auto"
+  views: "auto"
 };
 
 const app = new TypePicker(options);

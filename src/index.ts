@@ -119,6 +119,8 @@ function getRangeFromQueue(useRange: boolean) {
   return createDates(start, size).map(useFormatDate);
 }
 
+let viewType;
+
 function renderTemplate({ date, reachEnd, reachStart }): string {
   const state = getState();
   const monthPanelData = new MonthPanelData();
@@ -154,7 +156,7 @@ function renderTemplate({ date, reachEnd, reachStart }): string {
     days: state.i18n.days,
     reachStart,
     reachEnd,
-    switchable: 1 <= (state.views as number) && (state.views as number) <= 2
+    switchable: viewType !== viewTypes.auto
   });
 }
 const isNumber = (v: string) => /[0-9]/.test(v);
@@ -174,6 +176,7 @@ class TypePicker {
     );
     match({ condition: isDef, value: option.views })(views => {
       partial.views = viewTypes[viewTypes[views]];
+      viewType = views;
     });
     match({ condition: isNumber, value: option.selection })(
       (size: number) => (partial.selection = size)
@@ -238,6 +241,7 @@ class TypePicker {
     if (partial && Object.keys(partial).length <= 0) {
       return;
     }
+
     setState(partial);
     const { startDate, endDate } = getState();
     this.startDate = startDate;
@@ -359,6 +363,7 @@ class TypePicker {
       }
       disables.set({ startDate: partial.startDate, endDate: partial.endDate });
     });
+
     match({ condition: (v: { length: number }) => v.length > 0, value: days })(
       (days: any[]) => {
         const isValidDay = day => isNumber(day) && day >= 0 && day <= 6;
@@ -376,6 +381,9 @@ class TypePicker {
         dates
       });
     });
+    if (partial.startDate && partial.endDate && viewType === viewTypes.auto) {
+      partial.views = diffMonths(partial.startDate, partial.endDate, true);
+    }
     this.update(partial);
   }
 
