@@ -1,6 +1,4 @@
-import { TypePickerI18n } from "./datepicker.interface";
-import { isDate, isEmpty, List } from "./util";
-import { useParseDate, useFormatDate } from "./state";
+import { isDate, List, isDef, Dat } from "./util";
 export const padding = (n: Number): string => `${n > 9 ? n : "0" + n}`;
 export function classname(options) {
   const { isActive, isStart, isEnd, isDisabled, inRange, isEmpty } = options;
@@ -10,22 +8,18 @@ export function classname(options) {
   let className = "";
   if (isActive) {
     className = "active";
-
     if (isStart) {
       className = "active start-date";
     } else if (isEnd) {
       className = "active end-date";
     }
   }
-
   if (inRange) {
     return "in-range";
   }
-
   if (isDisabled && !isActive) {
     className = "disabled";
   }
-
   return className;
 }
 /**
@@ -63,7 +57,6 @@ export function timeDiff(
 
   return result;
 }
-
 /**
  *
  * @param first Date
@@ -227,60 +220,9 @@ function createDateFormatRegExpression(format: string) {
   return new RegExp(`${result}$`);
 }
 
-/**
- *
- * @param date
- * @param size
- * @param direction
- */
-export function createDates(
-  date: Date,
-  size: number,
-  direction?: number
-): Array<Date> {
-  direction = direction || 1;
-
-  const dir = (now: number, size: number) =>
-    direction > 0 ? now + size : now - size;
-
-  let result = [];
-  if (!isDate(date)) {
-    return result;
-  }
-
-  for (let i = 0; i <= size; i++) {
-    let currYear = date.getFullYear();
-    let currMonth = date.getMonth();
-    let currDate = date.getDate();
-    currDate = dir(currDate, i);
-    result.push(new Date(currYear, currMonth, currDate));
-  }
-  return result;
-}
-
-export function defaultI18n(): TypePickerI18n {
-  return {
-    title: "YYYY年MM月",
-    days: <Array<string>>["日", "一", "二", "三", "四", "五", "六"],
-    months: <Array<string>>[
-      "01",
-      "02",
-      "03",
-      "04",
-      "05",
-      "06",
-      "07",
-      "08",
-      "09",
-      "10",
-      "11",
-      "12"
-    ]
-  };
-}
-
 export function i18nValidator(i18n: TypePickerI18n, next: Function) {
   if (
+    isDef(i18n) &&
     List.isList(i18n.days) &&
     List.isList(i18n.months) &&
     typeof i18n.title === "string"
@@ -288,32 +230,6 @@ export function i18nValidator(i18n: TypePickerI18n, next: Function) {
     next(i18n);
   }
 }
-
-export const createDateDataOfMonth = (origin, disabled?, partial?) => {
-  disabled = disabled || false;
-
-  partial = partial || {};
-  let { year, month, day } = partial;
-
-  let date = null;
-
-  if (isDate(origin)) {
-    year = origin.getFullYear();
-    month = origin.getMonth();
-    day = origin.getDay();
-    date = origin.getDate();
-  }
-
-  return {
-    origin,
-    month,
-    year,
-    day,
-    date,
-    disabled,
-    selected: false
-  };
-};
 
 /**
  *
@@ -367,15 +283,117 @@ export const publish = (event: string, value: any) =>
  */
 export const subscribe = Observer.subscribe;
 
+export const useViewTypes = views => {
+  const result = {
+    type: viewTypes.singleView.toString(),
+    size: 1
+  };
+
+  if (!views) {
+    return result;
+  }
+  switch (views) {
+    case 1:
+      result.type = viewTypes.singleView.toString();
+      result.size = 1;
+      break;
+    case 2:
+      result.type = viewTypes.doubleViews.toString();
+      result.size = 2;
+      break;
+    case "auto":
+      result.type = viewTypes.flatView.toString();
+      result.size = 3;
+      break;
+    default:
+      break;
+  }
+  return result;
+};
+export enum viewTypes {
+  singleView = "single-view",
+  doubleViews = "double-views",
+  flatView = "flat-view"
+}
+export enum events {
+  click = "click"
+}
+export enum dataset {
+  date = "data-date",
+  disabled = "data-disabled"
+}
+
+export class Selection {
+  size = 1;
+  list: any[] = [];
+  setSize(size: number) {
+    this.size = size;
+  }
+  setCanPushInvalid(can) {
+    this.useInvalidAsSelected = can;
+  }
+  useInvalidAsSelected = false;
+  last = () => this.list[this.length() - 1];
+  front = () => this.list[0];
+  length = () => this.list.length;
+
+  isEmpty() {
+    return this.length() <= 0;
+  }
+
+  isFilled() {
+    return this.length() === this.size;
+  }
+
+  push = (date: SelectionItem) => (afterPush: Function): void => {
+    this.beforePush(date);
+    this.list.push(date);
+    this.afterPush();
+    const id = setTimeout(function afterQueueReset() {
+      afterPush();
+      clearTimeout(id);
+    }, 0);
+  };
+  beforePush(date) {
+    for (let item of this.list) {
+      if (item && item.value === date.value) {
+        if (this.size === 2) {
+          this.shift();
+        } else {
+          this.list = [];
+        }
+      }
+    }
+  }
+
+  afterPush() {
+    let temp = {};
+    let list = [];
+    for (let item of this.list) {
+      if (!temp[item.value]) {
+        temp[item.value] = 1;
+        list.push(item);
+      }
+    }
+    this.list = list;
+  }
+  clean = () => (this.list = []);
+  shift = () => this.list.shift();
+  pop = () => this.list.pop();
+  has(value: string) {
+    return this.list.filter(item => item && item.value === value).length > 0;
+  }
+}
+
 export class Disabled {
   days = [];
   dates = [];
-  all = [];
-  startDate;
-  endDate;
 
-  update(type: string, value: any) {
-    this[type] = value;
+  getState = null;
+  useFormatDate = null;
+  constructor(getState: Function, useFormatDate: Function) {
+    this.getState = getState;
+    this.useFormatDate = useFormatDate;
   }
 
   set(partial) {
@@ -383,135 +401,161 @@ export class Disabled {
       this[key] = partial[key];
     }
   }
-
-  findDay(day) {
-    return List.includes(this.days, day);
-  }
-  findDate(date) {
-    return List.includes(this.dates, date);
-  }
-  both(date, day) {
-    return this.findDate(date) && this.findDay(day);
-  }
-  oneOf(date, day) {
-    return this.findDate(date) || this.findDay(day);
-  }
-
-  of(date: Date, value: string) {
+  find(date: Date) {
     if (!isDate(date)) {
       return true;
     }
+
+    const value = this.useFormatDate(date);
+
     const day = date.getDay();
+    const { startDate, endDate } = this.getState();
+    const outofRange =
+      List.every([startDate, endDate], isDate) &&
+      (date >= endDate || date < startDate);
     const result =
-      this.oneOf(value, day) || this.outofRange(date) || this.find(date);
-
+      List.includes(this.dates, value) ||
+      List.includes(this.days, day) ||
+      outofRange;
     return result;
-  }
-
-  find(date) {
-    return List.includes(this.all, date);
-  }
-  outofRange(date: Date) {
-    const isValidDates = List.every(
-      [this.startDate, this.endDate, date],
-      isDate
-    );
-    return isValidDates && (date > this.endDate || date < this.startDate);
-  }
-
-  some(handler) {
-    return this.all.some(handler);
   }
 }
 
-export class MonthPanelData {
-  data = [];
-  /**
-   *
-   * @param date
-   * @param size
-   * @param heading
-   * @returns {any[]}
-   */
-  mapMonths(date: Date, size: number) {
-    const getFirstDateOfMonth = index =>
-      new Date(date.getFullYear(), date.getMonth() + index, 1);
-    this.data = List.create(size, getFirstDateOfMonth).map(date => {
-      const dates = new Date(
-        Date.UTC(date.getFullYear(), date.getMonth() + 1, 0)
-      ).getUTCDate();
+function getRangeFromQueue(
+  useRange: boolean,
+  queue,
+  useFormatDate,
+  useParseDate
+) {
+  const length = queue.length();
+  if (length <= 0 || !useRange) {
+    return [];
+  }
+  const first = queue.front();
+  const last = queue.last();
+  const start = useParseDate(first.value);
+  const end = useParseDate(last.value);
+  const size = diffDates(end, start);
+  return List.create(size + 1, index => {
+    const currYear = start.getFullYear();
+    const currMonth = start.getMonth();
+    const currDate = start.getDate() + index;
+    return useFormatDate(new Date(currYear, currMonth, currDate));
+  });
+}
+export const useSwitchable = (date: Date, state: TypePickerState) => {
+  const { startDate, endDate, views } = state;
+  const diffEnd = diffMonths(endDate, date);
+  const diffStart = diffMonths(date, startDate);
+  return [
+    diffStart <= 0 && diffEnd > 0,
+    diffStart > 0 && diffEnd <= (views === 1 ? 0 : 1)
+  ];
+};
 
-      const day = date.getDay();
-      //get days of first week at each month
-      const firstWeek = List.create(day, day => ({
-        year: date.getFullYear(),
-        month: date.getMonth(),
-        day
-      })).map(item => createDateDataOfMonth(null, true, item));
-      const restWeeks = createDates(date, dates - 1).map(now =>
-        createDateDataOfMonth(now)
+export function useCalendarData(
+  getState,
+  { date, queue, disables, useFormatDate, useParseDate }
+) {
+  const state = getState();
+  const i18n = state.i18n;
+  const usePanelTitle = (year, month) =>
+    formatHeading(i18n.title, year, i18n.months[month]);
+  //create calendar panel size
+  const calendars = List.create(state.views, index => {
+    const _date = Dat.firstDate(date, index);
+    const day = _date.getDay();
+    return {
+      date: _date,
+      dates: Dat.dates(date) + day,
+      day,
+      heading: usePanelTitle(_date.getFullYear(), _date.getMonth())
+    };
+  });
+  return List.map(calendars, ({ date, dates, day, heading }) => ({
+    heading,
+    dates: List.create(dates, index => {
+      const invalid = index < day;
+      const target = index < day ? 1 - day + index : index - day + 1;
+      const current = new Date(date.getFullYear(), date.getMonth(), target);
+      const disabled = invalid || disables.find(current);
+      const value = useFormatDate(current);
+      const range = getRangeFromQueue(
+        state.selection === 2,
+        queue,
+        useFormatDate,
+        useParseDate
       );
-      return {
-        month: date.getMonth(),
-        year: date.getFullYear(),
-        dates: [...firstWeek, ...restWeeks]
-      };
-    });
-  }
 
-  mapDates({
-    useFormatDate,
-    usePanelTitle, //: Function,
-    useRange //: Function
-  }) {
-    this.data = this.data.map(item => {
-      const dates = item.dates.map(item => {
-        const value = useFormatDate(item.origin);
-        const date = item.date;
-        const [inQueue, inDisabled, inRange, isStart, isEnd] = useRange({
-          date: item.origin,
+      const className = classname({
+        isActive: queue.has(value),
+        isStart: List.inRange(range, value, index => index === 0),
+        isEnd: List.inRange(
+          range,
           value,
-          day: item.day
-        });
-
-        const disabled = inDisabled || item.disabled;
-
-        const className = classname({
-          isActive: inQueue,
-          isStart,
-          isEnd,
-          inRange,
-          isDisabled: disabled,
-          isEmpty: isEmpty(value)
-        });
-
-        return {
+          (index, list) => index === list.length - 1
+        ),
+        inRange: List.inRange(
+          range,
           value,
-          disabled,
-          date,
-          className
-        };
+          (index, list) => index > 0 && index < list.length - 1
+        ),
+        isDisabled: disabled,
+        isEmpty: invalid
       });
-
       return {
-        dates,
-        heading: usePanelTitle(item.year, item.month)
+        value,
+        disabled,
+        date,
+        className,
+        day: current.getDay(),
+        label: current.getDate(),
+        invalid
       };
-    });
-    return this.data;
-  }
+    })
+  }));
+}
 
-  mapDisabled(handler) {
-    const data = this.data;
-    const result = [];
-    for (let item of data) {
-      let dates = item.dates;
-      for (let dateItem of dates) {
-        if (dateItem.disabled && dateItem.date) {
-          result.push(dateItem.value);
-        }
+export function useSelection(
+  queue: Selection,
+  item: SelectionItem,
+  unpushable: Function,
+  popable,
+  shiftable,
+  next: Function
+): void {
+  const currentQueueLength = queue.length();
+  const nextQueueLength = currentQueueLength + 1;
+  const first = queue.front();
+  const last = queue.last();
+  if (item.disabled) {
+    if (
+      queue.size !== 2 ||
+      (queue.size === 2 &&
+        ((currentQueueLength === 1 && unpushable(first)) ||
+          //queue is empty
+          queue.isEmpty() ||
+          //queue filled
+          queue.isFilled() ||
+          !queue.useInvalidAsSelected))
+    ) {
+      return;
+    }
+  }
+  //find out disables between last and curren
+  else if (queue.size === 2) {
+    if (currentQueueLength) {
+      if (unpushable(first) || shiftable(last)) {
+        queue.shift();
+      } else if (popable(first)) {
+        queue.pop();
       }
     }
-    handler(result);
   }
+
+  if (nextQueueLength > queue.size) {
+    queue.clean();
+  }
+  const dispatchValue = () => next(queue.list);
+  queue.push(item)(dispatchValue);
 }

@@ -1,11 +1,26 @@
 body {
   padding: 32px;
 }
-#app {
+
+/**/
+
+#container {
+  display: flex;
+  flex-direction: column;
+  width: 720px;
   border: 1px #ccc solid;
+}
+#app {
   display: block;
-  max-width: 480px;
   width: auto;
+  display: flex;
+}
+
+.display-value {
+  font-size: 14px;
+  padding: 12px;
+  border-bottom: 1px #ccc solid;
+  height: 24px;
 }
 #app .calendar {
   margin: 0;

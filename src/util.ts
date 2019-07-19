@@ -2,7 +2,12 @@ export const isDef = (v: any) => v !== undefined && v !== null;
 export const isBool = (v: any) => typeof v === "boolean";
 export const isEmpty = (v): boolean => !isDef(v) || v == "";
 export const isDate = object => object instanceof Date;
-
+/**
+ * @ only positive integer
+ * @param input
+ */
+export const isPositiveInteger = (input: string) =>
+  /^[1-9]?[0-9]+$/.test(input);
 interface match {
   condition: any;
   value?: any;
@@ -116,4 +121,11 @@ export const List = {
   fetchTop(list) {
     return List.fetch(list, 0);
   }
+};
+
+export const Dat = {
+  firstDate: (date, index) =>
+    new Date(date.getFullYear(), date.getMonth() + index, 1),
+  dates: date =>
+    new Date(Date.UTC(date.getFullYear(), date.getMonth() + 1, 0)).getUTCDate()
 };

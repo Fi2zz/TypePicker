@@ -13,6 +13,18 @@
     "noUnusedLocals": false,
     "lib": ["dom", "es6"]
   },
-  "include": ["./src/**/*"],
-  "exclude": ["./test/**/*"]
+
+  "files": [
+    "./src/index.ts",
+    "./src/core.ts",
+    "./src/helpers.ts",
+    "./src/dom.helper.ts",
+    "./src/template.ts",
+    "./src/typepicker.d.ts"
+  ],
+  "plugins": [
+    {
+      "transform": "typescript-transform-macros"
+    }
+  ]
 }

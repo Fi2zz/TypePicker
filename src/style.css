@@ -4,9 +4,12 @@
   margin: auto;
   width: 240px;
 }
+
+/* if DEBUG { */
 .calendar * {
   box-sizing: border-box;
 }
+/* endif */
 
 .calendar .calendar-item {
   display: flex;

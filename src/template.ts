@@ -1,6 +1,8 @@
-import { DateTagData } from "./datepicker.interface";
-import { isDef, isEmpty, List } from "./util";
-import { DOMHelpers } from "./datepicker.dom.helper";
+import { isDef, List } from "./util";
+import { DOMHelpers } from "./dom.helper";
+
+//#ifdef DEBUG
+//#endif
 
 function createTag(tag, props: any): string {
   if (!tag) {
@@ -49,33 +51,28 @@ function createActionView(reachStart: boolean, reachEnd: boolean) {
  * @returns {string}
  */
 function createDateView(data: DateTagData): string {
-  const nodeChildren = [];
-  if (!isEmpty(data.date)) {
-    nodeChildren.push(
-      createTag("div", {
-        className: "date",
-        children: data.date
-      })
-    );
-  }
-
   const props = {
     className: DOMHelpers.class.cell(data.day, data.className),
-    children: nodeChildren
+    children: []
   };
 
-  if (data.value) {
-    nodeChildren.push(
+  if (!data.invalid) {
+    props.children.push(
       createTag("div", {
-        className: "placeholder"
+        className: "date",
+        children: data.label
       })
     );
-    props["data-date"] = data.value;
+    if (data.value) {
+      props.children.push(
+        createTag("div", {
+          className: "placeholder"
+        })
+      );
+      props["data-date"] = data.value;
+    }
   }
-
-  if (!isEmpty(data.disabled)) {
-    props["data-disabled"] = data.disabled;
-  }
+  props["data-disabled"] = data.disabled;
   return createTag("div", props);
 }
 
@@ -97,7 +94,6 @@ const createDayView = (week: Array<string>): string =>
 
 /**
  *
- * @param {Array<any>} data
  * @param weekView
  * @returns {string[]}
  */

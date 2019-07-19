@@ -15,13 +15,13 @@ module.exports = function(_, options) {
   };
   if (isEnvProduction) {
     output.library = "TypePicker";
-    if (!options.module) {
-      output.libraryExport = "default"; // string | [...modules]
-      output.filename = "typepicker.js";
-    } else {
+    if (options.module) {
       //for  import TypePicker from '/path/to/typepicker.js'
       output.libraryTarget = "umd";
       output.filename = "typepicker.esm.js";
+    } else {
+      output.libraryExport = "default"; // string | [...modules]
+      output.filename = "typepicker.js";
     }
   }
   return {
@@ -30,18 +30,41 @@ module.exports = function(_, options) {
     output,
     module: {
       rules: [
-         {
+        {
+          enforce: "pre",
+          test: /\.js$/,
+          loader: "source-map-loader"
+        },
+        {
+          enforce: "pre",
+          test: /\.(css|ts)$/,
+          loader: "defines-loader",
+          options: {
+            defines: {
+              DEBUG: isEnvDevelopment,
+              TEST: process.env.NODE_ENV === "test"
+            }
+          }
+        },
+        {
           test: /\.css$/,
-          use: [isEnvProduction ? MiniCssExtractPlugin.loader:'style-loader', "css-loader"]
+          use: [
+            isEnvProduction ? MiniCssExtractPlugin.loader : "style-loader",
+            "css-loader"
+          ]
         },
         {
           test: /\.js$/,
-          loader: "babel-loader",
-          options: {
-            babelrc: false,
-            configFile: false,
-            presets: ["@babel/preset-env"]
-          }
+          use: [
+            {
+              loader: "babel-loader",
+              options: {
+                babelrc: false,
+                configFile: false,
+                presets: ["@babel/preset-env"]
+              }
+            }
+          ]
         },
         {
           test: /\.tsx?$/,
@@ -53,7 +76,6 @@ module.exports = function(_, options) {
       extensions: [".js", ".json", ".ts", ".tsx"]
     },
     devtool: useSourceMap && "#eval-source-map",
-
     optimization: {
       minimizer: [
         isEnvProduction &&

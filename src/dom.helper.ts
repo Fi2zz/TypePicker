@@ -44,18 +44,8 @@ export const DOMHelpers = {
       }
       return names.join(" ").trim();
     },
-    container(views) {
-      let classes = ["calendar"];
-
-      if (views === 1) {
-        classes.push("calendar-single-view");
-      } else if (views === 2) {
-        classes.push("calendar-double-views");
-      } else {
-        classes.push("calendar-flat-view");
-      }
-
-      return classes.join("  ").trim();
+    container(viewType) {
+      return ["calendar", `calendar-${viewType}`].join("  ").trim();
     }
   }
 };
