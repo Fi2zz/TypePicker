@@ -47,10 +47,10 @@ function createActionView(reachStart: boolean, reachEnd: boolean) {
 
 /**
  *
- * @param {DateTagData} data
+ * @param {TypePickerTagData} data
  * @returns {string}
  */
-function createDateView(data: DateTagData): string {
+function createDateView(data: TypePickerTagData): string {
   const props = {
     className: DOMHelpers.class.cell(data.day, data.className),
     children: []

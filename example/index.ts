@@ -116,12 +116,11 @@ function onReady(app, element) {
     }
   });
 }
-
-const datesToSet = ["2019-06-18", "2019-06-19"];
+const datesToSet = ["2019-07-22", "2019-07-25"];
 const disable = {
   // to: "2019-06-12",
   // from: "2019-12-12",
-  dates: ["2019-07-20", "2019-08-01"],
+  dates: ["2019-07-25", "2019-08-01"],
   days: [0, dist.day, 6]
 };
 // const flatViewTypePicker = createFlatView();
@@ -133,4 +132,5 @@ const disable = {
 // singleViewTypePicker.setDates(datesToSet);
 const doubleViewTypePicker = createDoubleView();
 doubleViewTypePicker.disable(disable);
-//doubleViewTypePicker.setDates(datesToSet);
+doubleViewTypePicker.setDates([new Date()]);
+doubleViewTypePicker.setDates(datesToSet);

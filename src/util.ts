@@ -17,11 +17,18 @@ export function match(input: match) {
   return (next?: Function) => {
     let { condition, value, expected } = input;
     expected = expected || true;
-    const output: boolean =
-      (typeof condition === "function" ? condition(value) : condition) ===
-      expected;
-    if (typeof next === "function" && output) {
-      return next(value);
+    let output: any =
+      typeof condition === "function" ? condition(value) : condition;
+
+    const outputIsArray = List.isList(output);
+    let result = outputIsArray ? output[0] : output;
+    result = result === expected;
+
+    const dispatchValue = !outputIsArray
+      ? value
+      : (output as any[])[output.length - 1];
+    if (typeof next === "function" && result) {
+      return next(dispatchValue);
     }
   };
 }
@@ -129,3 +136,5 @@ export const Dat = {
   dates: date =>
     new Date(Date.UTC(date.getFullYear(), date.getMonth() + 1, 0)).getUTCDate()
 };
+export const pipe = (first: Function, ...more) =>
+  more.reduce((acc, curr) => (...args) => curr(acc(...args)), first);

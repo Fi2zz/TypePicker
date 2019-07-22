@@ -12,14 +12,22 @@ import {
   useViewTypes,
   events,
   dataset,
-  Selection,
-  Disabled,
+  TypePickerSelection,
+  TypePickerDisables,
   useCalendarData,
   useSwitchable,
   useSelection
 } from "./helpers";
 import { template } from "./template";
-import { match, isBool, isDate, isDef, List, isPositiveInteger } from "./util";
+import {
+  match,
+  isBool,
+  isDate,
+  isDef,
+  List,
+  isPositiveInteger,
+  pipe
+} from "./util";
 const baseState = {
   selection: 1,
   startDate: null,
@@ -59,9 +67,7 @@ function updateState(state, partial): TypePickerState[] {
   }
   return state;
 }
-// #test_start
-const helloForLoaderTest = "123";
-// #test_end
+
 export function factory() {
   let updateTemp = [];
   let state: TypePickerState[] = [baseState];
@@ -70,51 +76,60 @@ export function factory() {
   const getState = (): TypePickerState => fetchState(state);
   const useFormatDate = (date: Date) => format(date, getState().format);
   const useParseDate = (date: Date | string) => parse(date, getState().format);
-  const disables = new Disabled(getState, useFormatDate);
-  const queue = new Selection();
-  function useUpdate(data: SelectionItem, next: Function) {
-    console.log("before", data);
-
+  const disables = new TypePickerDisables(getState, useFormatDate);
+  const queue = new TypePickerSelection();
+  function useUpdate(data: TypePickerSelectionItem, next: Function) {
     if (data) {
-      updateTemp.push(data);
       const date = useParseDate(data.value);
-      if (data.isInitialValue) {
-        const isDisabled = disables.find(date);
-        console.log("isDisabled", isDisabled);
-
-        if (isDisabled) {
-          updateTemp = [];
-          //   updateTemp.pop();
-        }
-      }
+      data.disabled = disables.find(date);
+      data.selected = true;
+      updateTemp.push(data);
     }
-    console.trace("updateTemp", updateTemp);
     const state = getState();
-    List.loop(updateTemp, (item: SelectionItem) => {
+    List.loop(updateTemp, (item: TypePickerSelectionItem) => {
       const current = useParseDate(item.value);
       item.disabled = disables.find(current);
-      item.selected = true;
+      // item.selected = true;
       const unpushable = first => {
-        const firstDate = useParseDate(first.value);
-        const size = diffDates(firstDate, current, true);
-        const dates = List.create(size, (index: string | number) => {
-          const date = new Date(
-            firstDate.getFullYear(),
-            firstDate.getMonth(),
-            firstDate.getDate() + index
-          );
-          const disable = disables.find(date);
-          return disable && useFormatDate(date) !== item.value;
-        });
         const isTrue = v => v === true;
-        return List.filter(dates, isTrue).length > 0;
+
+        const getSize = (current, first) => {
+          return {
+            size: diffDates(current, first, true),
+            date: first
+          };
+        };
+        const createDateList = ({ date, size }) =>
+          List.create(
+            size,
+            index =>
+              new Date(
+                date.getFullYear(),
+                date.getMonth(),
+                date.getDate() + index
+              )
+          );
+
+        const mapDisables = dates =>
+          List.map(
+            dates,
+            date => disables.find(date) && useFormatDate(date) !== item.value
+          );
+
+        return pipe(
+          getSize,
+          createDateList,
+          mapDisables,
+          dates => List.filter(dates, isTrue),
+          dates => dates.length > 0
+        )(current, useParseDate(first.value));
       };
+
       const popable = target => useParseDate(target.value) > current;
       const shiftable = last =>
         diffDates(current, useParseDate(last.value)) > state.limit;
       useSelection(queue, item, unpushable, popable, shiftable, selected => {
         publish("select", selected.map(item => item.value));
-        console.log("selected", selected.map(item => item.value));
         next({ selected });
       });
     });
@@ -193,25 +208,19 @@ export function factory() {
       this.element.className = DOMHelpers.class.container(partial.viewType);
       queue.setSize(partial.selection);
       queue.setCanPushInvalid(partial.useInvalidAsSelected);
-      this.update(partial, { date: new Date(), isInitialValue: true });
+      this.update(partial, { date: new Date() });
     }
-    protected update(partial, addtionalValue?: any) {
-      let initialValue = null;
+    protected update(partial, addtional?: any) {
       if (partial && Object.keys(partial).length <= 0) {
         return;
       }
       setState(partial);
-      console.log("addtionalValue", addtionalValue);
       const state = getState();
-      if (addtionalValue && addtionalValue.isInitialValue) {
-        initialValue = {};
-        initialValue.value = useFormatDate(addtionalValue.date);
-        initialValue.isInitialValue = addtionalValue.isInitialValue;
-        if (isDate(addtionalValue.date)) {
-          this.date = addtionalValue.date;
-        }
+      if (addtional && isDate(addtional.date)) {
+        this.date = addtional.date;
       }
-      const calendarData = useCalendarData(getState, {
+      const calendarData = useCalendarData({
+        state,
         date: this.date,
         useFormatDate,
         useParseDate,
@@ -263,22 +272,24 @@ export function factory() {
           if (!value) {
             return;
           }
-          useUpdate({ value, isInitialValue: false }, this.update.bind(this));
+          useUpdate({ value }, this.update.bind(this));
         });
       });
-      useUpdate(initialValue, this.update.bind(this));
+      useUpdate(null, this.update.bind(this));
     }
-    public setDates(dates: Array<string | Date>): void {
+    public setDates(dates): void {
       const { selection, limit } = getState();
-      dates = List.slice(dates, 0, selection);
-      dates = List.map(dates, useParseDate, isDef);
-      dates = List.dedup(dates, (date: Date, map: Function) => {
+      const dedup = (date: Date, map: any) => {
         if (!map[date.toDateString()]) {
           return date;
         }
         return null;
-      });
-
+      };
+      dates = pipe(
+        dates => List.slice(dates, 0, selection),
+        (dates: Date[]) => List.map(dates, useParseDate, isDef),
+        (dates: Date[]) => List.dedup(dates, dedup)
+      )(dates);
       match({
         condition: List.every(dates, isDate),
         value: dates
@@ -301,22 +312,21 @@ export function factory() {
         if (dates.length <= 0) {
           return;
         }
-
+        queue.clean();
         updateTemp = List.map(dates, value => ({
           value,
           selected: true,
           disabled: disables.find(useParseDate(value))
         }));
-        let initDate;
-
+        let initDate: Date;
         let lastItem = updateTemp[updateTemp.length - 1];
         if (lastItem) {
           initDate = useParseDate(lastItem.value);
         }
-        this.update(null, { date: initDate, isInitialValue: true });
+        this.update(null, { date: initDate });
       });
     }
-    public disable(options: TypePickerDisable): void {
+    public disable(options: TypePickerDisableOptions): void {
       let { to, from, days, dates } = options;
       if (!List.isList(dates)) {
         dates = [];
@@ -325,49 +335,42 @@ export function factory() {
         days = [];
       }
       let partial: Partial<TypePickerState> = null;
-      match({ condition: isDate, value: useParseDate(from) })((from: Date) => {
-        if (!partial) {
-          partial = {};
-        }
-        partial.endDate = from;
-      });
-      match({ condition: isDate, value: useParseDate(to) })((to: Date) => {
-        if (!partial) {
-          partial = {};
-        }
-        partial.startDate = to;
-      });
 
       match({
-        condition: dates => List.every(dates, isDate),
-        value: partial && [(partial.startDate, partial.endDate)]
-      })(([start, end]) => {
-        if (start >= end) {
-          partial = null;
+        condition: () => {
+          to = useParseDate(to);
+          from = useParseDate(from);
+          const allAreDates = isDate(to) && isDate(from);
+          return [allAreDates && from > to, { from, to }];
         }
+      })(({ from, to }) => {
+        partial = {};
+        partial.startDate = to;
+        partial.endDate = from;
       });
       match({
-        condition: !List.isEmpty(days)
-      })(() => {
-        const isValidDay = day =>
-          isPositiveInteger(day) && day >= 0 && day <= 6;
-        days = List.map(days, day => parseInt(day, 10));
-        days = List.filter(days, isValidDay);
+        condition: () => {
+          const isValidDay = day =>
+            isPositiveInteger(day) && day >= 0 && day <= 6;
+          days = pipe(
+            days => List.map(days, day => parseInt(day, 10)),
+            days => List.filter(days, isValidDay)
+          )(days);
+          dates = pipe(
+            dates => List.map(dates, useParseDate, isDate),
+            dates => List.map(dates, useFormatDate, isDef),
+            dates => List.dedup(dates)
+          )(dates);
+          return [dates.length > 0 || days.length > 0, { days, dates }];
+        }
+      })(({ days, dates }) => {
         disables.set({
+          dates,
           days
         });
       });
-      match({ condition: v => v.length > 0, value: dates })(dates => {
-        dates = List.map(dates, useParseDate, isDate);
-        dates = List.map(dates, useFormatDate, isDef);
-        dates = List.dedup(dates);
-        disables.set({
-          dates
-        });
-      });
       this.update(partial, {
-        date: partial ? partial.startDate : this.date,
-        isInitialValue: true
+        date: partial && partial.startDate
       });
     }
     public i18n(i18n: TypePickerI18n): void {

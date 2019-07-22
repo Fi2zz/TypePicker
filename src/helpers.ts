@@ -81,14 +81,21 @@ export const diffMonths = (first: Date, second: Date, isAbsolute?: boolean) =>
  * @param format
  * @returns {string}
  */
-export function format(date: Date, format?: string): string {
-  if (!isDate(date)) {
-    return null;
-  }
+export function format(date: Date | string, format?: string): string {
   if (!format) {
     format = "YYYY-MM-DD";
   }
+
+  if (!isDate(date)) {
+    if (createDateFormatRegExpression(format).test(date as string)) {
+      return date as string;
+    }
+
+    return null;
+  }
+
   format = format.toUpperCase();
+  date = date as Date;
   let parts = <any>{
     YYYY: date.getFullYear(),
     DD: padding(date.getDate()),
@@ -275,7 +282,7 @@ const Observer = (function() {
  * @param value
  * @returns {boolean}
  */
-export const publish = (event: string, value: any) =>
+export const publish = (event: string, value: any): boolean =>
   Observer.publish(event, value);
 /**
  *
@@ -323,7 +330,7 @@ export enum dataset {
   disabled = "data-disabled"
 }
 
-export class Selection {
+export class TypePickerSelection implements TypePickerSelectionInterface {
   size = 1;
   list: any[] = [];
   setSize(size: number) {
@@ -345,7 +352,7 @@ export class Selection {
     return this.length() === this.size;
   }
 
-  push = (date: SelectionItem) => (afterPush: Function): void => {
+  push = (date: TypePickerSelectionItem) => (afterPush: Function): void => {
     this.beforePush(date);
     this.list.push(date);
     this.afterPush();
@@ -384,11 +391,9 @@ export class Selection {
     return this.list.filter(item => item && item.value === value).length > 0;
   }
 }
-
-export class Disabled {
+export class TypePickerDisables implements TypePickerDisabledInterface {
   days = [];
   dates = [];
-
   getState = null;
   useFormatDate = null;
   constructor(getState: Function, useFormatDate: Function) {
@@ -453,11 +458,14 @@ export const useSwitchable = (date: Date, state: TypePickerState) => {
   ];
 };
 
-export function useCalendarData(
-  getState,
-  { date, queue, disables, useFormatDate, useParseDate }
-) {
-  const state = getState();
+export function useCalendarData({
+  state,
+  date,
+  queue,
+  disables,
+  useFormatDate,
+  useParseDate
+}: useCalendarData) {
   const i18n = state.i18n;
   const usePanelTitle = (year, month) =>
     formatHeading(i18n.title, year, i18n.months[month]);
@@ -517,8 +525,8 @@ export function useCalendarData(
 }
 
 export function useSelection(
-  queue: Selection,
-  item: SelectionItem,
+  queue: TypePickerSelection,
+  item: TypePickerSelectionItem,
   unpushable: Function,
   popable,
   shiftable,
