@@ -1,6 +1,6 @@
 {
   "name": "datepicker",
-  "version": "6.1.5",
+  "version": "6.1.9",
   "description": "A Typescript Datepicker",
   "author": "Fi2zzz <wenjingbiao@outlook.com>",
   "repository": {
@@ -11,7 +11,7 @@
   "license": "MIT",
   "scripts": {
     "start": "webpack --mode development  -w ",
-    "build": "gulp build:clean build:version build:umd build:esm"
+    "build": "gulp build:clean build:version build:umd build:esm build:core build:core:esm"
   },
   "devDependencies": {
     "@babel/core": "^7.4.5",

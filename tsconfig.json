@@ -19,12 +19,6 @@
     "./src/core.ts",
     "./src/helpers.ts",
     "./src/dom.helper.ts",
-    "./src/template.ts",
     "./src/typepicker.d.ts"
-  ],
-  "plugins": [
-    {
-      "transform": "typescript-transform-macros"
-    }
   ]
 }

@@ -1,5 +1,7 @@
+type TypePickerSetDates = string | Date[];
+
 interface TypePickerOptions {
-  el: string | HTMLElement;
+  el?: string | HTMLElement;
   limit?: number;
   format?: string;
   views?: number | string;
@@ -8,12 +10,15 @@ interface TypePickerOptions {
   selection?: number;
   infinite?: boolean;
   useInvalidAsSelected?: boolean;
+  typeNameOfUpdate?: string;
+  typeNameOfSelect?: string;
 }
 interface TypePickerState extends Partial<TypePickerOptions> {
   i18n: TypePickerI18n;
   selected: Array<any>;
   views: number;
   viewType: String;
+  date: Date | null;
 }
 
 interface TypePickerI18n {
@@ -62,7 +67,6 @@ interface TypePickerSelectionInterface {
   pop: () => void;
   has: (item: string) => boolean;
 }
-type TypePickerSetDates = string | Date[];
 interface TypePickerDisabledInterface {
   days: number[];
   dates: string[];
@@ -78,4 +82,16 @@ interface useCalendarData {
   disables: TypePickerDisabledInterface;
   useFormatDate: (date: Date | string) => string;
   useParseDate: (date: Date | string) => Date | null;
+}
+
+declare abstract class TypePickerCore {
+  public i18n: Function;
+  public disable: Function;
+  public setDates: Function;
+  protected setState?: Function;
+  public switch: Function;
+  public subscribe;
+  public publish;
+  public select: Function;
+  constructor(option: TypePickerOptions);
 }

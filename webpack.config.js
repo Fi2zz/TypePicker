@@ -8,25 +8,17 @@ module.exports = function(_, options) {
   const isEnvProduction = options.mode === "production";
   const isEnvDevelopment = options.mode === "development";
   const useSourceMap = options.sourceMap || isEnvDevelopment;
-  const output = {
+  let output = {
     path: path.resolve(__dirname, "dist"),
     publicPath: "/",
     filename: "[name].js"
   };
   if (isEnvProduction) {
-    output.library = "TypePicker";
-    if (options.module) {
-      //for  import TypePicker from '/path/to/typepicker.js'
-      output.libraryTarget = "umd";
-      output.filename = "typepicker.esm.js";
-    } else {
-      output.libraryExport = "default"; // string | [...modules]
-      output.filename = "typepicker.js";
-    }
+    Object.assign(output, options.output);
   }
   return {
     mode: options.mode,
-    entry: isEnvDevelopment ? "./example/index.ts" : "./src/index.ts",
+    entry: isEnvDevelopment ? "./example/index.ts" : options.entry,
     output,
     module: {
       rules: [
@@ -110,7 +102,6 @@ module.exports = function(_, options) {
           test: /\.js|css$/,
           banner() {
             const pkg = require("./package");
-
             const now = new Date();
             return [
               `TypePicker v${pkg.version}`,

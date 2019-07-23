@@ -1,27 +1,6 @@
-import { isDate, List, isDef, Dat } from "./util";
+import { isDate, List, isDef, Dat, pipe } from "./util";
 export const padding = (n: Number): string => `${n > 9 ? n : "0" + n}`;
-export function classname(options) {
-  const { isActive, isStart, isEnd, isDisabled, inRange, isEmpty } = options;
-  if (isEmpty) {
-    return "empty disabled";
-  }
-  let className = "";
-  if (isActive) {
-    className = "active";
-    if (isStart) {
-      className = "active start-date";
-    } else if (isEnd) {
-      className = "active end-date";
-    }
-  }
-  if (inRange) {
-    return "in-range";
-  }
-  if (isDisabled && !isActive) {
-    className = "disabled";
-  }
-  return className;
-}
+
 /**
  *
  * @param {Date} start
@@ -238,57 +217,43 @@ export function i18nValidator(i18n: TypePickerI18n, next: Function) {
   }
 }
 
-/**
- *
- * @type {{subscribe: (key: string, fn: Function) => void; publish: (...args: any[]) => boolean}}
- */
-const Observer = (function() {
-  const clientList = <any>{};
+export class Observer {
+  constructor(name) {
+    this.name = name;
+  }
+  name = "observe";
+  clientList = <any>{};
   /**
    *
    * @param {string} key
    * @param {Function} fn
    */
-  const subscribe = function(key: string, fn: Function) {
-    if (!clientList[key]) {
-      clientList[key] = [];
+  subscribe = (key: string, fn: Function) => {
+    const typeName = `${this.name}:${key}`;
+    if (!this.clientList[typeName]) {
+      this.clientList[typeName] = [];
     }
-    clientList[key].push(fn);
+    this.clientList[typeName].push(fn);
   };
   /**
    *
    * @param args
    * @returns {boolean}
    */
-  const publish = function(...args: Array<any>) {
-    let key = [].shift.call(args);
-    let fns = clientList[key];
-    if (!fns || fns.length === 0) {
-      return false;
-    }
-    for (let i = 0, fn; (fn = fns[i++]); ) {
-      fn.apply(this, args);
-    }
+  publish = (...args: Array<any>) => {
+    let id = setTimeout(() => {
+      let key = [].shift.call(args);
+      let fns = this.clientList[`${this.name}:${key}`];
+      if (!fns || fns.length === 0) {
+        return false;
+      }
+      for (let i = 0, fn; (fn = fns[i++]); ) {
+        fn.apply(this, args);
+      }
+      clearTimeout(id);
+    }, 0);
   };
-  return {
-    subscribe,
-    publish
-  };
-})();
-
-/**
- *
- * @param {string} event
- * @param value
- * @returns {boolean}
- */
-export const publish = (event: string, value: any): boolean =>
-  Observer.publish(event, value);
-/**
- *
- * @type {(key: string, fn: Function) => void}
- */
-export const subscribe = Observer.subscribe;
+}
 
 export const useViewTypes = views => {
   const result = {
@@ -448,8 +413,8 @@ function getRangeFromQueue(
     return useFormatDate(new Date(currYear, currMonth, currDate));
   });
 }
-export const useSwitchable = (date: Date, state: TypePickerState) => {
-  const { startDate, endDate, views } = state;
+export const useSwitchable = (state: TypePickerState) => {
+  const { startDate, endDate, views, date } = state;
   const diffEnd = diffMonths(endDate, date);
   const diffStart = diffMonths(date, startDate);
   return [
@@ -469,61 +434,65 @@ export function useCalendarData({
   const i18n = state.i18n;
   const usePanelTitle = (year, month) =>
     formatHeading(i18n.title, year, i18n.months[month]);
-  //create calendar panel size
-  const calendars = List.create(state.views, index => {
-    const _date = Dat.firstDate(date, index);
-    const day = _date.getDay();
-    return {
-      date: _date,
-      dates: Dat.dates(date) + day,
-      day,
-      heading: usePanelTitle(_date.getFullYear(), _date.getMonth())
-    };
-  });
-  return List.map(calendars, ({ date, dates, day, heading }) => ({
-    heading,
-    dates: List.create(dates, index => {
-      const invalid = index < day;
-      const target = index < day ? 1 - day + index : index - day + 1;
-      const current = new Date(date.getFullYear(), date.getMonth(), target);
-      const disabled = invalid || disables.find(current);
-      const value = useFormatDate(current);
-      const range = getRangeFromQueue(
-        state.selection === 2,
-        queue,
-        useFormatDate,
-        useParseDate
-      );
-
-      const className = classname({
-        isActive: queue.has(value),
-        isStart: List.inRange(range, value, index => index === 0),
-        isEnd: List.inRange(
-          range,
-          value,
-          (index, list) => index === list.length - 1
-        ),
-        inRange: List.inRange(
-          range,
-          value,
-          (index, list) => index > 0 && index < list.length - 1
-        ),
-        isDisabled: disabled,
-        isEmpty: invalid
-      });
+  const genCalendar = (views, date) =>
+    List.create(views, index => {
+      const _date = Dat.firstDate(date, index);
+      const day = _date.getDay();
       return {
-        value,
-        disabled,
-        date,
-        className,
-        day: current.getDay(),
-        label: current.getDate(),
-        invalid
+        date: _date,
+        dates: Dat.dates(date) + day,
+        day,
+        heading: usePanelTitle(_date.getFullYear(), _date.getMonth())
       };
-    })
-  }));
+    });
+  const genMonth = calendars => {
+    return List.map(calendars, ({ date, dates, day, heading }) => ({
+      heading,
+      dates: List.create(dates, index => {
+        const invalid = index < day;
+        const target = index < day ? 1 - day + index : index - day + 1;
+        const current = new Date(date.getFullYear(), date.getMonth(), target);
+        const disabled = invalid || disables.find(current);
+        const value = useFormatDate(current);
+        const range = getRangeFromQueue(
+          state.selection === 2,
+          queue,
+          useFormatDate,
+          useParseDate
+        );
+        const status = {
+          isActive: queue.has(value),
+          isStart: List.inRange(range, value, index => index === 0),
+          isEnd: List.inRange(
+            range,
+            value,
+            (index, list) => index === list.length - 1
+          ),
+          inRange: List.inRange(
+            range,
+            value,
+            (index, list) => index > 0 && index < list.length - 1
+          ),
+          isDisabled: disabled,
+          isEmpty: invalid
+        };
+        return {
+          value,
+          disabled,
+          date,
+          day: current.getDay(),
+          label: current.getDate(),
+          invalid,
+          status
+        };
+      })
+    }));
+  };
+  return pipe(
+    genCalendar,
+    genMonth
+  )(state.views, date);
 }
-
 export function useSelection(
   queue: TypePickerSelection,
   item: TypePickerSelectionItem,
@@ -566,4 +535,13 @@ export function useSelection(
   }
   const dispatchValue = () => next(queue.list);
   queue.push(item)(dispatchValue);
+}
+
+export class SelectionItem implements TypePickerSelectionItem {
+  value: string;
+  selected: boolean = true;
+  disabled: boolean = false;
+  constructor({ value }) {
+    this.value = value;
+  }
 }

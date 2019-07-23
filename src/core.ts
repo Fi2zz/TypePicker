@@ -1,24 +1,18 @@
-import "./style.css";
-import { DOMHelpers } from "./dom.helper";
 import {
   diffDates,
   diffMonths,
   i18nValidator,
-  publish,
-  subscribe,
   parse,
   format,
   viewTypes,
   useViewTypes,
-  events,
-  dataset,
   TypePickerSelection,
   TypePickerDisables,
   useCalendarData,
   useSwitchable,
-  useSelection
+  useSelection,
+  Observer
 } from "./helpers";
-import { template } from "./template";
 import {
   match,
   isBool,
@@ -26,259 +20,253 @@ import {
   isDef,
   List,
   isPositiveInteger,
-  pipe
+  pipe,
+  uuid
 } from "./util";
-const baseState = {
-  selection: 1,
-  startDate: null,
-  endDate: null,
-  format: "YYYY-MM-DD",
-  limit: 1,
-  viewType: "single",
-  i18n: {
-    title: "YYYY年MM月",
-    days: <Array<string>>["日", "一", "二", "三", "四", "五", "六"],
-    months: <Array<string>>[
-      "01",
-      "02",
-      "03",
-      "04",
-      "05",
-      "06",
-      "07",
-      "08",
-      "09",
-      "10",
-      "11",
-      "12"
-    ]
-  },
-  useInvalidAsSelected: false,
-  selected: [],
-  views: 1
+
+abstract class TypePickerCore {
+  public i18n: Function;
+  public disable: Function;
+  public setDates: Function;
+  public switch: Function;
+  public subscribe;
+  public publish;
+  public select: Function;
+  constructor(option: TypePickerOptions) {}
+  public onSelect?(next: Function);
+  public onRender?(next: Function);
+}
+
+const baseI18n = {
+  title: "YYYY年MM月",
+  days: <Array<string>>["日", "一", "二", "三", "四", "五", "六"],
+  months: <Array<string>>[
+    "01",
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "09",
+    "10",
+    "11",
+    "12"
+  ]
 };
-function fetchState(state) {
-  return state[state.length - 1];
-}
-function updateState(state, partial): TypePickerState[] {
-  if (partial) {
-    const old = fetchState(state);
-    state = [{ ...old, ...partial }];
-  }
-  return state;
-}
 
-export function factory() {
-  let updateTemp = [];
-  let state: TypePickerState[] = [baseState];
-  const setState = (partial: Partial<TypePickerState>) =>
-    (state = updateState(state, partial));
-  const getState = (): TypePickerState => fetchState(state);
-  const useFormatDate = (date: Date) => format(date, getState().format);
-  const useParseDate = (date: Date | string) => parse(date, getState().format);
-  const disables = new TypePickerDisables(getState, useFormatDate);
-  const queue = new TypePickerSelection();
-  function useUpdate(data: TypePickerSelectionItem, next: Function) {
-    if (data) {
-      const date = useParseDate(data.value);
-      data.disabled = disables.find(date);
-      data.selected = true;
-      updateTemp.push(data);
-    }
-    const state = getState();
-    List.loop(updateTemp, (item: TypePickerSelectionItem) => {
-      const current = useParseDate(item.value);
-      item.disabled = disables.find(current);
-      // item.selected = true;
-      const unpushable = first => {
-        const isTrue = v => v === true;
-
-        const getSize = (current, first) => {
-          return {
-            size: diffDates(current, first, true),
-            date: first
-          };
-        };
-        const createDateList = ({ date, size }) =>
-          List.create(
-            size,
-            index =>
-              new Date(
-                date.getFullYear(),
-                date.getMonth(),
-                date.getDate() + index
-              )
-          );
-
-        const mapDisables = dates =>
-          List.map(
-            dates,
-            date => disables.find(date) && useFormatDate(date) !== item.value
-          );
-
-        return pipe(
-          getSize,
-          createDateList,
-          mapDisables,
-          dates => List.filter(dates, isTrue),
-          dates => dates.length > 0
-        )(current, useParseDate(first.value));
-      };
-
-      const popable = target => useParseDate(target.value) > current;
-      const shiftable = last =>
-        diffDates(current, useParseDate(last.value)) > state.limit;
-      useSelection(queue, item, unpushable, popable, shiftable, selected => {
-        publish("select", selected.map(item => item.value));
-        next({ selected });
-      });
-    });
-    updateTemp = [];
-  }
-
-  return class TypePickerCore {
-    startDate: Date | null;
-    endDate: Date | null;
-    date = new Date();
-    protected element: HTMLElement = null;
-    constructor(option: TypePickerOptions) {
-      const el = DOMHelpers.select(option.el);
-      if (!el || !option) {
-        return;
-      }
-
-      const partial: Partial<TypePickerState> = {
-        useInvalidAsSelected: false
-      };
-      match({ condition: isDef, value: option.format })(
-        (format: string) => (partial.format = format)
-      );
-      match({ condition: isDef, value: option.views })(views => {
-        const { type, size } = useViewTypes(views);
-        partial.viewType = type;
-        partial.views = size;
-      });
-      match({ condition: isPositiveInteger, value: option.selection })(
-        (size: number) => (partial.selection = size)
-      );
-      match({ condition: isDate, value: useParseDate(option.startDate) })(
-        (date: Date) => (partial.startDate = date)
-      );
-      match({ condition: isDate, value: useParseDate(option.endDate) })(
-        (date: Date) => (partial.endDate = date)
-      );
-      match({
-        condition: isPositiveInteger,
-        value: option.limit
-      })((limit: number) => (partial.limit = limit));
-
-      match({
-        condition:
-          List.every([partial.startDate, partial.endDate], isDate) &&
-          partial.startDate > partial.endDate
-      })(() => {
-        partial.startDate = null;
-        partial.endDate = null;
-      });
-      match({
-        condition: partial.viewType === viewTypes.flatView
-      })(() => {
-        if (!partial.startDate) {
-          partial.startDate = new Date();
-        }
-        let start = partial.startDate;
-        if (!partial.endDate) {
-          partial.endDate = new Date(
-            start.getFullYear(),
-            start.getMonth() + 3,
-            start.getDate()
-          );
-        }
-        partial.views = diffMonths(partial.endDate, partial.startDate) + 1;
-      });
-      match({ condition: isBool, value: option.useInvalidAsSelected })(
-        value => {
-          partial.useInvalidAsSelected = value;
-          if (value === true) {
-            partial.selection = 2;
+export class Core extends TypePickerCore {
+  constructor(option: TypePickerOptions) {
+    super(option);
+    let updateTemp = [];
+    const state: TypePickerState = {
+      selection: 1,
+      startDate: null,
+      endDate: null,
+      format: "YYYY-MM-DD",
+      limit: 1,
+      viewType: "single",
+      date: new Date(),
+      i18n: baseI18n,
+      useInvalidAsSelected: false,
+      selected: [],
+      views: 1
+    };
+    const _setState = (partial: Partial<TypePickerState>, next?: Function) => {
+      if (partial && Object.keys(partial).length > 0) {
+        for (let key in partial) {
+          if (state.hasOwnProperty(key)) {
+            state[key] = partial[key];
           }
         }
-      );
-      this.element = el;
-      this.element.className = DOMHelpers.class.container(partial.viewType);
-      queue.setSize(partial.selection);
-      queue.setCanPushInvalid(partial.useInvalidAsSelected);
-      this.update(partial, { date: new Date() });
+        next(state);
+      }
+    };
+    const getState = (): TypePickerState => state;
+    const useFormatDate = (date: Date) => format(date, state.format);
+    const useParseDate = (date: Date | string) => parse(date, state.format);
+    const disables = new TypePickerDisables(() => state, useFormatDate);
+    const queue = new TypePickerSelection();
+    const { type, size } = useViewTypes(option.views);
+    const partial: Partial<TypePickerState> = {
+      useInvalidAsSelected: false,
+      viewType: type,
+      views: size
+    };
+    const key = `${partial.viewType}:${uuid()}`;
+    const genType = type => `${key}:${type}`;
+    const observe = new Observer(key);
+    this.subscribe = (type, next) => observe.subscribe(genType(type), next);
+    this.publish = (type, payload) => observe.publish(genType(type), payload);
+    match({ condition: isDef, value: option.format })(
+      (format: string) => (partial.format = format)
+    );
+    match({
+      condition: isPositiveInteger,
+      value: option.selection
+    })((size: number) => (partial.selection = size));
+    match({
+      condition: isDate,
+      value: useParseDate(option.startDate)
+    })((date: Date) => (partial.startDate = date));
+    match({
+      condition: isDate,
+      value: useParseDate(option.endDate)
+    })((date: Date) => (partial.endDate = date));
+    match({
+      condition: isPositiveInteger,
+      value: option.limit
+    })((limit: number) => (partial.limit = limit));
+    match({
+      condition:
+        List.every([partial.startDate, partial.endDate], isDate) &&
+        partial.startDate > partial.endDate
+    })(() => {
+      partial.startDate = null;
+      partial.endDate = null;
+    });
+    match({
+      condition: partial.viewType === viewTypes.flatView
+    })(() => {
+      if (!partial.startDate) {
+        partial.startDate = new Date();
+      }
+      let start = partial.startDate;
+      if (!partial.endDate) {
+        partial.endDate = new Date(
+          start.getFullYear(),
+          start.getMonth() + 3,
+          start.getDate()
+        );
+      }
+      partial.views = diffMonths(partial.endDate, partial.startDate) + 1;
+    });
+    match({
+      condition: isBool,
+      value: option.useInvalidAsSelected
+    })(value => {
+      partial.useInvalidAsSelected = value;
+      if (value === true) {
+        partial.selection = 2;
+      }
+    });
+
+    queue.setSize(partial.selection);
+    queue.setCanPushInvalid(partial.useInvalidAsSelected);
+    function useSelect(
+      data: TypePickerSelectionItem | TypePickerSelectionItem[],
+      next: Function
+    ) {
+      if (data) {
+        let updateList = List.isList(data) ? data : [data];
+        pipe(
+          data => List.filter(data, isDef),
+          data =>
+            List.map(data, item => {
+              const date = useParseDate(item.value);
+
+              item.disabled = disables.find(date);
+              item.selected = true;
+              return item;
+            }),
+          data => List.loop(data, item => updateTemp.push(item))
+        )(updateList);
+      }
+
+      if (updateTemp.length === 0) {
+        next({ selected: [] });
+      } else {
+        List.loop(updateTemp, (item: TypePickerSelectionItem) => {
+          const current = useParseDate(item.value);
+          item.disabled = disables.find(current);
+          const unpushable = first => {
+            const isTrue = v => v === true;
+
+            const getSize = (current, first) => {
+              return {
+                size: diffDates(current, first, true),
+                date: first
+              };
+            };
+            const createDateList = ({ date, size }) =>
+              List.create(
+                size,
+                index =>
+                  new Date(
+                    date.getFullYear(),
+                    date.getMonth(),
+                    date.getDate() + index
+                  )
+              );
+
+            const mapDisables = dates =>
+              List.map(
+                dates,
+                date =>
+                  disables.find(date) && useFormatDate(date) !== item.value
+              );
+
+            return pipe(
+              getSize,
+              createDateList,
+              mapDisables,
+              dates => List.filter(dates, isTrue),
+              dates => dates.length > 0
+            )(current, useParseDate(first.value));
+          };
+
+          const popable = target => useParseDate(target.value) > current;
+          const shiftable = last =>
+            diffDates(current, useParseDate(last.value)) > state.limit;
+          useSelection(
+            queue,
+            item,
+            unpushable,
+            popable,
+            shiftable,
+            selected => {
+              next({ selected });
+            }
+          );
+        });
+      }
+      updateTemp = [];
     }
-    protected update(partial, addtional?: any) {
-      if (partial && Object.keys(partial).length <= 0) {
-        return;
-      }
-      setState(partial);
-      const state = getState();
-      if (addtional && isDate(addtional.date)) {
-        this.date = addtional.date;
-      }
+
+    const createUpdate = state => {
+      const [reachStart, reachEnd] = useSwitchable(state);
       const calendarData = useCalendarData({
         state,
-        date: this.date,
+        date: state.date,
         useFormatDate,
         useParseDate,
         queue,
         disables
       });
-      const { startDate, endDate } = state;
-      this.startDate = startDate;
-      this.endDate = endDate;
-      if (state.viewType == viewTypes.flatView) {
-        this.date = startDate;
-      }
-      const [reachStart, reachEnd] = useSwitchable(this.date, state);
-      this.element.innerHTML = template({
+      this.publish("update", {
         data: calendarData,
         days: state.i18n.days,
         reachStart,
         reachEnd,
-        switchable: state.viewType !== viewTypes.flatView
+        switchable: state.viewType !== viewTypes.flatView,
+        date: state.date,
+        selected: state.selected
       });
-      const select = (selector: string) =>
-        DOMHelpers.select(this.element, selector);
-      const prevActionDOM = select(".calendar-action.prev");
-      const nextActionDOM = select(".calendar-action.next");
-      const nodeList = select(".calendar-cell");
-      if (prevActionDOM && nextActionDOM) {
-        const listener = (disabled: any, step: number) => {
-          const now = new Date(
-            this.date.getFullYear(),
-            this.date.getMonth() + step * state.views,
-            this.date.getDate()
-          );
-          if (disabled) {
-            return;
-          }
-          this.date = now;
-          this.update(null);
-        };
-        prevActionDOM.addEventListener(events.click, () =>
-          listener(reachStart, -1)
-        );
-        nextActionDOM.addEventListener(events.click, () =>
-          listener(reachEnd, 1)
-        );
-      }
-      List.loop(nodeList, (node: HTMLElement) => {
-        node.addEventListener(events.click, () => {
-          const value = DOMHelpers.attr(node, dataset.date);
-          if (!value) {
-            return;
-          }
-          useUpdate({ value }, this.update.bind(this));
-        });
-      });
-      useUpdate(null, this.update.bind(this));
-    }
-    public setDates(dates): void {
-      const { selection, limit } = getState();
+    };
+
+    const setState = partial => _setState(partial, createUpdate);
+    this.select = data => useSelect(data, setState);
+    this.switch = step => {
+      const now = new Date(
+        state.date.getFullYear(),
+        state.date.getMonth() + step,
+        state.date.getDate()
+      );
+      setState({ date: now });
+    };
+    this.setDates = (dates): void => {
+      const { selection, limit } = state;
       const dedup = (date: Date, map: any) => {
         if (!map[date.toDateString()]) {
           return date;
@@ -313,20 +301,26 @@ export function factory() {
           return;
         }
         queue.clean();
-        updateTemp = List.map(dates, value => ({
+        dates = List.map(dates, value => ({
           value,
           selected: true,
           disabled: disables.find(useParseDate(value))
         }));
-        let initDate: Date;
-        let lastItem = updateTemp[updateTemp.length - 1];
-        if (lastItem) {
-          initDate = useParseDate(lastItem.value);
-        }
-        this.update(null, { date: initDate });
+
+        useSelect(dates, payload => {
+          if (payload.selected.length > 0) {
+            const selected = payload.selected;
+            const last = selected[selected.length - 1];
+            let date = useParseDate(last.value);
+            if (date) {
+              payload.date = date;
+            }
+          }
+          setState(payload);
+        });
       });
-    }
-    public disable(options: TypePickerDisableOptions): void {
+    };
+    this.disable = (options: TypePickerDisableOptions): void => {
       let { to, from, days, dates } = options;
       if (!List.isList(dates)) {
         dates = [];
@@ -369,18 +363,26 @@ export function factory() {
           days
         });
       });
-      this.update(partial, {
-        date: partial && partial.startDate
+
+      if (partial) {
+        partial.date = partial.startDate;
+      }
+      setState(partial);
+    };
+    this.i18n = (i18n: TypePickerI18n): void => {
+      i18nValidator(i18n, (i18n: TypePickerI18n) => {
+        setState({ i18n });
       });
-    }
-    public i18n(i18n: TypePickerI18n): void {
-      i18nValidator(i18n, (i18n: TypePickerI18n) => this.update({ i18n }));
-    }
-    public onRender(next: Function) {
-      subscribe("render", next);
-    }
-    public onSelect(next: (dispatchValue: string[]) => void): void {
-      subscribe("select", next);
-    }
-  };
+    };
+    setState(partial);
+    return {
+      subscribe: this.subscribe,
+      publish: this.publish,
+      select: this.select,
+      switch: this.switch,
+      disable: this.disable,
+      setDates: this.setDates,
+      i18n: this.i18n
+    };
+  }
 }

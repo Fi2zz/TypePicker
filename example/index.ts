@@ -69,12 +69,12 @@ function createFlatView() {
   config.views = "auto";
   config.el = "#flat";
   config.useInvalidAsSelected = false;
-  config.startDate = new Date(config.startDate);
-  config.endDate = new Date(
-    startDate.getFullYear(),
-    startDate.getMonth() + 2,
-    endDate.getDate()
-  );
+  // config.startDate = new Date(config.startDate);
+  // config.endDate = new Date(
+  //   startDate.getFullYear(),
+  //   startDate.getMonth() + 2,
+  //   endDate.getDate()
+  // );
   const picker = new TypePicker(config);
   onReady(picker, document.getElementById("flat-value"));
   return picker;
@@ -95,42 +95,46 @@ function createFlatView() {
 // const app = new TypePicker(options);
 
 function onReady(app, element) {
+  console.log("onReady", app);
   app.onSelect((value: any[]) => {
     console.log("onselect", value);
     element.innerText = value.join(",");
   });
-  app.onRender(nodeList => {
-    for (let i = 0; i < nodeList.length; i++) {
-      let node = nodeList[i];
-      let date = node.getAttribute("data-date");
-      let disable = node.getAttribute("data-disabled");
-      if (disable) {
-        disable = JSON.parse(disable);
-      }
-      let placeholder: HTMLElement = node.querySelector(".placeholder");
-      let data = source[date];
-      if (!disable && data) {
-        if (data.highlight) node.classList.add("highlight");
-        placeholder.innerText = data.value;
-      }
-    }
-  });
+  // app.onRender(nodeList => {
+  //   for (let i = 0; i < nodeList.length; i++) {
+  //     let node = nodeList[i];
+  //     let date = node.getAttribute("data-date");
+  //     let disable = node.getAttribute("data-disabled");
+  //     if (disable) {
+  //       disable = JSON.parse(disable);
+  //     }
+  //     let placeholder: HTMLElement = node.querySelector(".placeholder");
+  //     let data = source[date];
+  //     if (!disable && data) {
+  //       if (data.highlight) node.classList.add("highlight");
+  //       placeholder.innerText = data.value;
+  //     }
+  //   }
+  // });
 }
-const datesToSet = ["2019-07-22", "2019-07-25"];
+const datesToSet = ["2019-07-23", "2019-07-24"];
 const disable = {
   // to: "2019-06-12",
   // from: "2019-12-12",
   dates: ["2019-07-25", "2019-08-01"],
-  days: [0, dist.day, 6]
+  days: [0, dist.day - 1, 6]
 };
 // const flatViewTypePicker = createFlatView();
-// flatViewTypePicker.setDates(datesToSet);
+// console.log(flatViewTypePicker);
 // flatViewTypePicker.disable(disable);
+// flatViewTypePicker.i18n(i18n["en-us"]);
+// flatViewTypePicker.setDates(datesToSet);
 
-// const singleViewTypePicker = createSingleView();
+const singleViewTypePicker = createSingleView();
 // singleViewTypePicker.disable(disable);
 // singleViewTypePicker.setDates(datesToSet);
 const doubleViewTypePicker = createDoubleView();
-doubleViewTypePicker.disable(disable);
-doubleViewTypePicker.setDates([new Date()]);
-doubleViewTypePicker.setDates(datesToSet);
+// doubleViewTypePicker.disable(disable);
+// doubleViewTypePicker.setDates([new Date()]);
+// // doubleViewTypePicker.setDates(datesToSet);
+// doubleViewTypePicker.i18n(i18n["en-us"]);
