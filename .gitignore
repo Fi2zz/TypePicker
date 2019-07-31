@@ -17,4 +17,4 @@ cloc.exe
 package-lock.json
 dist/main.js
 
-demo
+example/mian.js

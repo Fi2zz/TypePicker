@@ -7,43 +7,13 @@
     />
     <meta charset="utf-8" />
     <title>DatePicker</title>
+    <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
     <div id="container">
-      <div id="app" class="container-item">
-        <div
-          class="app-item single-view-app"
-          id="single-view-app"
-          style="display: none"
-        >
-          <div id="single" class="calendar-container"></div>
-          <div class="display-value">
-            Single View: <span id="single-value"></span>
-          </div>
-        </div>
-        <div
-          class="app-item double-view-app"
-          id="double-view-app"
-          style="display: none"
-        >
-          <div id="double"></div>
-          <div class="display-value">
-            Double View: <span id="double-value"></span>
-          </div>
-        </div>
-      </div>
-      <div
-        class="container-item flat-view-app"
-        id="flat-view-app"
-        style="display: none"
-      >
-        <div class="display-value">
-          Flat View: <span id="flat-value"></span>
-        </div>
-        <div id="flat"></div>
-      </div>
+      <div class="display-value"><span id="value"></span></div>
+      <div id="picker"></div>
     </div>
-
-    <script src="../dist/main.js"></script>
+    <script src="./main.js"></script>
   </body>
 </html>

@@ -6,44 +6,6 @@ const fs = require("fs");
 
 const webpackConfig = require("./webpack.config");
 
-const extraWebpackConfig = rest =>
-  webpackConfig(null, Object.assign({ mode: "production" }, rest));
-
-const buildESMWebpackConfig = extraWebpackConfig({
-  output: {
-    libraryTarget: "umd",
-    filename: "typepicker.esm.js",
-    library: "TypePicker"
-  },
-  entry: "./src/index.ts"
-});
-const buildWebpackConfig = extraWebpackConfig({
-  output: {
-    libraryExport: "default",
-    filename: "typepicker.js",
-    library: "TypePicker"
-  },
-  entry: "./src/index.ts"
-});
-
-const buildCoreWebpackConfig = extraWebpackConfig({
-  output: {
-    libraryExport: "default",
-    filename: "typepicker.core.js",
-    library: "TypePickerCore"
-  },
-  entry: "./src/core.ts"
-});
-
-const buildESMCoreWebpackConfig = extraWebpackConfig({
-  output: {
-    libraryTarget: "umd",
-    filename: "typepicker.core.esm.js",
-    library: "TypePickerCore"
-  },
-  entry: "./src/core.ts"
-});
-
 function cleanBuildDirectory(dir) {
   let files = [];
   try {
@@ -99,63 +61,34 @@ function createNewVersion(op) {
     cb(null, file);
   });
 }
-
-function createCompiler(config) {
-  return webpack(config);
-}
 const dest = dest => gulp.dest(dest ? dest : "./dist");
 const src = "./src/index.ts";
-
-const cleanBuild = done => {
-  cleanBuildDirectory("./dist");
-  done();
+exports.default = async next => {
+  try {
+    await cleanBuildDirectory("./dist");
+    await next();
+    await gulp
+      .src(path.resolve("./package.json"))
+      .pipe(createNewVersion())
+      .pipe(dest(process.cwd()));
+    await next();
+    await gulp
+      .src(src)
+      .pipe(webpack(webpackConfig(null, { mode: "production", type: "umd" })))
+      .pipe(dest());
+    await next();
+  } catch (error) {
+    console.log("errir", error);
+  }
 };
 
-const buildVersion = done => {
-  gulp
-    .src(path.resolve("./package.json"))
-    .pipe(createNewVersion())
-    .pipe(dest(process.cwd()));
-  done();
-};
+exports.test = async next => {
+  const jestConfig = require("./jest.config");
+  process.env.BABEL_ENV = "test";
+  process.env.NODE_ENV = "test";
+  process.env.PUBLIC_URL = "";
+  const jest = require("jest");
 
-const buildUMD = done => {
-  gulp
-    .src(src)
-    .pipe(createCompiler(buildWebpackConfig))
-    .pipe(dest());
-  done();
-};
-
-const buildESM = done => {
-  gulp
-    .src(src)
-    .pipe(createCompiler(buildESMWebpackConfig))
-    .pipe(dest());
-  done();
-};
-
-const buildCore = done => {
-  gulp
-    .src(src)
-    .pipe(createCompiler(buildCoreWebpackConfig))
-    .pipe(dest());
-  done();
-};
-
-const buildCoreESM = done => {
-  gulp
-    .src(src)
-    .pipe(createCompiler(buildESMCoreWebpackConfig))
-    .pipe(dest());
-  done();
-};
-
-exports.default = async done => {
-  await cleanBuild(done);
-  await buildVersion(done);
-  await buildCore(done);
-  await buildCoreESM(done);
-  await buildUMD(done);
-  await buildESM(done);
+  jest.run("--config", JSON.stringify(jestConfig));
+  await next();
 };

@@ -3,22 +3,15 @@
     "outDir": "dist",
     "sourceMap": false,
     "noImplicitAny": false,
-    "target": "es3",
+    "target": "ES5",
     "noEmitOnError": false,
     "allowSyntheticDefaultImports": true,
     "noUnusedParameters": false,
     "pretty": true,
     "allowJs": true,
     "removeComments": true,
-    "noUnusedLocals": false,
+    "noUnusedLocals": true,
     "lib": ["dom", "es6"]
   },
-
-  "files": [
-    "./src/index.ts",
-    "./src/core.ts",
-    "./src/helpers.ts",
-    "./src/dom.helper.ts",
-    "./src/typepicker.d.ts"
-  ]
+  "files": ["./src/index.ts", "./src/declare.d.ts"]
 }

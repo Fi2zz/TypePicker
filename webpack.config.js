@@ -1,32 +1,33 @@
 const path = require("path");
 const webpack = require("webpack");
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
-const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
-const TerserPlugin = require("terser-webpack-plugin");
-module.exports = function(_, options) {
+module.exports = function(env, options) {
   const isEnvProduction = options.mode === "production";
   const isEnvDevelopment = options.mode === "development";
+  // options.mode = "development";
   const useSourceMap = options.sourceMap || isEnvDevelopment;
-  let output = {
-    path: path.resolve(__dirname, "dist"),
+  const entry = isEnvProduction ? "./src/index" : "./example/index.ts";
+  const output = {
+    path: path.resolve(__dirname, "example"),
     publicPath: "/",
     filename: "[name].js"
   };
   if (isEnvProduction) {
-    Object.assign(output, options.output);
+    output.path = path.resolve(__dirname, "dist");
+    Object.assign(output, {
+      libraryTarget: "umd",
+      filename: "typepicker.js",
+      library: "TypePicker",
+      globalObject: "this",
+      pathinfo: false
+    });
   }
   return {
     mode: options.mode,
-    entry: isEnvDevelopment ? "./example/index.ts" : options.entry,
+    entry,
     output,
     module: {
       rules: [
-        {
-          enforce: "pre",
-          test: /\.js$/,
-          loader: "source-map-loader"
-        },
         {
           enforce: "pre",
           test: /\.(css|ts)$/,
@@ -39,14 +40,7 @@ module.exports = function(_, options) {
           }
         },
         {
-          test: /\.css$/,
-          use: [
-            isEnvProduction ? MiniCssExtractPlugin.loader : "style-loader",
-            "css-loader"
-          ]
-        },
-        {
-          test: /\.js$/,
+          test: /\.ts$/,
           use: [
             {
               loader: "babel-loader",
@@ -55,12 +49,15 @@ module.exports = function(_, options) {
                 configFile: false,
                 presets: ["@babel/preset-env"]
               }
+            },
+            {
+              loader: "ts-loader",
+              options: {
+                transpileOnly: true,
+                experimentalWatchApi: true
+              }
             }
           ]
-        },
-        {
-          test: /\.tsx?$/,
-          use: ["ts-loader"]
         }
       ].filter(Boolean)
     },
@@ -68,34 +65,6 @@ module.exports = function(_, options) {
       extensions: [".js", ".json", ".ts", ".tsx"]
     },
     devtool: useSourceMap && "#eval-source-map",
-    optimization: {
-      minimizer: [
-        isEnvProduction &&
-          new TerserPlugin({
-            terserOptions: {
-              parse: {
-                ecma: 8
-              },
-              compress: {
-                ecma: 5,
-                warnings: false,
-                comparisons: false,
-                inline: 2
-              },
-              mangle: {
-                safari10: true
-              },
-              output: {
-                ecma: 5,
-                ascii_only: true,
-                comments: /^\**!|@preserve|@license|@cc_on/i //保留banner信息
-              }
-            },
-            extractComments: false
-          }),
-        isEnvProduction && new OptimizeCSSAssetsPlugin()
-      ].filter(Boolean)
-    },
     plugins: [
       isEnvProduction &&
         new webpack.BannerPlugin({
@@ -113,16 +82,7 @@ module.exports = function(_, options) {
             ].join("\n");
           }
         }),
-      new ForkTsCheckerWebpackPlugin(),
-      new webpack.DefinePlugin({
-        "process.env": {
-          NODE_ENV: `"${options.mode}"`
-        }
-      }),
-      isEnvProduction &&
-        new MiniCssExtractPlugin({
-          filename: "style.css"
-        })
+      new ForkTsCheckerWebpackPlugin()
     ].filter(Boolean)
   };
 };
