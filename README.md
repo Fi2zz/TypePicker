@@ -8,7 +8,7 @@ A date picker use in web and react-native
 
 | OPTION    | REQUIRED | TYPE   | DESC                        | Default /Possible Value |
 | --------- | -------- | ------ | --------------------------- | ----------------------- |
-| size      | NO       | number | Display views of DatePicker | auto,1,2                |
+| size      | NO       | number | Display views of DatePicker | 1              |
 | selection | NO       | number | Size of dates can be picked | 1                       |
 
 
