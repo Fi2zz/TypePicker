@@ -124,32 +124,15 @@
   cursor: default;
 }
 .calendar .calendar-cell.in-range .date {
-  background: #eee;
-}
-
-.calendar .calendar-cell.inrange .date {
-  background: #06a2d0;
+  background: #999;
+  color: white;
 }
 .calendar .calendar-cell.active {
   position: relative;
 }
-
 .calendar .calendar-cell.active .date {
   color: #fff;
   background: #06a2d0;
-}
-
-.calendar.calendar-double-views {
-  width: 100%;
-  max-width: none;
-  flex-direction: row;
-  display: flex;
-  align-items: flex-start;
-  width: 480px;
-}
-
-.calendar.calendar-double-views .calendar-item {
-  width: 50%;
 }
 
 .calendar-title {
@@ -180,10 +163,10 @@
   color: #06a2d0;
 }
 .calendar-cell.start-date .date {
-  background: #182828 !important;
+  background: #f51 !important;
 }
 .calendar-cell.end-date .date {
-  background: #006f6f !important;
+  background: #f51 !important;
 }
 .calendar .calendar-cell.active .date {
   color: white;

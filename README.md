@@ -1,15 +1,14 @@
 # TypePicker
 
-##### uh! naming project is the most difficult thing of the world
 
 A date picker use in web and react-native
 
 ## OPTIONS
 
-| OPTION    | REQUIRED | TYPE   | DESC                        | Default /Possible Value |
-| --------- | -------- | ------ | --------------------------- | ----------------------- |
-| size      | NO       | number | Display views of DatePicker | 1              |
-| selection | NO       | number | Size of dates can be picked | 1                       |
+| OPTION    | REQUIRED | TYPE   | DESC                  | Default        |
+| --------- | -------- | ------ | ------------------    |----------------|
+| size      | NO       | number | Size of data created  | 1              |
+| selection | NO       | number | Size of data picked   | 1              |
 
 
 
@@ -18,26 +17,27 @@ A date picker use in web and react-native
 ```typescript
 
 
-   public apply={
-   				select		:(date:Date)=>void
-   				date		:(date:Date)=>void
-   				dates   	:(dates:Date[])=>void
-   				update  	:()=>void;
-   				disableDate	:(date:Date)=>boolean
-   				
-   			};
-   			
-   public listen(({type,types,payload})=>void)
+	apply.select(date:Date)=>void
+	
+	apply.date(date:Date)=>void
+	
+	apply.dates(dates:Date[])=>void
+	
+	apply.update()=>void;
+	
+	apply.disableDate((date:Date)=>boolean)
+	
+	listen(({type,types,payload})=>void)
    
    
    
    
 ```
 
-## HOW TO USE
+### EXAMPLE
 
-### use build tools,like webpack
 
+[Full Example](./example/createPicker.ts)
 
 
 
@@ -48,21 +48,21 @@ A date picker use in web and react-native
 	
 	
 	const config = {
-			size:1,
-			selection:1
+		size:1,
+		selection:1
 	}
 	
-		interface TypePickerDate {
-		  date: Date;
-		  invalid: boolean;
-		  disabled: boolean;
-		  status?: {
-		    isActive?: boolean;
-		    isStart?: boolean;
-		    isEnd?: Boolean;
-		    inRange?: Boolean;
-		  };
-		}
+	interface TypePickerDate {
+	  date: Date;
+	  invalid: boolean;
+	  disabled: boolean;
+	  status?: {
+	    isActive?: boolean;
+	    isStart?: boolean;
+	    isEnd?: Boolean;
+	    inRange?: Boolean;
+	  };
+	}
 	
 	
 	const typepicker= new TypePicker(config);
@@ -73,17 +73,15 @@ A date picker use in web and react-native
 	}
 	const onDataUpdate =(data:[])=>{
 	
-	
 			const renderData =data.map(item=>{
 						return  {
 							year: <number>item.year
 							month: <number> item.month,
 							dates: <TypePickerDate>item.dates						}	
 			})
-
-
-			//here goes how your datepicker ui render
-			//example document.getElementById('picker') .innerHTML =template(renderData)		
+		//here goes how your datepicker ui render
+		//example
+		//document.getElementById('picker') .innerHTML=template(renderData)		
 			
 	
 	

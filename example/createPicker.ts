@@ -1,4 +1,4 @@
-import Core from "../src";
+import TypePicker from "../src";
 
 const Timex = {
   isDate: d => d instanceof Date,
@@ -74,17 +74,8 @@ const DOMHelpers = {
   attr: (el: HTMLElement, attr: string) => el.getAttribute(attr),
   class(index: number, options) {
     function classname(options) {
-      const {
-        isActive,
-        isStart,
-        isEnd,
-        isDisabled,
-        inRange,
-        isEmpty
-      } = options;
-      if (isEmpty) {
-        return "empty disabled";
-      }
+      const { isActive, isStart, isEnd, isDisabled, inRange } = options;
+
       let className = "";
       if (isActive) {
         className = "active";
@@ -113,7 +104,7 @@ const DOMHelpers = {
     return names.join(" ").trim();
   }
 };
-function createTemplate(data) {
+function renderTemplate(data) {
   const isDef = (v: any) => v !== undefined && v !== null;
   function createTag(tag, props: any): string {
     if (!tag) {
@@ -142,10 +133,11 @@ function createTemplate(data) {
     }
     return `<${tag} ${attributes.join("")}>${children}</${tag}>`;
   }
-  const actionNode = type => {
+  const actionNode = (type, step) => {
     const className = ["calendar-action", type];
     return createTag("div", {
-      className: className.join(" ")
+      className: className.join(" "),
+      "data-step": step
     });
   };
   function dateNodes(data): string {
@@ -154,7 +146,6 @@ function createTemplate(data) {
       children: []
     };
 
-    // if (!data.invalid) {
     props.children.push(
       createTag("div", {
         className: "date",
@@ -162,7 +153,6 @@ function createTemplate(data) {
       })
     );
     props["data-date"] = data.value;
-    // }
     props["data-disabled"] = data.disabled;
     return createTag("div", props);
   }
@@ -192,202 +182,120 @@ function createTemplate(data) {
       children: calendarViewData
     });
   });
-  return [actionNode("prev"), actionNode("next"), ...calendars].join("");
-}
-/**
- *
- * @param date
- * @param format
- * @returns {string}
- */
-function format(date: Date | string, format?: string): string {
-  if (!format) {
-    format = "YYYY-MM-DD";
-  }
-
-  if (!Timex.isDate(date)) {
-    return null;
-  }
-  const padding = (n: Number): string => `${n > 9 ? n : "0" + n}`;
-
-  format = format.toUpperCase();
-  date = date as Date;
-  let parts = <any>{
-    YYYY: date.getFullYear(),
-    DD: padding(date.getDate()),
-    MM: padding(date.getMonth() + 1),
-    D: date.getDate(),
-    M: date.getMonth() + 1
-  };
-
-  return format.replace(/(?:\b|%)([dDMyY]+)(?:\b|%)/g, $1 =>
-    parts[$1] === undefined ? $1 : parts[$1]
-  );
-}
-/**
- *
- * @param strDate
- * @param format
- */
-
-function parse(strDate: string | Date, format: string) {
-  if (Timex.isDate(strDate)) {
-    return strDate;
-  }
-  if (!strDate) {
-    return null;
-  }
-
-  function parse(string: string | Date): any {
-    if (!string) return new Date();
-    if (string instanceof Date) return string;
-    let split = string.split(/\W/).map(item => parseInt(item, 10));
-    let date = new Date(split.join(" "));
-    if (!date.getTime()) return null;
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  }
-
-  let ret = parse(strDate);
-  if (ret) return ret;
-  const token = /d{1,4}|M{1,4}|YY(?:YY)?|S{1,3}|Do|ZZ|([HhMsDm])\1?|[aA]|"[^"]*"|'[^']*'/g;
-  const parseFlags: any = {
-    D: [/\d{1,2}/, (d: any, v: any) => (d.day = parseInt(v))],
-    M: [/\d{1,2}/, (d: any, v: any) => (d.month = parseInt(v) - 1)],
-    DD: [/\d{2}/, (d: any, v: any) => (d.day = parseInt(v))],
-    MM: [/\d{2}/, (d: any, v: any) => (d.month = parseInt(v) - 1)],
-    YY: [/\d{2,4}/, (d: any, v: any) => (d.year = parseInt(v))],
-    YYYY: [/\d{4}/, (d: any, v: any) => (d.year = parseInt(v))]
-  };
-  ret = function(dateStr: string, format: string) {
-    if (dateStr.length > 1000) {
-      return null;
-    }
-    let isValid = true;
-    const dateInfo = {
-      year: 0,
-      month: 0,
-      day: 0
-    };
-    format.replace(token, function($0) {
-      if (parseFlags[$0]) {
-        const info = parseFlags[$0];
-        const regExp = info[0];
-        const handler = info[info.length - 1];
-        const index = dateStr.search(regExp);
-
-        if (!~index) {
-          isValid = false;
-        } else {
-          dateStr.replace(info[0], function(result) {
-            handler(dateInfo, result);
-            dateStr = dateStr.substr(index + result.length);
-            return result;
-          });
-        }
-      }
-      return parseFlags[$0] ? "" : $0.slice(1, $0.length - 1);
-    });
-    if (!isValid) {
-      return null;
-    }
-    const parsed = new Date(dateInfo.year, dateInfo.month, dateInfo.day);
-    return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
-  };
-
-  return ret(strDate, format);
+  return [actionNode("prev", -1), actionNode("next", 1), ...calendars].join("");
 }
 
-export default class TypePicker {
-  constructor(options) {
-    this.setup(options);
-  }
-  core;
-  element: HTMLElement;
+interface TypePickerExampleConfig {
+  selection?: number;
+  size?: number;
+}
+
+interface TypePickerRenderDate {
   date: Date;
-  useFormatDate = date => format(date, this.dateFormat);
-  useParseDate = date => parse(date, this.dateFormat);
-  dateFormat = "YYYY/MM/DD";
-  setup(options) {
-    const element = DOMHelpers.select(options.el);
-    this.element = element;
-    this.element.classList.add("calendar");
-    this.dateFormat = options.format;
-    // let startDate = parse(options.startDate, options.format);
-    // let endDate = new Date(options.endDate);
-    options.size = 12; // viewSize;
+  invalid: boolean;
+  disabled: boolean;
+  status?: {
+    isActive?: boolean;
+    isStart?: boolean;
+    isEnd?: Boolean;
+    inRange?: Boolean;
+    isDisabled?: boolean;
+  };
+  value?: string;
+  day?: string;
+  label?: string;
+}
 
-    this.core = new Core(options);
-    this.core.listen(({ types, type, payload }) => {
-      if (type === types.update) {
-        this.render(payload);
-      }
-    });
+export default class TypePickerExample {
+  constructor(element: string | HTMLElement, options: TypePickerExampleConfig) {
+    this.init(element, options);
+  }
+  element: HTMLElement;
+  date = new Date();
+  apply = null;
+  init(element: string | HTMLElement, config: TypePickerExampleConfig) {
+    this.element = DOMHelpers.select(element);
+    //config.selection => size of data picked
+    //config.size => size of data created
+    const picker = new TypePicker(config);
+    //subscribe update data action and pick data action
+    picker.listen(this.render.bind(this));
+    //bind picker apply api to instance
     this.apply = {
-      ...this.core.apply,
-      date: date => {
+      ...picker.apply,
+      date: (date: Date) => {
         this.date = date;
-        this.core.apply.date(date);
+        picker.apply.date(date);
       }
     };
-    // this.apply.date(Timex.today());
+    //apply first month of data
+    //it will render start from  applied date
+    this.apply.date(new Date());
   }
-  render(data) {
-    console.count("payload");
-    data = data.map(item => {
-      item.dates = item.dates.map(item => {
-        item.disabled = item.disabled || item.invalid;
-        item.status.isDisabled = item.disabled;
-        if (item.invalid) {
-          item.status.inRange = false;
-          item.status.isStart = false;
-          item.status.isEnd = false;
-          item.status.isActive = false;
-        }
-        // item.className = classname(item.status);
-        item.value = this.useFormatDate(item.date);
-        item.label = item.date.getDate();
-        item.day = item.date.getDay();
-        return item;
-      });
-      item.heading = `${item.month + 1}月`;
-      return item;
-    });
-
-    this.element.innerHTML = createTemplate(data);
-    const select = (selector: string) =>
-      DOMHelpers.select(this.element, selector);
-    const prevActionDOM = select(".calendar-action.prev");
-    const nextActionDOM = select(".calendar-action.next");
-    const nodeList = select(".calendar-cell");
-    if (prevActionDOM && nextActionDOM) {
-      const listener = (step: number) => {
-        const components = Timex.dateComponents(this.date);
-        components.month += step;
-        this.apply.date(Timex.createDate(components));
-      };
-      prevActionDOM.addEventListener("click", () => listener(-1));
-      nextActionDOM.addEventListener("click", () => listener(1));
+  render(options) {
+    let data = options.payload;
+    if (options.type !== options.types.update) {
+      data = data.map(item => item.toLocaleDateString());
+      this._onSelect(data);
+      return;
     }
-    for (let i = 0; i < nodeList.length; i++) {
-      let node = nodeList[i];
+    //render DOMs
+    this.element.innerHTML = renderTemplate(
+      data.map(
+        (item: {
+          month: number;
+          dates: TypePickerRenderDate[];
+          year: number;
+        }) => {
+          return {
+            heading: `${item.year}年 ${item.month + 1}月`,
+            dates: item.dates.map(item => {
+              item.value = item.date.toLocaleDateString();
+              item.label = item.date.getDate().toString();
+              item.day = item.date.getDay().toString();
+              if (item.invalid) {
+                for (let key in item.status) {
+                  item.status[key] = false;
+                }
+              }
+              item.status.isDisabled = item.disabled || item.invalid;
 
+              return item;
+            })
+          };
+        }
+      )
+    );
+    // switch month action
+    const actions = DOMHelpers.select(this.element, ".calendar-action");
+
+    if (actions) {
+      for (let actioner of actions) {
+        const stepper = () => {
+          const _step = DOMHelpers.attr(actioner, "data-step");
+          const step = parseInt(_step, 10) as number;
+          const components = Timex.dateComponents(this.date);
+          components.month += step;
+          this.apply.date(Timex.createDate(components));
+        };
+        actioner.addEventListener("click", () => stepper());
+      }
+    }
+    // calendar date cells
+    const cells = DOMHelpers.select(this.element, ".calendar-cell");
+    for (let node of cells) {
       node.addEventListener("click", () => {
         const value = DOMHelpers.attr(node, "data-date");
         if (!value) {
           return;
         }
-        this.core.apply.select(this.useParseDate(value));
+        //select date action
+        this.apply.select(new Date(value));
       });
     }
   }
-
-  apply = null;
-  onSelect(next) {
-    this.core.listen(({ type, types, payload }) => {
-      if (type === types.select) {
-        const value = payload.map(item => this.useFormatDate(item));
-        next(value);
-      }
-    });
+  _onSelect: (data: Date[]) => void;
+  onSelect(next: (data: Date[]) => void) {
+    this._onSelect = next;
   }
 }

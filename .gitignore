@@ -2,19 +2,8 @@
 node_modules/
 npm-debug.log*
 .idea
-
-src/**/*.js
-demo
-dev
-temp
-lib
-
 cloc.exe
 .vscode
-
 /yarn-error.log
 
 package-lock.json
-dist/main.js
-
-example/mian.js

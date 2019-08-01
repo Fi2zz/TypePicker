@@ -4,7 +4,6 @@ const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 module.exports = function(env, options) {
   const isEnvProduction = options.mode === "production";
   const isEnvDevelopment = options.mode === "development";
-  // options.mode = "development";
   const useSourceMap = options.sourceMap || isEnvDevelopment;
   const entry = isEnvProduction ? "./src/index" : "./example/index.ts";
   const output = {
@@ -30,6 +29,11 @@ module.exports = function(env, options) {
       rules: [
         {
           enforce: "pre",
+          test: /\.js|ts$/,
+          loader: "source-map-loader"
+        },
+        {
+          enforce: "pre",
           test: /\.(css|ts)$/,
           loader: "defines-loader",
           options: {
@@ -53,7 +57,6 @@ module.exports = function(env, options) {
             {
               loader: "ts-loader",
               options: {
-                transpileOnly: true,
                 experimentalWatchApi: true
               }
             }
@@ -73,7 +76,7 @@ module.exports = function(env, options) {
             const pkg = require("./package");
             const now = new Date();
             return [
-              `TypePicker v${pkg.version}`,
+              `${pkg.bannerName} v${pkg.version}`,
               `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`,
               `${pkg.description}`,
               `(c) 2017-${now.getFullYear()},${pkg.author}`,

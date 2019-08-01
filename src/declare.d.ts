@@ -1,7 +1,7 @@
 type TimexDate = Date;
 interface TypePickerConfig {
-  date: Date | null;
-  size: number;
+  date?: Date | null;
+  size?: number;
   selection?: number;
   useInvalidAsSelected?: boolean;
 }
