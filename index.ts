@@ -1,3 +1,44 @@
+export interface TypePickerConfig {
+  date?: Date | null;
+  size?: number;
+  selection?: number;
+  useInvalidAsSelected?: boolean;
+}
+
+type TimexDate = Date;
+
+interface TypePickerSelected {
+  value?: Date;
+  disabled?: boolean;
+}
+interface TimexCreateDate {
+  year?: number;
+  date?: number;
+  month?: number;
+  hours?: number;
+  minutes?: number;
+  seconds?: number;
+  milliseconds?: number;
+}
+
+export interface TypePickerDate {
+  date: Date;
+  invalid: boolean;
+  disabled: boolean;
+  status?: {
+    isActive?: boolean;
+    isStart?: boolean;
+    isEnd?: Boolean;
+    inRange?: Boolean;
+  };
+}
+interface TypePickerMonth {
+  year: number;
+  month: number;
+  dates: TypePickerDate[];
+}
+export type TypePickerData = TypePickerMonth[];
+
 const List = {
   map(input: any[], map: Function) {
     if (!List.isList(input)) {
@@ -86,7 +127,7 @@ const isInterger = (input: string | number) =>
 const isBool = (v: any) => typeof v === "boolean";
 const genRandomNumber = () =>
   `${Math.random() * 0x100000000}`.replace(".", "-");
-class Observer {
+class PubSub {
   constructor(name) {
     this.name = name;
   }
@@ -437,15 +478,39 @@ const mapStatusOfDate = (range: Queue, useRange: boolean) => (
 };
 
 class Updater {
-  constructor(queue: Queue, disables: TypePickerDisables, updater) {
-    this.disables = disables;
-    this.queue = queue;
-    this.updater = data => updater(queue, data);
+  constructor(config: TypePickerConfig) {
+    this.config = config;
+    this.queue = new Queue(config.selection, config.useInvalidAsSelected);
   }
-  updater = null;
+  pubsub = new PubSub(genRandomNumber());
+  update = (date: TimexDate, selectedValue: TypePickerSelected[]) => {
+    if (date) {
+      this.config.date = date;
+    }
+
+    const createData = pipe(
+      genTypePickerData(
+        mapStatusOfDate(this.queue, this.config.selection === 2),
+        this.disables.find
+      )
+    );
+    this.pubsub.publish(
+      TypePickerListenerTypes.update,
+      createData(this.config.size, this.config.date)
+    );
+    if (List.isList(selectedValue)) {
+      this.pubsub.publish(
+        TypePickerListenerTypes.select,
+        List.map(selectedValue, (item: Selection) => item.value)
+      );
+    }
+  };
   queue = null;
   data = [];
-  disables = null;
+  disables = {
+    find: (date: TimexDate) => false
+  };
+  config: TypePickerConfig;
   checkQueue(item) {
     const queue = this.queue;
     const disables = this.disables;
@@ -509,14 +574,14 @@ class Updater {
     }
     this.data = List.map(data, createItem);
     if (List.length(this.data) <= 0) {
-      this.updater([]);
+      this.update(null, []);
     }
     List.loop(this.data, item => {
       Timex.delay(() => {
         item.disabled = this.disables.find(item.value);
       }, 0);
       const canPush = this.checkQueue(item);
-      const callUpdate = () => this.updater(this.queue.fetch());
+      const callUpdate = () => this.update(null, this.queue.fetch());
       if (canPush) {
         this.queue.push(item)(callUpdate);
       }
@@ -536,54 +601,28 @@ interface TypePickerListener {
 }
 
 export default function TypePicker(option: TypePickerConfig): void {
-  const disables = {
-    find: (date: TimexDate) => false
-  };
-  const config: TypePickerConfig = {
+  const updater = new Updater({
     selection: 1,
     date: Timex.today(),
     useInvalidAsSelected: false,
     size: 1,
     ...getOptions(option)
-  };
-  const observer = new Observer(genRandomNumber());
-  const queue = new Queue(config.selection, config.useInvalidAsSelected);
-  const update = (queue: Queue, selectedValue: TypePickerSelected[]) => {
-    const createData = pipe(
-      genTypePickerData(
-        mapStatusOfDate(queue, config.selection === 2),
-        disables.find
-      )
-    );
-    observer.publish(
-      TypePickerListenerTypes.update,
-      createData(config.size, config.date)
-    );
-    if (List.isList(selectedValue)) {
-      observer.publish(
-        TypePickerListenerTypes.select,
-        List.map(selectedValue, (item: Selection) => item.value)
-      );
-    }
-  };
-
-  // map[]
-  const selection = new Updater(queue, disables, update);
+  });
   const applyDates = (dates: TimexDate[]): void => {
     const setDates = pipe(
-      (dates: TimexDate[]) => dates.slice(0, config.selection),
+      (dates: TimexDate[]) => dates.slice(0, updater.config.selection),
       (dates: TimexDate[]) => dates.filter(Timex.isDate),
       (dates: TimexDate[]) => List.dedup(dates, setDatesDedupe),
       (dates: TimexDate[]) => (List.every(dates, Timex.isDate) ? dates : []),
       (dates: TimexDate[]) => dates.sort((t1, t2) => +t1 - +t2)
     );
     Timex.delay(() => {
-      selection.push(setDates(dates), true);
+      updater.push(setDates(dates), true);
     });
   };
 
   this.listen = (next: (options: TypePickerListener) => void) => {
-    observer.subscribe(
+    updater.pubsub.subscribe(
       TypePickerListenerTypes.update,
       (payload: TypePickerData) =>
         next({
@@ -592,31 +631,33 @@ export default function TypePicker(option: TypePickerConfig): void {
           types: TypePickerListenerTypes
         })
     );
-    observer.subscribe(TypePickerListenerTypes.select, (payload: Selection[]) =>
-      next({
-        type: TypePickerListenerTypes.select,
-        payload,
-        types: TypePickerListenerTypes
-      })
+    updater.pubsub.subscribe(
+      TypePickerListenerTypes.select,
+      (payload: Selection[]) =>
+        next({
+          type: TypePickerListenerTypes.select,
+          payload,
+          types: TypePickerListenerTypes
+        })
     );
   };
+
+  const select = (date: TimexDate | TimexDate[]) => {
+    if (List.isList(date)) {
+      date = (<TimexDate[]>date).pop();
+    }
+    updater.push(date);
+  };
+
   this.apply = {
     dates: applyDates,
-    disableDate: (handler: (date: Date) => boolean) =>
-      (disables.find = handler),
-    date(date: TimexDate) {
-      config.date = date;
-      selection.updater(null);
-    },
-    update: () => selection.updater(null),
-    select(date: TimexDate | TimexDate[]) {
-      if (List.isList(date)) {
-        date = (<TimexDate[]>date).pop();
-      }
-      selection.push(date);
-    }
+    disableDate: (handler: (date: TimexDate) => boolean) =>
+      (updater.disables.find = handler),
+    date: (date: TimexDate) => updater.update(date, null),
+    update: () => updater.update(null, null),
+    select
   };
   Timex.delay(() => {
-    this.apply.select(config.date, true);
+    this.apply.select(updater.config.date, true);
   });
 }

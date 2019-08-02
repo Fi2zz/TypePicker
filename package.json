@@ -2,25 +2,41 @@
   "name": "typepicker",
   "bannerName": "TypePicker",
   "version": "6.1.3",
-  "description": "A date picker use in web and react-native and nodejs",
+  "description": "A date picker use in web and react-native",
   "author": "Fi2zzz <wenjingbiao@outlook.com>",
   "repository": {
     "type": "github",
-    "url": "https://github.com/Fi2zz/datepicker"
+    "url": "https://github.com/Fi2zz/TypePicker"
   },
-  "private": true,
   "license": "MIT",
   "scripts": {
-    "start": "webpack --mode development  -w "
+    "start": "webpack --mode development  -w"
   },
+  "keywords": [
+    "datepicker",
+    "datetime-picker",
+    "typescript",
+    "typepicker",
+    "webpack",
+    "react-datepicker",
+    "vue-datepicker",
+    "angular-datepicker"
+  ],
+  "files": [
+    "LICENSE",
+    "README.md",
+    "index.js",
+    "dist/",
+    "index.ts",
+    "index.d.ts"
+  ],
+  "main": "index.js",
   "devDependencies": {
     "@babel/core": "^7.4.5",
     "@babel/preset-env": "^7.5.5",
     "@babel/preset-typescript": "^7.3.3",
-    "@babel/types": "^7.5.5",
     "babel-jest": "^24.8.0",
     "babel-loader": "^8.0.6",
-    "defines-loader": "^1.0.2",
     "fork-ts-checker-webpack-plugin": "^1.3.7",
     "gulp": "^4.0.2",
     "jest": "^24.8.0",

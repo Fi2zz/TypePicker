@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "outDir": "dist",
+    "outDir": "./",
     "sourceMap": false,
     "noImplicitAny": false,
     "target": "ES5",
@@ -8,10 +8,10 @@
     "allowSyntheticDefaultImports": true,
     "noUnusedParameters": false,
     "pretty": true,
-    "allowJs": true,
     "removeComments": true,
     "noUnusedLocals": true,
-    "lib": ["dom", "es6"]
+    "lib": ["dom", "es6"],
+    "declaration": true
   },
-  "files": ["./src/index.ts", "./src/declare.d.ts"]
+  "files": ["index.ts"]
 }

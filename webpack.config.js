@@ -5,43 +5,31 @@ module.exports = function(env, options) {
   const isEnvProduction = options.mode === "production";
   const isEnvDevelopment = options.mode === "development";
   const useSourceMap = options.sourceMap || isEnvDevelopment;
-  const entry = isEnvProduction ? "./src/index" : "./example/index.ts";
+  const entry = isEnvProduction ? "./index.ts" : "./example/index.ts";
   const output = {
     path: path.resolve(__dirname, "example"),
     publicPath: "/",
-    filename: "[name].js"
+    filename: "[name].js",
+    pathinfo: isEnvDevelopment
   };
   if (isEnvProduction) {
-    output.path = path.resolve(__dirname, "dist");
     Object.assign(output, {
-      libraryTarget: "umd",
-      filename: "typepicker.js",
+      path: path.resolve(__dirname, "dist"),
+      libraryTarget: "commonjs2",
+      filename: options.filename,
       library: "TypePicker",
-      globalObject: "this",
-      pathinfo: false
+      globalObject: "this"
     });
   }
-  return {
-    mode: options.mode,
+  const config = {
     entry,
     output,
     module: {
       rules: [
-        {
+        isEnvDevelopment && {
           enforce: "pre",
           test: /\.js|ts$/,
           loader: "source-map-loader"
-        },
-        {
-          enforce: "pre",
-          test: /\.(css|ts)$/,
-          loader: "defines-loader",
-          options: {
-            defines: {
-              DEBUG: isEnvDevelopment,
-              TEST: process.env.NODE_ENV === "test"
-            }
-          }
         },
         {
           test: /\.ts$/,
@@ -54,12 +42,7 @@ module.exports = function(env, options) {
                 presets: ["@babel/preset-env"]
               }
             },
-            {
-              loader: "ts-loader",
-              options: {
-                experimentalWatchApi: true
-              }
-            }
+            "ts-loader"
           ]
         }
       ].filter(Boolean)
@@ -88,4 +71,11 @@ module.exports = function(env, options) {
       new ForkTsCheckerWebpackPlugin()
     ].filter(Boolean)
   };
+  if (options.type === "development") {
+    config.optimization = {
+      minimize: false
+    };
+  }
+  config.mode = options.mode;
+  return config;
 };

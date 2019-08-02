@@ -74,21 +74,31 @@ exports.default = async next => {
     await next();
     await gulp
       .src(src)
-      .pipe(webpack(webpackConfig(null, { mode: "production", type: "umd" })))
+      .pipe(
+        webpack(
+          webpackConfig(null, {
+            mode: "production",
+            filename: "typepicker.production.js",
+            type: "production"
+          })
+        )
+      )
+      .pipe(dest());
+    await next();
+    await gulp
+      .src(src)
+      .pipe(
+        webpack(
+          webpackConfig(null, {
+            mode: "production",
+            filename: "typepicker.development.js",
+            type: "development"
+          })
+        )
+      )
       .pipe(dest());
     await next();
   } catch (error) {
-    console.log("errir", error);
+    console.error("Build Error:", error);
   }
-};
-
-exports.test = async next => {
-  const jestConfig = require("./jest.config");
-  process.env.BABEL_ENV = "test";
-  process.env.NODE_ENV = "test";
-  process.env.PUBLIC_URL = "";
-  const jest = require("jest");
-
-  jest.run("--config", JSON.stringify(jestConfig));
-  await next();
 };
