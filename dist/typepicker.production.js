@@ -1,6 +1,6 @@
 /*!
- * TypePicker v6.1.5
- * 2019/8/2
+ * TypePicker v6.1.6
+ * 2019/8/5
  * A date picker use in web and react-native
  * (c) 2017-2019,Fi2zzz <wenjingbiao@outlook.com>
  * https://github.com/Fi2zz/TypePicker

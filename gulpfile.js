@@ -62,7 +62,7 @@ function createNewVersion(op) {
   });
 }
 const dest = dest => gulp.dest(dest ? dest : "./dist");
-const src = "./src/index.ts";
+const src = "./index.ts";
 exports.default = async next => {
   try {
     await cleanBuildDirectory("./dist");
