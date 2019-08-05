@@ -45,7 +45,7 @@ A date picker use in web and react-native
 ```typescript
 
 	//if you are using typescript
-	import TypePicker from "./src/index.ts";
+	import TypePicker from "typepicker";
 
 	const config = {
 		size:1,
